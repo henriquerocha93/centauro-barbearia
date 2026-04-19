@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Centauros Barbearia | Premium Grooming</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- Renderização Dinâmica aqui -->
+        <header class="fade-in">
+            <div class="logo-container">
+                <img src="centauros_logo_1776617248021.png" alt="Centauros Barbearia Logo" id="main-logo">
+            </div>
+            <h1>Centauros</h1>
+            <p style="color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Barbearia de Elite</p>
+        </header>
+
+        <main id="main-content">
+            <!-- Tela Inicial (Padrão) -->
+            <section id="home-view" class="fade-in">
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2 style="margin-bottom: 10px;">Excelência em cada corte.</h2>
+                    <p style="color: var(--text-secondary);">Agende seu horário com os melhores profissionais da região.</p>
+                </div>
+
+                <div class="actions" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn-primary" onclick="app.navigateTo('booking')">Agendar Agora</button>
+                    <button class="btn-secondary" onclick="app.navigateTo('login')">Área Administrativa</button>
+                </div>
+
+                <div style="margin-top: 50px;">
+                    <h3 class="section-title">Nossos Serviços</h3>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Corte Moderno</h4>
+                            <p>Degradê, tesoura ou social</p>
+                        </div>
+                        <div class="service-price">R$ 50</div>
+                    </div>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Barba Completa</h4>
+                            <p>Toalha quente e terapia capilar</p>
+                        </div>
+                        <div class="service-price">R$ 40</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav id="bottom-nav" class="glass" style="position: fixed; bottom: 20px; left: 20px; right: 20px; display: none;">
+            <!-- Navegação para quando logado -->
+        </nav>
+
+    </div>
+
+    <dialog id="app-modal" class="glass" style="padding: 0; border: 1px solid var(--glass-border); border-radius: 15px; color: var(--text-primary); max-width: 400px; width: 90%;">
+        <!-- Conteúdo injetado via JS -->
+    </dialog>
+
+    <style>
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+        dialog section {
+            padding: 25px;
+        }
+    </style>
+
+    <script src="app.js?v=2" type="module"></script>
+</body>
+</html>
