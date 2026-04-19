@@ -1,4 +1,4 @@
-// Centauros Barbearia - App Logic
+// Centauro Barbearia - App Logic
 const app = {
     state: {
         view: 'home',
@@ -7,13 +7,13 @@ const app = {
             agenda: {
                 intervalMin: 15,
                 schedule: {
-                    0: { active: false, open: '08:00', close: '18:00' }, // Dom
-                    1: { active: true,  open: '08:00', close: '20:00' }, // Seg
-                    2: { active: true,  open: '08:00', close: '20:00' }, // Ter
-                    3: { active: true,  open: '08:00', close: '20:00' }, // Qua
-                    4: { active: true,  open: '08:00', close: '20:00' }, // Qui
-                    5: { active: true,  open: '08:00', close: '20:00' }, // Sex
-                    6: { active: true,  open: '09:00', close: '16:00' }  // Sab
+                    0: { active: false, open: '09:00', close: '09:01' }, // Dom
+                    1: { active: true,  open: '09:00', close: '20:00' }, // Seg
+                    2: { active: true,  open: '09:00', close: '20:00' }, // Ter
+                    3: { active: true,  open: '09:00', close: '20:00' }, // Qua
+                    4: { active: true,  open: '09:00', close: '21:00' }, // Qui
+                    5: { active: true,  open: '09:00', close: '21:00' }, // Sex
+                    6: { active: true,  open: '09:00', close: '21:00' }  // Sab
                 }
             } // Configuração Dinâmica Semanal
         },
@@ -24,9 +24,22 @@ const app = {
             { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' }
         ],
         services: [
-            { id: 1, name: 'Corte Moderno', price: 50, duration: 45 },
-            { id: 2, name: 'Barba Premium', price: 40, duration: 30 },
-            { id: 3, name: 'Combo (Corte + Barba)', price: 80, duration: 75 }
+            { id: 1, name: 'Corte Brigada Militar', price: 30, duration: 40 },
+            { id: 2, name: 'Acabamento', price: 15, duration: 30 },
+            { id: 3, name: 'Barba', price: 35, duration: 30 },
+            { id: 4, name: 'Barba só maquina', price: 20, duration: 15 },
+            { id: 5, name: 'Corte', price: 35, duration: 30 },
+            { id: 6, name: 'Corte, Barba e sobrancelha', price: 85, duration: 55 },
+            { id: 7, name: 'Corte máquina', price: 25, duration: 40 },
+            { id: 8, name: 'Corte + Platinado', price: 180, duration: 60 },
+            { id: 9, name: 'Corte + sobrancelha', price: 50, duration: 40 },
+            { id: 10, name: 'Depilação ouvido', price: 25, duration: 20 },
+            { id: 11, name: 'Depilção nariz', price: 25, duration: 20 },
+            { id: 12, name: 'Luzes', price: 100, duration: 40 },
+            { id: 13, name: 'Luzes + Corte', price: 135, duration: 60 },
+            { id: 14, name: 'Pigmentação', price: 25, duration: 40 },
+            { id: 15, name: 'Relaxamento capilar', price: 65, duration: 20 },
+            { id: 16, name: 'Sobrancelha', price: 15, duration: 20 }
         ],
         products: [
             { id: 1, name: 'Pomada Efeito Matte', stock: 15, price: 45 },
@@ -64,7 +77,7 @@ const app = {
     },
 
     init() {
-        console.log('Centauros App Initialized');
+        console.log('Centauro App Initialized');
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.view) {
@@ -202,9 +215,9 @@ const app = {
         appContainer.innerHTML = `
             <header class="fade-in">
                 <div class="logo-container">
-                    <img src="centauros_logo_1776617248021.png" alt="Centauros Barbearia Logo" id="main-logo">
+                    <img src="logo_centauro.png" alt="Centauro Barbearia Logo" id="main-logo">
                 </div>
-                <h1>Centauros</h1>
+                <h1>Centauro</h1>
                 <p style="color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Barbearia de Elite</p>
             </header>
             <main id="main-content"></main>
@@ -226,7 +239,7 @@ const app = {
         appContainer.innerHTML = `
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
-                <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color);">CENTAUROS</div>
+                <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color);">CENTAURO</div>
                 <div style="width: 24px;"></div> <!-- Spacer -->
             </div>
             
@@ -234,8 +247,8 @@ const app = {
 
             <aside class="sidebar glass" id="sidebar">
                 <div class="sidebar-logo">
-                    <img src="centauros_logo_1776617248021.png" alt="Logo">
-                    <p style="font-size: 0.7rem; color: var(--accent-color); margin-top:5px;">CMS CENTAUROS</p>
+                    <img src="logo_centauro.png" alt="Logo">
+                    <p style="font-size: 0.7rem; color: var(--accent-color); margin-top:5px;">CMS CENTAURO</p>
                 </div>
                 
                 <nav class="sidebar-menu">
@@ -360,7 +373,7 @@ const app = {
                         const basePhone = c.phone || '';
                         const phoneNumbers = basePhone.replace(/\D/g, '');
                         const firstName = c.name ? c.name.split(' ')[0] : 'Cliente';
-                        const link = `https://wa.me/55${phoneNumbers}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauros%20te%20deseja%20um%20feliz%20aniversário!%20%F0%9F%A5%B3`;
+                        const link = `https://wa.me/55${phoneNumbers}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20%F0%9F%A5%B3`;
                         return `
                             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px;">
                                 <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); flex: 1; min-width: 150px;">${firstName}</div>
