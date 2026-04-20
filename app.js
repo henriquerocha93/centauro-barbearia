@@ -1277,7 +1277,8 @@ const app = {
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
                     <h2 class="section-title">Base de Clientes</h2>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-primary" style="padding: 10px 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: none; background: #2E8B57;" onclick="app.openImportDatabase()">📂 Importar Base (.zip/.xlsx)</button>
+                        <button class="btn-primary" style="padding: 10px 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: none; background: #2E8B57;" onclick="app.loadConsolidatedBase()">🚀 Carregar Base Cliente 1</button>
+                        <button class="btn-secondary" style="padding: 10px 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: none;" onclick="app.openImportDatabase()">📂 Outra Base</button>
                         <div style="position: relative;">
                             <input type="text" id="admin-cust-search" class="glass" style="padding: 10px; color: var(--text-primary); width: 250px;" 
                                    placeholder="Pesquisar..." value="${query}" oninput="app.searchAdminCustomers(this.value)">
@@ -1321,19 +1322,71 @@ const app = {
         this.openModal('Importar Banco de Clientes', `
             <section class="fade-in">
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
-                    Faça o upload do seu bando de dados nos formatos <strong>.zip</strong>, <strong>.xlsx</strong> ou <strong>.csv</strong>. 
+                    Para manter seus dados privados, cole o conteúdo JSON que o assistente gerou para você abaixo:
                 </p>
                 
-                <div style="border: 2px dashed var(--glass-border); padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 20px; cursor: pointer; background: rgba(0,0,0,0.15);" onclick="document.getElementById('import-file-input').click()">
-                    <div style="font-size: 2.5rem; margin-bottom: 10px; color: var(--accent-color);">☁️</div>
-                    <div style="font-weight: 600; color: var(--text-primary);">Clique para Escolher o Arquivo</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Formatos aceitos: Excel / ZIP</div>
-                    <input type="file" id="import-file-input" style="display: none;" accept=".zip,.xlsx,.xls,.csv" onchange="alert('Arquivo \\'' + this.files[0].name + '\\' anexado com sucesso na base visual! Num ambiente real, a leitura em massa enviaria isso ao servidor SQL.')">
+                <textarea id="import-json-area" class="glass" style="width: 100%; height: 200px; padding: 15px; font-family: monospace; font-size: 0.75rem; color: var(--text-primary); margin-bottom: 20px;" placeholder='Ex: [ { "name": "Cliente X", ... }, ... ]'></textarea>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
+                    <button class="btn-primary" style="flex: 2; background: #2E8B57;" onclick="app.importJSONData()">🚀 Processar Importação</button>
                 </div>
                 
-                <button class="btn-secondary" style="width: 100%; border-radius: 8px;" onclick="app.closeModal()">Cancelar e Voltar</button>
+                <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 15px; text-align: center;">
+                    Nota: O formato de arquivo (.xlsx/.zip) é processado pelo assistente para sua segurança e convertido em JSON.
+                </p>
             </section>
         `);
+    },
+
+    async loadConsolidatedBase() {
+        if (!confirm("Isso irá SUBSTITUIR sua base de clientes atual pela base 'Cliente 1'. Deseja continuar?")) return;
+        
+        try {
+            const response = await fetch('customers_final.json');
+            if (!response.ok) throw new Error('Arquivo de base não encontrado. Certifique-se de que o arquivo customers_final.json existe na raiz.');
+            const data = await response.json();
+            
+            this.state.customers = data;
+            this.saveState();
+            alert(`Sucesso! ${data.length} clientes carregados.`);
+            this.render('admin-customers');
+        } catch (e) {
+            alert('Erro ao carregar base: ' + e.message);
+        }
+    },
+
+    importJSONData() {
+        const area = document.getElementById('import-json-area');
+        const dataStr = area.value.trim();
+        
+        if (!dataStr) {
+            alert('Por favor, cole o conteúdo JSON antes de continuar.');
+            return;
+        }
+
+        try {
+            const newCustomers = JSON.parse(dataStr);
+            if (!Array.isArray(newCustomers)) throw new Error('Dados inválidos. Esperava-se uma lista (Array).');
+
+            // Mesclar dados (evitar duplicatas por ID se houver)
+            const existingIds = new Set(this.state.customers.map(c => c.id));
+            let addedCount = 0;
+
+            newCustomers.forEach(cust => {
+                if (!existingIds.has(cust.id)) {
+                    this.state.customers.push(cust);
+                    addedCount++;
+                }
+            });
+
+            this.saveState();
+            alert(`Sucesso! ${addedCount} novos clientes foram importados para a sua base local.`);
+            this.closeModal();
+            this.render('admin-customers');
+        } catch (e) {
+            alert('Erro ao processar JSON: ' + e.message);
+        }
     },
 
     viewCustomerDetails(customerId) {
