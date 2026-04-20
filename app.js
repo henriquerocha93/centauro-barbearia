@@ -108,6 +108,19 @@ const app = {
         }
     },
 
+    exportDatabase() {
+        const estado = localStorage.getItem('centauro_state');
+        if (!estado) return alert('Nenhum dado salvo no sistema atual.');
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(estado);
+        const dl = document.createElement('a');
+        dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", "centauro_backup.json");
+        document.body.appendChild(dl);
+        dl.click();
+        dl.remove();
+        alert('Incrível! O arquivo centauro_backup.json foi baixado. Avise no chat que já foi baixado!');
+    },
+
     init() {
         this.loadState();
         console.log('Centauro App Initialized');
@@ -328,7 +341,7 @@ const app = {
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Crédito em dinheiro')"><i>💳</i> Crédito em dinheiro</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Descontos')"><i>📉</i> Descontos</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Estatísticas')"><i>📈</i> Estatísticas</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Exportações')"><i>📥</i> Exportações</a>
+                            <a class="menu-item submenu-item" onclick="app.exportDatabase()"><i>📥</i> Exportações</a>
                             <a class="menu-item submenu-item" onclick="app.navigateTo('admin-faturamento')"><i>💰</i> Faturamento</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Financeiro/Contábil')"><i>🏦</i> Financeiro / Contábil</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Ordens de serviço')"><i>📝</i> Ordens de serviço</a>
