@@ -499,21 +499,6 @@ const app = {
                 </div>
             </section>
 
-            <section id="top-services" class="fade-in" style="padding: 60px 20px; max-width: 800px; margin: 0 auto;">
-                <h2 class="section-title">Serviços Selecionados</h2>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    ${this.state.services.slice(0, 5).map(s => `
-                        <div class="service-card glass" style="padding: 25px; border-left: 4px solid var(--accent-color);">
-                            <div class="service-info">
-                                <h4 style="font-size: 1.2rem;">${s.name}</h4>
-                                <p style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">Duração aproximada: ${s.duration} min</p>
-                            </div>
-                            <div class="service-price" style="font-size: 1.4rem;">R$ ${s.price}</div>
-                        </div>
-                    `).join('')}
-                    <button class="btn-secondary" style="width: 100%; margin-top: 20px; color: var(--text-primary); border-color: var(--text-secondary);" onclick="app.navigateTo('booking')">Ver Todos os Serviços</button>
-                </div>
-            </section>
 
             <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
                 <h2 class="section-title">Onde Estamos</h2>
