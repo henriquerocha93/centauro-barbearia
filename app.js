@@ -1191,8 +1191,9 @@ const app = {
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Barbeiro</label>
                         <select id="barber-select" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
-                            <option value="Barbeiro Silva">Barbeiro Silva</option>
-                            <option value="Barbeiro Santos">Barbeiro Santos</option>
+                            ${this.state.staff.filter(s => s.role === 'barber' || s.id === 1).map(s => `
+                                <option value="${s.name}">${s.name}</option>
+                            `).join('')}
                         </select>
                     </div>
                     <div style="margin-bottom: 15px;">
