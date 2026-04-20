@@ -278,7 +278,7 @@ const app = {
             <aside class="sidebar glass" id="sidebar">
                 <div class="sidebar-logo">
                     <img src="logo_centauro.png" alt="Logo">
-                    <p style="font-size: 0.7rem; color: var(--accent-color); margin-top:5px;">CMS CENTAURO</p>
+                    <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
                 </div>
                 
                 <nav class="sidebar-menu">
