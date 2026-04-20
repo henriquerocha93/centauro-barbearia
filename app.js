@@ -105,6 +105,12 @@ const app = {
                 const data = JSON.parse(saved);
                 this.state.services = data.services || this.state.services;
                 this.state.staff = data.staff || this.state.staff;
+                
+                // Força a inserção do usuário Totem se a sessão do localStorage for antiga
+                if (!this.state.staff.find(s => s.role === 'totem')) {
+                    this.state.staff.push({ id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false });
+                }
+
                 this.state.customers = data.customers || this.state.customers;
                 this.state.settings = data.settings || this.state.settings;
                 this.state.vouchers = data.vouchers || this.state.vouchers;
@@ -135,6 +141,8 @@ const app = {
                 // Redireciona automaticamente para sua devida tela na inicialização
                 if(this.state.user.role === 'admin') {
                     this.render('admin-dash');
+                } else if(this.state.user.role === 'totem') {
+                    this.render('totem-dash');
                 } else {
                     this.render('barber-dash');
                 }
