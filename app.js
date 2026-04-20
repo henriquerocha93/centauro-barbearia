@@ -1609,7 +1609,7 @@ const app = {
                 </div>
 
                 <h4 style="font-size: 0.9rem; margin-bottom: 10px;">Histórico de Atendimentos</h4>
-                <div style="max-height: 250px; overflow-y: auto;">
+                <div style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;">
                     ${customer.history.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem histórico registrado.</p>' : ''}
                     ${customer.history.map(h => `
                         <div class="glass" style="padding: 10px; margin-bottom: 5px; font-size: 0.8rem;">
@@ -1621,8 +1621,23 @@ const app = {
                         </div>
                     `).reverse().join('')}
                 </div>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--glass-border); pt: 15px;">
+                    <button class="btn-secondary" style="border: 1px solid #ff4444; color: #ff4444;" onclick="app.deleteCustomer(${customer.id})">Deletar Cliente</button>
+                    <button class="btn-secondary" onclick="app.closeModal()">Fechar</button>
+                </div>
             </section>
         `);
+    },
+
+    deleteCustomer(customerId) {
+        if (confirm('Tem certeza que deseja excluir permanentemente este cliente e todo o seu histórico? Esta ação não pode ser desfeita.')) {
+            this.state.customers = this.state.customers.filter(c => c.id !== customerId);
+            this.saveState();
+            this.closeModal();
+            this.render('admin-customers');
+            alert('Cliente removido com sucesso.');
+        }
     },
 
     openStaffModal(staffId = null) {
