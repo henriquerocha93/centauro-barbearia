@@ -1018,9 +1018,7 @@ const app = {
                         ${apt.status !== 'finalizado' ? `
                             <button class="btn-primary" style="background: #48C17E; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openFinalizeOS(${apt.id})">FINALIZAR ATENDIMENTO</button>
                         ` : ''}
-                        ${this.state.user.role === 'admin' ? `
-                            <button class="btn-secondary" style="border: 1px solid #48C17E; color: #EF4444; width: 100%; border-radius: 8px;" onclick="app.cancelApt(${apt.id})">Remover / Cancelar</button>
-                        ` : ''}
+                        <button class="btn-secondary" style="border: 1px solid #ff4444; color: #ff4444; width: 100%; border-radius: 8px;" onclick="app.cancelApt(${apt.id})">Remover / Cancelar</button>
                     </div>
                 `}
                 <button class="btn-secondary" style="border: 1px solid #48C17E; color: #48C17E; width: 100%; border-radius: 8px; margin-top: 10px;" onclick="app.closeModal()">Fechar</button>
@@ -1099,7 +1097,9 @@ const app = {
 
     cancelApt(aptId) {
         if (confirm('Deseja realmente remover este agendamento?')) {
-            this.state.appointments = this.state.appointments.filter(a => a.id !== aptId);
+            // Garantir que a comparação seja feita como número
+            const idToCancel = Number(aptId);
+            this.state.appointments = this.state.appointments.filter(a => a.id !== idToCancel);
             this.saveState();
             this.closeModal();
             this.render(this.state.view);
