@@ -244,6 +244,200 @@ const app = {
         this.render(this.state.view);
     },
 
+    renderAdminSettings(container) {
+        const s = this.state.settings.agenda;
+        const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const dayShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+        const scheduleRows = days.map((d, i) => {
+            const sc = s.schedule[i];
+            return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                    <td style="padding: 14px 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap;">
+                        <span style="display: inline-block; min-width: 30px; text-align: center; font-size: 0.75rem; color: var(--text-secondary); background: var(--surface-dark); border-radius: 4px; padding: 2px 6px; margin-right: 8px;">${dayShort[i]}</span>
+                        ${d}
+                    </td>
+                    <td style="padding: 14px 12px; text-align: center;">
+                        <label style="display: flex; align-items: center; justify-content: center; cursor: pointer; gap: 8px;">
+                            <input type="checkbox" id="cfg-act-${i}" ${sc.active ? 'checked' : ''} 
+                                   style="width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer;"
+                                   onchange="document.getElementById('hours-row-${i}').style.opacity = this.checked ? '1' : '0.35'">
+                            <span style="font-size: 0.8rem; color: ${sc.active ? 'var(--accent-color)' : 'var(--text-secondary)'};">${sc.active ? 'Aberto' : 'Fechado'}</span>
+                        </label>
+                    </td>
+                    <td style="padding: 14px 12px;" id="hours-row-${i}" style="opacity: ${sc.active ? '1' : '0.35'};">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <input type="time" id="cfg-open-${i}" value="${sc.open}"
+                                   class="glass" style="padding: 8px 10px; color: var(--text-primary); font-size: 0.9rem; border-radius: 8px; min-width: 110px;">
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;">até</span>
+                            <input type="time" id="cfg-close-${i}" value="${sc.close}"
+                                   class="glass" style="padding: 8px 10px; color: var(--text-primary); font-size: 0.9rem; border-radius: 8px; min-width: 110px;">
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        const shopInfo = this.state.settings.shopInfo || {};
+
+        container.innerHTML = `
+            <section id="admin-settings" class="fade-in">
+                <h2 class="section-title" style="margin-bottom: 25px;">⚙️ Configurações do Sistema</h2>
+
+                <!-- BLOCO 1: Horários da Agenda -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 1.5rem;">🗓️</div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Horários de Funcionamento</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Define os dias e horários disponíveis na agenda de agendamentos.</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-dark); border-radius: 10px;">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">⏱ Intervalo padrão entre horários</label>
+                        <select id="set-inter" class="glass" style="width: 100%; max-width: 300px; padding: 10px; color: var(--text-primary); font-size: 0.9rem;">
+                            <option value="5"  ${s.intervalMin == 5  ? 'selected' : ''}>A cada 5 minutos</option>
+                            <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
+                            <option value="15" ${s.intervalMin == 15 ? 'selected' : ''}>A cada 15 minutos</option>
+                            <option value="20" ${s.intervalMin == 20 ? 'selected' : ''}>A cada 20 minutos</option>
+                            <option value="30" ${s.intervalMin == 30 ? 'selected' : ''}>A cada 30 minutos</option>
+                            <option value="60" ${s.intervalMin == 60 ? 'selected' : ''}>A cada 1 hora</option>
+                        </select>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Dia</th>
+                                    <th style="padding: 10px 12px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 120px;">Status</th>
+                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Horário (Abertura → Fechamento)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${scheduleRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BLOCO 2: Dados da Barbearia -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #a78bfa;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 1.5rem;">💈</div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Dados da Barbearia</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Informações exibidas no site e nos relatórios.</p>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Nome da Barbearia</label>
+                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || 'Centauro Barbearia'}" placeholder="Ex: Centauro Barbearia">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Telefone / WhatsApp</label>
+                            <input type="text" id="shop-phone" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.phone || ''}" placeholder="(51) 99999-9999">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Instagram</label>
+                            <input type="text" id="shop-instagram" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.instagram || ''}" placeholder="@centaurobarbearia">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endereço</label>
+                            <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Rua Tenente Alpoim, 516">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 3: Backup & Sistema -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #fbbf24;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 1.5rem;">🛡️</div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Backup & Dados</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Exporte ou restaure os dados do sistema.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                        <button class="btn-primary" style="background: #2E8B57; box-shadow: none; display: flex; align-items: center; gap: 8px;" onclick="app.exportDatabase()">
+                            📥 Exportar Backup JSON
+                        </button>
+                        <button class="btn-secondary" style="display: flex; align-items: center; gap: 8px; border-color: #ff4444; color: #ff4444;" onclick="app.confirmResetData()">
+                            ⚠️ Limpar Todos os Dados
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botão Salvar -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-bottom: 30px;">
+                    <button class="btn-secondary" onclick="app.navigateTo('admin-dash')">Cancelar</button>
+                    <button class="btn-primary" style="padding: 12px 40px; font-size: 1rem;" onclick="app.saveAdminSettings()">
+                        ✅ Salvar Configurações
+                    </button>
+                </div>
+            </section>
+        `;
+
+        // Corrigir opacidade inicial das linhas fechadas
+        days.forEach((_, i) => {
+            const sc = s.schedule[i];
+            const row = document.getElementById(`hours-row-${i}`);
+            if (row) row.style.opacity = sc.active ? '1' : '0.35';
+
+            const checkbox = document.getElementById(`cfg-act-${i}`);
+            if (checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const label = this.nextElementSibling;
+                    if (label) {
+                        label.textContent = this.checked ? 'Aberto' : 'Fechado';
+                        label.style.color = this.checked ? 'var(--accent-color)' : 'var(--text-secondary)';
+                    }
+                });
+            }
+        });
+    },
+
+    saveAdminSettings() {
+        // Salvar horários da agenda
+        this.state.settings.agenda.intervalMin = parseInt(document.getElementById('set-inter').value);
+        for (let i = 0; i < 7; i++) {
+            this.state.settings.agenda.schedule[i].active = document.getElementById(`cfg-act-${i}`).checked;
+            this.state.settings.agenda.schedule[i].open   = document.getElementById(`cfg-open-${i}`).value;
+            this.state.settings.agenda.schedule[i].close  = document.getElementById(`cfg-close-${i}`).value;
+        }
+
+        // Salvar dados da barbearia
+        if (!this.state.settings.shopInfo) this.state.settings.shopInfo = {};
+        this.state.settings.shopInfo.name      = document.getElementById('shop-name').value.trim();
+        this.state.settings.shopInfo.phone     = document.getElementById('shop-phone').value.trim();
+        this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
+        this.state.settings.shopInfo.address   = document.getElementById('shop-address').value.trim();
+
+        this.saveState();
+
+        // Feedback visual no botão
+        const btn = document.querySelector('[onclick="app.saveAdminSettings()"]');
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '✔ Salvo com sucesso!';
+            btn.style.background = '#2E8B57';
+            setTimeout(() => { btn.innerHTML = original; btn.style.background = ''; }, 2500);
+        }
+    },
+
+    confirmResetData() {
+        if (confirm('⚠️ ATENÇÃO: Isso irá apagar TODOS os dados (clientes, agendamentos, transações, vales). Esta ação é irreversível.\n\nDeseja continuar?')) {
+            if (confirm('Tem ABSOLUTA certeza? Todos os dados serão perdidos permanentemente.')) {
+                localStorage.removeItem('centauro_state');
+                localStorage.removeItem('centauros_user');
+                alert('Dados limpos. O sistema será reiniciado.');
+                location.reload();
+            }
+        }
+    },
+
     navigateTo(view) {
         // Fechar sidebar se estiver aberta (mobile)
         const sidebar = document.getElementById('sidebar');
@@ -363,6 +557,11 @@ const app = {
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales Base</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos Básicos</a>
                     `}
+
+                    ${this.state.user.role === 'admin' ? `
+                        <div class="menu-category">Sistema</div>
+                        <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="app.navigateTo('admin-settings')"><i>⚙️</i> Configurações</a>
+                    ` : ''}
                     
                     <div style="margin-top: auto; padding: 20px;">
                         <button class="btn-secondary" style="width: 100%; font-size: 0.8rem;" onclick="app.logout()">Sair</button>
@@ -392,6 +591,7 @@ const app = {
             case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
+            case 'admin-settings': this.renderAdminSettings(main); break;
             default: 
                 console.warn('View não reconhecida no layout:', view);
                 this.renderAdminDash(main);
