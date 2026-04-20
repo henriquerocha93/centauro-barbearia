@@ -504,7 +504,7 @@ const app = {
                 <h2 class="section-title">Onde Estamos</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
                     <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
-                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=Rua+Tenente+Alpoim,516,Porto+Alegre&zoom=15&size=600x400&markers=color:red%7CRua+Tenente+Alpoim,516,Porto+Alegre&key=YOUR_API_KEY_HERE" style="width: 100%; height: 250px; object-fit: cover;">
+                        <img src="map_vintage.png" style="width: 100%; height: 250px; object-fit: cover;">
                         <div style="padding: 20px; color: white;">
                              <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">Rua Tenente Alpoim, 516</p>
                              <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">Vila João Pessoa, Porto Alegre, RS</p>
