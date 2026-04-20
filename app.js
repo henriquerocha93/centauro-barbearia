@@ -253,14 +253,14 @@ const app = {
         }
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
-            <header class="fade-in">
-                <div class="logo-container">
-                    <img src="logo_centauro.png" alt="Centauro Barbearia Logo" id="main-logo">
+            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 10; display: flex; justify-content: center;">
+                <div class="logo-container" style="display: flex; align-items: center; gap: 15px;">
+                    <img src="logo_centauro.png" alt="Logo" style="width: 50px;">
+                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
                 </div>
-                <h1>Centauro</h1>
-                <p style="color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Barbearia de Elite</p>
             </header>
             <main id="main-content"></main>
+            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
         `;
         const newMain = document.getElementById('main-content');
 
@@ -464,60 +464,86 @@ const app = {
 
     renderHome(container) {
         container.innerHTML = `
-            <section id="home-view" class="fade-in">
-                <div style="text-align: center; margin-bottom: 40px;">
-                    <h2 style="margin-bottom: 10px;">Excelência em cada corte.</h2>
-                    <p style="color: var(--text-secondary);">Agende seu horário com os melhores profissionais da região.</p>
+            <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
+                <div class="hero-content fade-in">
+                    <p>Excelência & Tradição</p>
+                    <h1>Centauro Barbearia</h1>
+                    <div style="width: 100px; height: 3px; background: var(--accent-color); margin: 20px auto;"></div>
+                    <button class="btn-primary" style="margin-top: 20px; padding: 15px 40px; font-size: 1rem;" onclick="app.navigateTo('booking')">Agendar Horário</button>
+                    <button class="btn-secondary" style="margin-left: 10px; padding: 15px 30px; font-size: 0.9rem; color: white; border-color: white;" onclick="app.navigateTo('login')">Acesso Staff</button>
                 </div>
+            </section>
 
-                <div class="actions" style="display: flex; flex-direction: column; gap: 15px;">
-                    <button class="btn-primary" onclick="app.navigateTo('booking')">Agendar Agora</button>
-                    <button class="btn-secondary" onclick="app.navigateTo('login')">Área do Profissional</button>
+            <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💈</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Profissionais de Elite</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Nossa equipe é composta por especialistas em cortes clássicos e modernos, garantindo perfeição em cada detalhe.</p>
+                    </div>
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🥃</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Ambiente Premium</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Desfrute de uma experiência única em um ambiente clássico e climatizado, pensado para o seu total conforto.</p>
+                    </div>
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📅</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Agendamento Prático</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Reserve seu horário em segundos através do nosso sistema online, sem esperas e sem complicações.</p>
+                    </div>
                 </div>
+            </section>
 
-                <div style="margin-top: 50px;">
-                    <h3 class="section-title">Nossos Serviços</h3>
-                    ${this.state.services.slice(0, 3).map(s => `
-                        <div class="service-card glass">
+            <section id="top-services" class="fade-in" style="padding: 60px 20px; max-width: 800px; margin: 0 auto;">
+                <h2 class="section-title">Serviços Selecionados</h2>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    ${this.state.services.slice(0, 5).map(s => `
+                        <div class="service-card glass" style="padding: 25px; border-left: 4px solid var(--accent-color);">
                             <div class="service-info">
-                                <h4>${s.name}</h4>
-                                <p>${s.duration} min</p>
+                                <h4 style="font-size: 1.2rem;">${s.name}</h4>
+                                <p style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">Duração aproximada: ${s.duration} min</p>
                             </div>
-                            <div class="service-price">R$ ${s.price}</div>
+                            <div class="service-price" style="font-size: 1.4rem;">R$ ${s.price}</div>
                         </div>
                     `).join('')}
+                    <button class="btn-secondary" style="width: 100%; margin-top: 20px; color: var(--text-primary); border-color: var(--text-secondary);" onclick="app.navigateTo('booking')">Ver Todos os Serviços</button>
                 </div>
+            </section>
 
-                <div class="info-section">
-                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass map-card">
-                        <div style="background: url('https://maps.googleapis.com/maps/api/staticmap?center=Rua+Tenente+Alpoim,516,Porto+Alegre&zoom=15&size=600x300&markers=color:red%7CRua+Tenente+Alpoim,516,Porto+Alegre&key=YOUR_API_KEY_HERE') center/cover; height: 180px; width: 100%; position: relative;">
-                            <div style="position: absolute; top: 10px; left: 10px; background: white; color: #1a73e8; padding: 5px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 5px;">
-                                📍 Abrir no Maps
-                            </div>
-                        </div>
-                        <div class="address-info">
-                            <span>📍</span>
-                            <div>
-                                <p style="font-weight: 600;">Rua Tenente Alpoim, 516</p>
-                                <p style="color: var(--text-secondary); font-size: 0.8rem;">Vila João Pessoa, Porto Alegre, RS</p>
-                            </div>
+            <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
+                <h2 class="section-title">Onde Estamos</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
+                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=Rua+Tenente+Alpoim,516,Porto+Alegre&zoom=15&size=600x400&markers=color:red%7CRua+Tenente+Alpoim,516,Porto+Alegre&key=YOUR_API_KEY_HERE" style="width: 100%; height: 250px; object-fit: cover;">
+                        <div style="padding: 20px; color: white;">
+                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">Rua Tenente Alpoim, 516</p>
+                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">Vila João Pessoa, Porto Alegre, RS</p>
+                             <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color);">📍 Clique para abrir no Google Maps</p>
                         </div>
                     </a>
-
-                    <div class="glass hours-container">
-                        <div class="hour-row"><span>Segunda</span><span>09:00 - 20:00</span></div>
-                        <div class="hour-row"><span>Terça</span><span>09:00 - 20:00</span></div>
-                        <div class="hour-row"><span>Quarta</span><span>09:00 - 20:00</span></div>
-                        <div class="hour-row"><span>Quinta</span><span>09:00 - 21:00</span></div>
-                        <div class="hour-row"><span>Sexta</span><span>09:00 - 21:00</span></div>
-                        <div class="hour-row"><span>Sábado</span><span>09:00 - 21:00</span></div>
-                        <div class="hour-row closed"><span>🔴 Domingo</span><span>09:00 - 09:01</span></div>
+                    <div class="glass" style="padding:30px;">
+                        <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--accent-color); text-align: center;">Horários de Atendimento</h3>
+                        <div class="hours-container" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>09:00 - 20:00</span></div>
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>09:00 - 21:00</span></div>
+                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>Fechado</span></div>
+                        </div>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--glass-border); text-align: center;">
+                            <p style="font-size: 0.85rem; margin-bottom: 15px;">Precisa de ajuda ou agendamento especial?</p>
+                            <a href="https://wa.me/5551999999999" target="_blank" class="btn-primary" style="background: #25D366; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: none;">
+                                💬 Falar no WhatsApp
+                            </a>
+                        </div>
                     </div>
+                </div>
+            </section>
 
-                    <div class="glass amenities-grid">
-                        <div class="amenity-item"><span>♿</span> Acessibilidade</div>
-                        <div class="amenity-item"><span>🚽</span> Estacionamento</div>
-                        <div class="amenity-item"><span>❄️</span> Amb. Climatizado</div>
+            <footer style="padding: 60px 20px; text-align: center; border-top: 1px solid var(--glass-border); margin-top: 60px;">
+                <div style="opacity: 0.6; font-size: 0.8rem;">
+                    <p>© 2026 Centauro Barbearia. Todos os direitos reservados.</p>
+                    <p style="margin-top: 10px;">Excelência em Barbearia Clássica.</p>
+                </div>
+            </footer>
                         <div class="amenity-item"><span>🎵</span> Música Ambiente</div>
                         <div class="amenity-item"><span>👶</span> Atende Crianças</div>
                         <div class="amenity-item"><span>🐶</span> Pet Friendly</div>
