@@ -89,10 +89,18 @@ const app = {
     },
 
     loadState() {
+        const APP_VERSION = "1.0.1";
+        if (localStorage.getItem('centauro_version') !== APP_VERSION) {
+            localStorage.removeItem('centauro_state');
+            localStorage.setItem('centauro_version', APP_VERSION);
+            console.log("Limpeza de cache forçada para atualização de serviços e correção de erros.");
+        }
+
         const saved = localStorage.getItem('centauro_state');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
+
                 this.state.services = data.services || this.state.services;
                 this.state.staff = data.staff || this.state.staff;
                 
