@@ -76,7 +76,36 @@ const app = {
         document.getElementById('app-modal').close();
     },
 
+    saveState() {
+        localStorage.setItem('centauro_state', JSON.stringify({
+            services: this.state.services,
+            staff: this.state.staff,
+            customers: this.state.customers,
+            settings: this.state.settings,
+            vouchers: this.state.vouchers,
+            transactions: this.state.transactions
+        }));
+    },
+
+    loadState() {
+        const saved = localStorage.getItem('centauro_state');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                this.state.services = data.services || this.state.services;
+                this.state.staff = data.staff || this.state.staff;
+                this.state.customers = data.customers || this.state.customers;
+                this.state.settings = data.settings || this.state.settings;
+                this.state.vouchers = data.vouchers || this.state.vouchers;
+                this.state.transactions = data.transactions || this.state.transactions;
+            } catch (e) {
+                console.error("Erro ao carregar estado:", e);
+            }
+        }
+    },
+
     init() {
+        this.loadState();
         console.log('Centauro App Initialized');
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
@@ -180,6 +209,7 @@ const app = {
             this.state.settings.agenda.schedule[i].open = document.getElementById(`cfg-open-${i}`).value;
             this.state.settings.agenda.schedule[i].close = document.getElementById(`cfg-close-${i}`).value;
         }
+        this.saveState();
         this.closeModal();
         this.render(this.state.view);
     },
@@ -259,6 +289,7 @@ const app = {
                     
                     <div class="menu-category">Cadastros</div>
                     <a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>
+                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')"><i>💈</i> Serviços</a>` : ''}
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')"><i>✂️</i> Colaboradores</a>` : ''}
                     <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')"><i>📦</i> Produtos</a>
                     
@@ -316,6 +347,7 @@ const app = {
             case 'admin-cashflow': this.renderAdminCashFlow(main); break;
             case 'admin-vouchers': this.renderAdminVouchers(main); break;
             case 'admin-staff': this.renderAdminStaff(main); break;
+            case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
             default: 
                 console.warn('View não reconhecida no layout:', view);
@@ -393,6 +425,7 @@ const app = {
         if (c) {
             c.lastCongratsDate = new Date().toISOString().split('T')[0];
         }
+        this.saveState();
         window.open(link, '_blank');
         this.render(this.state.view); // Recarrega a tela comemorativa
     },
@@ -408,6 +441,7 @@ const app = {
             category // 'servico', 'produto', 'despesa', 'vale'
         };
         this.state.transactions.push(transaction);
+        this.saveState();
         return transaction;
     },
 
@@ -433,7 +467,7 @@ const app = {
 
                 <div style="margin-top: 50px;">
                     <h3 class="section-title">Nossos Serviços</h3>
-                    ${this.state.services.map(s => `
+                    ${this.state.services.slice(0, 3).map(s => `
                         <div class="service-card glass">
                             <div class="service-info">
                                 <h4>${s.name}</h4>
@@ -442,6 +476,63 @@ const app = {
                             <div class="service-price">R$ ${s.price}</div>
                         </div>
                     `).join('')}
+                </div>
+
+                <div class="info-section">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass map-card">
+                        <div style="background: url('https://maps.googleapis.com/maps/api/staticmap?center=Rua+Tenente+Alpoim,516,Porto+Alegre&zoom=15&size=600x300&markers=color:red%7CRua+Tenente+Alpoim,516,Porto+Alegre&key=YOUR_API_KEY_HERE') center/cover; height: 180px; width: 100%; position: relative;">
+                            <div style="position: absolute; top: 10px; left: 10px; background: white; color: #1a73e8; padding: 5px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 5px;">
+                                📍 Abrir no Maps
+                            </div>
+                        </div>
+                        <div class="address-info">
+                            <span>📍</span>
+                            <div>
+                                <p style="font-weight: 600;">Rua Tenente Alpoim, 516</p>
+                                <p style="color: var(--text-secondary); font-size: 0.8rem;">Vila João Pessoa, Porto Alegre, RS</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="glass hours-container">
+                        <div class="hour-row"><span>Segunda</span><span>09:00 - 20:00</span></div>
+                        <div class="hour-row"><span>Terça</span><span>09:00 - 20:00</span></div>
+                        <div class="hour-row"><span>Quarta</span><span>09:00 - 20:00</span></div>
+                        <div class="hour-row"><span>Quinta</span><span>09:00 - 21:00</span></div>
+                        <div class="hour-row"><span>Sexta</span><span>09:00 - 21:00</span></div>
+                        <div class="hour-row"><span>Sábado</span><span>09:00 - 21:00</span></div>
+                        <div class="hour-row closed"><span>🔴 Domingo</span><span>09:00 - 09:01</span></div>
+                    </div>
+
+                    <div class="glass amenities-grid">
+                        <div class="amenity-item"><span>♿</span> Acessibilidade</div>
+                        <div class="amenity-item"><span>🚽</span> Estacionamento</div>
+                        <div class="amenity-item"><span>❄️</span> Amb. Climatizado</div>
+                        <div class="amenity-item"><span>🎵</span> Música Ambiente</div>
+                        <div class="amenity-item"><span>👶</span> Atende Crianças</div>
+                        <div class="amenity-item"><span>🐶</span> Pet Friendly</div>
+                        <div class="amenity-item"><span>🤝</span> Atend. Inclusivo</div>
+                        <div class="amenity-item"><span>📺</span> TV</div>
+                        <div class="amenity-item"><span>🧸</span> Espaço Kids</div>
+                        <div class="amenity-item"><span>📶</span> Wi-Fi</div>
+                        <div class="amenity-item"><span>⚽</span> Esportes ao Vivo</div>
+                    </div>
+
+                    <div class="payment-section">
+                        <div class="payment-badges">
+                            <span class="p-badge">Crédito</span>
+                            <span class="p-badge">Dinheiro</span>
+                            <span class="p-badge">Débito</span>
+                            <span class="p-badge">PIX</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-footer">
+                        <p>Fale conosco:</p>
+                        <a href="tel:+5551986551068" class="contact-phone">
+                            <span>📞</span> +55 (51) 98655-1068
+                        </a>
+                    </div>
                 </div>
             </section>
         `;
@@ -1364,6 +1455,7 @@ const app = {
             this.state.staff.push({ id: newId, name, photo, login, password, role, commission, showInAgenda });
         }
         
+        this.saveState();
         this.closeModal();
         this.render('admin-staff');
     },
@@ -1371,6 +1463,7 @@ const app = {
     deleteStaff(staffId) {
         if(confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
             this.state.staff = this.state.staff.filter(s => s.id !== staffId);
+            this.saveState();
             this.closeModal();
             this.render('admin-staff');
         }
@@ -1400,6 +1493,115 @@ const app = {
                 </div>
             </section>
         `;
+    },
+
+    renderAdminServices(container) {
+        container.innerHTML = `
+            <section id="admin-services" class="fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title">Serviços Oferecidos</h2>
+                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; box-shadow: none;" onclick="app.openServiceModal()">+ Novo Serviço</button>
+                </div>
+                
+                <div class="glass" style="padding: 10px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; min-width: 500px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">
+                                <th style="padding: 15px;">Nome do Serviço</th>
+                                <th style="padding: 15px;">Preço</th>
+                                <th style="padding: 15px;">Duração</th>
+                                <th style="padding: 15px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.state.services.map(s => `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 15px; font-weight: 600; color: var(--text-primary); transition: color 0.3s;">${s.name}</td>
+                                    <td style="padding: 15px; color: var(--accent-color); font-weight: 700;">R$ ${s.price}</td>
+                                    <td style="padding: 15px; opacity: 0.8;">${s.duration} min</td>
+                                    <td style="padding: 15px; text-align: center; display: flex; gap: 8px; justify-content: center;">
+                                        <button class="glass" style="padding: 5px 12px; font-size: 0.7rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" 
+                                                onclick="app.openServiceModal(${s.id})">Editar</button>
+                                        <button class="glass" style="padding: 5px 12px; font-size: 0.7rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer;" 
+                                                onclick="app.deleteService(${s.id})">Remover</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        `;
+    },
+
+    openServiceModal(serviceId = null) {
+        let title = 'Novo Serviço';
+        let service = { name: '', price: 0, duration: 30 };
+        
+        if (serviceId) {
+            service = this.state.services.find(s => s.id === serviceId);
+            title = 'Editar Serviço';
+        }
+
+        const html = `
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Nome do Serviço</label>
+                    <input type="text" id="svc-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.name}" placeholder="Ex: Corte Degradê">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Preço (R$)</label>
+                        <input type="number" id="svc-price" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.price}">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Duração (minutos)</label>
+                        <input type="number" id="svc-duration" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.duration}">
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button class="btn-secondary" style="padding: 10px 20px;" onclick="app.closeModal()">Cancelar</button>
+                    <button class="btn-primary" style="padding: 10px 30px; cursor: pointer;" onclick="app.saveService(${serviceId || 'null'})">Salvar Serviço</button>
+                </div>
+            </div>
+        `;
+        this.openModal(title, html);
+    },
+
+    saveService(serviceId) {
+        const name = document.getElementById('svc-name').value;
+        const price = parseFloat(document.getElementById('svc-price').value) || 0;
+        const duration = parseInt(document.getElementById('svc-duration').value) || 0;
+
+        if (!name) {
+            alert('O nome do serviço é obrigatório!');
+            return;
+        }
+
+        if (serviceId) {
+            const service = this.state.services.find(s => s.id === serviceId);
+            if (service) {
+                service.name = name;
+                service.price = price;
+                service.duration = duration;
+            }
+        } else {
+            const newId = this.state.services.length ? Math.max(...this.state.services.map(s => s.id)) + 1 : 1;
+            this.state.services.push({ id: newId, name, price, duration });
+        }
+        
+        this.saveState();
+        this.closeModal();
+        this.render('admin-services');
+    },
+
+    deleteService(serviceId) {
+        if(confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
+            this.state.services = this.state.services.filter(s => s.id !== serviceId);
+            this.saveState();
+            this.render('admin-services');
+        }
     },
 
     renderAdminPayments(container) {

@@ -400,5 +400,116 @@ section {
 }
 
 .modal-close:hover {
+    color: var(--text-primary);
+}
+
+/* Info Section Styles */
+.info-section {
+    margin-top: 60px;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.map-card {
+    display: block;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.map-card:hover {
+    transform: scale(1.02);
+}
+
+.map-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background: #e5e7eb;
+}
+
+.address-info {
+    padding: 15px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--text-primary);
+}
+
+.hours-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hour-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.hour-row.closed {
+    color: #ff4444;
+}
+
+.amenities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 20px;
+}
+
+.amenity-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.payment-section {
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid var(--glass-border);
+}
+
+.payment-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.p-badge {
+    background: #4B5563;
     color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.contact-footer {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.contact-phone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 10px;
 }
