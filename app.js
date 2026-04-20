@@ -84,7 +84,9 @@ const app = {
             customers: this.state.customers,
             settings: this.state.settings,
             vouchers: this.state.vouchers,
-            transactions: this.state.transactions
+            transactions: this.state.transactions,
+            products: this.state.products,
+            productSales: this.state.productSales || []
         }));
     },
 
@@ -113,6 +115,8 @@ const app = {
                 this.state.settings = data.settings || this.state.settings;
                 this.state.vouchers = data.vouchers || this.state.vouchers;
                 this.state.transactions = data.transactions || this.state.transactions;
+                this.state.products = data.products || this.state.products;
+                this.state.productSales = data.productSales || [];
             } catch (e) {
                 console.error("Erro ao carregar estado:", e);
             }
@@ -1426,62 +1430,345 @@ const app = {
     },
 
     renderAdminStock(container) {
+        const salesHistory = this.state.productSales || [];
+        const todaySales = salesHistory.filter(s => s.date === new Date().toISOString().split('T')[0]);
+        const todayRevenue = todaySales.reduce((sum, s) => sum + (s.total || 0), 0);
+
         container.innerHTML = `
             <section id="stock-view" class="fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
                     <h2 class="section-title">Estoque de Produtos</h2>
-                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem;" id="btn-add-stock">+ Produto</button>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; background: #7c3aed; display: flex; align-items: center; gap: 6px;" id="btn-scan-barcode">
+                            📷 Escanear Código
+                        </button>
+                        <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="btn-add-stock">
+                            + Novo Produto
+                        </button>
+                    </div>
                 </div>
-                <div class="stock-list">
-                    ${this.state.products.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhum produto cadastrado. Clique em "+ Produto" para adicionar.</p>' : ''}
-                    ${this.state.products.map(p => {
-                        const stockColor = p.stock <= 0 ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
-                        return `
-                        <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                            <div style="flex: 1; min-width: 0;">
-                                <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${p.name}</p>
-                                <p style="font-size: 0.8rem; color: var(--text-secondary);">Preço: <strong style="color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
-                                <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
-                            </div>
-                            <div style="display: flex; gap: 5px; align-items: center; flex-shrink: 0;">
-                                <button class="glass" style="padding: 6px 12px; font-size: 1rem; font-weight: 700;" title="Remover 1 unidade" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
-                                <span style="min-width: 28px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
-                                <button class="glass" style="padding: 6px 12px; font-size: 1rem; font-weight: 700;" title="Adicionar 1 unidade" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
-                                <button class="glass" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-color); border: 1px solid var(--glass-border);" title="Editar produto" onclick="app.openProductModal(${p.id})">✏️ Editar</button>
-                                <button class="glass" style="padding: 6px 12px; font-size: 0.8rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" title="Excluir produto" onclick="app.deleteProduct(${p.id})">🗑️</button>
-                            </div>
-                        </div>`;
-                    }).join('')}
+
+                <!-- Mini painel de vendas do dia -->
+                ${todaySales.length > 0 ? `
+                <div class="glass" style="padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent-color);">
+                    <div>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Vendas Hoje</p>
+                        <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">R$ ${todayRevenue.toFixed(2)}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Transações</p>
+                        <p style="font-size: 1.1rem; font-weight: 700;">${todaySales.length} venda${todaySales.length > 1 ? 's' : ''}</p>
+                    </div>
+                </div>` : ''}
+
+                <!-- Barra de busca -->
+                <div style="margin-bottom: 15px; position: relative;">
+                    <input type="text" id="stock-search" class="glass" style="width: 100%; padding: 10px 40px 10px 12px; color: var(--text-primary);" 
+                           placeholder="🔍  Buscar produto por nome ou código..." oninput="app.filterStockList(this.value)">
+                </div>
+
+                <div class="stock-list" id="stock-list-container">
+                    ${this.renderStockItems(this.state.products)}
                 </div>
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">Voltar</button>
             </section>
         `;
         document.getElementById('btn-add-stock').onclick = () => this.openProductModal(null);
+        document.getElementById('btn-scan-barcode').onclick = () => this.openBarcodeScanner();
     },
 
-    openProductModal(productId) {
+    renderStockItems(products) {
+        if (products.length === 0) {
+            return '<p style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhum produto encontrado.</p>';
+        }
+        return products.map(p => {
+            const stockColor = p.stock <= 0 ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
+            return `
+            <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div style="flex: 1; min-width: 0;">
+                    <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${p.name}</p>
+                    ${p.barcode ? `<p style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px;">🔖 ${p.barcode}</p>` : ''}
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Venda: <strong style="color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
+                    <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; flex-shrink: 0;">
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="−1" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
+                        <span style="min-width: 26px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="+1" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #4ade80; border: 1px solid rgba(74,222,128,0.3);" onclick="app.openProductFoundModal(app.state.products.find(x=>x.id===${p.id}))">💰 Vender</button>
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">🗑️</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    filterStockList(query) {
+        const q = query.toLowerCase();
+        const filtered = q
+            ? this.state.products.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                (p.barcode && p.barcode.toLowerCase().includes(q))
+              )
+            : this.state.products;
+        const container = document.getElementById('stock-list-container');
+        if (container) container.innerHTML = this.renderStockItems(filtered);
+    },
+
+    // ─── Leitor de Código de Barras ───────────────────────────────────────────
+
+    openBarcodeScanner() {
+        this.openModal('📷 Escanear Código de Barras', `
+            <section class="fade-in" style="padding-top: 5px;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; text-align: center;">
+                    Aponte a câmera para o código de barras ou QR Code do produto.
+                </p>
+
+                <!-- Visor da câmera -->
+                <div style="position: relative; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 12px; aspect-ratio: 4/3; max-height: 300px;">
+                    <video id="scanner-video" style="width: 100%; height: 100%; object-fit: cover; display: block;" autoplay playsinline muted></video>
+                    <!-- Mira de leitura -->
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                        <div style="width: 70%; height: 2px; background: rgba(255,60,60,0.85); box-shadow: 0 0 8px rgba(255,60,60,0.6); border-radius: 2px;"></div>
+                    </div>
+                    <div style="position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;"></div>
+                </div>
+
+                <div id="scan-status" style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); padding: 8px; margin-bottom: 10px;">
+                    🔍 Aguardando leitura do código...
+                </div>
+
+                <!-- Entrada manual como alternativa -->
+                <div style="display: flex; gap: 8px; margin-bottom: 5px;">
+                    <input type="text" id="manual-barcode" class="glass" style="flex: 1; padding: 9px; color: var(--text-primary); font-size: 0.9rem;" 
+                           placeholder="Ou digite o código manualmente" 
+                           onkeydown="if(event.key==='Enter') app.handleBarcodeResult(this.value.trim())">
+                    <button class="btn-primary" style="padding: 9px 14px; font-size: 0.85rem;" onclick="app.handleBarcodeResult(document.getElementById('manual-barcode').value.trim())">
+                        Buscar
+                    </button>
+                </div>
+
+                <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="app.stopBarcodeScanner(); app.closeModal();">
+                    Cancelar
+                </button>
+            </section>
+        `);
+
+        // Inicia o scanner após o modal estar no DOM
+        setTimeout(() => this.startBarcodeScanner(), 300);
+    },
+
+    startBarcodeScanner() {
+        const statusEl = document.getElementById('scan-status');
+        const videoEl  = document.getElementById('scanner-video');
+        if (!videoEl) return;
+
+        // Tenta usar ZXing (biblioteca carregada via CDN)
+        if (typeof ZXingBrowser !== 'undefined' || (typeof window.ZXing !== 'undefined')) {
+            const ZXingLib = window.ZXingBrowser || window.ZXing;
+            try {
+                const codeReader = new ZXingLib.BrowserMultiFormatReader();
+                this._codeReader = codeReader;
+                codeReader.decodeFromVideoDevice(null, 'scanner-video', (result, err) => {
+                    if (result) {
+                        const code = result.getText();
+                        if (statusEl) statusEl.innerHTML = `✅ Código lido: <strong>${code}</strong>`;
+                        this.stopBarcodeScanner();
+                        setTimeout(() => this.handleBarcodeResult(code), 400);
+                    }
+                    // err é normal (frame sem código), ignora
+                });
+                if (statusEl) statusEl.textContent = '🔍 Câmera ativa — aponte para o código...';
+                return;
+            } catch (e) {
+                console.warn('ZXing falhou, usando API nativa:', e);
+            }
+        }
+
+        // Fallback: API nativa BarcodeDetector (Chrome/Android)
+        if ('BarcodeDetector' in window) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    this._cameraStream = stream;
+                    videoEl.srcObject = stream;
+                    const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code', 'code_39', 'upc_a'] });
+                    const scan = async () => {
+                        if (!this._scanning) return;
+                        try {
+                            const barcodes = await detector.detect(videoEl);
+                            if (barcodes.length > 0) {
+                                const code = barcodes[0].rawValue;
+                                if (statusEl) statusEl.innerHTML = `✅ Código lido: <strong>${code}</strong>`;
+                                this.stopBarcodeScanner();
+                                setTimeout(() => this.handleBarcodeResult(code), 400);
+                                return;
+                            }
+                        } catch(_) {}
+                        requestAnimationFrame(scan);
+                    };
+                    this._scanning = true;
+                    scan();
+                    if (statusEl) statusEl.textContent = '🔍 Câmera ativa — aponte para o código...';
+                })
+                .catch(() => {
+                    if (statusEl) statusEl.innerHTML = '⚠️ Permissão de câmera negada. Use a entrada manual.';
+                });
+        } else {
+            if (statusEl) statusEl.innerHTML = '⚠️ Câmera não suportada neste dispositivo. Use a entrada manual abaixo.';
+        }
+    },
+
+    stopBarcodeScanner() {
+        this._scanning = false;
+        if (this._codeReader) {
+            try { this._codeReader.reset(); } catch(_) {}
+            this._codeReader = null;
+        }
+        if (this._cameraStream) {
+            this._cameraStream.getTracks().forEach(t => t.stop());
+            this._cameraStream = null;
+        }
+    },
+
+    handleBarcodeResult(code) {
+        if (!code) { alert('Código não detectado. Tente novamente.'); return; }
+        this.stopBarcodeScanner();
+        this.closeModal();
+
+        const product = this.state.products.find(p => p.barcode === code);
+        if (product) {
+            this.openProductFoundModal(product, code);
+        } else {
+            // Produto não cadastrado → oferecer cadastro
+            const cadastrar = confirm(`Código "${code}" não encontrado.\n\nDeseja cadastrar um novo produto com este código?`);
+            if (cadastrar) this.openProductModal(null, code);
+        }
+    },
+
+    openProductFoundModal(product, scannedCode) {
+        if (!product) return;
+        const stockColor = product.stock <= 0 ? '#ff4444' : product.stock <= 3 ? '#fbbf24' : '#4ade80';
+        this.openModal('Produto Encontrado ✅', `
+            <section class="fade-in">
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
+                    <p style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">${product.name}</p>
+                    ${product.barcode ? `<p style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">🔖 ${product.barcode}</p>` : ''}
+                    <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-color); margin: 10px 0;">R$ ${parseFloat(product.price).toFixed(2)}</p>
+                    <p style="font-size: 0.85rem;">Estoque: <strong style="color: ${stockColor};">${product.stock} un.</strong></p>
+                </div>
+
+                <!-- Venda rápida -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quantidade a Vender</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); if(i.value>1)i.value=parseInt(i.value)-1;">−</button>
+                        <input type="number" id="sale-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" value="1" min="1" max="${product.stock}">
+                        <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); i.value=parseInt(i.value)+1;">+</button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Forma de Pagamento</label>
+                    <select id="sale-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="btn-primary" style="background: #2E8B57; width: 100%; font-size: 1rem;" onclick="app.doQuickSale(${product.id})">
+                        💰 Confirmar Venda
+                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal(); app.openProductModal(${product.id})">✏️ Editar</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Fechar</button>
+                    </div>
+                </div>
+            </section>
+        `);
+    },
+
+    doQuickSale(productId) {
+        const product = this.state.products.find(p => p.id === productId);
+        const qty     = parseInt(document.getElementById('sale-qty').value) || 1;
+        const payment = document.getElementById('sale-payment').value;
+
+        if (!product) return;
+        if (product.stock < qty) {
+            alert(`Estoque insuficiente! Disponível: ${product.stock} un.`);
+            return;
+        }
+
+        product.stock -= qty;
+        const total = product.price * qty;
+
+        // Registrar no histórico de vendas de produtos
+        if (!this.state.productSales) this.state.productSales = [];
+        this.state.productSales.push({
+            id: Date.now(),
+            productId,
+            productName: product.name,
+            qty,
+            unitPrice: product.price,
+            total,
+            payment,
+            date: new Date().toISOString().split('T')[0],
+            timestamp: new Date().toISOString()
+        });
+
+        // Integrar com fluxo de caixa
+        let method = 'dinheiro';
+        if (payment === 'PIX') method = 'pix';
+        if (payment === 'Cartão de Débito') method = 'debito';
+        if (payment === 'Cartão de Crédito') method = 'credito';
+        this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
+
+        this.saveState();
+        this.closeModal();
+        this.render('admin-stock');
+        alert(`✅ Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
+    },
+
+    // ─── Modal de Produto ─────────────────────────────────────────────────────
+
+    openProductModal(productId, prefillBarcode) {
         const isNew = productId === null;
-        const product = isNew ? { name: '', price: 0, stock: 0 } : this.state.products.find(p => p.id === productId);
+        const product = isNew ? { name: '', price: 0, stock: 0, barcode: prefillBarcode || '' } : this.state.products.find(p => p.id === productId);
         if (!product) return;
 
         this.openModal(isNew ? 'Novo Produto' : 'Editar Produto', `
             <section class="fade-in">
-                <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Produto *</label>
                         <input type="text" id="prod-name" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.name}" placeholder="Ex: Pomada Modeladora">
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Preço de Venda (R$) *</label>
                             <input type="number" id="prod-price" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.price}" min="0" step="0.01">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Qtd. em Estoque *</label>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Qtd. em Estoque</label>
                             <input type="number" id="prod-stock" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.stock}" min="0">
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">🔖 Código de Barras / QR Code</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="prod-barcode" class="glass" style="flex: 1; padding: 11px; color: var(--text-primary); font-family: monospace;" 
+                                   value="${product.barcode || ''}" placeholder="Ex: 7891234560001">
+                            <button class="btn-secondary" style="padding: 10px; font-size: 0.8rem; white-space: nowrap;" onclick="app.stopBarcodeScanner(); app.closeModal(); app.openBarcodeScanner();">
+                                📷
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 8px;">
                         <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
                         <button class="btn-primary" style="flex: 2;" onclick="app.saveProduct(${isNew ? 'null' : productId})">Salvar Produto</button>
                     </div>
@@ -1491,24 +1778,18 @@ const app = {
     },
 
     saveProduct(productId) {
-        const name = document.getElementById('prod-name').value.trim();
-        const price = parseFloat(document.getElementById('prod-price').value) || 0;
-        const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+        const name    = document.getElementById('prod-name').value.trim();
+        const price   = parseFloat(document.getElementById('prod-price').value) || 0;
+        const stock   = parseInt(document.getElementById('prod-stock').value) || 0;
+        const barcode = document.getElementById('prod-barcode').value.trim();
 
-        if (!name) {
-            alert('Informe o nome do produto.');
-            return;
-        }
+        if (!name) { alert('Informe o nome do produto.'); return; }
 
         if (productId === null) {
-            this.state.products.push({ id: Date.now(), name, price, stock });
+            this.state.products.push({ id: Date.now(), name, price, stock, barcode });
         } else {
             const product = this.state.products.find(p => p.id === productId);
-            if (product) {
-                product.name = name;
-                product.price = price;
-                product.stock = stock;
-            }
+            if (product) { product.name = name; product.price = price; product.stock = stock; product.barcode = barcode; }
         }
         this.saveState();
         this.closeModal();
