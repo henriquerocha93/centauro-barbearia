@@ -24,7 +24,7 @@ const app = {
             { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' }
         ],
         services: [
-            { id: 1, name: 'Corte Brigada Militar', price: 30, duration: 40 },
+            { id: 1, name: 'Corte Brigada Militar (exclusivo p/ forças de segurança)', price: 30, duration: 40 },
             { id: 2, name: 'Acabamento', price: 15, duration: 30 },
             { id: 3, name: 'Barba', price: 35, duration: 30 },
             { id: 4, name: 'Barba só maquina', price: 20, duration: 15 },
