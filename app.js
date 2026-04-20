@@ -326,7 +326,7 @@ const app = {
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Descontos')"><i>📉</i> Descontos</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Estatísticas')"><i>📈</i> Estatísticas</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Exportações')"><i>📥</i> Exportações</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Faturamento')"><i>💰</i> Faturamento</a>
+                            <a class="menu-item submenu-item" onclick="app.navigateTo('admin-faturamento')"><i>💰</i> Faturamento</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Financeiro/Contábil')"><i>🏦</i> Financeiro / Contábil</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Ordens de serviço')"><i>📝</i> Ordens de serviço</a>
                             <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Pagamentos')"><i>💎</i> Pagamentos</a>
@@ -364,6 +364,7 @@ const app = {
             case 'admin-staff': this.renderAdminStaff(main); break;
             case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
+            case 'admin-faturamento': this.renderAdminFaturamento(main); break;
             default: 
                 console.warn('View não reconhecida no layout:', view);
                 this.renderAdminDash(main);
@@ -1121,6 +1122,57 @@ const app = {
             this.closeModal();
             this.render(this.state.view);
         }
+    },
+
+    renderAdminFaturamento(container) {
+        const currentDate = new Date();
+        const currentMonthPrefix = currentDate.toISOString().slice(0, 7); // ex: "2026-04"
+
+        // 1. Filtrar as transações do mês baseando na data ISO das transações
+        const transactionsMonth = this.state.transactions.filter(t => t.date.startsWith(currentMonthPrefix));
+
+        // 2. Faturamento Bruto de Tudo do Mês (Entradas + Saídas se houver)
+        const grossRevenue = transactionsMonth.reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
+
+        // 3. Agrupamento de Serviços Executados
+        const servicesCount = {};
+        transactionsMonth.forEach(t => {
+            if (t.type === 'in' && t.category === 'servico') {
+                // description format is usually: Serviço: NOME DO SERVICO (CLIENTE)
+                const match = t.description.match(/Serviço:\s*(.*?)\s*\(/);
+                if (match && match[1]) {
+                    const serviceName = match[1].trim();
+                    if (!servicesCount[serviceName]) servicesCount[serviceName] = 0;
+                    servicesCount[serviceName]++;
+                }
+            }
+        });
+
+        // Converte o dicionário em um array para ordenação e renderização
+        const servicesList = Object.entries(servicesCount).sort((a, b) => b[1] - a[1]); // Order by count (descending)
+
+        container.innerHTML = `
+            <section id="faturamento-view" class="fade-in">
+                <h2 class="section-title">Relatório: Faturamento</h2>
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento Mensal Bruto (Atual)</p>
+                    <p style="font-size: 2.5rem; font-weight: 700; color: ${grossRevenue >= 0 ? '#4ade80' : '#f87171'}">R$ ${grossRevenue.toFixed(2)}</p>
+                </div>
+
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Serviços Executados no Mês</h3>
+                <div class="service-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    ${servicesList.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum serviço registrado neste mês.</p>' : ''}
+                    ${servicesList.map(([name, count]) => `
+                        <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; font-size: 0.95rem;">${name}</span>
+                            <span style="background: var(--surface-dark); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--accent-color);">
+                                ${count}x vezes
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+        `;
     },
 
     renderAdminStock(container) {
