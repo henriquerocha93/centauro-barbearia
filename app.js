@@ -257,12 +257,11 @@ const app = {
         }
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
-            <header class="fade-in" style="padding: 15px 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: space-between; align-items: center;">
-                <div class="logo-container" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 50px; backdrop-filter: blur(5px); border: 1px solid rgba(212,175,55,0.3);">
-                    <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 35px; filter: invert(1) brightness(2);">
-                    <span style="font-family: 'Playfair Display'; font-size: 1.2rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
+            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center;">
+                <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
+                    <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 40px; filter: invert(1) brightness(2);">
+                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
                 </div>
-                <button class="btn-secondary" style="padding: 8px 15px; font-size: 0.75rem; border-color: rgba(255,255,255,0.5); color: white;" onclick="app.navigateTo('login')">LOGIN</button>
             </header>
             <main id="main-content"></main>
             ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
@@ -474,8 +473,7 @@ const app = {
                     <p>Excelência & Tradição</p>
                     <h1>Centauro Barbearia</h1>
                     <div style="width: 100px; height: 3px; background: var(--accent-color); margin: 20px auto;"></div>
-                    <button class="btn-primary" style="margin-top: 20px; padding: 15px 40px; font-size: 1rem;" onclick="app.navigateTo('booking')">Agendar Horário</button>
-                    <button class="btn-secondary" style="margin-left: 10px; padding: 15px 30px; font-size: 0.9rem; color: white; border-color: white;" onclick="app.navigateTo('login')">Acesso Staff</button>
+                    <button class="btn-primary" style="margin-top: 20px; padding: 15px 50px; font-size: 1.1rem;" onclick="app.navigateTo('booking')">Agendar Horário</button>
                 </div>
             </section>
 
