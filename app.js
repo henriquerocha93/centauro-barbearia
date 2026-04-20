@@ -57,7 +57,9 @@ const app = {
             customerName: '',
             customerPhone: '',
             customerBirth: ''
-        }
+        },
+        cart: [],        // Carrinho do PDV
+        pdvSeller: null  // Barbeiro vendedor selecionado no PDV
     },
 
     openModal(title, contentHTML) {
@@ -476,7 +478,7 @@ const app = {
 
         // [x] Agenda Multi-Colunas (Visão Admin Geral vs Visão Barbeiro Privada)
         // Se for uma visão administrativa/barbeiro, usar o layout com sidebar
-        if (view.includes('-dash') || view.includes('admin-') || view.includes('barber-')) {
+        if (view.includes('-dash') || view.includes('admin-') || view.includes('barber-') || view === 'pdv') {
             this.renderLayout(view);
             return;
         }
@@ -525,6 +527,7 @@ const app = {
                     <div class="menu-category">Acompanhamento</div>
                     <a class="menu-item ${view === (this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash') ? 'active' : ''}" 
                        onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
+                    <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
                     <a class="menu-item" onclick="alert('Funcionalidade em breve')"><i>📝</i> Ordens de Serviço</a>
                     
                     <div class="menu-category">Cadastros</div>
@@ -596,6 +599,7 @@ const app = {
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
             case 'admin-settings': this.renderAdminSettings(main); break;
+            case 'pdv': this.renderPDV(main); break;
             default: 
                 console.warn('View não reconhecida no layout:', view);
                 this.renderAdminDash(main);
@@ -1521,7 +1525,8 @@ const app = {
 
     // ─── Leitor de Código de Barras ───────────────────────────────────────────
 
-    openBarcodeScanner() {
+    openBarcodeScanner(forPDV = false) {
+        this._scannerForPDV = forPDV;
         this.openModal('📷 Escanear Código de Barras', `
             <section class="fade-in" style="padding-top: 5px;">
                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; text-align: center;">
@@ -1639,11 +1644,16 @@ const app = {
         this.stopBarcodeScanner();
         this.closeModal();
 
+        if (this._scannerForPDV) {
+            // Adicionar produto ao carrinho do PDV
+            this.pdvAddToCartByCode(code);
+            return;
+        }
+
         const product = this.state.products.find(p => p.barcode === code);
         if (product) {
             this.openProductFoundModal(product, code);
         } else {
-            // Produto não cadastrado → oferecer cadastro
             const cadastrar = confirm(`Código "${code}" não encontrado.\n\nDeseja cadastrar um novo produto com este código?`);
             if (cadastrar) this.openProductModal(null, code);
         }
@@ -1738,7 +1748,9 @@ const app = {
 
     openProductModal(productId, prefillBarcode) {
         const isNew = productId === null;
-        const product = isNew ? { name: '', price: 0, stock: 0, barcode: prefillBarcode || '' } : this.state.products.find(p => p.id === productId);
+        const product = isNew
+            ? { name: '', price: 0, stock: 0, barcode: prefillBarcode || '', commissionPct: 10 }
+            : this.state.products.find(p => p.id === productId);
         if (!product) return;
 
         this.openModal(isNew ? 'Novo Produto' : 'Editar Produto', `
@@ -1757,6 +1769,16 @@ const app = {
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Qtd. em Estoque</label>
                             <input type="number" id="prod-stock" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.stock}" min="0">
                         </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">💹 Margem do Barbeiro na Venda (%)</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="number" id="prod-commission" class="glass" style="flex: 1; padding: 11px; color: var(--text-primary);" value="${product.commissionPct ?? 10}" min="0" max="100" step="1">
+                            <span style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">% sobre o valor de venda</span>
+                        </div>
+                        <p style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 5px;">
+                            Ex: com 10% e preço de R$ ${parseFloat(product.price || 0).toFixed(2)}, o barbeiro recebe R$ ${(parseFloat(product.price || 0) * ((product.commissionPct ?? 10) / 100)).toFixed(2)} por venda.
+                        </p>
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">🔖 Código de Barras / QR Code</label>
@@ -1778,22 +1800,334 @@ const app = {
     },
 
     saveProduct(productId) {
-        const name    = document.getElementById('prod-name').value.trim();
-        const price   = parseFloat(document.getElementById('prod-price').value) || 0;
-        const stock   = parseInt(document.getElementById('prod-stock').value) || 0;
-        const barcode = document.getElementById('prod-barcode').value.trim();
+        const name          = document.getElementById('prod-name').value.trim();
+        const price         = parseFloat(document.getElementById('prod-price').value) || 0;
+        const stock         = parseInt(document.getElementById('prod-stock').value) || 0;
+        const barcode       = document.getElementById('prod-barcode').value.trim();
+        const commissionPct = parseFloat(document.getElementById('prod-commission').value) || 0;
 
         if (!name) { alert('Informe o nome do produto.'); return; }
 
         if (productId === null) {
-            this.state.products.push({ id: Date.now(), name, price, stock, barcode });
+            this.state.products.push({ id: Date.now(), name, price, stock, barcode, commissionPct });
         } else {
             const product = this.state.products.find(p => p.id === productId);
-            if (product) { product.name = name; product.price = price; product.stock = stock; product.barcode = barcode; }
+            if (product) { product.name = name; product.price = price; product.stock = stock; product.barcode = barcode; product.commissionPct = commissionPct; }
         }
         this.saveState();
         this.closeModal();
         this.render('admin-stock');
+    },
+
+    // ──────────────────────────────────────────────────────────────
+    //  PDV — Ponto de Venda
+    // ──────────────────────────────────────────────────────────────
+
+    renderPDV(container) {
+        const cart     = this.state.cart || [];
+        const seller   = this.state.pdvSeller;
+        const barbers  = this.state.staff.filter(s => s.role === 'barber');
+        const products = this.state.products;
+
+        // Totais do carrinho
+        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount  = parseFloat(this.state.pdvDiscount || 0);
+        const total     = Math.max(0, subtotal - discount);
+        const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
+
+        container.innerHTML = `
+            <section id="pdv-view" class="fade-in" style="padding-bottom: 40px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 3px;">💵 PDV — Ponto de Venda</h2>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'})}</p>
+                    </div>
+                    <button class="btn-primary" style="background: #7c3aed; padding: 8px 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" onclick="app.openBarcodeScanner(true)">
+                        📷 Escanear
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start;">
+
+                    <!-- COLUNA ESQUERDA: catálogo -->
+                    <div>
+                        <!-- Busca -->
+                        <div style="margin-bottom: 14px;">
+                            <input type="text" id="pdv-search" class="glass"
+                                   style="width: 100%; padding: 11px 14px; color: var(--text-primary); font-size: 0.95rem;"
+                                   placeholder="🔍 Buscar produto..." oninput="app.renderPDVGrid(this.value)">
+                        </div>
+
+                        <!-- Grid de produtos -->
+                        <div id="pdv-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">
+                            ${this.getPDVProductCards(products, '')}
+                        </div>
+                    </div>
+
+                    <!-- COLUNA DIREITA: carrinho -->
+                    <div class="glass" style="padding: 20px; position: sticky; top: 20px;">
+                        <h3 style="font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                            🛒 Carrinho
+                            ${cart.length > 0 ? `<button style="font-size: 0.72rem; color: #ff4444; background: none; border: 1px solid rgba(255,68,68,0.3); border-radius: 6px; padding: 3px 8px; cursor: pointer;" onclick="app.clearCart()">Limpar</button>` : ''}
+                        </h3>
+
+                        <!-- Itens do carrinho -->
+                        <div style="max-height: 260px; overflow-y: auto; margin-bottom: 14px;">
+                            ${cart.length === 0
+                                ? '<p style="text-align:center; color: var(--text-secondary); font-size: 0.85rem; padding: 20px 0;">Adicione produtos ao carrinho</p>'
+                                : cart.map((item, idx) => `
+                                    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</p>
+                                            <p style="font-size: 0.72rem; color: var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)} un.</p>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                            <button class="glass" style="padding: 3px 8px; font-size: 0.85rem;" onclick="app.pdvChangeQty(${idx}, -1)">−</button>
+                                            <span style="font-size: 0.9rem; font-weight: 700; min-width: 20px; text-align: center;">${item.qty}</span>
+                                            <button class="glass" style="padding: 3px 8px; font-size: 0.85rem;" onclick="app.pdvChangeQty(${idx}, 1)">+</button>
+                                        </div>
+                                        <div style="text-align: right; flex-shrink: 0; min-width: 60px;">
+                                            <p style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
+                                            <button style="font-size: 0.65rem; color: #ff4444; background: none; border: none; cursor: pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+
+                        <!-- Desconto -->
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Desconto (R$)</label>
+                            <input type="number" id="pdv-discount" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" 
+                                   value="${discount}" min="0" step="0.01"
+                                   oninput="app.state.pdvDiscount = parseFloat(this.value)||0; app.renderPDVTotals();">
+                        </div>
+
+                        <!-- Vendedor -->
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Vendedor (Barbeiro)</label>
+                            <select id="pdv-seller" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" onchange="app.state.pdvSeller = this.value || null;">
+                                <option value="">-- Sem comissão --</option>
+                                ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <!-- Pagamento -->
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Forma de Pagamento</label>
+                            <select id="pdv-payment" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Cartão de Débito</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            </select>
+                        </div>
+
+                        <!-- Resumo final -->
+                        <div id="pdv-totals" style="margin-bottom: 16px; padding: 14px; background: var(--surface-dark); border-radius: 10px;">
+                            ${this.getPDVTotalsHTML(subtotal, discount, total, commission, seller)}
+                        </div>
+
+                        <!-- Botão finalizar -->
+                        <button class="btn-primary" style="width: 100%; font-size: 1rem; padding: 14px; background: ${cart.length > 0 ? '#2E8B57' : '#555'}; cursor: ${cart.length > 0 ? 'pointer' : 'not-allowed'};" 
+                                ${cart.length === 0 ? 'disabled' : ''} onclick="app.finalizePDVSale()">
+                            ✅ Finalizar Venda
+                        </button>
+                    </div>
+                </div>
+            </section>
+        `;
+
+        // Torna o layout fluido no mobile
+        const main = document.getElementById('main-content');
+        if (main) main.style.overflow = 'auto';
+    },
+
+    getPDVProductCards(products, query) {
+        const q = (query || '').toLowerCase();
+        const filtered = q
+            ? products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)))
+            : products;
+
+        if (filtered.length === 0) {
+            return '<p style="grid-column:1/-1; text-align:center; color:var(--text-secondary); padding: 20px;">Nenhum produto encontrado.</p>';
+        }
+
+        return filtered.map(p => {
+            const outOfStock = p.stock <= 0;
+            const stockColor = outOfStock ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
+            return `
+                <div class="glass" style="padding: 14px; cursor: ${outOfStock ? 'not-allowed' : 'pointer'}; opacity: ${outOfStock ? '0.5' : '1'}; border: 1px solid var(--glass-border); border-radius: 12px; transition: all 0.2s; text-align: center;"
+                     onclick="${outOfStock ? "alert('Produto esgotado!')" : `app.pdvAddToCart(${p.id})`}"
+                     onmouseover="this.style.borderColor='var(--accent-color)'"
+                     onmouseout="this.style.borderColor='var(--glass-border)'">
+                    <div style="font-size: 2rem; margin-bottom: 8px;">📦</div>
+                    <p style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); line-height: 1.2; margin-bottom: 6px;">${p.name}</p>
+                    <p style="font-size: 1rem; font-weight: 800; color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</p>
+                    <p style="font-size: 0.7rem; color: ${stockColor}; margin-top: 4px;">${outOfStock ? 'Esgotado' : `${p.stock} em estoque`}</p>
+                    ${(p.commissionPct || 0) > 0 ? `<p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;">💹 ${p.commissionPct}% comissão</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    },
+
+    getPDVTotalsHTML(subtotal, discount, total, commission, seller) {
+        return `
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span style="color: var(--text-secondary);">Subtotal</span>
+                <span>R$ ${subtotal.toFixed(2)}</span>
+            </div>
+            ${discount > 0 ? `
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span style="color: #fbbf24;">Desconto</span>
+                <span style="color: #fbbf24;">- R$ ${discount.toFixed(2)}</span>
+            </div>` : ''}
+            <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 800; border-top: 1px solid var(--glass-border); padding-top: 8px; margin-top: 4px;">
+                <span style="color: var(--accent-color);">Total</span>
+                <span style="color: var(--accent-color);">R$ ${total.toFixed(2)}</span>
+            </div>
+            ${seller && commission > 0 ? `
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--glass-border);">
+                <span style="color: var(--text-secondary);">Comissão (${seller.split(' ')[0]})</span>
+                <span style="color: #4ade80; font-weight: 700;">R$ ${commission.toFixed(2)}</span>
+            </div>` : ''}
+        `;
+    },
+
+    renderPDVGrid(query) {
+        const grid = document.getElementById('pdv-grid');
+        if (grid) grid.innerHTML = this.getPDVProductCards(this.state.products, query);
+    },
+
+    renderPDVTotals() {
+        const cart      = this.state.cart || [];
+        const seller    = this.state.pdvSeller;
+        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount  = parseFloat(this.state.pdvDiscount || 0);
+        const total     = Math.max(0, subtotal - discount);
+        const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
+        const el = document.getElementById('pdv-totals');
+        if (el) el.innerHTML = this.getPDVTotalsHTML(subtotal, discount, total, commission, seller);
+    },
+
+    pdvAddToCart(productId) {
+        const product = this.state.products.find(p => p.id === productId);
+        if (!product || product.stock <= 0) return;
+        if (!this.state.cart) this.state.cart = [];
+
+        const existing = this.state.cart.find(i => i.productId === productId);
+        if (existing) {
+            existing.qty++;
+        } else {
+            this.state.cart.push({
+                productId, name: product.name,
+                unitPrice: product.price,
+                commissionPct: product.commissionPct || 0,
+                qty: 1
+            });
+        }
+        this.render('pdv');
+    },
+
+    pdvAddToCartByCode(code) {
+        const product = this.state.products.find(p => p.barcode === code);
+        if (!product) {
+            const reg = confirm(`Código "${code}" não encontrado.\nDeseja cadastrar um novo produto?`);
+            if (reg) this.openProductModal(null, code);
+            return;
+        }
+        this.pdvAddToCart(product.id);
+    },
+
+    pdvChangeQty(idx, delta) {
+        const item = this.state.cart[idx];
+        if (!item) return;
+        item.qty = Math.max(1, item.qty + delta);
+        this.renderPDVTotals();
+        // Re-render apenas o carrinho sem recarregar a página toda
+        this.render('pdv');
+    },
+
+    pdvRemoveItem(idx) {
+        this.state.cart.splice(idx, 1);
+        this.render('pdv');
+    },
+
+    clearCart() {
+        if (confirm('Limpar o carrinho?')) {
+            this.state.cart = [];
+            this.state.pdvDiscount = 0;
+            this.render('pdv');
+        }
+    },
+
+    finalizePDVSale() {
+        const cart    = this.state.cart || [];
+        const payment = document.getElementById('pdv-payment')?.value || 'Dinheiro';
+        const seller  = document.getElementById('pdv-seller')?.value || null;
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+
+        if (cart.length === 0) return;
+
+        // Verificar estoque
+        for (const item of cart) {
+            const product = this.state.products.find(p => p.id === item.productId);
+            if (!product || product.stock < item.qty) {
+                alert(`Estoque insuficiente para: ${item.name}`);
+                return;
+            }
+        }
+
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const total    = Math.max(0, subtotal - discount);
+        let totalCommission = 0;
+
+        // Descontar estoque + registrar histórico
+        if (!this.state.productSales) this.state.productSales = [];
+        const now = new Date();
+        const saleDate = now.toISOString().split('T')[0];
+
+        for (const item of cart) {
+            const product = this.state.products.find(p => p.id === item.productId);
+            product.stock -= item.qty;
+            const itemTotal = item.unitPrice * item.qty;
+            const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
+            totalCommission += itemComm;
+
+            this.state.productSales.push({
+                id: Date.now() + Math.random(),
+                productId: item.productId,
+                productName: item.name,
+                qty: item.qty,
+                unitPrice: item.unitPrice,
+                total: itemTotal,
+                commissionPct: item.commissionPct || 0,
+                sellerCommission: itemComm,
+                seller: seller || null,
+                payment, discount: 0,
+                date: saleDate,
+                timestamp: now.toISOString()
+            });
+        }
+
+        // Registrar no fluxo de caixa como única transação
+        let method = 'dinheiro';
+        if (payment === 'PIX') method = 'pix';
+        if (payment === 'Cartão de Débito') method = 'debito';
+        if (payment === 'Cartão de Crédito') method = 'credito';
+        const desc = cart.length === 1
+            ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+            : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
+        this.addTransaction('in', desc, total, 'produto', method);
+
+        // Limpar carrinho
+        this.state.cart = [];
+        this.state.pdvDiscount = 0;
+        this.state.pdvSeller = seller || null;
+        this.saveState();
+        this.render('pdv');
+
+        const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
+        alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
     },
 
     deleteProduct(productId) {
