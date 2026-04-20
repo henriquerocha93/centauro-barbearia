@@ -19,42 +19,12 @@ const app = {
         },
         staff: [
             { id: 1, name: 'Administrador Principal', commission: 0, role: 'admin', login: 'admin', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', showInAgenda: false },
-            { id: 2, name: 'Marcos Barbosa', commission: 50, role: 'barber', login: 'marcos', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png' },
-            { id: 3, name: 'Matheus Fernandes', commission: 40, role: 'barber', login: 'matheus', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140040.png' },
-            { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' },
             { id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false }
         ],
-        services: [
-            { id: 1, name: 'Corte Brigada Militar (exclusivo p/ forças de segurança)', price: 30, duration: 40 },
-            { id: 2, name: 'Acabamento', price: 15, duration: 30 },
-            { id: 3, name: 'Barba', price: 35, duration: 30 },
-            { id: 4, name: 'Barba só maquina', price: 20, duration: 15 },
-            { id: 5, name: 'Corte', price: 35, duration: 30 },
-            { id: 6, name: 'Corte, Barba e sobrancelha', price: 85, duration: 55 },
-            { id: 7, name: 'Corte máquina', price: 25, duration: 40 },
-            { id: 8, name: 'Corte + Platinado', price: 180, duration: 60 },
-            { id: 9, name: 'Corte + sobrancelha', price: 50, duration: 40 },
-            { id: 10, name: 'Depilação ouvido', price: 25, duration: 20 },
-            { id: 11, name: 'Depilção nariz', price: 25, duration: 20 },
-            { id: 12, name: 'Luzes', price: 100, duration: 40 },
-            { id: 13, name: 'Luzes + Corte', price: 135, duration: 60 },
-            { id: 14, name: 'Pigmentação', price: 25, duration: 40 },
-            { id: 15, name: 'Relaxamento capilar', price: 65, duration: 20 },
-            { id: 16, name: 'Sobrancelha', price: 15, duration: 20 }
-        ],
-        products: [
-            { id: 1, name: 'Pomada Efeito Matte', stock: 15, price: 45 },
-            { id: 2, name: 'Óleo para Barba', stock: 8, price: 35 }
-        ],
-        appointments: [
-            { id: 101, barber: 'Miguel Macedo', time: '10:00', customer: 'Miguel Fontora', service: 'Corte Moderno', price: 50, status: 'agendado', date: new Date().toISOString().split('T')[0] },
-            { id: 102, barber: 'Marcos Barbosa', time: '15:00', customer: 'Aulas de Corte', service: 'Especialização', price: 150, status: 'finalizado', payment: 'Dinheiro', date: new Date().toISOString().split('T')[0] }
-        ],
-        customers: [
-            { id: 1, name: 'Henrique Rocha', gender: 'M', phone: '11999999999', birthDate: '1990-04-19', history: [
-                { date: '2026-04-10', service: 'Corte Moderno', barber: 'Marcos Barbosa' }
-            ]}
-        ],
+        services: [],
+        products: [],
+        appointments: [],
+        customers: [],
         currentDate: new Date().toISOString().split('T')[0], // Data atual para a agenda
         vouchers: [], // Vales dos barbeiros
         transactions: [], // Fluxo de caixa
