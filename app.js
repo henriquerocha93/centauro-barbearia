@@ -1782,8 +1782,22 @@ const app = {
                     <input type="text" id="staff-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${staff.name}">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">URL da Foto (Avatar)</label>
-                    <input type="text" id="staff-photo" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${staff.photo}" placeholder="Ex: https://link-da-imagem.com/foto.png">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Foto do Perfil (Avatar)</label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img id="staff-photo-preview" src="${staff.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color);">
+                        <input type="file" id="staff-photo-upload" accept="image/*" class="glass" style="flex: 1; padding: 8px; color: var(--text-primary); font-size: 0.8rem;" onchange="
+                            const file = this.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    document.getElementById('staff-photo-preview').src = e.target.result;
+                                    document.getElementById('staff-photo-base64').value = e.target.result;
+                                }
+                                reader.readAsDataURL(file);
+                            }
+                        ">
+                        <input type="hidden" id="staff-photo-base64" value="${staff.photo || ''}">
+                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
@@ -1829,7 +1843,7 @@ const app = {
 
     saveStaff(staffId) {
         const name = document.getElementById('staff-name').value;
-        const photo = document.getElementById('staff-photo').value;
+        const photo = document.getElementById('staff-photo-base64').value || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
         const login = document.getElementById('staff-login').value;
         const password = document.getElementById('staff-password').value;
         const role = document.getElementById('staff-role').value;
