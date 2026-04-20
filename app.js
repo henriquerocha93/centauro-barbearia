@@ -1100,6 +1100,7 @@ const app = {
     cancelApt(aptId) {
         if (confirm('Deseja realmente remover este agendamento?')) {
             this.state.appointments = this.state.appointments.filter(a => a.id !== aptId);
+            this.saveState();
             this.closeModal();
             this.render(this.state.view);
         }
