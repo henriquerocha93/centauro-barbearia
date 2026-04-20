@@ -445,14 +445,15 @@ const app = {
     },
 
     // --- Helpers de Dados ---
-    addTransaction(type, description, amount, category) {
+    addTransaction(type, description, amount, category, method = 'dinheiro') {
         const transaction = {
             id: Date.now(),
             date: new Date().toISOString(),
             type, // 'in' ou 'out'
             description,
             amount,
-            category // 'servico', 'produto', 'despesa', 'vale'
+            category, // 'servico', 'produto', 'despesa', 'vale'
+            method // 'dinheiro', 'pix', 'debito', 'credito'
         };
         this.state.transactions.push(transaction);
         this.saveState();
@@ -530,17 +531,11 @@ const app = {
                 <div style="opacity: 0.6; font-size: 0.8rem;">
                     <p>© 2026 Centauro Barbearia. Todos os direitos reservados.</p>
                     <p style="margin-top: 10px;">Excelência em Barbearia Clássica.</p>
+                    <p style="margin-top: 20px;">
+                        <a style="color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: color 0.3s;" onclick="app.navigateTo('login')" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'">🔒 Acesso Restrito</a>
+                    </p>
                 </div>
             </footer>
-                        <div class="amenity-item"><span>🎵</span> Música Ambiente</div>
-                        <div class="amenity-item"><span>👶</span> Atende Crianças</div>
-                        <div class="amenity-item"><span>🐶</span> Pet Friendly</div>
-                        <div class="amenity-item"><span>🤝</span> Atend. Inclusivo</div>
-                        <div class="amenity-item"><span>📺</span> TV</div>
-                        <div class="amenity-item"><span>🧸</span> Espaço Kids</div>
-                        <div class="amenity-item"><span>📶</span> Wi-Fi</div>
-                        <div class="amenity-item"><span>⚽</span> Esportes ao Vivo</div>
-                    </div>
 
                     <div class="payment-section">
                         <div class="payment-badges">
@@ -1100,10 +1095,17 @@ const app = {
                 });
             }
 
+            // Mapear modalidades para os IDs que usamos no balanço
+            let mappedMethod = 'dinheiro';
+            if (payment === 'PIX') mappedMethod = 'pix';
+            if (payment === 'Cartão de Débito') mappedMethod = 'debito';
+            if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
+
             // Integrar com Fluxo de Caixa
-            this.addTransaction('in', `Serviço: ${apt.service} (${apt.customer})`, apt.price, 'servico');
+            this.addTransaction('in', `Serviço: ${apt.service} (${apt.customer})`, apt.price, 'servico', mappedMethod);
             
             this.closeModal();
+            this.saveState();
             this.render(this.state.view);
             alert('Venda registrada e enviada para o faturamento!');
         }
@@ -1156,27 +1158,69 @@ const app = {
     },
 
     renderAdminCashFlow(container) {
-        const total = this.state.transactions.reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
+        const today = new Date().toISOString().split('T')[0];
+        const transactionsToday = this.state.transactions.filter(t => t.date.startsWith(today));
+        
+        const totals = {
+            dinheiro: 0,
+            pix: 0,
+            debito: 0,
+            credito: 0
+        };
+
+        transactionsToday.forEach(t => {
+            if (t.type === 'in') {
+                totals[t.method || 'dinheiro'] += t.amount;
+            } else {
+                // Saídas geralmente são em dinheiro (vales/despesas)
+                totals['dinheiro'] -= t.amount;
+            }
+        });
+
+        const totalGeral = this.state.transactions.reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
         
         container.innerHTML = `
             <section id="cashflow-view" class="fade-in">
-                <h2 class="section-title">Fluxo de Caixa</h2>
-                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center;">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Geral</p>
-                    <p style="font-size: 2rem; font-weight: 700; color: ${total >= 0 ? 'var(--accent-color)' : '#ff4444'}">R$ ${total.toFixed(2)}</p>
+                <h2 class="section-title">Balanço de Hoje</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💵 Dinheiro</p>
+                        <p style="font-weight: 700;">R$ ${totals.dinheiro.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #22d3ee;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">📱 PIX</p>
+                        <p style="font-weight: 700;">R$ ${totals.pix.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Débito</p>
+                        <p style="font-weight: 700;">R$ ${totals.debito.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Crédito</p>
+                        <p style="font-weight: 700;">R$ ${totals.credito.toFixed(2)}</p>
+                    </div>
                 </div>
 
-                <div class="transaction-list">
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(255,255,255,0.02);">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Geral Acumulado</p>
+                    <p style="font-size: 1.8rem; font-weight: 700; color: ${totalGeral >= 0 ? 'var(--accent-color)' : '#ff4444'}">R$ ${totalGeral.toFixed(2)}</p>
+                </div>
+
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimas Movimentações</h3>
+                <div class="transaction-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                     ${this.state.transactions.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação</p>' : ''}
-                    ${this.state.transactions.map(t => `
-                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.9rem;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>${t.description}</span>
-                                <span style="font-weight: 700; color: ${t.type === 'in' ? '#44ff44' : '#ff4444'}">
+                    ${this.state.transactions.slice(-20).map(t => `
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? '#4ade80' : '#f87171'}">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-weight: 600;">${t.description}</span>
+                                    <span style="font-size: 0.7rem; color: var(--text-secondary);">${t.category.toUpperCase()} | ${t.method ? t.method.toUpperCase() : 'DINHEIRO'}</span>
+                                </div>
+                                <span style="font-weight: 700; color: ${t.type === 'in' ? '#4ade80' : '#f87171'}">
                                     ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
                                 </span>
                             </div>
-                            <div style="font-size: 0.7rem; color: var(--text-secondary);">${new Date(t.date).toLocaleDateString()}</div>
                         </div>
                     `).reverse().join('')}
                 </div>
@@ -1192,8 +1236,12 @@ const app = {
         document.getElementById('btn-add-in').onclick = () => {
             const desc = prompt('Descrição da entrada:');
             const val = parseFloat(prompt('Valor:'));
+            const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
+            
             if (desc && val) {
-                this.addTransaction('in', desc, val, 'outros');
+                const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
+                const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
+                this.addTransaction('in', desc, val, 'outros', selectedMethod);
                 this.render('admin-cashflow');
             }
         };
@@ -1202,7 +1250,8 @@ const app = {
             const desc = prompt('Descrição da saída:');
             const val = parseFloat(prompt('Valor:'));
             if (desc && val) {
-                this.addTransaction('out', desc, val, 'despesa');
+                // Saídas deduzem do montante 'dinheiro' por padrão
+                this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
                 this.render('admin-cashflow');
             }
         };
