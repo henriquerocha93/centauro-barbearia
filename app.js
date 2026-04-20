@@ -21,7 +21,8 @@ const app = {
             { id: 1, name: 'Administrador Principal', commission: 0, role: 'admin', login: 'admin', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', showInAgenda: false },
             { id: 2, name: 'Marcos Barbosa', commission: 50, role: 'barber', login: 'marcos', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png' },
             { id: 3, name: 'Matheus Fernandes', commission: 40, role: 'barber', login: 'matheus', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140040.png' },
-            { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' }
+            { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' },
+            { id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false }
         ],
         services: [
             { id: 1, name: 'Corte Brigada Militar (exclusivo p/ forças de segurança)', price: 30, duration: 40 },
@@ -249,6 +250,13 @@ const app = {
             appContainer.className = 'container';
         }
         
+        // Desvio de layout para o TOTEM (sem sidebar, tela cheia)
+        if (view === 'totem-dash') {
+            appContainer.className = 'container full-width';
+            this.renderTotemDash(appContainer);
+            return;
+        }
+
         // [x] Agenda Multi-Colunas (Visão Admin Geral vs Visão Barbeiro Privada)
         // Se for uma visão administrativa/barbeiro, usar o layout com sidebar
         if (view.includes('-dash') || view.includes('admin-') || view.includes('barber-')) {
@@ -374,6 +382,27 @@ const app = {
     renderBarberDash(container) {
         container.innerHTML = this.getBirthdaysHTML() + `<div id="dash-agenda-wrapper"></div>`;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'), this.state.user.name);
+    },
+
+    renderTotemDash(container) {
+        container.innerHTML = `
+            <header style="padding: 15px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="logo_centauro.png" style="width: 40px; filter: invert(1) brightness(2);">
+                    <div>
+                        <h1 style="font-family: 'Playfair Display'; font-size: 1.2rem; color: var(--accent-color); margin: 0;">CENTAURO BARBEARIA</h1>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Acesso de Recepção / Totem</p>
+                    </div>
+                </div>
+                <button class="btn-secondary" style="font-size: 0.8rem; padding: 8px 15px;" onclick="app.logout()">Sair do Totem</button>
+            </header>
+            <main style="padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%;">
+                ${this.getBirthdaysHTML()}
+                <div id="totem-agenda-wrapper"></div>
+            </main>
+        `;
+        // Sem user passado, renderiza todos os barbeiros
+        this.renderAgenda(document.getElementById('totem-agenda-wrapper'));
     },
 
     logout() {
@@ -599,6 +628,8 @@ const app = {
 
                 if (matchedUser.role === 'admin') {
                     this.navigateTo('admin-dash');
+                } else if (matchedUser.role === 'totem') {
+                    this.navigateTo('totem-dash');
                 } else {
                     this.navigateTo('barber-dash');
                 }
