@@ -612,25 +612,338 @@ const app = {
     },
 
     renderTotemDash(container) {
+        const tab = this.state.totemTab || 'agenda';
+
         container.innerHTML = `
-            <header style="padding: 15px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <img src="logo_centauro.png" style="width: 40px; filter: invert(1) brightness(2);">
+            <!-- HEADER -->
+            <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: sticky; top: 0; z-index: 50;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <img src="logo_centauro.png" style="width: 36px; filter: invert(1) brightness(2);">
                     <div>
-                        <h1 style="font-family: 'Playfair Display'; font-size: 1.2rem; color: var(--accent-color); margin: 0;">CENTAURO BARBEARIA</h1>
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Acesso de Recepção / Totem</p>
+                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO BARBEARIA</h1>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
-                <button class="btn-secondary" style="font-size: 0.8rem; padding: 8px 15px;" onclick="app.logout()">Sair do Totem</button>
+                <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
             </header>
-            <main style="padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%;">
+
+            <!-- ABAS -->
+            <nav style="display: flex; gap: 0; background: var(--surface-dark); border-bottom: 2px solid var(--glass-border); padding: 0 20px;">
+                <button id="totem-tab-agenda"
+                    onclick="app.setTotemTab('agenda')"
+                    style="padding: 14px 24px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; background: transparent;
+                           color: ${tab === 'agenda' ? 'var(--accent-color)' : 'var(--text-secondary)'};
+                           border-bottom: 3px solid ${tab === 'agenda' ? 'var(--accent-color)' : 'transparent'};
+                           margin-bottom: -2px; transition: all 0.2s;">
+                    📅 Agenda
+                </button>
+                <button id="totem-tab-pdv"
+                    onclick="app.setTotemTab('pdv')"
+                    style="padding: 14px 24px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; background: transparent;
+                           color: ${tab === 'pdv' ? '#4ade80' : 'var(--text-secondary)'};
+                           border-bottom: 3px solid ${tab === 'pdv' ? '#4ade80' : 'transparent'};
+                           margin-bottom: -2px; transition: all 0.2s;">
+                    💵 Vendas
+                </button>
+                <button id="totem-tab-estoque"
+                    onclick="app.setTotemTab('estoque')"
+                    style="padding: 14px 24px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; background: transparent;
+                           color: ${tab === 'estoque' ? '#a78bfa' : 'var(--text-secondary)'};
+                           border-bottom: 3px solid ${tab === 'estoque' ? '#a78bfa' : 'transparent'};
+                           margin-bottom: -2px; transition: all 0.2s;">
+                    📦 Estoque
+                </button>
+            </nav>
+
+            <!-- CONTEÚDO DA ABA -->
+            <main id="totem-content" style="padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box;">
                 ${this.getBirthdaysHTML()}
-                <div id="totem-agenda-wrapper"></div>
+                <div id="totem-tab-content"></div>
             </main>
         `;
-        // Sem user passado, renderiza todos os barbeiros
-        this.renderAgenda(document.getElementById('totem-agenda-wrapper'));
+
+        this._renderTotemTabContent(tab);
     },
+
+    setTotemTab(tab) {
+        this.state.totemTab = tab;
+        this.renderTotemDash(document.getElementById('app'));
+    },
+
+    _renderTotemTabContent(tab) {
+        const el = document.getElementById('totem-tab-content');
+        if (!el) return;
+
+        if (tab === 'agenda') {
+            el.innerHTML = '<div id="totem-agenda-wrapper"></div>';
+            this.renderAgenda(document.getElementById('totem-agenda-wrapper'));
+
+        } else if (tab === 'pdv') {
+            this._renderTotemPDV(el);
+
+        } else if (tab === 'estoque') {
+            this._renderTotemEstoque(el);
+        }
+    },
+
+    // ─── TOTEM: PDV ───────────────────────────────────────────────────────────
+    _renderTotemPDV(container) {
+        const cart      = this.state.cart || [];
+        const seller    = this.state.pdvSeller;
+        const barbers   = this.state.staff.filter(s => s.role === 'barber');
+        const products  = this.state.products;
+        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount  = parseFloat(this.state.pdvDiscount || 0);
+        const total     = Math.max(0, subtotal - discount);
+        const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
+
+        container.innerHTML = `
+            <div class="fade-in">
+                <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
+                    ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}
+                </p>
+
+                <!-- Barra Scanner USB -->
+                <div class="glass" style="padding:12px 16px; margin-bottom:16px; border-left:4px solid #7c3aed; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.4rem; flex-shrink:0;">📶</span>
+                    <div style="flex:1; position:relative;">
+                        <input type="text" id="totem-scanner-input" class="glass"
+                               style="width:100%; padding:9px 40px 9px 12px; color:var(--text-primary); font-size:0.95rem; font-family:monospace;
+                                      border:1.5px solid #7c3aed; border-radius:8px; letter-spacing:1px;"
+                               placeholder="Aponte o leitor para o produto..."
+                               autocomplete="off"
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ app.pdvAddToCartByCode(c); this.value=''; app.setTotemTab('pdv'); } }">
+                        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0.4;">↵</span>
+                    </div>
+                    <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">Leitor USB</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 360px; gap:18px; align-items:start;">
+                    <!-- Catálogo -->
+                    <div>
+                        <input type="text" id="totem-pdv-search" class="glass"
+                               style="width:100%; padding:9px 12px; color:var(--text-primary); margin-bottom:12px;"
+                               placeholder="🔍 Buscar produto..." oninput="app._totemPDVSearch(this.value)">
+                        <div id="totem-pdv-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+                            ${this.getPDVProductCards(products, '')}
+                        </div>
+                    </div>
+
+                    <!-- Carrinho -->
+                    <div class="glass" style="padding:18px; position:sticky; top:90px;">
+                        <h3 style="font-size:0.95rem; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                            🛒 Carrinho
+                            ${cart.length > 0 ? `<button style="font-size:0.7rem;color:#ff4444;background:none;border:1px solid rgba(255,68,68,0.3);border-radius:5px;padding:2px 8px;cursor:pointer;" onclick="app.clearCart()">Limpar</button>` : ''}
+                        </h3>
+
+                        <div style="max-height:240px; overflow-y:auto; margin-bottom:12px;">
+                            ${cart.length === 0
+                                ? '<p style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">Nenhum item no carrinho</p>'
+                                : cart.map((item, idx) => `
+                                    <div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--glass-border);">
+                                        <div style="flex:1;min-width:0;">
+                                            <p style="font-size:0.8rem;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</p>
+                                            <p style="font-size:0.7rem;color:var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)} un.</p>
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+                                            <button class="glass" style="padding:3px 7px;font-size:0.8rem;" onclick="app.pdvChangeQty(${idx},-1)">−</button>
+                                            <span style="font-size:0.9rem;font-weight:700;min-width:18px;text-align:center;">${item.qty}</span>
+                                            <button class="glass" style="padding:3px 7px;font-size:0.8rem;" onclick="app.pdvChangeQty(${idx},1)">+</button>
+                                        </div>
+                                        <div style="text-align:right;flex-shrink:0;min-width:55px;">
+                                            <p style="font-size:0.82rem;font-weight:700;color:var(--accent-color);">R$ ${(item.unitPrice*item.qty).toFixed(2)}</p>
+                                            <button style="font-size:0.62rem;color:#ff4444;background:none;border:none;cursor:pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Desconto (R$)</label>
+                            <input type="number" id="totem-pdv-discount" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
+                                   value="${discount}" min="0" step="0.01"
+                                   oninput="app.state.pdvDiscount=parseFloat(this.value)||0; app.setTotemTab('pdv');">
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Vendedor</label>
+                            <select id="totem-pdv-seller" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
+                                    onchange="app.state.pdvSeller=this.value||null;">
+                                <option value="">-- Sem comissão --</option>
+                                ${barbers.map(b=>`<option value="${b.name}" ${seller===b.name?'selected':''}>${b.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:14px;">
+                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Pagamento</label>
+                            <select id="totem-pdv-payment" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Cartão de Débito</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            </select>
+                        </div>
+
+                        <!-- Totais -->
+                        <div style="padding:12px;background:var(--surface-dark);border-radius:8px;margin-bottom:14px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;">
+                                <span style="color:var(--text-secondary);">Subtotal</span><span>R$ ${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;">
+                                <span style="color:#fbbf24;">Desconto</span><span style="color:#fbbf24;">- R$ ${discount.toFixed(2)}</span>
+                            </div>` : ''}
+                            <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:800;border-top:1px solid var(--glass-border);padding-top:7px;">
+                                <span style="color:var(--accent-color);">Total</span>
+                                <span style="color:var(--accent-color);">R$ ${total.toFixed(2)}</span>
+                            </div>
+                            ${seller && commission > 0 ? `<div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-top:7px;padding-top:7px;border-top:1px solid var(--glass-border);">
+                                <span style="color:var(--text-secondary);">Comissão (${seller.split(' ')[0]})</span>
+                                <span style="color:#4ade80;font-weight:700;">R$ ${commission.toFixed(2)}</span>
+                            </div>` : ''}
+                        </div>
+
+                        <button class="btn-primary"
+                                style="width:100%;font-size:1rem;padding:13px;background:${cart.length>0?'#2E8B57':'#555'};cursor:${cart.length>0?'pointer':'not-allowed'};"
+                                ${cart.length===0?'disabled':''} onclick="app._totemFinalizeSale()">
+                            ✅ Finalizar Venda
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    _totemPDVSearch(query) {
+        const grid = document.getElementById('totem-pdv-grid');
+        if (grid) grid.innerHTML = this.getPDVProductCards(this.state.products, query);
+    },
+
+    _totemFinalizeSale() {
+        const payment = document.getElementById('totem-pdv-payment')?.value || 'Dinheiro';
+        const seller  = document.getElementById('totem-pdv-seller')?.value || null;
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+        const cart    = this.state.cart || [];
+
+        if (cart.length === 0) return;
+
+        for (const item of cart) {
+            const product = this.state.products.find(p => p.id === item.productId);
+            if (!product || product.stock < item.qty) { alert(`Estoque insuficiente: ${item.name}`); return; }
+        }
+
+        const subtotal = cart.reduce((s,i) => s + i.unitPrice * i.qty, 0);
+        const total    = Math.max(0, subtotal - discount);
+        let totalComm  = 0;
+
+        if (!this.state.productSales) this.state.productSales = [];
+        const now = new Date();
+        for (const item of cart) {
+            const product = this.state.products.find(p => p.id === item.productId);
+            product.stock -= item.qty;
+            const itemTotal = item.unitPrice * item.qty;
+            const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
+            totalComm += itemComm;
+            this.state.productSales.push({
+                id: Date.now() + Math.random(), productId: item.productId, productName: item.name,
+                qty: item.qty, unitPrice: item.unitPrice, total: itemTotal,
+                commissionPct: item.commissionPct || 0, sellerCommission: itemComm,
+                seller: seller || null, payment, discount: 0,
+                date: now.toISOString().split('T')[0], timestamp: now.toISOString()
+            });
+        }
+
+        let method = 'dinheiro';
+        if (payment==='PIX') method='pix';
+        if (payment==='Cartão de Débito') method='debito';
+        if (payment==='Cartão de Crédito') method='credito';
+        const desc = cart.length === 1
+            ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+            : `PDV: ${cart.length} produtos`;
+        this.addTransaction('in', desc, total, 'produto', method);
+
+        this.state.cart = [];
+        this.state.pdvDiscount = 0;
+        this.state.pdvSeller = seller || null;
+        this.saveState();
+
+        const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
+        alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
+        this.setTotemTab('pdv');
+    },
+
+    // ─── TOTEM: ESTOQUE ───────────────────────────────────────────────────────
+    _renderTotemEstoque(container) {
+        container.innerHTML = `
+            <div class="fade-in">
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px;">
+                    <h2 style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">📦 Estoque de Produtos</h2>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;background:#7c3aed;" onclick="app._totemScanEstoque()">
+                            📶 Leitor USB
+                        </button>
+                        <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;" onclick="app.openProductModal(null); app._afterProductSaveCallback=()=>app.setTotemTab('estoque');">
+                            + Novo Produto
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <input type="text" id="totem-stock-search" class="glass"
+                           style="width:100%;padding:9px 12px;color:var(--text-primary);"
+                           placeholder="🔍 Buscar por nome ou código..."
+                           oninput="app._totemStockSearch(this.value)">
+                </div>
+
+                <div id="totem-stock-list">
+                    ${this._getTotemStockRows(this.state.products)}
+                </div>
+            </div>
+        `;
+    },
+
+    _getTotemStockRows(products) {
+        if (products.length === 0)
+            return '<p style="text-align:center;color:var(--text-secondary);padding:30px;">Nenhum produto cadastrado.</p>';
+
+        return products.map(p => {
+            const sc = p.stock <= 0 ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
+            return `
+            <div class="glass" style="padding:13px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <div style="flex:1;min-width:0;">
+                    <p style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">${p.name}</p>
+                    ${p.barcode?`<p style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary);">🔖 ${p.barcode}</p>`:''}
+                    <p style="font-size:0.78rem;color:var(--text-secondary);">Venda: <strong style="color:var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
+                    <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock<=3&&p.stock>0?' ⚠️':p.stock<=0?' ❌ Esgotado':''}</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},-1);app.saveState();app.setTotemTab('estoque')">−</button>
+                        <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock}</span>
+                        <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},1);app.saveState();app.setTotemTab('estoque')">+</button>
+                    </div>
+                    <button class="glass" style="padding:5px 12px;font-size:0.75rem;color:var(--accent-color);border:1px solid var(--glass-border);"
+                            onclick="app.openProductModal(${p.id})">✏️ Editar</button>
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    _totemStockSearch(query) {
+        const q = query.toLowerCase();
+        const filtered = q
+            ? this.state.products.filter(p =>
+                p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)))
+            : this.state.products;
+        const el = document.getElementById('totem-stock-list');
+        if (el) el.innerHTML = this._getTotemStockRows(filtered);
+    },
+
+    _totemScanEstoque() {
+        this._scannerForPDV = false;
+        this.openBarcodeScanner(false);
+    },
+
+
 
     logout() {
         if (confirm('Deseja realmente sair?')) {
@@ -1756,8 +2069,15 @@ const app = {
         }
         this.saveState();
         this.closeModal();
-        this.render('admin-stock');
+
+        // Redireciona para o contexto correto após salvar
+        if (this.state.user?.role === 'totem') {
+            this.setTotemTab('estoque');
+        } else {
+            this.render('admin-stock');
+        }
     },
+
 
     // ──────────────────────────────────────────────────────────────
     //  PDV — Ponto de Venda
@@ -1978,7 +2298,16 @@ const app = {
                 qty: 1
             });
         }
-        this.render('pdv');
+        this._refreshPDVView();
+    },
+
+    // Redireciona para o PDV correto dependendo do contexto (totem ou admin)
+    _refreshPDVView() {
+        if (this.state.user?.role === 'totem') {
+            this.setTotemTab('pdv');
+        } else {
+            this.render('pdv');
+        }
     },
 
     pdvAddToCartByCode(code) {
@@ -1995,21 +2324,19 @@ const app = {
         const item = this.state.cart[idx];
         if (!item) return;
         item.qty = Math.max(1, item.qty + delta);
-        this.renderPDVTotals();
-        // Re-render apenas o carrinho sem recarregar a página toda
-        this.render('pdv');
+        this._refreshPDVView();
     },
 
     pdvRemoveItem(idx) {
         this.state.cart.splice(idx, 1);
-        this.render('pdv');
+        this._refreshPDVView();
     },
 
     clearCart() {
         if (confirm('Limpar o carrinho?')) {
             this.state.cart = [];
             this.state.pdvDiscount = 0;
-            this.render('pdv');
+            this._refreshPDVView();
         }
     },
 
