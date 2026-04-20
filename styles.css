@@ -81,9 +81,14 @@ h1, h2, h3 {
 /* Layout */
 .container {
     width: 100%;
-    max-width: 480px; /* App feel */
+    max-width: 480px; /* App feel for internal views */
     margin: 0 auto;
     padding: 20px;
+}
+
+.full-width {
+    max-width: none;
+    padding: 0;
 }
 
 header {
@@ -603,16 +608,40 @@ section {
 }
 
 .hero h1 {
-    font-size: 3.5rem;
+    font-size: clamp(2rem, 8vw, 3.5rem); /* Fonte fluida para mobile */
     color: var(--accent-color);
     margin-bottom: 10px;
-    text-shadow: 0 5px 15px rgba(0,0,0,1);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+    font-family: 'Playfair Display', serif;
 }
 
 .hero p {
-    font-size: 1.1rem;
-    letter-spacing: 4px;
+    font-size: clamp(0.8rem, 3vw, 1.1rem);
+    letter-spacing: 3px;
     text-transform: uppercase;
     color: white;
     margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.integrated-logo {
+    mix-blend-mode: screen; /* Tenta remover fundo preto se for o caso, ou multiply para branco */
+    filter: brightness(1.2) contrast(1.1);
+    background: transparent !important;
+}
+
+/* Utilitários de Responsividade */
+@media (max-width: 600px) {
+    .hero {
+        height: 70vh;
+    }
+    .hero h1 {
+        line-height: 1.1;
+    }
+    .fab {
+        bottom: 20px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+    }
 }

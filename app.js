@@ -242,8 +242,12 @@ const app = {
         const appContainer = document.getElementById('app');
         const main = document.getElementById('main-content');
         
-        // Reset layout classes
-        appContainer.className = 'container'; 
+        // Toggle full-width for landing page
+        if (view === 'home' || view === 'services') {
+            appContainer.className = 'container full-width';
+        } else {
+            appContainer.className = 'container';
+        }
         
         // [x] Agenda Multi-Colunas (Visão Admin Geral vs Visão Barbeiro Privada)
         // Se for uma visão administrativa/barbeiro, usar o layout com sidebar
@@ -253,11 +257,12 @@ const app = {
         }
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
-            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 10; display: flex; justify-content: center;">
-                <div class="logo-container" style="display: flex; align-items: center; gap: 15px;">
-                    <img src="logo_centauro.png" alt="Logo" style="width: 50px;">
-                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
+            <header class="fade-in" style="padding: 15px 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: space-between; align-items: center;">
+                <div class="logo-container" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 50px; backdrop-filter: blur(5px); border: 1px solid rgba(212,175,55,0.3);">
+                    <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 35px; filter: invert(1) brightness(2);">
+                    <span style="font-family: 'Playfair Display'; font-size: 1.2rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
                 </div>
+                <button class="btn-secondary" style="padding: 8px 15px; font-size: 0.75rem; border-color: rgba(255,255,255,0.5); color: white;" onclick="app.navigateTo('login')">LOGIN</button>
             </header>
             <main id="main-content"></main>
             ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
