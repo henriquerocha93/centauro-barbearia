@@ -257,11 +257,12 @@ const app = {
         }
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
-            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center;">
+            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
                 <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
                     <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 40px; filter: invert(1) brightness(2);">
                     <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
                 </div>
+                <button onclick="app.navigateTo('login')" style="position: absolute; right: 20px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: color 0.3s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'" title="Acesso Restrito">🔒</button>
             </header>
             <main id="main-content"></main>
             ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
