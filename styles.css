@@ -513,3 +513,29 @@ section {
     text-decoration: none;
     margin-top: 10px;
 }
+
+/* Step Indicators / Booking */
+.step-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--glass-border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+.step-indicator.active {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.glass.active {
+    border-color: var(--accent-color) !important;
+    background: var(--accent-glow) !important;
+}

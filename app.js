@@ -56,7 +56,17 @@ const app = {
         ],
         currentDate: new Date().toISOString().split('T')[0], // Data atual para a agenda
         vouchers: [], // Vales dos barbeiros
-        transactions: [] // Fluxo de caixa
+        transactions: [], // Fluxo de caixa
+        bookingState: {
+            step: 1,
+            barber: null,
+            service: null,
+            date: new Date().toISOString().split('T')[0],
+            time: null,
+            customerName: '',
+            customerPhone: '',
+            customerBirth: ''
+        }
     },
 
     openModal(title, contentHTML) {
@@ -1231,41 +1241,238 @@ const app = {
     },
 
     renderBooking(container) {
-        // Filtra para exibir apenas funcionários com cargo de barbeiro E marcados para aparecer na agenda
-        const barbers = this.state.staff.filter(s => s.role === 'barber' && s.showInAgenda !== false);
-
+        const bs = this.state.bookingState;
+        
         container.innerHTML = `
             <section id="booking-view" class="fade-in">
-                <h2 class="section-title">Agendar Horário</h2>
-                
-                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">1. Escolha seu profissional</p>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                    ${barbers.map(b => `
-                        <div class="glass" style="padding: 15px; text-align: center; cursor: pointer; border: 2px solid var(--glass-border); border-radius: 12px; transition: all 0.3s; background: var(--surface-light);" 
-                             onclick="alert('Você estaria agendando com ${b.name}. Em um banco real ele salvaria o estado aqui e passaria para a tela de Seleção de Serviços.')"
-                             onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--glass-border)'">
-                            <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); padding: 2px; background: white;">
-                            <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
-                            <p style="color: var(--accent-color); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
-                        </div>
-                    `).join('')}
+                <div class="booking-header" style="text-align: center; margin-bottom: 30px;">
+                    <h2 class="section-title">Agendar Horário</h2>
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+                        <div class="step-indicator ${bs.step >= 1 ? 'active' : ''}">1</div>
+                        <div class="step-indicator ${bs.step >= 2 ? 'active' : ''}">2</div>
+                        <div class="step-indicator ${bs.step >= 3 ? 'active' : ''}">3</div>
+                        <div class="step-indicator ${bs.step >= 4 ? 'active' : ''}">4</div>
+                    </div>
                 </div>
-
-                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">2. Selecione o serviço</p>
-                <div class="service-list">
-                    ${this.state.services.map(s => `
-                        <div class="service-card glass" style="cursor: pointer;" onclick="alert('Serviço de ${s.name} selecionado!')">
-                            <div class="service-info">
-                                <h4>${s.name}</h4>
-                                <p style="color: var(--text-secondary);">R$ ${s.price} - ${s.duration} min</p>
-                            </div>
-                        </div>
-                    `).join('')}
+                <div id="booking-step-content"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    ${bs.step > 1 ? `<button class="btn-secondary" style="flex: 1;" onclick="app.prevBookingStep()">❮ Voltar</button>` : ''}
+                    <button class="btn-secondary" style="flex: 1;" onclick="app.navigateTo('home')">Cancelar</button>
                 </div>
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('home')">Voltar</button>
             </section>
         `;
+
+        const content = document.getElementById('booking-step-content');
+        
+        if (bs.step === 1) this.renderBookingStep1(content);
+        else if (bs.step === 2) this.renderBookingStep2(content);
+        else if (bs.step === 3) this.renderBookingStep3(content);
+        else if (bs.step === 4) this.renderBookingStep4(content);
+    },
+
+    renderBookingStep1(container) {
+        const barbers = this.state.staff.filter(s => s.role === 'barber' && s.showInAgenda !== false);
+        container.innerHTML = `
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha seu profissional</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
+                ${barbers.map(b => `
+                    <div class="glass" style="padding: 15px; text-align: center; cursor: pointer; border: 2px solid ${this.state.bookingState.barber?.id === b.id ? 'var(--accent-color)' : 'var(--glass-border)'}; border-radius: 12px; transition: all 0.3s; background: var(--surface-light);" 
+                         onclick="app.selectBookingBarber(${b.id})">
+                        <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); padding: 2px; background: white;">
+                        <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
+                        <p style="color: var(--accent-color); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    renderBookingStep2(container) {
+        container.innerHTML = `
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Selecione o serviço</p>
+            <div class="service-list">
+                ${this.state.services.map(s => `
+                    <div class="service-card glass" style="cursor: pointer; border: 2px solid ${this.state.bookingState.service?.id === s.id ? 'var(--accent-color)' : 'transparent'};" 
+                         onclick="app.selectBookingService(${s.id})">
+                        <div class="service-info">
+                            <h4>${s.name}</h4>
+                            <p style="color: var(--text-secondary);">R$ ${s.price} - ${s.duration} min</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    renderBookingStep3(container) {
+        const timeSlots = this.generateTimeSlotsForBooking();
+        container.innerHTML = `
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha data e horário</p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Data</label>
+                <input type="date" id="booking-date" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
+                       value="${this.state.bookingState.date}" min="${new Date().toISOString().split('T')[0]}"
+                       onchange="app.selectBookingDate(this.value)">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
+                ${timeSlots.length === 0 ? '<p style="grid-column: 1/-1; text-align: center; color: #ff4444; padding: 20px;">Sem horários disponíveis para esta data.</p>' : ''}
+                ${timeSlots.map(t => `
+                    <button class="glass ${this.state.bookingState.time === t ? 'active' : ''}" 
+                            style="padding: 10px; font-size: 0.85rem; border: 1px solid ${this.state.bookingState.time === t ? 'var(--accent-color)' : 'var(--glass-border)'};"
+                            onclick="app.selectBookingTime('${t}')">
+                        ${t}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    renderBookingStep4(container) {
+        const bs = this.state.bookingState;
+        container.innerHTML = `
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Confirme seus dados</p>
+            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Barbeiro:</strong> ${bs.barber.name}</p>
+                <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Serviço:</strong> ${bs.service.name} (R$ ${bs.service.price})</p>
+                <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Data/Hora:</strong> ${new Date(bs.date + 'T00:00:00').toLocaleDateString()} às ${bs.time}</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Nome Completo</label>
+                    <input type="text" id="cust-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
+                           value="${bs.customerName}" placeholder="Ex: João da Silva" oninput="app.state.bookingState.customerName = this.value">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Telefone (WhatsApp)</label>
+                    <input type="text" id="cust-phone" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
+                           value="${bs.customerPhone}" placeholder="Ex: (51) 99999-9999" oninput="app.state.bookingState.customerPhone = this.value">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Data de Nascimento</label>
+                    <input type="date" id="cust-birth" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
+                           value="${bs.customerBirth}" oninput="app.state.bookingState.customerBirth = this.value">
+                </div>
+                
+                <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="app.finalizeBooking()">Confirmar Agendamento</button>
+            </div>
+        `;
+    },
+
+    selectBookingBarber(id) {
+        this.state.bookingState.barber = this.state.staff.find(s => s.id === id);
+        this.state.bookingState.step = 2;
+        this.render('booking');
+    },
+
+    selectBookingService(id) {
+        this.state.bookingState.service = this.state.services.find(s => s.id === id);
+        this.state.bookingState.step = 3;
+        this.render('booking');
+    },
+
+    selectBookingDate(date) {
+        this.state.bookingState.date = date;
+        this.state.bookingState.time = null;
+        this.render('booking');
+    },
+
+    selectBookingTime(time) {
+        this.state.bookingState.time = time;
+        this.state.bookingState.step = 4;
+        this.render('booking');
+    },
+
+    prevBookingStep() {
+        if (this.state.bookingState.step > 1) {
+            this.state.bookingState.step--;
+            this.render('booking');
+        }
+    },
+
+    generateTimeSlotsForBooking() {
+        const bs = this.state.bookingState;
+        if (!bs.barber) return [];
+
+        const dateObj = new Date(bs.date + 'T00:00:00');
+        const dayOfWeek = dateObj.getDay();
+        const { intervalMin, schedule } = this.state.settings.agenda;
+        const dayConfig = schedule[dayOfWeek];
+        if (!dayConfig || !dayConfig.active) return [];
+
+        const slots = [];
+        let [hour, min] = dayConfig.open.split(':').map(Number);
+        const [endHour, endMin] = dayConfig.close.split(':').map(Number);
+        
+        while (hour < endHour || (hour === endHour && min < endMin)) {
+            const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+            
+            const isOccupied = this.state.appointments.some(a => 
+                a.barber === bs.barber.name && 
+                a.time === time && 
+                (a.date === bs.date || (!a.date && bs.date === new Date().toISOString().split('T')[0])) &&
+                a.status !== 'cancelado'
+            );
+
+            if (!isOccupied) {
+                slots.push(time);
+            }
+
+            min += intervalMin;
+            if (min >= 60) {
+                hour += Math.floor(min / 60);
+                min = min % 60;
+            }
+        }
+        return slots;
+    },
+
+    finalizeBooking() {
+        const bs = this.state.bookingState;
+        if (!bs.customerName || !bs.customerPhone || !bs.customerBirth) {
+            alert('Por favor, preencha todos os campos para confirmar.');
+            return;
+        }
+
+        let customer = this.state.customers.find(c => c.phone === bs.customerPhone);
+        if (!customer) {
+            const newId = this.state.customers.length ? Math.max(...this.state.customers.map(c => c.id || 0)) + 1 : 1;
+            customer = {
+                id: newId,
+                name: bs.customerName,
+                phone: bs.customerPhone,
+                birthDate: bs.customerBirth,
+                gender: 'M',
+                history: []
+            };
+            this.state.customers.push(customer);
+        }
+
+        const newAptId = this.state.appointments.length ? Math.max(...this.state.appointments.map(a => a.id || 0)) + 1 : 101;
+        const appointment = {
+            id: newAptId,
+            barber: bs.barber.name,
+            time: bs.time,
+            customer: bs.customerName,
+            service: bs.service.name,
+            price: bs.service.price,
+            status: 'agendado',
+            date: bs.date
+        };
+
+        this.state.appointments.push(appointment);
+        this.saveState();
+        
+        alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name}!`);
+        
+        this.state.bookingState = {
+            step: 1, barber: null, service: null, time: null,
+            date: new Date().toISOString().split('T')[0],
+            customerName: '', customerPhone: '', customerBirth: ''
+        };
+        this.navigateTo('home');
     },
 
     renderAdminCustomers(container) {
