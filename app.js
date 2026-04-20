@@ -1229,35 +1229,98 @@ const app = {
         container.innerHTML = `
             <section id="stock-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title">Estoque</h2>
+                    <h2 class="section-title">Estoque de Produtos</h2>
                     <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem;" id="btn-add-stock">+ Produto</button>
                 </div>
                 <div class="stock-list">
-                    ${this.state.products.map(p => `
-                        <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <p style="font-weight: 600;">${p.name}</p>
-                                <p style="font-size: 0.8rem; color: var(--text-secondary);">Qtd: ${p.stock} | Preço: R$ ${p.price}</p>
+                    ${this.state.products.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhum produto cadastrado. Clique em "+ Produto" para adicionar.</p>' : ''}
+                    ${this.state.products.map(p => {
+                        const stockColor = p.stock <= 0 ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
+                        return `
+                        <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${p.name}</p>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary);">Preço: <strong style="color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
+                                <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button class="glass" style="padding: 5px 10px;" onclick="app.updateStock(${p.id}, -1); app.render('admin-stock')">-</button>
-                                <button class="glass" style="padding: 5px 10px;" onclick="app.updateStock(${p.id}, 1); app.render('admin-stock')">+</button>
+                            <div style="display: flex; gap: 5px; align-items: center; flex-shrink: 0;">
+                                <button class="glass" style="padding: 6px 12px; font-size: 1rem; font-weight: 700;" title="Remover 1 unidade" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
+                                <span style="min-width: 28px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
+                                <button class="glass" style="padding: 6px 12px; font-size: 1rem; font-weight: 700;" title="Adicionar 1 unidade" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
+                                <button class="glass" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-color); border: 1px solid var(--glass-border);" title="Editar produto" onclick="app.openProductModal(${p.id})">✏️ Editar</button>
+                                <button class="glass" style="padding: 6px 12px; font-size: 0.8rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" title="Excluir produto" onclick="app.deleteProduct(${p.id})">🗑️</button>
                             </div>
-                        </div>
-                    `).join('')}
+                        </div>`;
+                    }).join('')}
                 </div>
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">Voltar</button>
             </section>
         `;
-        document.getElementById('btn-add-stock').onclick = () => {
-            const name = prompt('Nome do produto:');
-            const price = parseFloat(prompt('Preço de venda:'));
-            const stock = parseInt(prompt('Quantidade inicial:'));
-            if (name && price && stock) {
-                this.state.products.push({ id: Date.now(), name, price, stock });
-                this.render('admin-stock');
+        document.getElementById('btn-add-stock').onclick = () => this.openProductModal(null);
+    },
+
+    openProductModal(productId) {
+        const isNew = productId === null;
+        const product = isNew ? { name: '', price: 0, stock: 0 } : this.state.products.find(p => p.id === productId);
+        if (!product) return;
+
+        this.openModal(isNew ? 'Novo Produto' : 'Editar Produto', `
+            <section class="fade-in">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Produto *</label>
+                        <input type="text" id="prod-name" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.name}" placeholder="Ex: Pomada Modeladora">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Preço de Venda (R$) *</label>
+                            <input type="number" id="prod-price" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.price}" min="0" step="0.01">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Qtd. em Estoque *</label>
+                            <input type="number" id="prod-stock" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.stock}" min="0">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
+                        <button class="btn-primary" style="flex: 2;" onclick="app.saveProduct(${isNew ? 'null' : productId})">Salvar Produto</button>
+                    </div>
+                </div>
+            </section>
+        `);
+    },
+
+    saveProduct(productId) {
+        const name = document.getElementById('prod-name').value.trim();
+        const price = parseFloat(document.getElementById('prod-price').value) || 0;
+        const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+
+        if (!name) {
+            alert('Informe o nome do produto.');
+            return;
+        }
+
+        if (productId === null) {
+            this.state.products.push({ id: Date.now(), name, price, stock });
+        } else {
+            const product = this.state.products.find(p => p.id === productId);
+            if (product) {
+                product.name = name;
+                product.price = price;
+                product.stock = stock;
             }
-        };
+        }
+        this.saveState();
+        this.closeModal();
+        this.render('admin-stock');
+    },
+
+    deleteProduct(productId) {
+        if (confirm('Deseja realmente excluir este produto do estoque?')) {
+            this.state.products = this.state.products.filter(p => p.id !== productId);
+            this.saveState();
+            this.render('admin-stock');
+        }
     },
 
     renderAdminCashFlow(container) {
@@ -1361,9 +1424,10 @@ const app = {
     },
 
     renderAdminVouchers(container) {
+        const today = new Date().toISOString().split('T')[0];
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
-                <h2 class="section-title">Lançar Valis</h2>
+                <h2 class="section-title">Lançar Vales</h2>
                 <div class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Barbeiro</label>
@@ -1373,22 +1437,45 @@ const app = {
                             `).join('')}
                         </select>
                     </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Valor do Vale (R$)</label>
+                            <input type="number" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Data de Desconto 📅</label>
+                            <input type="date" id="voucher-discount-date" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${today}">
+                        </div>
+                    </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Valor do Vale (R$)</label>
-                        <input type="number" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observação (opcional)</label>
+                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário">
                     </div>
                     <button class="btn-primary" style="width: 100%;" id="btn-save-voucher">Confirmar Retirada</button>
                 </div>
 
                 <h3 class="section-title" style="font-size: 1.1rem;">Últimos Lançados</h3>
                 <div class="voucher-list">
-                    ${this.state.vouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum vale hoje</p>' : ''}
-                    ${this.state.vouchers.map(v => `
-                        <div class="glass" style="padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between;">
-                            <span>${v.barber}</span>
-                            <span style="color: #ff4444;">- R$ ${v.amount.toFixed(2)}</span>
+                    ${this.state.vouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum vale lançado</p>' : ''}
+                    ${this.state.vouchers.map(v => {
+                        const discountLabel = v.discountDate
+                            ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(v.discountDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+                            : '';
+                        const noteLabel = v.note ? `<span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">${v.note}</span>` : '';
+                        return `
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <span style="font-weight: 600; color: var(--text-primary);">${v.barber}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">${new Date(v.date).toLocaleDateString('pt-BR')} — Emissão</span>
+                                ${discountLabel}
+                                ${noteLabel}
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                                <span style="font-weight: 700; color: #ff4444; white-space: nowrap;">- R$ ${v.amount.toFixed(2)}</span>
+                                <button class="glass" style="padding: 3px 10px; font-size: 0.7rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3); cursor: pointer;" onclick="app.deleteVoucher(${v.id})">Excluir</button>
+                            </div>
                         </div>
-                    `).reverse().join('')}
+                    `}).reverse().join('')}
                 </div>
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
             </section>
@@ -1397,14 +1484,27 @@ const app = {
         document.getElementById('btn-save-voucher').onclick = () => {
             const barber = document.getElementById('barber-select').value;
             const amount = parseFloat(document.getElementById('voucher-amount').value);
+            const discountDate = document.getElementById('voucher-discount-date').value;
+            const note = document.getElementById('voucher-note').value.trim();
             if (barber && amount) {
-                const voucher = { id: Date.now(), barber, amount, date: new Date().toISOString() };
+                const voucher = { id: Date.now(), barber, amount, date: new Date().toISOString(), discountDate: discountDate || null, note: note || '' };
                 this.state.vouchers.push(voucher);
                 // Registrar também no fluxo de caixa como saída
-                this.addTransaction('out', `Vale: ${barber}`, amount, 'vale');
+                this.addTransaction('out', `Vale: ${barber}${note ? ' - ' + note : ''}`, amount, 'vale');
+                this.saveState();
                 this.render('admin-vouchers');
+            } else {
+                alert('Preencha o barbeiro e o valor do vale.');
             }
         };
+    },
+
+    deleteVoucher(voucherId) {
+        if (confirm('Deseja realmente excluir este vale? Esta ação não pode ser desfeita.')) {
+            this.state.vouchers = this.state.vouchers.filter(v => v.id !== voucherId);
+            this.saveState();
+            this.render('admin-vouchers');
+        }
     },
 
     renderBooking(container) {
