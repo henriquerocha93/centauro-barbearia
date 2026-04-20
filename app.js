@@ -1444,7 +1444,7 @@ const app = {
                     <h2 class="section-title">Estoque de Produtos</h2>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; background: #7c3aed; display: flex; align-items: center; gap: 6px;" id="btn-scan-barcode">
-                            📷 Escanear Código
+                            📶 Leitor USB
                         </button>
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="btn-add-stock">
                             + Novo Produto
@@ -1523,129 +1523,69 @@ const app = {
         if (container) container.innerHTML = this.renderStockItems(filtered);
     },
 
-    // ─── Leitor de Código de Barras ───────────────────────────────────────────
+    // ─── Leitor de Código de Barras USB ──────────────────────────────────────
+    // Leitores USB 2D emulam teclado: digitam o código e enviam Enter automaticamente.
 
     openBarcodeScanner(forPDV = false) {
         this._scannerForPDV = forPDV;
-        this.openModal('📷 Escanear Código de Barras', `
+        const title = forPDV ? '📶 Scanner — PDV' : '📶 Escanear Código de Barras';
+        const hint  = forPDV
+            ? 'Aponte o leitor para o produto. Ele será adicionado ao carrinho automaticamente.'
+            : 'Aponte o leitor para o produto ou digite o código abaixo.';
+
+        this.openModal(title, `
             <section class="fade-in" style="padding-top: 5px;">
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; text-align: center;">
-                    Aponte a câmera para o código de barras ou QR Code do produto.
+                <!-- Ícone do leitor -->
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <div style="font-size: 4rem; margin-bottom: 8px; animation: pulse 1.5s ease-in-out infinite;">📶</div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">${hint}</p>
+                </div>
+
+                <!-- Input principal — recebe o código do leitor USB -->
+                <div style="position: relative; margin-bottom: 14px;">
+                    <input type="text" id="usb-barcode-input" class="glass"
+                           style="width: 100%; padding: 14px 50px 14px 16px; color: var(--text-primary); font-size: 1.1rem; font-family: monospace; letter-spacing: 2px;
+                                  border: 2px solid var(--accent-color); border-radius: 12px; outline: none;
+                                  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 212,175,55), 0.15);"
+                           placeholder="Aguardando leitura..."
+                           autocomplete="off" autofocus
+                           oninput="app._scanBuffer = this.value;"
+                           onkeydown="if(event.key === 'Enter') { event.preventDefault(); app.handleBarcodeResult(this.value.trim()); }">
+                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; opacity: 0.5;">↵</span>
+                </div>
+
+                <p style="font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin-bottom: 14px;">
+                    ↵ O leitor envia <strong>Enter</strong> automaticamente após a leitura.
                 </p>
 
-                <!-- Visor da câmera -->
-                <div style="position: relative; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 12px; aspect-ratio: 4/3; max-height: 300px;">
-                    <video id="scanner-video" style="width: 100%; height: 100%; object-fit: cover; display: block;" autoplay playsinline muted></video>
-                    <!-- Mira de leitura -->
-                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-                        <div style="width: 70%; height: 2px; background: rgba(255,60,60,0.85); box-shadow: 0 0 8px rgba(255,60,60,0.6); border-radius: 2px;"></div>
-                    </div>
-                    <div style="position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;"></div>
-                </div>
-
-                <div id="scan-status" style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); padding: 8px; margin-bottom: 10px;">
-                    🔍 Aguardando leitura do código...
-                </div>
-
-                <!-- Entrada manual como alternativa -->
-                <div style="display: flex; gap: 8px; margin-bottom: 5px;">
-                    <input type="text" id="manual-barcode" class="glass" style="flex: 1; padding: 9px; color: var(--text-primary); font-size: 0.9rem;" 
-                           placeholder="Ou digite o código manualmente" 
-                           onkeydown="if(event.key==='Enter') app.handleBarcodeResult(this.value.trim())">
-                    <button class="btn-primary" style="padding: 9px 14px; font-size: 0.85rem;" onclick="app.handleBarcodeResult(document.getElementById('manual-barcode').value.trim())">
-                        Buscar
-                    </button>
-                </div>
-
-                <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="app.stopBarcodeScanner(); app.closeModal();">
+                <button class="btn-secondary" style="width: 100%;" onclick="app.closeModal()">
                     Cancelar
                 </button>
             </section>
         `);
 
-        // Inicia o scanner após o modal estar no DOM
-        setTimeout(() => this.startBarcodeScanner(), 300);
-    },
-
-    startBarcodeScanner() {
-        const statusEl = document.getElementById('scan-status');
-        const videoEl  = document.getElementById('scanner-video');
-        if (!videoEl) return;
-
-        // Tenta usar ZXing (biblioteca carregada via CDN)
-        if (typeof ZXingBrowser !== 'undefined' || (typeof window.ZXing !== 'undefined')) {
-            const ZXingLib = window.ZXingBrowser || window.ZXing;
-            try {
-                const codeReader = new ZXingLib.BrowserMultiFormatReader();
-                this._codeReader = codeReader;
-                codeReader.decodeFromVideoDevice(null, 'scanner-video', (result, err) => {
-                    if (result) {
-                        const code = result.getText();
-                        if (statusEl) statusEl.innerHTML = `✅ Código lido: <strong>${code}</strong>`;
-                        this.stopBarcodeScanner();
-                        setTimeout(() => this.handleBarcodeResult(code), 400);
-                    }
-                    // err é normal (frame sem código), ignora
-                });
-                if (statusEl) statusEl.textContent = '🔍 Câmera ativa — aponte para o código...';
-                return;
-            } catch (e) {
-                console.warn('ZXing falhou, usando API nativa:', e);
-            }
-        }
-
-        // Fallback: API nativa BarcodeDetector (Chrome/Android)
-        if ('BarcodeDetector' in window) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(stream => {
-                    this._cameraStream = stream;
-                    videoEl.srcObject = stream;
-                    const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code', 'code_39', 'upc_a'] });
-                    const scan = async () => {
-                        if (!this._scanning) return;
-                        try {
-                            const barcodes = await detector.detect(videoEl);
-                            if (barcodes.length > 0) {
-                                const code = barcodes[0].rawValue;
-                                if (statusEl) statusEl.innerHTML = `✅ Código lido: <strong>${code}</strong>`;
-                                this.stopBarcodeScanner();
-                                setTimeout(() => this.handleBarcodeResult(code), 400);
-                                return;
-                            }
-                        } catch(_) {}
-                        requestAnimationFrame(scan);
-                    };
-                    this._scanning = true;
-                    scan();
-                    if (statusEl) statusEl.textContent = '🔍 Câmera ativa — aponte para o código...';
-                })
-                .catch(() => {
-                    if (statusEl) statusEl.innerHTML = '⚠️ Permissão de câmera negada. Use a entrada manual.';
-                });
-        } else {
-            if (statusEl) statusEl.innerHTML = '⚠️ Câmera não suportada neste dispositivo. Use a entrada manual abaixo.';
-        }
+        // Garantir foco no input após o modal abrir
+        setTimeout(() => {
+            const inp = document.getElementById('usb-barcode-input');
+            if (inp) inp.focus();
+        }, 150);
     },
 
     stopBarcodeScanner() {
-        this._scanning = false;
-        if (this._codeReader) {
-            try { this._codeReader.reset(); } catch(_) {}
-            this._codeReader = null;
-        }
-        if (this._cameraStream) {
-            this._cameraStream.getTracks().forEach(t => t.stop());
-            this._cameraStream = null;
-        }
+        // Não há mais recursos de câmera para liberar
+        // Mantido por compatibilidade com chamadas existentes
     },
 
     handleBarcodeResult(code) {
-        if (!code) { alert('Código não detectado. Tente novamente.'); return; }
-        this.stopBarcodeScanner();
+        if (!code || !code.trim()) { 
+            const inp = document.getElementById('usb-barcode-input');
+            if (inp) { inp.value = ''; inp.focus(); }
+            return; 
+        }
+        code = code.trim();
         this.closeModal();
 
         if (this._scannerForPDV) {
-            // Adicionar produto ao carrinho do PDV
             this.pdvAddToCartByCode(code);
             return;
         }
@@ -1837,25 +1777,38 @@ const app = {
 
         container.innerHTML = `
             <section id="pdv-view" class="fade-in" style="padding-bottom: 40px;">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px;">
                     <div>
                         <h2 class="section-title" style="margin-bottom: 3px;">💵 PDV — Ponto de Venda</h2>
                         <p style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'})}</p>
                     </div>
-                    <button class="btn-primary" style="background: #7c3aed; padding: 8px 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" onclick="app.openBarcodeScanner(true)">
-                        📷 Escanear
-                    </button>
+                </div>
+
+                <!-- Barra de Scanner USB — sempre visível no PDV -->
+                <div class="glass" style="padding: 14px 18px; margin-bottom: 18px; border-left: 4px solid #7c3aed; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.6rem; flex-shrink: 0;">📶</span>
+                    <div style="flex: 1; position: relative;">
+                        <input type="text" id="pdv-scanner-input" class="glass"
+                               style="width: 100%; padding: 10px 44px 10px 14px; color: var(--text-primary); font-size: 1rem; font-family: monospace;
+                                      border: 1.5px solid #7c3aed; border-radius: 10px; outline: none; letter-spacing: 1px;"
+                               placeholder="Aponte o leitor para o produto..."
+                               autocomplete="off"
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ app.pdvAddToCartByCode(c); this.value=''; } }"
+                               oninput="if(this.value.length===0) return;">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1rem; opacity:0.4;">↵</span>
+                    </div>
+                    <span style="font-size:0.72rem; color:var(--text-secondary); white-space:nowrap; flex-shrink:0;">Leitor USB</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start;">
 
                     <!-- COLUNA ESQUERDA: catálogo -->
                     <div>
-                        <!-- Busca -->
+                        <!-- Busca por nome -->
                         <div style="margin-bottom: 14px;">
                             <input type="text" id="pdv-search" class="glass"
-                                   style="width: 100%; padding: 11px 14px; color: var(--text-primary); font-size: 0.95rem;"
-                                   placeholder="🔍 Buscar produto..." oninput="app.renderPDVGrid(this.value)">
+                                   style="width: 100%; padding: 10px 14px; color: var(--text-primary); font-size: 0.9rem;"
+                                   placeholder="🔍 Buscar produto por nome..." oninput="app.renderPDVGrid(this.value)">
                         </div>
 
                         <!-- Grid de produtos -->
