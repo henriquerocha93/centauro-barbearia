@@ -58,8 +58,9 @@ const app = {
             customerPhone: '',
             customerBirth: ''
         },
-        cart: [],        // Carrinho do PDV
-        pdvSeller: null  // Barbeiro vendedor selecionado no PDV
+        cart: [],           // Carrinho do PDV
+        pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
+        serviceOrders: []   // Ordens de Serviço
     },
 
     openModal(title, contentHTML) {
@@ -88,7 +89,9 @@ const app = {
             vouchers: this.state.vouchers,
             transactions: this.state.transactions,
             products: this.state.products,
-            productSales: this.state.productSales || []
+            productSales: this.state.productSales || [],
+            appointments: this.state.appointments || [],
+            serviceOrders: this.state.serviceOrders || []
         }));
     },
 
@@ -119,6 +122,8 @@ const app = {
                 this.state.transactions = data.transactions || this.state.transactions;
                 this.state.products = data.products || this.state.products;
                 this.state.productSales = data.productSales || [];
+                this.state.appointments = data.appointments || this.state.appointments || [];
+                this.state.serviceOrders = data.serviceOrders || [];
             } catch (e) {
                 console.error("Erro ao carregar estado:", e);
             }
@@ -528,7 +533,7 @@ const app = {
                     <a class="menu-item ${view === (this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash') ? 'active' : ''}" 
                        onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
                     <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
-                    <a class="menu-item" onclick="alert('Funcionalidade em breve')"><i>📝</i> Ordens de Serviço</a>
+                    <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
@@ -599,6 +604,7 @@ const app = {
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
             case 'admin-settings': this.renderAdminSettings(main); break;
+            case 'admin-os': this.renderAdminOS(main); break;
             case 'pdv': this.renderPDV(main); break;
             default: 
                 console.warn('View não reconhecida no layout:', view);
@@ -1254,6 +1260,419 @@ const app = {
     renderAdminDash(container) {
         container.innerHTML = this.getBirthdaysHTML() + `<div id="dash-agenda-wrapper"></div>`;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  ORDENS DE SERVIÇO
+    // ══════════════════════════════════════════════════════════════
+
+    renderAdminOS(container) {
+        const orders  = this.state.serviceOrders || [];
+        const filter  = this.state.osFilter || 'all';
+
+        const counts = {
+            all:     orders.length,
+            open:    orders.filter(o => o.status === 'open').length,
+            progress:orders.filter(o => o.status === 'progress').length,
+            resolved:orders.filter(o => o.status === 'resolved').length,
+        };
+
+        const filtered = filter === 'all' ? orders
+            : orders.filter(o => o.status === filter);
+
+        // Ordenar: mais recentes primeiro
+        const sorted = [...filtered].sort((a, b) => b.createdAt - a.createdAt);
+
+        const statusBadge = (status) => {
+            const map = {
+                open:     { label: 'Aberta',       color: '#ff4444', bg: 'rgba(255,68,68,0.15)' },
+                progress: { label: 'Em andamento', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
+                resolved: { label: 'Resolvida',    color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+            };
+            const s = map[status] || map.open;
+            return `<span style="padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;color:${s.color};background:${s.bg};">${s.label}</span>`;
+        };
+
+        const problemIcon = (type) => ({
+            'corte':    '✂️', 'quimica':  '🧪', 'coloracao': '🎨',
+            'barba':    '💈', 'produto':  '🧴', 'lesao':     '⚠️',
+            'outro':    '📋',
+        }[type] || '📋');
+
+        const solutionLabel = (type) => ({
+            'refazer':  '🔄 Refazer o serviço',
+            'desconto': '🏷️ Desconto na próxima visita',
+            'reembolso_parcial': '💸 Reembolso parcial',
+            'reembolso_total':   '💸 Reembolso total',
+            'encaminhamento':    '📞 Encaminhamento externo',
+            'outro': '📝 Outro',
+        }[type] || type || '—');
+
+        container.innerHTML = `
+            <section class="fade-in" style="padding-bottom:40px;">
+                <!-- Cabeçalho -->
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom:3px;">📝 Ordens de Serviço</h2>
+                        <p style="font-size:0.78rem;color:var(--text-secondary);">Registre e acompanhe ocorrências e soluções para clientes</p>
+                    </div>
+                    <button class="btn-primary" style="padding:10px 20px;font-size:0.9rem;display:flex;align-items:center;gap:8px;"
+                            onclick="app.openNewOSModal()">
+                        + Nova Ordem
+                    </button>
+                </div>
+
+                <!-- Resumo por status -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:20px;">
+                    ${[
+                        { key:'all',      label:'Total',         color:'#a78bfa', count: counts.all },
+                        { key:'open',     label:'Abertas',       color:'#ff4444', count: counts.open },
+                        { key:'progress', label:'Em andamento',  color:'#fbbf24', count: counts.progress },
+                        { key:'resolved', label:'Resolvidas',    color:'#4ade80', count: counts.resolved },
+                    ].map(s => `
+                        <div class="glass" onclick="app.state.osFilter='${s.key}'; app.navigateTo('admin-os');"
+                             style="padding:14px;cursor:pointer;text-align:center;border-left:3px solid ${s.color};
+                                    ${filter===s.key?`background:rgba(255,255,255,0.06);`:''}transition:all 0.2s;"
+                             onmouseover="this.style.background='rgba(255,255,255,0.06)'"
+                             onmouseout="this.style.background='${filter===s.key?'rgba(255,255,255,0.06)':'transparent'}'">
+                            <p style="font-size:1.6rem;font-weight:800;color:${s.color};margin-bottom:2px;">${s.count}</p>
+                            <p style="font-size:0.72rem;color:var(--text-secondary);">${s.label}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Lista de OS -->
+                ${sorted.length === 0 ? `
+                    <div class="glass" style="padding:40px;text-align:center;">
+                        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                        <p style="color:var(--text-secondary);">Nenhuma ordem de serviço ${filter !== 'all' ? 'neste status' : 'registrada'}.</p>
+                        <button class="btn-primary" style="margin-top:16px;" onclick="app.openNewOSModal()">Criar primeira OS</button>
+                    </div>
+                ` : sorted.map(os => `
+                    <div class="glass fade-in" style="padding:18px;margin-bottom:12px;border-left:4px solid ${
+                        os.status==='open' ? '#ff4444' : os.status==='progress' ? '#fbbf24' : '#4ade80'
+                    };">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                            <div style="flex:1;min-width:200px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <span style="font-size:1.3rem;">${problemIcon(os.problemType)}</span>
+                                    <strong style="font-size:0.95rem;color:var(--text-primary);">${os.customerName}</strong>
+                                    ${statusBadge(os.status)}
+                                </div>
+                                <p style="font-size:0.75rem;color:var(--text-secondary);">
+                                    OS #${os.id.toString().slice(-5)} · ${new Date(os.createdAt).toLocaleDateString('pt-BR')}
+                                    ${os.barberName ? ` · Barbeiro: ${os.barberName}` : ''}
+                                </p>
+                            </div>
+                            <div style="display:flex;gap:6px;flex-shrink:0;">
+                                ${os.status !== 'resolved' ? `
+                                    <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:var(--accent-color);"
+                                            onclick="app.openResolveOSModal(${os.id})">✔ Resolver</button>
+                                ` : ''}
+                                <button class="glass" style="padding:6px 10px;font-size:0.75rem;"
+                                        onclick="app.openViewOSModal(${os.id})">👁 Detalhes</button>
+                                <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:#ff4444;"
+                                        onclick="app.deleteOS(${os.id})">🗑</button>
+                            </div>
+                        </div>
+
+                        <div style="padding:10px;background:var(--surface-dark);border-radius:8px;margin-bottom:8px;">
+                            <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:3px;">Problema:</p>
+                            <p style="font-size:0.85rem;color:var(--text-primary);">${os.problemDescription || '—'}</p>
+                        </div>
+
+                        ${os.solution ? `
+                        <div style="padding:10px;background:rgba(74,222,128,0.05);border-radius:8px;border:1px solid rgba(74,222,128,0.2);">
+                            <p style="font-size:0.8rem;color:#4ade80;margin-bottom:3px;">Solução: ${solutionLabel(os.solutionType)}</p>
+                            <p style="font-size:0.85rem;color:var(--text-primary);">${os.solution}</p>
+                        </div>` : ''}
+                    </div>
+                `).join('')}
+            </section>
+        `;
+    },
+
+    openNewOSModal() {
+        // Montar lista de clientes que passaram pela agenda
+        const apptNames = [...new Set(
+            (this.state.appointments || []).map(a => a.customerName).filter(Boolean)
+        )].sort();
+
+        // Também incluir clientes cadastrados
+        const registeredNames = (this.state.customers || []).map(c => c.name).filter(Boolean);
+        const allNames = [...new Set([...apptNames, ...registeredNames])].sort();
+
+        const barbers = this.state.staff.filter(s => s.role === 'barber' || s.role === 'admin');
+
+        this.openModal('📝 Nova Ordem de Serviço', `
+            <section class="fade-in" style="padding:5px;">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+
+                    <!-- Busca de cliente -->
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">👤 Cliente *</label>
+                        <input type="text" id="os-customer-search" class="glass"
+                               style="width:100%;padding:10px;color:var(--text-primary);margin-bottom:6px;"
+                               placeholder="Digite o nome do cliente..."
+                               oninput="app._filterOSCustomerList(this.value)"
+                               list="os-customer-list">
+                        <datalist id="os-customer-list">
+                            ${allNames.map(n => `<option value="${n}">`).join('')}
+                        </datalist>
+                        <div id="os-customer-suggestions" style="max-height:120px;overflow-y:auto;"></div>
+                    </div>
+
+                    <!-- Barbeiro responsável -->
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">✂️ Barbeiro Responsável</label>
+                        <select id="os-barber" class="glass" style="width:100%;padding:10px;color:var(--text-primary);">
+                            <option value="">— Não informado —</option>
+                            ${barbers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <!-- Tipo de problema -->
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">⚠️ Tipo de Ocorrência *</label>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;" id="os-problem-type-grid">
+                            ${[
+                                { key:'corte',    label:'✂️ Corte Incorreto' },
+                                { key:'quimica',  label:'🧪 Química / Relaxamento' },
+                                { key:'coloracao',label:'🎨 Coloração / Luzes' },
+                                { key:'barba',    label:'💈 Barba Incorreta' },
+                                { key:'produto',  label:'🧴 Reação a Produto' },
+                                { key:'lesao',    label:'⚠️ Lesão / Ferimento' },
+                                { key:'outro',    label:'📋 Outro' },
+                            ].map(p => `
+                                <button type="button" id="ospt-${p.key}"
+                                        class="glass"
+                                        style="padding:10px 8px;font-size:0.78rem;text-align:center;cursor:pointer;border-radius:8px;transition:all 0.2s;border:1px solid var(--glass-border);"
+                                        onclick="app._selectOSProblemType('${p.key}')">
+                                    ${p.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <input type="hidden" id="os-problem-type" value="">
+                    </div>
+
+                    <!-- Descrição do problema -->
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">📋 Descrição detalhada do problema *</label>
+                        <textarea id="os-problem-desc" class="glass"
+                                  style="width:100%;padding:10px;color:var(--text-primary);min-height:80px;resize:vertical;font-family:inherit;"
+                                  placeholder="Descreva o que aconteceu com o maior nível de detalhe possível..."></textarea>
+                    </div>
+
+                    <!-- Solução proposta -->
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">✅ Solução Proposta</label>
+                        <select id="os-solution-type" class="glass" style="width:100%;padding:10px;color:var(--text-primary);margin-bottom:8px;">
+                            <option value="">— Definir depois —</option>
+                            <option value="refazer">🔄 Refazer o serviço gratuitamente</option>
+                            <option value="desconto">🏷️ Desconto na próxima visita</option>
+                            <option value="reembolso_parcial">💸 Reembolso parcial</option>
+                            <option value="reembolso_total">💸 Reembolso total</option>
+                            <option value="encaminhamento">📞 Encaminhamento externo</option>
+                            <option value="outro">📝 Outro</option>
+                        </select>
+                        <textarea id="os-solution-desc" class="glass"
+                                  style="width:100%;padding:10px;color:var(--text-primary);min-height:60px;resize:vertical;font-family:inherit;"
+                                  placeholder="Descreva a solução acordada com o cliente (opcional)..."></textarea>
+                    </div>
+
+                    <div style="display:flex;gap:10px;margin-top:5px;">
+                        <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Cancelar</button>
+                        <button class="btn-primary" style="flex:2;" onclick="app.saveOS()">Criar Ordem de Serviço</button>
+                    </div>
+                </div>
+            </section>
+        `);
+    },
+
+    _filterOSCustomerList(query) {
+        const box = document.getElementById('os-customer-suggestions');
+        if (!box) return;
+        if (!query || query.length < 2) { box.innerHTML = ''; return; }
+
+        const q = query.toLowerCase();
+        const apptNames = [...new Set((this.state.appointments || []).map(a => a.customerName).filter(Boolean))];
+        const regNames  = (this.state.customers || []).map(c => c.name).filter(Boolean);
+        const all = [...new Set([...apptNames, ...regNames])].filter(n => n.toLowerCase().includes(q)).slice(0, 6);
+
+        box.innerHTML = all.map(name => `
+            <div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--glass-border);font-size:0.85rem;color:var(--text-primary);"
+                 onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                 onmouseout="this.style.background=''"
+                 onclick="document.getElementById('os-customer-search').value='${name}'; document.getElementById('os-customer-suggestions').innerHTML='';">
+                👤 ${name}
+            </div>
+        `).join('');
+    },
+
+    _selectOSProblemType(key) {
+        document.getElementById('os-problem-type').value = key;
+        document.querySelectorAll('#os-problem-type-grid button').forEach(btn => {
+            btn.style.borderColor = 'var(--glass-border)';
+            btn.style.background  = '';
+            btn.style.color       = 'var(--text-primary)';
+        });
+        const selected = document.getElementById(`ospt-${key}`);
+        if (selected) {
+            selected.style.borderColor = 'var(--accent-color)';
+            selected.style.background  = 'rgba(212,175,55,0.12)';
+            selected.style.color       = 'var(--accent-color)';
+        }
+    },
+
+    saveOS() {
+        const customerName    = document.getElementById('os-customer-search').value.trim();
+        const barberName      = document.getElementById('os-barber').value;
+        const problemType     = document.getElementById('os-problem-type').value;
+        const problemDesc     = document.getElementById('os-problem-desc').value.trim();
+        const solutionType    = document.getElementById('os-solution-type').value;
+        const solutionDesc    = document.getElementById('os-solution-desc').value.trim();
+
+        if (!customerName) { alert('Informe o nome do cliente.'); return; }
+        if (!problemType)  { alert('Selecione o tipo de ocorrência.'); return; }
+        if (!problemDesc)  { alert('Descreva o problema.'); return; }
+
+        if (!this.state.serviceOrders) this.state.serviceOrders = [];
+
+        this.state.serviceOrders.push({
+            id:                 Date.now(),
+            customerName,
+            barberName:         barberName || null,
+            problemType,
+            problemDescription: problemDesc,
+            solutionType:       solutionType || null,
+            solution:           solutionDesc || null,
+            status:             solutionType ? 'progress' : 'open',
+            createdAt:          Date.now(),
+            resolvedAt:         null,
+            resolvedBy:         null,
+            createdBy:          this.state.user?.name || 'Sistema',
+        });
+
+        this.saveState();
+        this.closeModal();
+        this.navigateTo('admin-os');
+    },
+
+    openResolveOSModal(osId) {
+        const os = (this.state.serviceOrders || []).find(o => o.id === osId);
+        if (!os) return;
+
+        this.openModal('✔ Resolver Ordem de Serviço', `
+            <section class="fade-in">
+                <div style="padding:12px;background:var(--surface-dark);border-radius:8px;margin-bottom:16px;">
+                    <p style="font-weight:700;color:var(--text-primary);margin-bottom:3px;">${os.customerName}</p>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);">${os.problemDescription}</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Solução aplicada *</label>
+                        <select id="resolve-solution-type" class="glass" style="width:100%;padding:10px;color:var(--text-primary);">
+                            <option value="refazer">🔄 Refazer o serviço gratuitamente</option>
+                            <option value="desconto">🏷️ Desconto na próxima visita</option>
+                            <option value="reembolso_parcial">💸 Reembolso parcial</option>
+                            <option value="reembolso_total">💸 Reembolso total</option>
+                            <option value="encaminhamento">📞 Encaminhamento externo</option>
+                            <option value="outro">📝 Outro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Observações da resolução</label>
+                        <textarea id="resolve-notes" class="glass"
+                                  style="width:100%;padding:10px;color:var(--text-primary);min-height:80px;resize:vertical;font-family:inherit;"
+                                  placeholder="Como o problema foi resolvido? Qual foi o acordo com o cliente?">${os.solution || ''}</textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Cancelar</button>
+                        <button class="btn-primary" style="flex:2;background:#2E8B57;" onclick="app.resolveOS(${osId})">Marcar como Resolvida</button>
+                    </div>
+                </div>
+            </section>
+        `);
+    },
+
+    resolveOS(osId) {
+        const os = (this.state.serviceOrders || []).find(o => o.id === osId);
+        if (!os) return;
+
+        os.status       = 'resolved';
+        os.solutionType = document.getElementById('resolve-solution-type').value;
+        os.solution     = document.getElementById('resolve-notes').value.trim() || os.solution;
+        os.resolvedAt   = Date.now();
+        os.resolvedBy   = this.state.user?.name || 'Sistema';
+
+        this.saveState();
+        this.closeModal();
+        this.navigateTo('admin-os');
+    },
+
+    openViewOSModal(osId) {
+        const os = (this.state.serviceOrders || []).find(o => o.id === osId);
+        if (!os) return;
+
+        const solutionLabel = (type) => ({
+            'refazer':  '🔄 Refazer o serviço',
+            'desconto': '🏷️ Desconto na próxima visita',
+            'reembolso_parcial': '💸 Reembolso parcial',
+            'reembolso_total':   '💸 Reembolso total',
+            'encaminhamento':    '📞 Encaminhamento externo',
+            'outro': '📝 Outro',
+        }[type] || type || '—');
+
+        const statusMap = { open:'🔴 Aberta', progress:'🟡 Em andamento', resolved:'🟢 Resolvida' };
+
+        this.openModal(`📋 OS #${os.id.toString().slice(-5)}`, `
+            <section class="fade-in">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="glass" style="padding:12px;">
+                            <p style="font-size:0.72rem;color:var(--text-secondary);">Cliente</p>
+                            <p style="font-weight:700;color:var(--text-primary);">${os.customerName}</p>
+                        </div>
+                        <div class="glass" style="padding:12px;">
+                            <p style="font-size:0.72rem;color:var(--text-secondary);">Status</p>
+                            <p style="font-weight:700;">${statusMap[os.status] || os.status}</p>
+                        </div>
+                        <div class="glass" style="padding:12px;">
+                            <p style="font-size:0.72rem;color:var(--text-secondary);">Barbeiro</p>
+                            <p style="font-weight:700;color:var(--text-primary);">${os.barberName || '—'}</p>
+                        </div>
+                        <div class="glass" style="padding:12px;">
+                            <p style="font-size:0.72rem;color:var(--text-secondary);">Aberta em</p>
+                            <p style="font-weight:700;color:var(--text-primary);">${new Date(os.createdAt).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+
+                    <div style="padding:14px;background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.2);border-radius:8px;">
+                        <p style="font-size:0.78rem;color:#ff8888;margin-bottom:5px;font-weight:600;">Problema Relatado</p>
+                        <p style="font-size:0.88rem;color:var(--text-primary);">${os.problemDescription}</p>
+                    </div>
+
+                    ${os.solution ? `
+                    <div style="padding:14px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px;">
+                        <p style="font-size:0.78rem;color:#4ade80;margin-bottom:5px;font-weight:600;">${solutionLabel(os.solutionType)}</p>
+                        <p style="font-size:0.88rem;color:var(--text-primary);">${os.solution}</p>
+                        ${os.resolvedAt ? `<p style="font-size:0.7rem;color:var(--text-secondary);margin-top:6px;">Resolvida em ${new Date(os.resolvedAt).toLocaleDateString('pt-BR')} por ${os.resolvedBy || '—'}</p>` : ''}
+                    </div>` : ''}
+
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        ${os.status !== 'resolved' ? `<button class="btn-primary" style="flex:1;background:#2E8B57;" onclick="app.closeModal();app.openResolveOSModal(${os.id})">✔ Resolver</button>` : ''}
+                        <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Fechar</button>
+                    </div>
+                </div>
+            </section>
+        `);
+    },
+
+    deleteOS(osId) {
+        if (!confirm('Excluir esta ordem de serviço?')) return;
+        this.state.serviceOrders = (this.state.serviceOrders || []).filter(o => o.id !== osId);
+        this.saveState();
+        this.navigateTo('admin-os');
     },
 
     renderBarberFinancial(container) {
