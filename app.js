@@ -1267,7 +1267,15 @@ const app = {
     // ══════════════════════════════════════════════════════════════
 
     renderAdminOS(container) {
-        const orders  = this.state.serviceOrders || [];
+        const isAdmin  = this.state.user?.role === 'admin';
+        const userName = this.state.user?.name;
+        const allOrders = this.state.serviceOrders || [];
+
+        // Barbeiro vê apenas os chamados que ele mesmo abriu
+        const orders = isAdmin
+            ? allOrders
+            : allOrders.filter(o => o.createdBy === userName);
+
         const filter  = this.state.osFilter || 'all';
 
         const counts = {
@@ -1365,14 +1373,15 @@ const app = {
                                 </p>
                             </div>
                             <div style="display:flex;gap:6px;flex-shrink:0;">
-                                ${os.status !== 'resolved' ? `
+                                ${isAdmin && os.status !== 'resolved' ? `
                                     <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:var(--accent-color);"
                                             onclick="app.openResolveOSModal(${os.id})">✔ Resolver</button>
                                 ` : ''}
                                 <button class="glass" style="padding:6px 10px;font-size:0.75rem;"
                                         onclick="app.openViewOSModal(${os.id})">👁 Detalhes</button>
+                                ${isAdmin ? `
                                 <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:#ff4444;"
-                                        onclick="app.deleteOS(${os.id})">🗑</button>
+                                        onclick="app.deleteOS(${os.id})">🗑</button>` : ''}
                             </div>
                         </div>
 
@@ -1614,6 +1623,8 @@ const app = {
         const os = (this.state.serviceOrders || []).find(o => o.id === osId);
         if (!os) return;
 
+        const isAdmin = this.state.user?.role === 'admin';
+
         const solutionLabel = (type) => ({
             'refazer':  '🔄 Refazer o serviço',
             'desconto': '🏷️ Desconto na próxima visita',
@@ -1652,7 +1663,7 @@ const app = {
                         <p style="font-size:0.88rem;color:var(--text-primary);">${os.problemDescription}</p>
                     </div>
 
-                    ${os.solution ? `
+                    ${os.solution && (isAdmin || os.status === 'resolved') ? `
                     <div style="padding:14px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px;">
                         <p style="font-size:0.78rem;color:#4ade80;margin-bottom:5px;font-weight:600;">${solutionLabel(os.solutionType)}</p>
                         <p style="font-size:0.88rem;color:var(--text-primary);">${os.solution}</p>
@@ -1660,13 +1671,15 @@ const app = {
                     </div>` : ''}
 
                     <div style="display:flex;gap:8px;margin-top:4px;">
-                        ${os.status !== 'resolved' ? `<button class="btn-primary" style="flex:1;background:#2E8B57;" onclick="app.closeModal();app.openResolveOSModal(${os.id})">✔ Resolver</button>` : ''}
+                        ${isAdmin && os.status !== 'resolved' ? `<button class="btn-primary" style="flex:1;background:#2E8B57;" onclick="app.closeModal();app.openResolveOSModal(${os.id})">✔ Resolver</button>` : ''}
                         <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Fechar</button>
                     </div>
                 </div>
             </section>
         `);
     },
+
+
 
     deleteOS(osId) {
         if (!confirm('Excluir esta ordem de serviço?')) return;
