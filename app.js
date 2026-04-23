@@ -970,35 +970,101 @@ const app = {
     getBirthdaysHTML() {
         const todayStr = new Date().toISOString().split('T')[0];
         const md = todayStr.substring(5);
-        
-        // Filtra clientes que fazem aniversário hoje E que ainda não foram parabenizados hoje
-        const birthdays = this.state.customers.filter(c => 
-            c.birthDate && 
-            c.birthDate.substring(5) === md && 
+
+        const birthdays = this.state.customers.filter(c =>
+            c.birthDate &&
+            c.birthDate.substring(5) === md &&
             c.lastCongratsDate !== todayStr
         );
 
         if (birthdays.length === 0) return '';
 
+        const getAge = (birthDate) => {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            return age;
+        };
+
         return `
-            <div class="glass fade-in" style="margin-bottom: 20px; padding: 15px; border-left: 5px solid #ff1493; background: linear-gradient(to bottom right, var(--surface-color), rgba(255,20,147,0.05));">
-                <h3 style="margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
-                    <span>🎉</span> Aniversariantes de Hoje!
-                </h3>
-                <div style="display: flex; gap: 10px; flex-direction: column;">
+            <div class="fade-in" style="
+                margin-bottom: 22px;
+                padding: 18px 20px;
+                border-radius: 14px;
+                border: 1.5px solid rgba(255,20,147,0.4);
+                background: linear-gradient(135deg, rgba(255,20,147,0.08), rgba(255,100,180,0.04), rgba(0,0,0,0));
+                box-shadow: 0 0 20px rgba(255,20,147,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+                animation: birthdayPulse 3s ease-in-out infinite;
+            ">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                    <span style="font-size:1.8rem; animation: spin 4s linear infinite; display:inline-block;">🎂</span>
+                    <div>
+                        <h3 style="font-size:1rem; font-weight:800; color:#ff69b4; margin:0; letter-spacing:0.5px;">
+                            🎉 ANIVERSARIANTES DE HOJE!
+                        </h3>
+                        <p style="font-size:0.72rem; color:var(--text-secondary); margin:2px 0 0;">
+                            ${birthdays.length} cliente${birthdays.length > 1 ? 's fazem' : ' faz'} aniversário hoje
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
                     ${birthdays.map(c => {
-                        const basePhone = c.phone || '';
-                        const phoneNumbers = basePhone.replace(/\D/g, '');
+                        const phone = (c.phone || '').replace(/\D/g, '');
                         const firstName = c.name ? c.name.split(' ')[0] : 'Cliente';
-                        const link = `https://wa.me/55${phoneNumbers}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20%F0%9F%A5%B3`;
+                        const fullName  = c.name || 'Cliente';
+                        const age       = getAge(c.birthDate);
+                        const ageText   = age ? ` · ${age} anos` : '';
+                        const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
+                        const hasPhone  = phone.length >= 10;
+
                         return `
-                            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px;">
-                                <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); flex: 1; min-width: 150px;">${firstName}</div>
-                                <button onclick="app.markBirthdayCongratulated(${c.id}, '${link}')" style="flex: 1; min-width: 120px; padding: 10px; font-size: 0.8rem; background: #25D366; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 4px 10px rgba(37,211,102,0.3); transition: all 0.3s;">
-                                    📞 WHATSAPP
-                                </button>
+                        <div style="
+                            display:flex; flex-wrap:wrap; align-items:center;
+                            justify-content:space-between; gap:10px;
+                            padding:12px 14px;
+                            background:rgba(255,20,147,0.06);
+                            border:1px solid rgba(255,20,147,0.2);
+                            border-radius:10px;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='rgba(255,20,147,0.12)'" onmouseout="this.style.background='rgba(255,20,147,0.06)'">
+                            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:160px;">
+                                <div style="
+                                    width:40px; height:40px; border-radius:50%;
+                                    background:linear-gradient(135deg,#ff69b4,#c2185b);
+                                    display:flex; align-items:center; justify-content:center;
+                                    font-size:1.2rem; flex-shrink:0;
+                                    box-shadow:0 2px 8px rgba(255,20,147,0.4);
+                                ">🎉</div>
+                                <div>
+                                    <p style="font-weight:700; font-size:0.92rem; color:var(--text-primary); margin:0;">${fullName}</p>
+                                    <p style="font-size:0.72rem; color:var(--text-secondary); margin:2px 0 0;">
+                                        ${hasPhone ? `📱 ${c.phone}` : 'Sem telefone cadastrado'}${ageText}
+                                    </p>
+                                </div>
                             </div>
-                        `;
+                            ${hasPhone ? `
+                            <button onclick="app.markBirthdayCongratulated(${c.id}, '${link}')"
+                                    style="padding:9px 16px; font-size:0.78rem; font-weight:700;
+                                           background:#25D366; color:#fff; border:none; border-radius:8px;
+                                           cursor:pointer; display:flex; align-items:center; gap:6px;
+                                           box-shadow:0 3px 10px rgba(37,211,102,0.35);
+                                           transition:all 0.2s; white-space:nowrap;
+                                           flex-shrink:0;"
+                                    onmouseover="this.style.transform='scale(1.04)'; this.style.boxShadow='0 5px 14px rgba(37,211,102,0.5)'"
+                                    onmouseout="this.style.transform=''; this.style.boxShadow='0 3px 10px rgba(37,211,102,0.35)'">
+                                📱 Parabenizar no WhatsApp
+                            </button>` : `
+                            <button onclick="app.markBirthdayCongratulated(${c.id}, null)"
+                                    style="padding:9px 16px; font-size:0.78rem; font-weight:700;
+                                           background:rgba(255,255,255,0.08); color:var(--text-secondary); border:1px solid var(--glass-border);
+                                           border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                                ✓ Marcar como parabenizado
+                            </button>`}
+                        </div>`;
                     }).join('')}
                 </div>
             </div>
@@ -1011,8 +1077,14 @@ const app = {
             c.lastCongratsDate = new Date().toISOString().split('T')[0];
         }
         this.saveState();
-        window.open(link, '_blank');
-        this.render(this.state.view); // Recarrega a tela comemorativa
+        if (link) window.open(link, '_blank');
+
+        // Redireciona para o contexto correto
+        if (this.state.user?.role === 'totem') {
+            this.setTotemTab(this.state.totemTab || 'agenda');
+        } else {
+            this.render(this.state.view);
+        }
     },
 
     // --- Helpers de Dados ---
