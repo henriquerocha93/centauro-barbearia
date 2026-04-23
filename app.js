@@ -133,14 +133,63 @@ const app = {
     exportDatabase() {
         const estado = localStorage.getItem('centauro_state');
         if (!estado) return alert('Nenhum dado salvo no sistema atual.');
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(estado);
-        const dl = document.createElement('a');
-        dl.setAttribute("href", dataStr);
-        dl.setAttribute("download", "centauro_backup.json");
+
+        const now  = new Date();
+        const pad  = n => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+        const filename = `centauro_backup_${stamp}.json`;
+
+        const blob = new Blob([estado], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const dl   = document.createElement('a');
+        dl.href     = url;
+        dl.download = filename;
         document.body.appendChild(dl);
         dl.click();
         dl.remove();
-        alert('Incrível! O arquivo centauro_backup.json foi baixado. Avise no chat que já foi baixado!');
+        URL.revokeObjectURL(url);
+
+        // Registra data/hora do último backup
+        localStorage.setItem('centauro_last_backup', now.toISOString());
+
+        // Atualiza o card de backup se estiver visível
+        const el = document.getElementById('last-backup-info');
+        if (el) el.textContent = `✅ Último backup: ${now.toLocaleString('pt-BR')}`;
+
+        alert(`✅ Backup salvo!\n📁 Arquivo: ${filename}\n\nGuarde este arquivo em local seguro.`);
+    },
+
+    importDatabase() {
+        const input = document.createElement('input');
+        input.type   = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    // Validação mínima
+                    if (!data.customers && !data.services && !data.staff) {
+                        alert('❌ Arquivo inválido. Este não parece ser um backup do sistema Centauro.');
+                        return;
+                    }
+                    if (!confirm(`⚠️ RESTAURAR BACKUP\n\nArquivo: ${file.name}\n\nIsso substituirá TODOS os dados atuais pelos dados do backup.\nClientes, agendamentos, transações e produtos serão restaurados.\n\nDeseja continuar?`)) return;
+
+                    localStorage.setItem('centauro_state', evt.target.result);
+                    localStorage.setItem('centauro_last_backup', new Date().toISOString());
+                    alert('✅ Dados restaurados com sucesso!\nO sistema será recarregado.');
+                    window.location.reload();
+                } catch (err) {
+                    alert('❌ Erro ao ler o arquivo. Certifique-se de que é um backup .json válido.');
+                }
+            };
+            reader.readAsText(file);
+        };
+        document.body.appendChild(input);
+        input.click();
+        input.remove();
     },
 
     init() {
@@ -363,20 +412,72 @@ const app = {
                 </div>
 
                 <!-- BLOCO 3: Backup & Sistema -->
-                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #fbbf24;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">🛡️</div>
-                        <div>
-                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Backup & Dados</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Exporte ou restaure os dados do sistema.</p>
+                <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #4ade80;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+                        <div style="font-size:1.5rem;">🛡️</div>
+                        <div style="flex:1;">
+                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Backup & Restauração de Dados</h3>
+                            <p style="font-size:0.8rem; color:var(--text-secondary); margin:4px 0 0;">
+                                Salve e restaure todos os dados: clientes, agendamentos, transações, produtos e OS.
+                            </p>
                         </div>
                     </div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-                        <button class="btn-primary" style="background: #2E8B57; box-shadow: none; display: flex; align-items: center; gap: 8px;" onclick="app.exportDatabase()">
-                            📥 Exportar Backup JSON
+
+                    <!-- Info do último backup -->
+                    <div style="padding:12px 16px; background:var(--surface-dark); border-radius:8px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.2rem;">🕐</span>
+                        <p id="last-backup-info" style="font-size:0.82rem; color:var(--text-secondary);">
+                            ${(() => {
+                                const lb = localStorage.getItem('centauro_last_backup');
+                                return lb
+                                    ? `✅ Último backup: ${new Date(lb).toLocaleString('pt-BR')}`
+                                    : '⚠️ Nenhum backup realizado ainda neste dispositivo.';
+                            })()}
+                        </p>
+                    </div>
+
+                    <!-- Botões principais -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px;">
+                        <button class="btn-primary"
+                                style="background:#2E8B57; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem;"
+                                onclick="app.exportDatabase()">
+                            <span style="font-size:1.3rem;">💾</span>
+                            <span style="text-align:left; line-height:1.3;">
+                                <strong style="display:block;">Exportar Backup</strong>
+                                <small style="font-weight:400; opacity:0.85;">Baixa arquivo .json com data/hora</small>
+                            </span>
                         </button>
-                        <button class="btn-secondary" style="display: flex; align-items: center; gap: 8px; border-color: #ff4444; color: #ff4444;" onclick="app.confirmResetData()">
-                            ⚠️ Limpar Todos os Dados
+
+                        <button class="btn-secondary"
+                                style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem; border-color:#a78bfa; color:#a78bfa;"
+                                onclick="app.importDatabase()">
+                            <span style="font-size:1.3rem;">📂</span>
+                            <span style="text-align:left; line-height:1.3;">
+                                <strong style="display:block;">Restaurar Backup</strong>
+                                <small style="font-weight:400; opacity:0.85;">Importa um arquivo .json salvo</small>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Instrução -->
+                    <div style="padding:10px 14px; background:rgba(74,222,128,0.06); border:1px solid rgba(74,222,128,0.2); border-radius:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.6;">
+                        💡 <strong style="color:#4ade80;">Como usar:</strong>
+                        Antes de qualquer atualização, clique em <strong>Exportar Backup</strong> para salvar um arquivo com todos os seus dados.
+                        Caso algo dê errado, use <strong>Restaurar Backup</strong> para voltar ao estado anterior.
+                    </div>
+
+                    <hr style="border:none; border-top:1px solid var(--glass-border); margin:20px 0;">
+
+                    <!-- Zona de perigo -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <p style="font-size:0.82rem; font-weight:600; color:#ff4444;">⚠️ Zona de Perigo</p>
+                            <p style="font-size:0.75rem; color:var(--text-secondary);">Apaga permanentemente todos os dados do sistema.</p>
+                        </div>
+                        <button class="btn-secondary"
+                                style="border-color:#ff4444; color:#ff4444; padding:9px 18px; font-size:0.82rem;"
+                                onclick="app.confirmResetData()">
+                            🗑️ Limpar Todos os Dados
                         </button>
                     </div>
                 </div>
