@@ -223,6 +223,38 @@ const app = {
         }
     },
 
+    async testGitHubSync() {
+        const token = document.getElementById('gh-token').value.trim();
+        const owner = document.getElementById('gh-owner').value.trim();
+        const repo = document.getElementById('gh-repo').value.trim();
+        const path = document.getElementById('gh-path').value.trim();
+        const branch = document.getElementById('gh-branch').value.trim();
+
+        if (!token || !owner || !repo) {
+            return alert('⚠️ Por favor, preencha o Token, Usuário e Repositório antes de testar.');
+        }
+
+        // Atualiza o estado temporariamente para o teste
+        this.state.githubConfig = { token, owner, repo, path, branch };
+
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Testando...';
+        btn.disabled = true;
+
+        await this.syncToCloud();
+
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        const statusEl = document.getElementById('sync-status-indicator');
+        if (statusEl && statusEl.innerHTML.includes('🟢')) {
+            alert('✅ CONEXÃO ESTABELECIDA!\n\nSeu sistema agora está salvando dados no GitHub com sucesso.');
+        } else {
+            alert('❌ FALHA NA CONEXÃO\n\nVerifique se o Token está correto e se o repositório existe e é público ou o token tem acesso a ele.');
+        }
+    },
+
     loadState() {
         const APP_VERSION = "1.0.1";
         if (localStorage.getItem('centauro_version') !== APP_VERSION) {
@@ -574,7 +606,7 @@ const app = {
                             <input type="text" id="gh-branch" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.branch || 'main'}" placeholder="main">
                         </div>
                     </div>
-                    <button class="btn-secondary" style="width: 100%; border-color: #4ade80; color: #4ade80;" onclick="app.syncToCloud()">🚀 Testar & Sincronizar Agora</button>
+                    <button class="btn-secondary" style="width: 100%; border-color: #4ade80; color: #4ade80;" onclick="app.testGitHubSync()">🚀 Testar & Sincronizar Agora</button>
                 </div>
 
                 <!-- BLOCO 4: Backup & Sistema -->
