@@ -651,41 +651,6 @@ const app = {
                     </div>
                 </div>
                 
-                <!-- BLOCO 3: Sincronização com GitHub (Banco de Dados) -->
-                <div class="glass github-config-block" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">☁️</div>
-                        <div style="flex: 1;">
-                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Sincronização com GitHub</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Transforme seu repositório em um banco de dados permanente.</p>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div style="grid-column: span 2;">
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">GitHub Personal Access Token (PAT) 🔑</label>
-                            <input type="password" id="gh-token" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.token || ''}" placeholder="ghp_xxxxxxxxxxxx">
-                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 5px;">Gere um token com permissão 'repo' em github.com/settings/tokens</p>
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Usuário/Dono</label>
-                            <input type="text" id="gh-owner" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.owner || ''}" placeholder="Ex: henriquerocha93">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Repositório</label>
-                            <input type="text" id="gh-repo" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.repo || ''}" placeholder="Ex: centauro-barbearia">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Caminho do Arquivo</label>
-                            <input type="text" id="gh-path" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.path || 'db.json'}" placeholder="Ex: database/db.json">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Branch</label>
-                            <input type="text" id="gh-branch" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.branch || 'main'}" placeholder="main">
-                        </div>
-                    </div>
-                    <button class="btn-secondary" style="width: 100%; border-color: #4ade80; color: #4ade80;" onclick="app.testGitHubSync()">🚀 Testar & Sincronizar Agora</button>
-                </div>
 
                 <!-- BLOCO 4: Backup & Sistema -->
                 <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #4ade80;">
