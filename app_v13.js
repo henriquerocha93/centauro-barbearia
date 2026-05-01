@@ -113,7 +113,8 @@ const app = {
             serviceOrders: this.state.serviceOrders || [],
             githubConfig: this.state.githubConfig
         }));
-        this.syncToFirebase(); // Sincroniza tempo real
+        this.syncToFirebase(); // NOVO: Sincroniza tempo real
+        this.syncToCloud();    // Mantém backup no GitHub
     },
 
     async syncToFirebase() {
@@ -143,12 +144,151 @@ const app = {
         }
     },
 
+    async syncToCloud() {
+        const config = this.state.githubConfig;
+        if (!config || !config.token || !config.repo) {
+            console.log('☁️ Sincronização em nuvem não configurada.');
+            return;
+        }
+
+        const statusEl = document.getElementById('sync-status-indicator');
+        if (statusEl) {
+            statusEl.innerHTML = '🟡 Sincronizando...';
+            statusEl.style.color = '#fbbf24';
+        }
+
+        try {
+            // Preparar conteúdo (UTF-8 safe base64)
+            const stateToSave = {
+                services: this.state.services,
+                staff: this.state.staff,
+                customers: this.state.customers,
+                settings: this.state.settings,
+                vouchers: this.state.vouchers,
+                transactions: this.state.transactions,
+                products: this.state.products,
+                productSales: this.state.productSales || [],
+                appointments: this.state.appointments || [],
+                serviceOrders: this.state.serviceOrders || [],
+                lastSync: new Date().toISOString()
+            };
+
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateToSave, null, 2))));
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+            
+            // 1. Tentar obter o SHA do arquivo atual
+            let sha = '';
+            const getRes = await fetch(url, {
+                headers: { 'Authorization': `token ${config.token}` }
+            });
+            
+            if (getRes.ok) {
+                const data = await getRes.json();
+                sha = data.sha;
+            }
+
+            // 2. Fazer o PUT (Create or Update)
+            const putRes = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Backup automático sistema: ${new Date().toLocaleString()}`,
+                    content: content,
+                    sha: sha,
+                    branch: config.branch
+                })
+            });
+
+            if (!putRes.ok) throw new Error('Falha no upload para o GitHub');
+
+            console.log('✅ Dados sincronizados com GitHub!');
+            if (statusEl) {
+                statusEl.innerHTML = '🟢 Nuvem Ativa';
+                statusEl.style.color = '#4ade80';
+                statusEl.title = `Último backup: ${new Date().toLocaleString()}`;
+            }
         } catch (error) {
-            console.error('❌ Erro no Firebase Sync:', error);
+            console.error('❌ Erro na sincronização:', error);
+            if (statusEl) {
+                statusEl.innerHTML = '🔴 Erro na Nuvem';
+                statusEl.style.color = '#ff4444';
+                statusEl.title = error.message;
+            }
         }
     },
 
+    async loadFromCloud() {
+        const config = this.state.githubConfig;
+        if (!config || !config.token || !config.repo) return;
+
+        try {
+            console.log('☁️ Buscando dados no GitHub...');
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': `token ${config.token}` }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const content = decodeURIComponent(escape(atob(data.content)));
+                const cloudState = JSON.parse(content);
+
+                // Comparar timestamps para decidir se carrega (Opcional, aqui vamos priorizar nuvem no init)
+                if (confirm(`☁️ DADOS ENCONTRADOS NO GITHUB\n\nBackup de: ${new Date(cloudState.lastSync).toLocaleString()}\n\nDeseja carregar os dados da nuvem e substituir os locais?`)) {
+                    this.state.services = cloudState.services || this.state.services;
+                    this.state.staff = cloudState.staff || this.state.staff;
+                    this.state.customers = cloudState.customers || this.state.customers;
+                    this.state.settings = cloudState.settings || this.state.settings;
+                    this.state.vouchers = cloudState.vouchers || this.state.vouchers;
+                    this.state.transactions = cloudState.transactions || this.state.transactions;
+                    this.state.products = cloudState.products || this.state.products;
+                    this.state.productSales = cloudState.productSales || [];
+                    this.state.appointments = cloudState.appointments || [];
+                    this.state.serviceOrders = cloudState.serviceOrders || [];
+                    
+                    this.saveState();
+                    alert('✅ Dados da nuvem carregados com sucesso!');
+                    this.render(this.state.view);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar da nuvem:', error);
+        }
+    },
+
+    async testGitHubSync() {
+        const token = document.getElementById('gh-token').value.trim();
+        const owner = document.getElementById('gh-owner').value.trim();
+        const repo = document.getElementById('gh-repo').value.trim();
+        const path = document.getElementById('gh-path').value.trim();
+        const branch = document.getElementById('gh-branch').value.trim();
+
+        if (!token || !owner || !repo) {
+            return alert('⚠️ Por favor, preencha o Token, Usuário e Repositório antes de testar.');
+        }
+
+        // Atualiza o estado temporariamente para o teste
+        this.state.githubConfig = { token, owner, repo, path, branch };
+
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Testando...';
+        btn.disabled = true;
+
+        await this.syncToCloud();
+
+        btn.disabled = false;
         btn.innerHTML = originalText;
+
+        const statusEl = document.getElementById('sync-status-indicator');
+        if (statusEl && statusEl.innerHTML.includes('🟢')) {
+            alert('✅ CONEXÃO ESTABELECIDA!\n\nSeu sistema agora está salvando dados no GitHub com sucesso.');
+        } else {
+            alert('❌ FALHA NA CONEXÃO\n\nVerifique se o Token está correto e se o repositório existe e é público ou o token tem acesso a ele.');
+        }
     },
 
     loadState() {
@@ -293,6 +433,7 @@ const app = {
             }
         }
 
+        this.loadFromCloud(); // NOVO: Busca dados na nuvem se configurado
         console.log('Centauro App Initialized');
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
@@ -509,9 +650,42 @@ const app = {
                         </div>
                     </div>
                 </div>
+                
+                <!-- BLOCO 3: Sincronização com GitHub (Banco de Dados) -->
+                <div class="glass github-config-block" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 1.5rem;">☁️</div>
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Sincronização com GitHub</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Transforme seu repositório em um banco de dados permanente.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">GitHub Personal Access Token (PAT) 🔑</label>
+                            <input type="password" id="gh-token" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.token || ''}" placeholder="ghp_xxxxxxxxxxxx">
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 5px;">Gere um token com permissão 'repo' em github.com/settings/tokens</p>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Usuário/Dono</label>
+                            <input type="text" id="gh-owner" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.owner || ''}" placeholder="Ex: henriquerocha93">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Repositório</label>
+                            <input type="text" id="gh-repo" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.repo || ''}" placeholder="Ex: centauro-barbearia">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Caminho do Arquivo</label>
+                            <input type="text" id="gh-path" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.path || 'db.json'}" placeholder="Ex: database/db.json">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Branch</label>
+                            <input type="text" id="gh-branch" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.githubConfig?.branch || 'main'}" placeholder="main">
+                        </div>
+                    </div>
+                    <button class="btn-secondary" style="width: 100%; border-color: #4ade80; color: #4ade80;" onclick="app.testGitHubSync()">🚀 Testar & Sincronizar Agora</button>
                 </div>
-
-                <!-- BLOCO 3: Backup & Sistema -->
 
                 <!-- BLOCO 4: Backup & Sistema -->
                 <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #4ade80;">
@@ -629,6 +803,14 @@ const app = {
         this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
         this.state.settings.shopInfo.address   = document.getElementById('shop-address').value.trim();
  
+        // Salvar configurações do GitHub
+        if (!this.state.githubConfig) this.state.githubConfig = {};
+        this.state.githubConfig.token = document.getElementById('gh-token').value.trim();
+        this.state.githubConfig.owner = document.getElementById('gh-owner').value.trim();
+        this.state.githubConfig.repo = document.getElementById('gh-repo').value.trim();
+        this.state.githubConfig.path = document.getElementById('gh-path').value.trim();
+        this.state.githubConfig.branch = document.getElementById('gh-branch').value.trim();
+
         this.saveState();
 
         // Feedback visual no botão
