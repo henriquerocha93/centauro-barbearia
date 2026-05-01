@@ -64,7 +64,15 @@ const app = {
         cart: [],           // Carrinho do PDV
         pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
         serviceOrders: [],   // Ordens de Serviço
-        firebaseConfig: null, // CONFIGURAÇÃO DA NUVEM
+        firebaseConfig: {
+            apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+            authDomain: "centauro-barbearia.firebaseapp.com",
+            projectId: "centauro-barbearia",
+            storageBucket: "centauro-barbearia.firebasestorage.app",
+            messagingSenderId: "96712816127",
+            appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+            databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
+        },
         githubConfig: { // Configuração padrão
             token: '',
             owner: 'henriquerocha93',
@@ -105,7 +113,35 @@ const app = {
             serviceOrders: this.state.serviceOrders || [],
             githubConfig: this.state.githubConfig
         }));
-        this.syncToCloud(); // SINCRONIZA COM A NUVEM
+        this.syncToFirebase(); // NOVO: Sincroniza tempo real
+        this.syncToCloud();    // Mantém backup no GitHub
+    },
+
+    async syncToFirebase() {
+        if (!this.state.firebaseConfig || !this.db) return;
+        
+        try {
+            const dbRef = ref(this.db, 'database/');
+            const stateToSave = {
+                services: this.state.services,
+                staff: this.state.staff,
+                customers: this.state.customers,
+                settings: this.state.settings,
+                vouchers: this.state.vouchers,
+                transactions: this.state.transactions,
+                products: this.state.products,
+                productSales: this.state.productSales || [],
+                appointments: this.state.appointments || [],
+                serviceOrders: this.state.serviceOrders || [],
+                lastUpdate: new Date().getTime(),
+                updatedBy: this.state.user ? this.state.user.name : 'Sistema'
+            };
+
+            await set(dbRef, stateToSave);
+            console.log('⚡ Sincronizado com Firebase (Tempo Real)');
+        } catch (error) {
+            console.error('❌ Erro no Firebase Sync:', error);
+        }
     },
 
     async syncToCloud() {
@@ -355,6 +391,48 @@ const app = {
 
     init() {
         this.loadState();
+        
+        // Inicializar Firebase
+        if (this.state.firebaseConfig) {
+            try {
+                const fbApp = initializeApp(this.state.firebaseConfig);
+                this.db = getDatabase(fbApp);
+                console.log('🔥 Firebase Initialized');
+                
+                // Escuta Ativa (Tempo Real)
+                const dbRef = ref(this.db, 'database/');
+                onValue(dbRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // Só atualiza se for mais recente que o local para evitar loops inúteis
+                        const localLastUpdate = this.state.lastUpdate || 0;
+                        if (data.lastUpdate > localLastUpdate) {
+                            console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
+                            
+                            this.state.services = data.services || this.state.services;
+                            this.state.staff = data.staff || this.state.staff;
+                            this.state.customers = data.customers || this.state.customers;
+                            this.state.settings = data.settings || this.state.settings;
+                            this.state.vouchers = data.vouchers || this.state.vouchers;
+                            this.state.transactions = data.transactions || this.state.transactions;
+                            this.state.products = data.products || this.state.products;
+                            this.state.productSales = data.productSales || [];
+                            this.state.appointments = data.appointments || [];
+                            this.state.serviceOrders = data.serviceOrders || [];
+                            this.state.lastUpdate = data.lastUpdate;
+
+                            // Atualiza a tela se não estiver no meio de um agendamento
+                            if (this.state.view !== 'booking') {
+                                this.render(this.state.view);
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao conectar Firebase:', e);
+            }
+        }
+
         this.loadFromCloud(); // NOVO: Busca dados na nuvem se configurado
         console.log('Centauro App Initialized');
         // Adicionar listener para navegação
@@ -824,7 +902,7 @@ const app = {
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
                 <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color); flex: 1; text-align: center;">CENTAURO</div>
-                <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;"></div>
+                <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
             </div>
             
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
