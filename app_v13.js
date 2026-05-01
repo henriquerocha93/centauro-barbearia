@@ -412,9 +412,9 @@ const app = {
                 onValue(dbRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        // Só atualiza se for mais recente que o local para evitar loops inúteis
+                        // Atualiza sempre que o ID/timestamp for diferente do local, resolvendo atrasos de relógio entre aparelhos
                         const localLastUpdate = this.state.lastUpdate || 0;
-                        if (data.lastUpdate > localLastUpdate) {
+                        if (data.lastUpdate !== localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
                             
                             this.state.services = data.services || this.state.services;
