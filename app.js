@@ -853,7 +853,7 @@ const app = {
                     <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 40px; filter: invert(1) brightness(2);">
                     <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
                 </div>
-                <button onclick="app.navigateTo('login')" style="position: absolute; right: 20px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: color 0.3s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'" title="Acesso Restrito">🔒</button>
+                <button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>
             </header>
             <main id="main-content"></main>
             ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
@@ -1540,7 +1540,7 @@ const app = {
                     <p>© 2026 Centauro Barbearia. Todos os direitos reservados.</p>
                     <p style="margin-top: 10px;">Excelência em Barbearia Clássica.</p>
                     <p style="margin-top: 20px;">
-                        <a style="color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: color 0.3s;" onclick="app.navigateTo('login')" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'">🔒 Acesso Restrito</a>
+                        <a style="color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: color 0.3s;" onclick="app.navigateTo('login')" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'">Acesso Restrito</a>
                     </p>
                 </div>
             </footer>
