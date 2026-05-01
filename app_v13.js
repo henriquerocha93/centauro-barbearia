@@ -99,7 +99,6 @@ const app = {
         document.getElementById('app-modal').close();
     },
 
-    saveState() {
         localStorage.setItem('centauro_state', JSON.stringify({
             services: this.state.services,
             staff: this.state.staff,
@@ -111,16 +110,18 @@ const app = {
             productSales: this.state.productSales || [],
             appointments: this.state.appointments || [],
             serviceOrders: this.state.serviceOrders || [],
-            githubConfig: this.state.githubConfig
+            lastUpdate: this.state.lastUpdate || 0
         }));
-        this.syncToFirebase(); // NOVO: Sincroniza tempo real
-        this.syncToCloud();    // Mantém backup no GitHub
+        this.syncToFirebase(); // Única sincronização ativa
     },
 
     async syncToFirebase() {
         if (!this.state.firebaseConfig || !this.db) return;
         
         try {
+            const now = new Date().getTime();
+            this.state.lastUpdate = now;
+            
             const dbRef = ref(this.db, 'database/');
             const stateToSave = {
                 services: this.state.services,
@@ -133,12 +134,18 @@ const app = {
                 productSales: this.state.productSales || [],
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
-                lastUpdate: new Date().getTime(),
+                lastUpdate: now,
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
 
             await set(dbRef, stateToSave);
             console.log('⚡ Sincronizado com Firebase (Tempo Real)');
+            
+            // Salva o timestamp no localStorage também para consistência no reload
+            const localState = JSON.parse(localStorage.getItem('centauro_state') || '{}');
+            localState.lastUpdate = now;
+            localStorage.setItem('centauro_state', JSON.stringify(localState));
+            
         } catch (error) {
             console.error('❌ Erro no Firebase Sync:', error);
         }
@@ -433,7 +440,8 @@ const app = {
             }
         }
 
-        this.loadFromCloud(); // NOVO: Busca dados na nuvem se configurado
+        // loadFromCloud removido para evitar sobrescrita de dados novos por antigos
+        console.log('Centauro App Initialized (Real-time mode)');
         console.log('Centauro App Initialized');
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
