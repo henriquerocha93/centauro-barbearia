@@ -655,3 +655,19 @@ section {
         height: 55px;
     }
 }
+
+/* Sync Status Indicator */
+#sync-status-indicator {
+    transition: all 0.3s ease;
+    cursor: help;
+    white-space: nowrap;
+}
+
+#sync-status-indicator:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.github-config-block {
+    border-left: 4px solid var(--accent-color) !important;
+}
