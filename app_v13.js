@@ -99,6 +99,7 @@ const app = {
         document.getElementById('app-modal').close();
     },
 
+    saveState() {
         localStorage.setItem('centauro_state', JSON.stringify({
             services: this.state.services,
             staff: this.state.staff,
