@@ -148,19 +148,33 @@
             const user = document.getElementById('s-login').value.trim().toLowerCase();
             const pass = document.getElementById('s-pass').value;
 
-            const sellerRef = ref(db, 'master/sellers/' + user);
-            const snapshot = await get(sellerRef);
-            
-            if (snapshot.exists() && snapshot.val().password === pass) {
-                currentSeller = { ...snapshot.val(), username: user };
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('dashboard-screen').classList.add('active');
-                document.getElementById('welcome-name').textContent = 'Olá, ' + currentSeller.name;
-                loadMyClients();
-            } else {
-                alert('Usuário ou senha incorretos!');
+            console.log('Tentando login vendedor:', user);
+
+            try {
+                const sellerRef = ref(db, 'master/sellers/' + user);
+                const snapshot = await get(sellerRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    console.log('Vendedor encontrado, validando senha...');
+                    if (data.password === pass) {
+                        currentSeller = { ...data, username: user };
+                        document.getElementById('login-screen').classList.remove('active');
+                        document.getElementById('dashboard-screen').classList.add('active');
+                        document.getElementById('welcome-name').textContent = 'Olá, ' + currentSeller.name;
+                        loadMyClients();
+                    } else {
+                        alert('Senha incorreta para o vendedor: ' + user);
+                    }
+                } else {
+                    alert('Usuário vendedor "' + user + '" não encontrado no sistema.');
+                }
+            } catch (err) {
+                console.error('Erro ao acessar banco de dados:', err);
+                alert('Erro técnico ao conectar com o banco de dados. Verifique sua conexão.');
             }
         };
+
 
         async function loadMyClients() {
             const tenantsRef = ref(db, 'master/tenants');
