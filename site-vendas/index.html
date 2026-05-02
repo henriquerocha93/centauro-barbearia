@@ -24,9 +24,11 @@
                 <a href="#sobre">Sobre nós</a>
                 <a href="#solucoes">Soluções</a>
                 <a href="#contato">Contato</a>
-                <a href="#blog">Blog</a>
             </nav>
-            <a href="#" class="btn btn-orange">Já sou cliente</a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="../master/" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3);">Painel Master</a>
+                <a href="#" class="btn btn-orange" onclick="const loja = prompt('Qual o link (slug) da sua barbearia?'); if(loja) window.location.href = '../?loja=' + loja;">Já sou cliente</a>
+            </div>
             
             <button class="mobile-menu-btn" aria-label="Abrir Menu">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
