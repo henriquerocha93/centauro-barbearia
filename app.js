@@ -798,13 +798,21 @@ const app = {
         this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
         this.state.settings.shopInfo.address   = document.getElementById('shop-address').value.trim();
  
-        // Salvar configurações do GitHub
-        if (!this.state.githubConfig) this.state.githubConfig = {};
-        this.state.githubConfig.token = document.getElementById('gh-token').value.trim();
-        this.state.githubConfig.owner = document.getElementById('gh-owner').value.trim();
-        this.state.githubConfig.repo = document.getElementById('gh-repo').value.trim();
-        this.state.githubConfig.path = document.getElementById('gh-path').value.trim();
-        this.state.githubConfig.branch = document.getElementById('gh-branch').value.trim();
+        // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
+        const ghToken = document.getElementById('gh-token');
+        const ghOwner = document.getElementById('gh-owner');
+        const ghRepo  = document.getElementById('gh-repo');
+        const ghPath  = document.getElementById('gh-path');
+        const ghBranch = document.getElementById('gh-branch');
+
+        if (ghToken || ghOwner || ghRepo || ghPath || ghBranch) {
+            if (!this.state.githubConfig) this.state.githubConfig = {};
+            if (ghToken)  this.state.githubConfig.token  = ghToken.value.trim();
+            if (ghOwner)  this.state.githubConfig.owner  = ghOwner.value.trim();
+            if (ghRepo)   this.state.githubConfig.repo   = ghRepo.value.trim();
+            if (ghPath)   this.state.githubConfig.path   = ghPath.value.trim();
+            if (ghBranch) this.state.githubConfig.branch = ghBranch.value.trim();
+        }
 
         this.saveState();
 
