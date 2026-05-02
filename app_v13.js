@@ -889,12 +889,16 @@ const app = {
             this.renderLayout(view);
             return;
         }
+        const s = this.state.settings || {};
+        const logo = s.logoUrl || 'logo_centauro.png';
+        const name = (s.shopName || 'CENTAURO').toUpperCase();
+
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
             <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
                 <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
-                    <img src="logo_centauro.png" alt="Logo" class="integrated-logo" style="width: 40px; filter: invert(1) brightness(2);">
-                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">CENTAURO</span>
+                    <img src="${logo}" alt="Logo" class="integrated-logo" style="width: 40px; ${!s.logoUrl ? 'filter: invert(1) brightness(2);' : 'border-radius: 8px;'}">
+                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">${name}</span>
                 </div>
                 <button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>
             </header>
@@ -1519,11 +1523,16 @@ const app = {
     },
 
     renderHome(container) {
+        const s = this.state.settings || {};
+        const subtitle = s.subtitle || 'Excelência & Tradição';
+        const name = s.shopName || 'Centauro Barbearia';
+        const welcome = s.welcomeMessage || 'Agendar Horário';
+
         container.innerHTML = `
             <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
                 <div class="hero-content fade-in">
-                    <p>Excelência & Tradição</p>
-                    <h1>Centauro Barbearia</h1>
+                    <p>${subtitle}</p>
+                    <h1>${name}</h1>
                     <div style="width: 100px; height: 3px; background: var(--accent-color); margin: 20px auto;"></div>
                     <button class="btn-primary" style="margin-top: 20px; padding: 15px 50px; font-size: 1.1rem;" onclick="app.navigateTo('booking')">Agendar Horário</button>
                 </div>
@@ -1548,6 +1557,15 @@ const app = {
                     </div>
                 </div>
             </section>
+            
+            ${(s.address || s.phone) ? `
+            <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
+                ${s.address ? `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
+                ${s.phone ? `<p style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
+            </div>
+            ` : ''}
+        `;
 
 
             <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
