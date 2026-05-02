@@ -2204,7 +2204,11 @@ const app = {
             return tBarber === myName &&
                    tDate >= startDate && tDate <= endDate;
         });
-        const totalTips = myTips.reduce((sum, t) => sum + t.amount, 0);
+        
+        // Somente gorjetas APROVADAS contam para o faturamento
+        const totalTips = myTips
+            .filter(t => t.status === 'approved')
+            .reduce((sum, t) => sum + t.amount, 0);
 
         const myVouchers = this.state.vouchers.filter(v => {
             const vDate = v.date ? v.date.split('T')[0] : today;
@@ -2240,7 +2244,7 @@ const app = {
                         <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-color);">R$ ${myCommission.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas (Aprov.)</p>
                         <p style="font-size: 1.1rem; font-weight: 700; color: #fbbf24;">+ R$ ${totalTips.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #ff4444;">
@@ -2271,10 +2275,13 @@ const app = {
                     `).reverse().join('')}
 
                     ${myTips.map(t => `
-                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid #fbbf24;">
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.status === 'approved' ? '#fbbf24' : '#94a3b8'}; opacity: ${t.status === 'rejected' ? '0.5' : '1'};">
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="font-weight: 600; color: var(--text-primary);">Gorjeta Recebida</span>
-                                <span style="font-weight: 700; color: #fbbf24;">+ R$ ${t.amount.toFixed(2)}</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-weight: 600; color: var(--text-primary);">Gorjeta ${t.status === 'pending' ? '(Pendente)' : t.status === 'rejected' ? '(Recusada)' : ''}</span>
+                                    ${t.status === 'pending' ? '⏳' : t.status === 'approved' ? '✅' : '❌'}
+                                </div>
+                                <span style="font-weight: 700; color: ${t.status === 'approved' ? '#fbbf24' : '#94a3b8'};">+ R$ ${t.amount.toFixed(2)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>Reconhecimento de Cliente</span>
@@ -2837,7 +2844,8 @@ const app = {
                         amount: tipAmount,
                         date: tipDate,
                         aptDate: apt.date || tipDate,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        status: 'pending' // Novo sistema de aprovação
                     });
                     
                     this.addTransaction('in', `Gorjeta: ${barberName} (Corte)`, tipAmount, 'outros', mappedMethod);
@@ -2989,65 +2997,67 @@ const app = {
                                 <span style="font-weight: 700;">R$ ${productGross.toFixed(2)}</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="glass" style="padding: 15px;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas</p>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>Total Atendimentos</span>
-                                <span style="font-weight: 700;">${appointments.length}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>Ticket Médio</span>
-                                <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (serviceGross / appointments.length).toFixed(2) : '0.00'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        `;
-    },
-
-    applyRevenueFilter() {
-        this.state.revenueStart = document.getElementById('rev-start').value;
-        this.state.revenueEnd = document.getElementById('rev-end').value;
-        this.renderAdminFaturamento(document.getElementById('main-content'));
-    },
-
     renderAdminTips(container) {
         const today = new Date().toISOString().split('T')[0];
-        const tipsToday = (this.state.tips || []).filter(t => t.date === today);
         const allTips = this.state.tips || [];
-        
+        const tipsToday = allTips.filter(t => t.date === today);
+        const pendingTips = allTips.filter(t => t.status === 'pending');
+        const recentApprovedTips = allTips.filter(t => t.status !== 'pending').slice(-20).reverse();
+
         container.innerHTML = `
             <section id="tips-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title" style="margin:0;">🪙 Gorjetas</h2>
-                    <button class="btn-primary" onclick="app.openTipModal()">+ Lançar Gorjeta</button>
+                    <h2 class="section-title" style="margin:0;">🪙 Gestão de Gorjetas</h2>
+                    <button class="btn-primary" onclick="app.openTipModal()">+ Lançar Direto</button>
                 </div>
 
-                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid #fbbf24;">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Gorjetas de Hoje</p>
-                    <p style="font-size: 2.2rem; font-weight: 700; color: #fbbf24;">R$ ${tipsToday.reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
+                        <p style="color: var(--text-secondary); font-size: 0.75rem;">PENDENTES HOJE</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;">R$ ${tipsToday.filter(t => t.status === 'pending').reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
+                        <p style="color: var(--text-secondary); font-size: 0.75rem;">APROVADAS HOJE</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: #4ade80;">R$ ${tipsToday.filter(t => t.status === 'approved').reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                    </div>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimos Lançamentos</h3>
-                <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px;">
-                    ${allTips.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma gorjeta registrada.</p>' : ''}
-                    ${allTips.slice(-30).reverse().map(t => `
-                        <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #fbbf24;">
+                ${pendingTips.length > 0 ? `
+                    <h3 class="section-title" style="font-size: 1rem; color: #fbbf24;">⚠️ Aguardando Aprovação (${pendingTips.length})</h3>
+                    <div class="transaction-list" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
+                        ${pendingTips.map(t => `
+                            <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #fbbf24; background: rgba(251, 191, 36, 0.05);">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-weight: 700; color: var(--text-primary);">${t.barber}</span>
+                                    <span style="font-size: 0.72rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-weight: 800; color: #fbbf24; font-size: 1.1rem; margin-right: 10px;">R$ ${t.amount.toFixed(2)}</span>
+                                    <button onclick="app.approveTip('${t.id}')" style="background: #4ade80; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">APROVAR</button>
+                                    <button onclick="app.rejectTip('${t.id}')" style="background: #f87171; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">RECUSAR</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <h3 class="section-title" style="font-size: 1rem;">Histórico Recente</h3>
+                <div class="transaction-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                    ${recentApprovedTips.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum lançamento aprovado.</p>' : ''}
+                    ${recentApprovedTips.map(t => `
+                        <div class="glass" style="padding: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid ${t.status === 'approved' ? '#4ade80' : '#f87171'}; opacity: 0.8;">
                             <div style="display: flex; flex-direction: column;">
-                                <span style="font-weight: 700; color: var(--text-primary);">${t.barber}</span>
-                                <span style="font-size: 0.72rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
+                                <span style="font-weight: 600; font-size: 0.9rem;">${t.barber} ${t.status === 'rejected' ? '(Recusada)' : ''}</span>
+                                <span style="font-size: 0.7rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 15px;">
-                                <span style="font-weight: 800; color: #fbbf24; font-size: 1.1rem;">R$ ${t.amount.toFixed(2)}</span>
-                                <button onclick="app.deleteTip(${t.id})" style="background:none; border:none; cursor:pointer; opacity:0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
+                                <span style="font-weight: 700; color: ${t.status === 'approved' ? '#4ade80' : '#f87171'};">R$ ${t.amount.toFixed(2)}</span>
+                                <button onclick="app.deleteTip('${t.id}')" style="background:none; border:none; cursor:pointer; opacity:0.4;">🗑️</button>
                             </div>
                         </div>
                     `).join('')}
                 </div>
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
             </section>
         `;
     },
@@ -3088,7 +3098,8 @@ const app = {
             barber,
             amount,
             date: now.toISOString().split('T')[0],
-            timestamp: now.toISOString()
+            timestamp: now.toISOString(),
+            status: 'approved'
         });
 
         // Registrar no fluxo de caixa
@@ -3100,16 +3111,39 @@ const app = {
         alert('✅ Gorjeta lançada com sucesso!');
     },
 
+    approveTip(id) {
+        const tip = (this.state.tips || []).find(t => t.id == id);
+        if (tip) {
+            tip.status = 'approved';
+            this.saveState();
+            this.render('admin-tips');
+            alert('✅ Gorjeta aprovada!');
+        }
+    },
+
+    rejectTip(id) {
+        if (confirm('Deseja realmente recusar esta gorjeta?')) {
+            const tip = (this.state.tips || []).find(t => t.id == id);
+            if (tip) {
+                tip.status = 'rejected';
+                // Opcional: Remover do caixa se já tiver sido adicionada, 
+                // mas geralmente mantemos o registro da transação de entrada do dinheiro.
+                this.saveState();
+                this.render('admin-tips');
+            }
+        }
+    },
+
     deleteTip(id) {
-        if (confirm('Deseja realmente excluir este lançamento de gorjeta?')) {
-            const tip = (this.state.tips || []).find(t => t.id === id);
+        if (confirm('Deseja realmente excluir permanentemente este registro?')) {
+            const tip = (this.state.tips || []).find(t => t.id == id);
             if (tip) {
                 // Tentar remover do caixa
                 this.state.transactions = (this.state.transactions || []).filter(t => 
-                    !(t.description === `Gorjeta: ${tip.barber}` && t.amount === tip.amount && t.date === tip.date)
+                    !(t.description.includes(`Gorjeta: ${tip.barber}`) && t.amount === tip.amount && t.date === tip.date)
                 );
             }
-            this.state.tips = (this.state.tips || []).filter(t => t.id !== id);
+            this.state.tips = (this.state.tips || []).filter(t => t.id != id);
             this.saveState();
             this.render('admin-tips');
         }
