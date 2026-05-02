@@ -37,12 +37,19 @@ const app = {
         if (this.state.tab === 'tenants') {
             document.getElementById('tenants-list').style.display = 'grid';
             if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
+            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
             this.renderTenants();
-        } else {
+        } else if (this.state.tab === 'billing') {
             document.getElementById('tenants-list').style.display = 'none';
+            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
             this.renderBilling();
+        } else if (this.state.tab === 'leads') {
+            document.getElementById('tenants-list').style.display = 'none';
+            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
+            this.renderLeads();
         }
     },
+
 
 
     setupLogin() {
@@ -247,6 +254,72 @@ const app = {
             alert('Erro ao alterar status de bloqueio.');
         }
     },
+
+    async renderLeads() {
+        const list = document.getElementById('tenants-list').parentElement;
+        let leadsView = document.getElementById('leads-view');
+        
+        if (!leadsView) {
+            leadsView = document.createElement('div');
+            leadsView.id = 'leads-view';
+            list.appendChild(leadsView);
+        }
+
+        leadsView.style.display = 'block';
+        leadsView.innerHTML = '<div style="padding: 20px; text-align: center;">⌛ Carregando leads capturados...</div>';
+
+        try {
+            const leadsRef = ref(this.db, 'master/leads');
+            const snapshot = await get(leadsRef);
+            const leads = snapshot.val() || {};
+
+            leadsView.innerHTML = `
+                <div class="glass-card" style="padding: 30px; border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <h2 style="margin-bottom: 20px; color: var(--primary-color);">🎯 Leads Capturados (Site AgendamentoFacil)</h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px;">Data</th>
+                                    <th style="padding: 12px;">Estabelecimento</th>
+                                    <th style="padding: 12px;">Contato</th>
+                                    <th style="padding: 12px;">Segmento</th>
+                                    <th style="padding: 12px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.keys(leads).sort((a,b) => new Date(leads[b].date) - new Date(leads[a].date)).map(key => {
+                                    const l = leads[key];
+                                    return `
+                                        <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                                            <td style="padding: 12px;">${new Date(l.date).toLocaleDateString('pt-BR')}</td>
+                                            <td style="padding: 12px;">
+                                                <strong>${l.shopName}</strong><br>
+                                                <span style="font-size: 0.8rem; color: var(--text-muted);">${l.name}</span>
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                ${l.email}<br>
+                                                <a href="https://wa.me/55${l.phone.replace(/\D/g,'')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 600;">📱 WhatsApp</a>
+                                            </td>
+                                            <td style="padding: 12px;"><span style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${l.segment}</span></td>
+                                            <td style="padding: 12px;">
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px;" onclick="alert('Mensagem: ${l.message.replace(/'/g, "\\'")}')">👁️ Ver Msg</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        ${Object.keys(leads).length === 0 ? '<p style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum lead capturado ainda.</p>' : ''}
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+            leadsView.innerHTML = '<div style="padding: 20px; color: red;">Erro ao carregar leads.</div>';
+        }
+    },
+
 
 
     async openEditTenantModal(slug) {

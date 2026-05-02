@@ -79,7 +79,8 @@
 
             <div class="hero-form-wrapper">
                 <div class="form-card glass">
-                    <form class="lead-form" onsubmit="event.preventDefault(); alert('Em breve! O formulário será configurado para enviar os dados para o seu WhatsApp ou E-mail.');">
+                    <form class="lead-form" onsubmit="window.submitLead(event)">
+
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -141,6 +142,59 @@
             </div>
 
         </div>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+                authDomain: "centauro-barbearia.firebaseapp.com",
+                projectId: "centauro-barbearia",
+                storageBucket: "centauro-barbearia.firebasestorage.app",
+                messagingSenderId: "96712816127",
+                appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+                databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            window.submitLead = async function(event) {
+                event.preventDefault();
+                const btn = event.target.querySelector('button');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = 'Enviando...';
+
+                const leadData = {
+                    name: event.target.elements[0].value,
+                    email: event.target.elements[1].value,
+                    phone: event.target.elements[2].value,
+                    shopName: event.target.elements[3].value,
+                    segment: event.target.elements[4].value,
+                    source: event.target.elements[5].value,
+                    message: event.target.elements[6].value,
+                    date: new Date().toISOString(),
+                    status: 'Novo'
+                };
+
+                try {
+                    const leadsRef = ref(db, 'master/leads');
+                    await push(leadsRef, leadData);
+                    
+                    alert('🚀 Sucesso! Recebemos seus dados. Nossa equipe entrará em contato em breve.');
+                    event.target.reset();
+                } catch (e) {
+                    console.error(e);
+                    alert('Erro ao enviar dados. Tente novamente mais tarde.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            };
+        </script>
+
 
         <!-- ONDAS INFERIORES HERO -->
         <div class="wave-bottom">
