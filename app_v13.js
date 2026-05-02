@@ -64,6 +64,7 @@ const app = {
         cart: [],           // Carrinho do PDV
         pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
         serviceOrders: [],   // Ordens de Serviço
+        productSales: [],    // Histórico de Vendas/Consumo
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
