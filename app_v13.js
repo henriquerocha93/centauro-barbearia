@@ -888,8 +888,9 @@ const app = {
             return;
         }
         const s = this.state.settings || {};
-        const logo = s.logoUrl || 'logo_centauro.png';
-        const name = (s.shopName || 'CENTAURO').toUpperCase();
+        const logo = s.logoUrl || 'logo.png';
+        const name = (s.shopName || 'AGENDAMENTO FÁCIL').toUpperCase();
+
 
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
@@ -921,7 +922,8 @@ const app = {
             ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
-                <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color); flex: 1; text-align: center;">CENTAURO</div>
+                <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color); flex: 1; text-align: center;">AGENDAMENTO FÁCIL</div>
+
                 <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
             </div>
             
@@ -929,7 +931,8 @@ const app = {
 
             <aside class="sidebar glass" id="sidebar">
                 <div class="sidebar-logo">
-                    <img src="logo_centauro.png" alt="Logo">
+                    <div style="font-family: 'Playfair Display'; font-weight: 900; font-size: 1.2rem; color: white;">AGENDAMENTO <span style="color: var(--accent-color);">FÁCIL</span></div>
+
                     <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
                 </div>
                 
