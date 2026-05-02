@@ -4621,7 +4621,6 @@ const app = {
                 </style>
             `;
         }
-        }
         return '';
     },
 
