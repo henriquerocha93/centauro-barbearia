@@ -616,6 +616,7 @@ const app = {
         const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
         const adminUser = document.getElementById('t-admin-user').value;
         const adminPass = document.getElementById('t-admin-pass').value;
+        const phone = document.getElementById('t-phone').value;
         const price = parseFloat(document.getElementById('t-price').value) || 0;
 
         if (this.tenants[slug]) {
@@ -636,6 +637,7 @@ const app = {
             await set(ref(this.db, 'master/tenants/' + slug), {
                 name: name,
                 slug: slug,
+                phone: phone,
                 adminUser: adminUser,
                 subscriptionPrice: price,
                 nextPayment: nextPayment.toISOString(),

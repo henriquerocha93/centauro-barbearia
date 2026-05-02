@@ -97,6 +97,11 @@
             </div>
 
             <div class="form-group">
+                <label>Telefone do Cliente (WhatsApp)</label>
+                <input type="tel" id="t-phone" required placeholder="Ex: 51999999999">
+            </div>
+
+            <div class="form-group">
                 <label>Valor da Mensalidade (R$)</label>
                 <input type="number" id="t-price" step="0.01" required placeholder="Ex: 99.90">
             </div>
@@ -203,17 +208,45 @@
                 Object.keys(tenants).forEach(key => {
                     const t = tenants[key];
                     if (t.sellerId === currentSeller.username) {
+                        const nextPayment = new Date(t.nextPayment);
+                        const createdAt = new Date(t.createdAt);
+                        const now = new Date();
+                        const diffDays = Math.ceil((nextPayment - now) / (1000 * 60 * 60 * 24));
+                        const isExpired = nextPayment < now;
+                        
+                        // Determinar Status Visual
+                        let statusHtml = '';
+                        if (t.isBlocked) {
+                            statusHtml = '<span style="background: #f3f4f6; color: #374151; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">⏳ AGUARDANDO ADMIN</span>';
+                        } else if (isExpired) {
+                            statusHtml = '<span style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">🔴 VENCIDO (CONVERTAR)</span>';
+                        } else if (diffDays <= 7 && (nextPayment - createdAt) < (10 * 24 * 60 * 60 * 1000)) {
+                            statusHtml = `<span style="background: #fef9c3; color: #854d0e; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">🟡 EM TESTE (${diffDays} dias)</span>`;
+                        } else {
+                            statusHtml = `<span style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">🟢 ATIVO (RENVOU)</span>`;
+                        }
+
                         const card = document.createElement('div');
                         card.className = 'glass-card';
+                        card.style.borderLeft = isExpired ? '5px solid #ef4444' : (t.isBlocked ? '1px solid #ddd' : '5px solid #10b981');
+                        
                         card.innerHTML = `
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                                <h3 style="margin: 0;">${t.name}</h3>
-                                <span style="font-size: 0.7rem; padding: 4px 8px; border-radius: 12px; background: ${t.isBlocked ? '#fee2e2; color: #b91c1c' : '#dcfce7; color: #15803d'}">
-                                    ${t.isBlocked ? '⏳ Aguardando Ativação' : '✅ Ativo'}
-                                </span>
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <h3 style="margin: 0; font-family: 'Playfair Display';">${t.name}</h3>
+                                ${statusHtml}
                             </div>
-                            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 5px;">Link: centauro-barbearia.vercel.app/?loja=${key}</p>
-                            <p style="font-size: 0.85rem; color: #6b7280;">Valor: <b>R$ ${(t.subscriptionPrice || 0).toFixed(2)}</b></p>
+                            <div style="font-size: 0.85rem; color: #6b7280; line-height: 1.6;">
+                                <p>🔗 <b>Link:</b> centauro-barbearia.vercel.app/?loja=${key}</p>
+                                <p>📅 <b>Vencimento:</b> ${nextPayment.toLocaleDateString('pt-BR')}</p>
+                                <p>💰 <b>Mensalidade:</b> R$ ${(t.subscriptionPrice || 0).toFixed(2)}</p>
+                            </div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                                <a href="https://wa.me/55${(t.phone || '').replace(/\D/g,'')}" target="_blank" 
+                                   style="text-decoration: none; background: #25D366; color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                   📱 Contatar Cliente
+                                </a>
+                                <span style="font-size: 0.75rem; color: #9ca3af;">ID: ${key}</span>
+                            </div>
                         `;
                         list.appendChild(card);
                     }
@@ -234,6 +267,7 @@
 
             const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
             const name = document.getElementById('t-name').value;
+            const phone = document.getElementById('t-phone').value;
             const adminUser = document.getElementById('t-admin-user').value;
             const adminPass = document.getElementById('t-admin-pass').value;
             const price = parseFloat(document.getElementById('t-price').value) || 0;
@@ -254,6 +288,7 @@
                 // Create in Master (BLOCKED)
                 await set(ref(db, 'master/tenants/' + slug), {
                     name,
+                    phone,
                     slug,
                     adminUser,
                     subscriptionPrice: price,
