@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const app = {
     db: null,
@@ -93,10 +93,72 @@ const app = {
                     <p class="t-info"><strong>Slug:</strong> /?loja=${key}</p>
                     <div class="t-actions">
                         <a href="../index.html?loja=${key}" target="_blank" class="t-link">↗ Acessar Sistema</a>
+                        <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="color: var(--primary-color); border-color: var(--primary-color); padding: 4px 10px; font-size: 0.75rem;">✏️ Editar Visual</button>
                     </div>
                 </div>
             `;
         });
+    },
+
+    async openEditTenantModal(slug) {
+        document.getElementById('edit-tenant-modal').showModal();
+        const form = document.getElementById('edit-tenant-form');
+        
+        // Carrega dados atuais
+        try {
+            const snapshot = await get(ref(this.db, 'tenants/' + slug + '/settings'));
+            const s = snapshot.val() || {};
+            
+            document.getElementById('e-slug').value = slug;
+            document.getElementById('e-name').value = s.shopName || '';
+            document.getElementById('e-subtitle').value = s.subtitle || '';
+            document.getElementById('e-logo').value = s.logoUrl || '';
+            document.getElementById('e-color-primary').value = s.primaryColor || '#000000';
+            document.getElementById('e-color-accent').value = s.accentColor || '#f97316';
+            document.getElementById('e-welcome-title').value = s.welcomeMessage || '';
+            document.getElementById('e-address').value = s.address || '';
+            document.getElementById('e-phone').value = s.phone || '';
+            
+        } catch (e) {
+            console.error('Erro ao carregar configuracoes:', e);
+        }
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            this.saveTenantSettings();
+        };
+    },
+
+    async saveTenantSettings() {
+        const slug = document.getElementById('e-slug').value;
+        const btn = document.getElementById('btn-save-tenant');
+        btn.textContent = 'Salvando...';
+        btn.disabled = true;
+
+        try {
+            await update(ref(this.db, 'tenants/' + slug + '/settings'), {
+                shopName: document.getElementById('e-name').value,
+                subtitle: document.getElementById('e-subtitle').value,
+                logoUrl: document.getElementById('e-logo').value,
+                primaryColor: document.getElementById('e-color-primary').value,
+                accentColor: document.getElementById('e-color-accent').value,
+                welcomeMessage: document.getElementById('e-welcome-title').value,
+                address: document.getElementById('e-address').value,
+                phone: document.getElementById('e-phone').value
+            });
+
+            // Sucesso
+            document.getElementById('edit-tenant-modal').close();
+            btn.textContent = 'Salvar Alterações';
+            btn.disabled = false;
+            alert('✅ Visual da barbearia atualizado com sucesso!');
+
+        } catch (error) {
+            console.error('Erro ao salvar:', error);
+            alert('❌ Erro ao salvar as configurações.');
+            btn.textContent = 'Salvar Alterações';
+            btn.disabled = false;
+        }
     },
 
     openNewTenantModal() {

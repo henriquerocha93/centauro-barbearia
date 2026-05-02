@@ -440,14 +440,36 @@ const app = {
                             this.state.lastUpdate = data.lastUpdate;
 
                             // SaaS: Atualiza textos da interface com base no Tenant
-                            if (this.state.settings && this.state.settings.shopName) {
-                                const titleEl = document.getElementById('shop-title');
-                                if (titleEl) titleEl.innerHTML = `${this.state.settings.shopName} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
-                                document.title = `${this.state.settings.shopName} | Premium Grooming`;
+                            if (this.state.settings) {
+                                const s = this.state.settings;
                                 
-                                // Para as telas internas (Landing Page interna)
-                                const internalTitle = document.querySelector('span[style*="CENTAURO"]');
-                                if (internalTitle) internalTitle.textContent = this.state.settings.shopName.toUpperCase();
+                                // Título Principal
+                                if (s.shopName) {
+                                    const titleEl = document.getElementById('shop-title');
+                                    if (titleEl) titleEl.innerHTML = `${s.shopName} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
+                                    document.title = `${s.shopName} | Premium Grooming`;
+                                    
+                                    const internalTitle = document.querySelector('span[style*="CENTAURO"]');
+                                    if (internalTitle) internalTitle.textContent = s.shopName.toUpperCase();
+                                }
+                                
+                                // Subtítulo e Logo
+                                if (s.subtitle) document.getElementById('shop-subtitle').textContent = s.subtitle;
+                                if (s.logoUrl) document.getElementById('main-logo').src = s.logoUrl;
+                                
+                                // Boas vindas
+                                if (s.welcomeMessage) document.getElementById('welcome-title').textContent = s.welcomeMessage;
+                                
+                                // Endereço e Telefone
+                                if (s.address || s.phone) {
+                                    document.getElementById('shop-contact').style.display = 'block';
+                                    if (s.address) document.getElementById('shop-address').textContent = s.address;
+                                    if (s.phone) document.getElementById('shop-phone').textContent = s.phone;
+                                }
+                                
+                                // Cores Dinâmicas (CSS Variables)
+                                if (s.primaryColor) document.documentElement.style.setProperty('--primary-color', s.primaryColor);
+                                if (s.accentColor) document.documentElement.style.setProperty('--accent-color', s.accentColor);
                             }
 
                             // Atualiza a tela se não estiver no meio de um agendamento
