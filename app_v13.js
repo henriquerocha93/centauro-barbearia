@@ -3872,7 +3872,7 @@ const app = {
         if (!sale) return;
 
         const confirmMsg = sale.target === 'barbeiro' 
-            ? `Deseja realmente apagar este consumo?\n\n⚠️ O estoque será devolvido, mas o VALE de R$ ${sale.total.toFixed(2)} lançado para ${sale.barberName} DEVE ser apagado manualmente na aba de Vales.`
+            ? `Deseja realmente apagar este consumo de ${sale.barberName}?\n\nO estoque será devolvido e o lançamento financeiro (Vale e Movimentação) será removido.`
             : `Deseja realmente apagar este registro de consumo ADM?\nO estoque (${sale.qty} un.) será devolvido automaticamente.`;
 
         if (confirm(confirmMsg)) {
@@ -3882,12 +3882,34 @@ const app = {
                 product.stock += sale.qty;
             }
 
-            // Remover do histórico
+            // Remover transação e vale se for consumo de barbeiro
+            if (sale.target === 'barbeiro') {
+                // Remover Transação
+                this.state.transactions = this.state.transactions.filter(t => {
+                    const isMatch = (t.description.includes("Uso Próprio") || t.description.includes("Consumo")) && 
+                                    t.description.includes(sale.productName.split(' ')[0]) && 
+                                    Math.abs(t.amount - sale.total) < 0.01 &&
+                                    t.date === sale.date;
+                    return !isMatch;
+                });
+
+                // Remover Vale (Voucher)
+                if (this.state.vouchers) {
+                    this.state.vouchers = this.state.vouchers.filter(v => {
+                        const isMatch = v.barber === sale.barberName && 
+                                        Math.abs(v.amount - sale.total) < 0.01 &&
+                                        v.date.startsWith(sale.date);
+                        return !isMatch;
+                    });
+                }
+            }
+
+            // Remover do histórico de vendas
             this.state.productSales = this.state.productSales.filter(s => s.id !== saleId);
 
             this.saveState();
             this.render('admin-consumption');
-            alert('✅ Registro removido e estoque restaurado.');
+            alert('✅ Registro removido, estoque restaurado e financeiro atualizado.');
         }
     },
 
