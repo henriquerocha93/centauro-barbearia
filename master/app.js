@@ -426,6 +426,7 @@ const app = {
                                     <th style="padding: 12px;">Estabelecimento</th>
                                     <th style="padding: 12px;">Contato</th>
                                     <th style="padding: 12px;">Segmento</th>
+                                    <th style="padding: 12px;">Status</th>
                                     <th style="padding: 12px;">Ações</th>
                                 </tr>
                             </thead>
@@ -446,7 +447,13 @@ const app = {
                                             </td>
                                             <td style="padding: 12px;"><span style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${l.segment}</span></td>
                                             <td style="padding: 12px;">
+                                                <span style="padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; background: ${l.contacted ? '#dcfce7; color: #15803d' : '#fef9c3; color: #854d0e'};" onclick="app.toggleLeadStatus('${key}', ${l.contacted || false})">
+                                                    ${l.contacted ? '✅ Contatado' : '⏳ Pendente'}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 12px; display: flex; gap: 5px;">
                                                 <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px;" onclick="alert('Mensagem: ${l.message.replace(/'/g, "\\'")}')">👁️ Ver Msg</button>
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px; color: #ef4444; border-color: #fecaca;" onclick="app.deleteLead('${key}')">🗑️</button>
                                             </td>
                                         </tr>
                                     `;
@@ -460,6 +467,29 @@ const app = {
         } catch (e) {
             console.error(e);
             leadsView.innerHTML = '<div style="padding: 20px; color: red;">Erro ao carregar leads.</div>';
+        }
+    },
+
+    async toggleLeadStatus(key, currentStatus) {
+        try {
+            await update(ref(this.db, 'master/leads/' + key), {
+                contacted: !currentStatus
+            });
+            this.renderLeads();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao atualizar status do lead.');
+        }
+    },
+
+    async deleteLead(key) {
+        if (!confirm('Deseja realmente excluir este lead permanentemente?')) return;
+        try {
+            await set(ref(this.db, 'master/leads/' + key), null);
+            this.renderLeads();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao excluir lead.');
         }
     },
 
