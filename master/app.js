@@ -145,45 +145,32 @@ const app = {
             let logoUrl = document.getElementById('e-logo-url').value;
             const fileInput = document.getElementById('e-logo-file');
 
-            // Se houver um arquivo selecionado, faz o upload primeiro
+            // Se houver um arquivo selecionado, faz o upload para o ImgBB
             if (fileInput.files[0]) {
                 const file = fileInput.files[0];
-                const storageRef = refStorage(this.storage, `logos/${slug}/${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
-                document.getElementById('upload-progress-container').style.display = 'block';
                 const statusLabel = document.getElementById('upload-status');
+                document.getElementById('upload-progress-container').style.display = 'block';
+                document.getElementById('upload-progress-bar').style.width = '50%';
+                statusLabel.textContent = 'Enviando imagem para o servidor seguro...';
 
-                logoUrl = await new Promise((resolve, reject) => {
-                    // Timeout de segurança (15 segundos)
-                    const timeout = setTimeout(() => {
-                        uploadTask.cancel();
-                        reject(new Error('Tempo limite excedido. Verifique se o Storage está ativado no Firebase Console.'));
-                    }, 15000);
-
-                    uploadTask.on('state_changed', 
-                        (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            document.getElementById('upload-progress-bar').style.width = progress + '%';
-                            statusLabel.textContent = `Enviando imagem: ${Math.round(progress)}%...`;
-                        }, 
-                        (error) => {
-                            clearTimeout(timeout);
-                            console.error('Erro detalhado no upload:', error);
-                            let msg = 'Erro no upload: ';
-                            if (error.code === 'storage/unauthorized') msg += 'Sem permissão. Verifique as "Rules" no Firebase Storage.';
-                            else if (error.code === 'storage/retry-limit-exceeded') msg += 'Falha na conexão. Verifique sua internet.';
-                            else msg += error.message;
-                            reject(new Error(msg));
-                        }, 
-                        () => {
-                            clearTimeout(timeout);
-                            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                                resolve(downloadURL);
-                            });
-                        }
-                    );
+                // Usando API do ImgBB (Gratuito e sem limites de projeto)
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const response = await fetch('https://api.imgbb.com/1/upload?key=6716186358cc9c78d488e04068307d7c', {
+                    method: 'POST',
+                    body: formData
                 });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    logoUrl = result.data.url;
+                    document.getElementById('upload-progress-bar').style.width = '100%';
+                    statusLabel.textContent = '✅ Imagem enviada com sucesso!';
+                } else {
+                    throw new Error('Erro no servidor de imagem: ' + result.error.message);
+                }
             }
 
             await update(ref(this.db, 'tenants/' + slug + '/settings'), {
