@@ -871,27 +871,26 @@ const app = {
         }
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_centauro.png';
-        const name = (s.shopName || 'CENTAURO').toUpperCase();
+        const name = s.shopName || 'Centauro';
+        const subtitle = s.subtitle || 'Barbearia de Elite';
 
-        // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
-        appContainer.innerHTML = `
-            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
-                <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
-                    <img src="${logo}" alt="Logo" class="integrated-logo" style="width: 40px; ${!s.logoUrl ? 'filter: invert(1) brightness(2);' : 'border-radius: 8px;'}">
-                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">${name}</span>
-                </div>
-                <button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>
-            </header>
-            <main id="main-content"></main>
-            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
-        `;
-        const newMain = document.getElementById('main-content');
+        // SaaS: Atualiza Header estático se existir
+        const mainLogo = document.getElementById('main-logo');
+        const shopTitle = document.getElementById('shop-title');
+        const shopSubtitle = document.getElementById('shop-subtitle');
+        
+        if (mainLogo) mainLogo.src = logo;
+        if (shopTitle) shopTitle.innerHTML = `${name} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
+        if (shopSubtitle) shopSubtitle.textContent = subtitle;
+
+        const mainContent = document.getElementById('main-content');
+        if (!mainContent) return;
 
         switch(view) {
-            case 'home': this.renderHome(newMain); break;
-            case 'login': this.renderLogin(newMain); break;
-            case 'booking': this.renderBooking(newMain); break;
-            default: this.renderHome(newMain);
+            case 'home': this.renderHome(mainContent); break;
+            case 'login': this.renderLogin(mainContent); break;
+            case 'booking': this.renderBooking(mainContent); break;
+            default: this.renderHome(mainContent);
         }
     },
 
@@ -1505,47 +1504,46 @@ const app = {
     renderHome(container) {
     renderHome(container) {
         const s = this.state.settings || {};
-        const subtitle = s.subtitle || 'Excelência & Tradição';
-        const name = s.shopName || 'Centauro Barbearia';
-        const welcome = s.welcomeMessage || 'Agendar Horário';
+        const welcome = s.welcomeMessage || 'Excelência em cada corte.';
 
         container.innerHTML = `
-            <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
-                <div class="hero-content fade-in">
-                    <p>${subtitle}</p>
-                    <h1>${name}</h1>
-                    <div style="width: 100px; height: 3px; background: var(--accent-color); margin: 20px auto;"></div>
-                    <button class="btn-primary" style="margin-top: 20px; padding: 15px 50px; font-size: 1.1rem;" onclick="app.navigateTo('booking')">${welcome}</button>
+            <section id="home-view" class="fade-in">
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2 id="welcome-title" style="margin-bottom: 10px;">${welcome}</h2>
+                    <p style="color: var(--text-secondary);">Agende seu horário com os melhores profissionais da região.</p>
                 </div>
-            </section>
 
-            <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💈</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Profissionais de Elite</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Nossa equipe é composta por especialistas em cortes clássicos e modernos, garantindo perfeição em cada detalhe.</p>
+                <div class="actions" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn-primary" onclick="app.navigateTo('booking')">Agendar Agora</button>
+                    <button class="btn-secondary" onclick="app.navigateTo('login')">Área Administrativa</button>
+                </div>
+
+                <div style="margin-top: 50px;">
+                    <h3 class="section-title">Nossos Serviços</h3>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Corte</h4>
+                            <p>Degradê, tesoura ou social</p>
+                        </div>
+                        <div class="service-price">R$ 35</div>
                     </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🥃</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Ambiente Premium</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Desfrute de uma experiência única em um ambiente clássico e climatizado, pensado para o seu total conforto.</p>
-                    </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📅</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Agendamento Prático</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Reserve seu horário em segundos através do nosso sistema online, sem esperas e sem complicações.</p>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Barba</h4>
+                            <p>Toalha quente e cuidados profissionais</p>
+                        </div>
+                        <div class="service-price">R$ 35</div>
                     </div>
                 </div>
+
+                ${(s.address || s.phone) ? `
+                <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
+                    ${s.address ? `<p id="shop-address" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
+                    ${s.phone ? `<p id="shop-phone" style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
+                </div>
+                ` : ''}
             </section>
-            
-            ${(s.address || s.phone) ? `
-            <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
-                <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
-                ${s.address ? `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
-                ${s.phone ? `<p style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
-            </div>
-            ` : ''}
         `;
     },
 
