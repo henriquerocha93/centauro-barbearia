@@ -1256,12 +1256,41 @@ const app = {
         const now = new Date();
         const dateStr = now.toISOString().split('T')[0];
 
+        let transactionId = null;
+        let voucherId = null;
+
+        if (target === 'barbeiro') {
+            // Lançar Vale para o barbeiro consumidor
+            voucherId = Date.now() + 2;
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: voucherId,
+                barber: consumer,
+                amount: total,
+                date: now.toISOString(),
+                note: `Consumo PDV Totem: ${cart.length} item(ns)`
+            });
+            // Transação via faturamento
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
+            transactionId = this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque, sem transação financeira
+        } else {
+            let method = 'dinheiro';
+            if (payment==='PIX') method='pix';
+            if (payment==='Cartão de Débito') method='debito';
+            if (payment==='Cartão de Crédito') method='credito';
+            const desc = cart.length === 1
+                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+                : `PDV: ${cart.length} produtos`;
+            transactionId = this.addTransaction('in', desc, total, 'produto', method);
+        }
+
+        // Registrar histórico individual
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
-            product.stock -= item.qty;
             const itemTotal = item.unitPrice * item.qty;
             const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
-            totalComm += itemComm;
             
             this.state.productSales.push({
                 id: Date.now() + Math.random(), 
@@ -1276,36 +1305,11 @@ const app = {
                 payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
                 target: target,
                 barberName: target === 'barbeiro' ? consumer : null,
-                discount: 0,
                 date: dateStr, 
-                timestamp: now.toISOString()
+                timestamp: now.toISOString(),
+                transactionId,
+                voucherId
             });
-        }
-
-        if (target === 'barbeiro') {
-            // Lançar Vale para o barbeiro consumidor
-            if (!this.state.vouchers) this.state.vouchers = [];
-            this.state.vouchers.push({
-                id: Date.now() + 2,
-                barber: consumer,
-                amount: total,
-                date: now.toISOString(),
-                note: `Consumo PDV Totem: ${cart.length} item(ns)`
-            });
-            // Transação via faturamento
-            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
-            this.addTransaction('in', desc, total, 'produto', 'faturamento');
-        } else if (target === 'adm') {
-            // Apenas baixa de estoque, sem transação financeira
-        } else {
-            let method = 'dinheiro';
-            if (payment==='PIX') method='pix';
-            if (payment==='Cartão de Débito') method='debito';
-            if (payment==='Cartão de Crédito') method='credito';
-            const desc = cart.length === 1
-                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-                : `PDV: ${cart.length} produtos`;
-            this.addTransaction('in', desc, total, 'produto', method);
         }
 
         this.state.cart = [];
@@ -2757,8 +2761,9 @@ const app = {
             if (payment === 'Cartão de Débito') mappedMethod = 'debito';
             if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
 
-            // Integrar com Fluxo de Caixa
-            this.addTransaction('in', `Serviço: ${apt.service} (${apt.customer})`, apt.price, 'servico', mappedMethod);
+            // Integrar com Fluxo de Caixa e salvar ID no agendamento
+            const desc = `Serviço: ${apt.service} (${apt.customer})`;
+            apt.transactionId = this.addTransaction('in', desc, apt.price, 'servico', mappedMethod);
             
             this.closeModal();
             this.saveState();
@@ -2769,12 +2774,23 @@ const app = {
 
     cancelApt(aptId) {
         if (confirm('Deseja realmente remover este agendamento?')) {
-            // Garantir que a comparação seja feita como número
             const idToCancel = Number(aptId);
+            const apt = this.state.appointments.find(a => a.id === idToCancel);
+            
+            if (apt && apt.transactionId) {
+                // Remover transação financeira se existir
+                this.state.transactions = this.state.transactions.filter(t => t.id !== apt.transactionId);
+            } else if (apt) {
+                // Fallback para agendamentos antigos sem ID de transação
+                const desc = `Serviço: ${apt.service} (${apt.customer})`;
+                this.state.transactions = this.state.transactions.filter(t => t.description === desc && t.date === apt.date);
+            }
+
             this.state.appointments = this.state.appointments.filter(a => a.id !== idToCancel);
             this.saveState();
             this.closeModal();
             this.render(this.state.view);
+            alert('Agendamento removido e financeiro atualizado.');
         }
     },
 
@@ -3777,10 +3793,22 @@ const app = {
             const discountDate = document.getElementById('voucher-discount-date').value;
             const note = document.getElementById('voucher-note').value.trim();
             if (barber && amount) {
-                const voucher = { id: Date.now(), barber, amount, date: new Date().toISOString(), discountDate: discountDate || null, note: note || '' };
+                const voucherId = Date.now() + Math.floor(Math.random() * 100);
+                const desc = `Vale: ${barber}${note ? ' - ' + note : ''}`;
+                
+                // Salva ID da transação no voucher
+                const transactionId = this.addTransaction('out', desc, amount, 'vale', 'dinheiro');
+                
+                const voucher = { 
+                    id: voucherId, 
+                    barber, 
+                    amount, 
+                    date: new Date().toISOString(), 
+                    discountDate: discountDate || null, 
+                    note: note || '',
+                    transactionId
+                };
                 this.state.vouchers.push(voucher);
-                // Registrar também no fluxo de caixa como saída
-                this.addTransaction('out', `Vale: ${barber}${note ? ' - ' + note : ''}`, amount, 'vale');
                 this.saveState();
                 this.render('admin-vouchers');
             } else {
@@ -3791,6 +3819,14 @@ const app = {
 
     deleteVoucher(voucherId) {
         if (confirm('Deseja realmente excluir este vale? Esta ação não pode ser desfeita.')) {
+            const voucher = this.state.vouchers.find(v => v.id === voucherId);
+            if (voucher && voucher.transactionId) {
+                this.state.transactions = this.state.transactions.filter(t => t.id !== voucher.transactionId);
+            } else if (voucher) {
+                // Fallback busca flexível
+                const desc = `Vale: ${voucher.barber}`;
+                this.state.transactions = this.state.transactions.filter(t => t.description.includes(desc) && t.amount === voucher.amount);
+            }
             this.state.vouchers = this.state.vouchers.filter(v => v.id !== voucherId);
             this.saveState();
             this.render('admin-vouchers');
