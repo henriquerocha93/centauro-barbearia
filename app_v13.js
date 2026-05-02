@@ -5106,6 +5106,14 @@ const app = {
         const grossRevenue = appointments.reduce((sum, a) => sum + a.price, 0);
         const staffCommission = grossRevenue * (staff.commission / 100);
 
+        // Gorjetas Aprovadas
+        const tips = (this.state.tips || []).filter(t => 
+            t.barber === staff.name && 
+            t.status === 'approved' &&
+            t.date >= start && t.date <= end
+        );
+        const totalTips = tips.reduce((sum, t) => sum + t.amount, 0);
+
         // Vales
         const vouchers = this.state.vouchers.filter(v => 
             v.barber === staff.name &&
@@ -5113,46 +5121,64 @@ const app = {
         );
         const totalVouchers = vouchers.reduce((sum, v) => sum + v.amount, 0);
 
-        const netPay = staffCommission - totalVouchers;
+        const netPay = staffCommission + totalTips - totalVouchers;
 
         resultsContainer.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid var(--text-secondary);">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Faturado Total</p>
-                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">R$ ${grossRevenue.toFixed(2)}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Faturado Total</p>
+                    <p style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">R$ ${grossRevenue.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Comissão (${staff.commission}%)</p>
-                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--accent-color);">R$ ${staffCommission.toFixed(2)}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Comissão (${staff.commission}%)</p>
+                    <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">R$ ${staffCommission.toFixed(2)}</p>
+                </div>
+                <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #fbbf24;">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas (100%)</p>
+                    <p style="font-size: 1.3rem; font-weight: 700; color: #fbbf24;">R$ ${totalTips.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #ff4444;">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Vales Detraídos</p>
-                    <p style="font-size: 1.5rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Vales Detraídos</p>
+                    <p style="font-size: 1.3rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #48C17E; background: rgba(72, 193, 126, 0.05);">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Líquido a Pagar</p>
-                    <p style="font-size: 1.8rem; font-weight: 800; color: #48C17E;">R$ ${netPay.toFixed(2)}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Líquido a Pagar</p>
+                    <p style="font-size: 1.6rem; font-weight: 800; color: #48C17E;">R$ ${netPay.toFixed(2)}</p>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                <div class="glass" style="padding: 20px; max-height: 400px; overflow-y: auto;">
-                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Relatório Analítico (Serviços)</h4>
-                    ${appointments.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem serviços finalizados neste período.</p>' : ''}
+                <div class="glass" style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Relatório Analítico (Serviços e Gorjetas)</h4>
+                    ${appointments.length === 0 && tips.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem movimentação neste período.</p>' : ''}
+                    
                     ${appointments.map(a => `
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem;">
                             <div>
                                 <strong style="color: var(--text-primary);">${a.customer}</strong><br>
-                                <span style="color: var(--text-secondary);">${a.service} | ${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
+                                <span style="color: var(--text-secondary);">💈 ${a.service} | ${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
                             <div style="text-align: right;">
                                 <strong style="color: var(--text-primary);">R$ ${a.price.toFixed(2)}</strong><br>
-                                <span style="color: var(--accent-color);">+ R$ ${(a.price * (staff.commission/100)).toFixed(2)}</span>
+                                <span style="color: var(--accent-color);">+ R$ ${(a.price * (staff.commission/100)).toFixed(2)} (comissão)</span>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    ${tips.map(t => `
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; background: rgba(251, 191, 36, 0.03);">
+                            <div>
+                                <strong style="color: #fbbf24;">Gorjeta 🪙</strong><br>
+                                <span style="color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <strong style="color: #fbbf24;">+ R$ ${t.amount.toFixed(2)}</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">Aprovada</span>
                             </div>
                         </div>
                     `).join('')}
                 </div>
-                <div class="glass" style="padding: 20px; max-height: 400px; overflow-y: auto;">
+                <div class="glass" style="padding: 20px; max-height: 500px; overflow-y: auto;">
                     <h4 style="margin-bottom: 15px; color: var(--text-primary);">Vales Registrados</h4>
                     ${vouchers.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem vales neste período.</p>' : ''}
                     ${vouchers.map(v => `
