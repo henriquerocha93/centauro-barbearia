@@ -443,28 +443,8 @@ const app = {
                             if (this.state.settings) {
                                 const s = this.state.settings;
                                 
-                                // Título Principal
                                 if (s.shopName) {
-                                    const titleEl = document.getElementById('shop-title');
-                                    if (titleEl) titleEl.innerHTML = `${s.shopName} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
                                     document.title = `${s.shopName} | Premium Grooming`;
-                                    
-                                    const internalTitle = document.querySelector('span[style*="CENTAURO"]');
-                                    if (internalTitle) internalTitle.textContent = s.shopName.toUpperCase();
-                                }
-                                
-                                // Subtítulo e Logo
-                                if (s.subtitle) document.getElementById('shop-subtitle').textContent = s.subtitle;
-                                if (s.logoUrl) document.getElementById('main-logo').src = s.logoUrl;
-                                
-                                // Boas vindas
-                                if (s.welcomeMessage) document.getElementById('welcome-title').textContent = s.welcomeMessage;
-                                
-                                // Endereço e Telefone
-                                if (s.address || s.phone) {
-                                    document.getElementById('shop-contact').style.display = 'block';
-                                    if (s.address) document.getElementById('shop-address').textContent = s.address;
-                                    if (s.phone) document.getElementById('shop-phone').textContent = s.phone;
                                 }
                                 
                                 // Cores Dinâmicas (CSS Variables)
