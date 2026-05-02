@@ -67,7 +67,7 @@ const app = {
                         <p class="t-info"><strong>Dono:</strong> Henri</p>
                         <p class="t-info"><strong>Slug:</strong> (Acesso Direto)</p>
                         <div class="t-actions">
-                            <a href="../" target="_blank" class="t-link">↗ Acessar Sistema</a>
+                            <a href="../index.html" target="_blank" class="t-link">↗ Acessar Sistema</a>
                         </div>
                     </div>
                 `;
@@ -86,7 +86,7 @@ const app = {
                     <p class="t-info"><strong>Criado em:</strong> ${date}</p>
                     <p class="t-info"><strong>Slug:</strong> /?loja=${key}</p>
                     <div class="t-actions">
-                        <a href="../?loja=${key}" target="_blank" class="t-link">↗ Acessar Sistema</a>
+                        <a href="../index.html?loja=${key}" target="_blank" class="t-link">↗ Acessar Sistema</a>
                     </div>
                 </div>
             `;
