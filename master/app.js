@@ -147,6 +147,7 @@ const app = {
                     <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <a href="../index.html?loja=${key}" target="_blank" class="t-link" style="width: 100%; text-align: center; margin-bottom: 5px;">↗ Acessar Sistema</a>
                         <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
+                        <button onclick="app.openPlanModal('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: #2563eb; color: white; border: none;">📋 Plano</button>
                         <button onclick="app.renewSubscription('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: ${statusColor}; color: white; border: none;">💰 Renovar</button>
                         <button onclick="app.toggleBlock('${key}')" class="btn" style="width: 100%; font-size: 0.7rem; background: ${t.isBlocked ? '#10b981' : '#475569'}; color: white; border: none; margin-top: 5px;">
                             ${t.isBlocked ? '🔓 Desbloquear Acesso' : '🚫 Bloquear Acesso'}
@@ -254,6 +255,58 @@ const app = {
             alert('Erro ao alterar status de bloqueio.');
         }
     },
+
+    openPlanModal(slug) {
+        const t = this.tenants[slug];
+        const modal = document.getElementById('plan-modal');
+        if (!modal) {
+            console.error('Modal de plano não encontrado!');
+            return;
+        }
+        
+        document.getElementById('plan-slug').value = slug;
+        document.getElementById('plan-price').value = t.subscriptionPrice || 0;
+        document.getElementById('plan-tenant-name').textContent = t.name;
+        
+        modal.showModal();
+    },
+
+    async savePlanConfig(event) {
+        event.preventDefault();
+        const slug = document.getElementById('plan-slug').value;
+        const price = parseFloat(document.getElementById('plan-price').value) || 0;
+        
+        try {
+            await update(ref(this.db, 'master/tenants/' + slug), {
+                subscriptionPrice: price
+            });
+            alert('✅ Valor do plano atualizado!');
+            document.getElementById('plan-modal').close();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao salvar plano.');
+        }
+    },
+
+    async activateTrial(slug) {
+        if (!confirm('Deseja ativar o Plano Teste de 7 dias gratuitamente para este cliente?')) return;
+        
+        const trialDate = new Date();
+        trialDate.setDate(trialDate.getDate() + 7);
+        
+        try {
+            await update(ref(this.db, 'master/tenants/' + slug), {
+                nextPayment: trialDate.toISOString(),
+                isBlocked: false // Garante que está desbloqueado
+            });
+            alert('✅ Plano Teste (7 dias) ativado com sucesso!');
+            document.getElementById('plan-modal').close();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao ativar teste.');
+        }
+    },
+
 
     async renderLeads() {
         const list = document.getElementById('tenants-list').parentElement;

@@ -197,6 +197,46 @@
         </div>
     </dialog>
 
+    <!-- Modal de Plano -->
+    <dialog id="plan-modal" class="glass-card" style="width: 90%; max-width: 400px; padding: 0; border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);">
+        <div style="background: var(--primary-color); padding: 20px; color: white;">
+            <h3 style="margin: 0;">⚙️ Configurar Plano</h3>
+            <p id="plan-tenant-name" style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;"></p>
+        </div>
+        <div style="padding: 25px; background: white;">
+            <form onsubmit="app.savePlanConfig(event)">
+                <input type="hidden" id="plan-slug">
+                
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Valor do Plano Mensal (R$)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;">R$</span>
+                        <input type="number" id="plan-price" step="0.01" style="width: 100%; padding: 12px 12px 12px 35px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1.1rem; font-weight: 700;">
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button type="submit" class="btn btn-purple" style="width: 100%; padding: 14px;">Salvar Valor do Plano</button>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                        <hr style="flex: 1; border: none; border-top: 1px solid #e5e7eb;">
+                        <span style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">Ou</span>
+                        <hr style="flex: 1; border: none; border-top: 1px solid #e5e7eb;">
+                    </div>
+
+                    <button type="button" class="btn" style="width: 100%; padding: 14px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;" 
+                            onclick="app.activateTrial(document.getElementById('plan-slug').value)">
+                        🎁 Ativar Teste Grátis (7 Dias)
+                    </button>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="button" style="background: none; border: none; color: #9ca3af; cursor: pointer; text-decoration: underline; font-size: 0.85rem;" onclick="document.getElementById('plan-modal').close()">Fechar</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
     <script type="module" src="app.js?v=2"></script>
 </body>
 </html>
