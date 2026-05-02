@@ -26,11 +26,15 @@
                 restrita à administração da plataforma.</p>
 
             <form id="master-login-form">
-                <div class="form-group">
-                    <label>Senha de Acesso</label>
-                    <input type="password" id="master-password" placeholder="Digite a senha mestra" required>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Usuário / Login</label>
+                    <input type="text" id="master-login" placeholder="admin ou seu login de vendedor" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
                 </div>
-                <button type="submit" class="btn btn-purple" style="width: 100%;">Entrar no Painel</button>
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Senha</label>
+                    <input type="password" id="master-password" placeholder="Sua senha" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                </div>
+                <button type="submit" class="btn btn-purple" style="width: 100%; padding: 14px; font-weight: 700;">Entrar no Sistema</button>
             </form>
         </div>
     </div>
