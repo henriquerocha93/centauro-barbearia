@@ -99,8 +99,14 @@ const app = {
         document.getElementById('app-modal').close();
     },
 
+    getStorageKey() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('loja') || 'centauro';
+        return `centauro_state_${tenantId}`;
+    },
+
     saveState() {
-        localStorage.setItem('centauro_state', JSON.stringify({
+        localStorage.setItem(this.getStorageKey(), JSON.stringify({
             services: this.state.services,
             staff: this.state.staff,
             customers: this.state.customers,
@@ -113,7 +119,7 @@ const app = {
             serviceOrders: this.state.serviceOrders || [],
             lastUpdate: this.state.lastUpdate || 0
         }));
-        this.syncToFirebase(); // Única sincronização ativa
+        this.syncToFirebase();
     },
 
     async syncToFirebase() {
@@ -305,37 +311,15 @@ const app = {
     },
 
     loadState() {
-        const APP_VERSION = "1.0.1";
-        if (localStorage.getItem('centauro_version') !== APP_VERSION) {
-            localStorage.removeItem('centauro_state');
-            localStorage.setItem('centauro_version', APP_VERSION);
-            console.log("Limpeza de cache forçada para atualização de serviços e correção de erros.");
-        }
-
-        const saved = localStorage.getItem('centauro_state');
+        const key = this.getStorageKey();
+        const saved = localStorage.getItem(key);
         if (saved) {
             try {
-                const data = JSON.parse(saved);
-
-                this.state.services = data.services || this.state.services;
-                this.state.staff = data.staff || this.state.staff;
-                
-                // Força a inserção do usuário Totem se a sessão do localStorage for antiga
-                if (!this.state.staff.find(s => s.role === 'totem')) {
-                    this.state.staff.push({ id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false });
-                }
-
-                this.state.customers = data.customers || this.state.customers;
-                this.state.settings = data.settings || this.state.settings;
-                this.state.vouchers = data.vouchers || this.state.vouchers;
-                this.state.transactions = data.transactions || this.state.transactions;
-                this.state.products = data.products || this.state.products;
-                this.state.productSales = data.productSales || [];
-                this.state.appointments = data.appointments || this.state.appointments || [];
-                this.state.serviceOrders = data.serviceOrders || [];
-                this.state.githubConfig = data.githubConfig || this.state.githubConfig;
+                const loaded = JSON.parse(saved);
+                Object.assign(this.state, loaded);
+                console.log(`✅ Estado carregado para loja: ${key}`);
             } catch (e) {
-                console.error("Erro ao carregar estado:", e);
+                console.error('Erro ao carregar estado local:', e);
             }
         }
     },
@@ -437,13 +421,13 @@ const app = {
                         if (data.lastUpdate !== localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
                             
-                            this.state.services = data.services || this.state.services;
-                            this.state.staff = data.staff || this.state.staff;
-                            this.state.customers = data.customers || this.state.customers;
+                            this.state.services = data.services || [];
+                            this.state.staff = data.staff || [];
+                            this.state.customers = data.customers || [];
                             this.state.settings = data.settings || this.state.settings;
-                            this.state.vouchers = data.vouchers || this.state.vouchers;
-                            this.state.transactions = data.transactions || this.state.transactions;
-                            this.state.products = data.products || this.state.products;
+                            this.state.vouchers = data.vouchers || [];
+                            this.state.transactions = data.transactions || [];
+                            this.state.products = data.products || [];
                             this.state.productSales = data.productSales || [];
                             this.state.appointments = data.appointments || [];
                             this.state.serviceOrders = data.serviceOrders || [];
