@@ -1171,9 +1171,10 @@ const app = {
                         <div style="margin-bottom:10px;">
                             <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Destino da Venda</label>
                             <select id="totem-pdv-target" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
-                                    onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                                    onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-payment-wrapper').style.display = (this.value === 'cliente') ? 'block' : 'none';">
                                 <option value="cliente">👤 Cliente</option>
                                 <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                                <option value="adm">⚙️ Uso Interno (ADM)</option>
                             </select>
                         </div>
 
@@ -1263,12 +1264,12 @@ const app = {
                 productId: item.productId, 
                 productName: item.name,
                 qty: item.qty, 
-                unitPrice: item.unitPrice, 
-                total: itemTotal,
-                commissionPct: item.commissionPct || 0, 
-                sellerCommission: target === 'barbeiro' ? 0 : itemComm,
-                seller: target === 'barbeiro' ? null : (seller || null), 
-                payment: target === 'barbeiro' ? 'Faturamento' : payment,
+                unitPrice: target === 'adm' ? 0 : item.unitPrice, 
+                total: target === 'adm' ? 0 : itemTotal,
+                commissionPct: target === 'adm' ? 0 : (item.commissionPct || 0), 
+                sellerCommission: (target === 'barbeiro' || target === 'adm') ? 0 : itemComm,
+                seller: (target === 'barbeiro' || target === 'adm') ? null : (seller || null), 
+                payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
                 target: target,
                 barberName: target === 'barbeiro' ? consumer : null,
                 discount: 0,
@@ -1290,6 +1291,8 @@ const app = {
             // Transação via faturamento
             const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
             this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque, sem transação financeira
         } else {
             let method = 'dinheiro';
             if (payment==='PIX') method='pix';
@@ -1308,6 +1311,8 @@ const app = {
 
         if (target === 'barbeiro') {
             alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+        } else if (target === 'adm') {
+            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
         } else {
             const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
             alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
@@ -3004,9 +3009,10 @@ const app = {
                 <!-- Destino da Venda -->
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Venda para:</label>
-                    <select id="sale-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('sale-barber-select-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('sale-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                    <select id="sale-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('sale-barber-select-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('sale-payment-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
                         <option value="cliente">👤 Cliente</option>
                         <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                        <option value="adm">⚙️ Uso Interno (ADM)</option>
                     </select>
                 </div>
 
@@ -3075,9 +3081,9 @@ const app = {
             productId,
             productName: product.name,
             qty,
-            unitPrice: product.price,
-            total,
-            payment: target === 'barbeiro' ? 'Faturamento' : payment,
+            unitPrice: target === 'adm' ? 0 : product.price,
+            total: target === 'adm' ? 0 : total,
+            payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
             target: target,
             barberName: target === 'barbeiro' ? bName : null,
             date: new Date().toISOString().split('T')[0],
@@ -3096,6 +3102,8 @@ const app = {
             });
             // Transação de entrada via faturamento (não entra no caixa físico)
             this.addTransaction('in', `Venda (Uso Próprio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque
         } else {
             // Integrar com fluxo de caixa normal
             let method = 'dinheiro';
@@ -3111,6 +3119,8 @@ const app = {
         
         if (target === 'barbeiro') {
             alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${bName.split(' ')[0]}.`);
+        } else if (target === 'adm') {
+            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
         } else {
             alert(`✅ Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
         }
@@ -3298,9 +3308,10 @@ const app = {
                         <div style="margin-bottom: 12px;">
                             <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Destino da Venda</label>
                             <select id="pdv-target" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" 
-                                    onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                                    onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
                                 <option value="cliente">👤 Cliente</option>
                                 <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                                <option value="adm">⚙️ Uso Interno (ADM)</option>
                             </select>
                         </div>
 
@@ -3516,12 +3527,12 @@ const app = {
                 productId: item.productId,
                 productName: item.name,
                 qty: item.qty,
-                unitPrice: item.unitPrice,
-                total: itemTotal,
-                commissionPct: item.commissionPct || 0,
-                sellerCommission: target === 'barbeiro' ? 0 : itemComm,
-                seller: target === 'barbeiro' ? null : (seller || null),
-                payment: target === 'barbeiro' ? 'Faturamento' : payment,
+                unitPrice: target === 'adm' ? 0 : item.unitPrice,
+                total: target === 'adm' ? 0 : itemTotal,
+                commissionPct: target === 'adm' ? 0 : (item.commissionPct || 0),
+                sellerCommission: (target === 'barbeiro' || target === 'adm') ? 0 : itemComm,
+                seller: (target === 'barbeiro' || target === 'adm') ? null : (seller || null),
+                payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
                 target: target,
                 barberName: target === 'barbeiro' ? consumer : null,
                 discount: 0,
@@ -3542,6 +3553,8 @@ const app = {
             });
             const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
             this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque
         } else {
             let method = 'dinheiro';
             if (payment === 'PIX') method = 'pix';
@@ -3562,6 +3575,8 @@ const app = {
 
         if (target === 'barbeiro') {
             alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+        } else if (target === 'adm') {
+            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
         } else {
             const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
             alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
