@@ -2199,7 +2199,9 @@ const app = {
 
         const myTips = (this.state.tips || []).filter(t => {
             const tDate = t.date || t.timestamp?.split('T')[0] || today;
-            return t.barber === this.state.user.name &&
+            const tBarber = (t.barber || '').trim().toLowerCase();
+            const myName = (this.state.user.name || '').trim().toLowerCase();
+            return tBarber === myName &&
                    tDate >= startDate && tDate <= endDate;
         });
         const totalTips = myTips.reduce((sum, t) => sum + t.amount, 0);
@@ -2824,14 +2826,22 @@ const app = {
                 const tipAmount = parseFloat(tipInput.value);
                 if (!isNaN(tipAmount) && tipAmount > 0) {
                     if (!this.state.tips) this.state.tips = [];
+                    
+                    // Usar o barbeiro do agendamento ou o logado como fallback
+                    const barberName = apt.barber || (this.state.user ? this.state.user.name : 'Indefinido');
+                    const tipDate = new Date().toISOString().split('T')[0]; // Data de HOJE (quando o dinheiro entra)
+
                     this.state.tips.push({
                         id: Date.now() + 1,
-                        barber: apt.barber,
+                        barber: barberName,
                         amount: tipAmount,
-                        date: apt.date || new Date().toISOString().split('T')[0],
+                        date: tipDate,
+                        aptDate: apt.date || tipDate,
                         timestamp: new Date().toISOString()
                     });
-                    this.addTransaction('in', `Gorjeta: ${apt.barber} (Corte)`, tipAmount, 'outros', mappedMethod);
+                    
+                    this.addTransaction('in', `Gorjeta: ${barberName} (Corte)`, tipAmount, 'outros', mappedMethod);
+                    console.log('Gorjeta registrada para:', barberName, tipAmount);
                 }
             }
             
