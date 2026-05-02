@@ -936,9 +936,7 @@ const app = {
                     <a class="menu-item ${view === (this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash') ? 'active' : ''}" 
                        onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
                     <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
-                    ${this.state.user.role === 'admin' ? `
-                        <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
-                    ` : ''}
+                    <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
                     ${this.state.user.role === 'admin' ? `
                         <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')" style="background: rgba(167, 139, 250, 0.1); border-left: 3px solid var(--accent-color);"><i>💳</i> Fatura do Sistema</a>
                     ` : ''}
@@ -947,7 +945,7 @@ const app = {
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')"><i>💈</i> Serviços</a>` : ''}
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')"><i>✂️</i> Colaboradores</a>` : ''}
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')"><i>📦</i> Produtos</a>` : ''}
+                    <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')"><i>📦</i> Produtos</a>
                     
                     <div class="menu-category">Administração</div>
                     ${this.state.user.role === 'barber' ? `
