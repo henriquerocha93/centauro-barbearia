@@ -2739,14 +2739,15 @@ const app = {
                     <input type="number" id="final-tip" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" placeholder="R$ 0,00" step="0.50">
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS(${apt.id})">Concluir e Receber</button>
-                    <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement(${apt.id})">Voltar</button>
+                    <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS('${apt.id}')">Concluir e Receber</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement('${apt.id}')">Voltar</button>
                 </div>
             </section>
         `);
     },
 
     doFinalizeOS(aptId) {
+        console.log('Finalizando OS:', aptId);
         try {
             const name = document.getElementById('final-cust-name').value;
             const payment = document.getElementById('final-payment').value;
@@ -2756,38 +2757,45 @@ const app = {
                 return;
             }
 
-            const apt = this.state.appointments.find(a => a.id === aptId);
-            if (apt) {
-                apt.customer = name;
-                apt.payment = payment;
-                apt.status = 'finalizado';
-                
-                // Integrar com CRM (Histórico do Cliente)
-                const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
-                if (customer) {
-                    if (!customer.history) customer.history = [];
-                    customer.history.push({
-                        date: apt.date || new Date().toISOString().split('T')[0],
-                        service: apt.service || 'Serviço',
-                        barber: apt.barber || 'Barbeiro'
-                    });
-                }
+            // Busca flexível por ID (string ou número)
+            const apt = this.state.appointments.find(a => a.id == aptId);
+            if (!apt) {
+                console.error('Agendamento não encontrado:', aptId);
+                alert('Erro: Agendamento não encontrado.');
+                return;
+            }
 
-                // Mapear modalidades para os IDs que usamos no balanço
-                let mappedMethod = 'dinheiro';
-                if (payment === 'PIX') mappedMethod = 'pix';
-                if (payment === 'Cartão de Débito') mappedMethod = 'debito';
-                if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
+            console.log('Agendamento encontrado:', apt);
+            apt.customer = name;
+            apt.payment = payment;
+            apt.status = 'finalizado';
+            
+            // Integrar com CRM (Histórico do Cliente)
+            const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+            if (customer) {
+                if (!customer.history) customer.history = [];
+                customer.history.push({
+                    date: apt.date || new Date().toISOString().split('T')[0],
+                    service: apt.service || 'Serviço',
+                    barber: apt.barber || 'Barbeiro'
+                });
+            }
 
-                // Integrar com Fluxo de Caixa e salvar ID no agendamento
-                const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
-                const price = parseFloat(apt.price || 0);
-                apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
-                
-                // Registrar Gorjeta se houver
-                const tipInput = document.getElementById('final-tip');
-                const tipAmount = tipInput ? parseFloat(tipInput.value || 0) : 0;
-                
+            // Mapear modalidades para os IDs que usamos no balanço
+            let mappedMethod = 'dinheiro';
+            if (payment === 'PIX') mappedMethod = 'pix';
+            if (payment === 'Cartão de Débito') mappedMethod = 'debito';
+            if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
+
+            // Integrar com Fluxo de Caixa e salvar ID no agendamento
+            const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
+            const price = parseFloat(apt.price || 0);
+            apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
+            
+            // Registrar Gorjeta se houver
+            const tipInput = document.getElementById('final-tip');
+            if (tipInput && tipInput.value) {
+                const tipAmount = parseFloat(tipInput.value);
                 if (!isNaN(tipAmount) && tipAmount > 0) {
                     if (!this.state.tips) this.state.tips = [];
                     this.state.tips.push({
@@ -2799,15 +2807,15 @@ const app = {
                     });
                     this.addTransaction('in', `Gorjeta: ${apt.barber} (Corte)`, tipAmount, 'outros', mappedMethod);
                 }
-                
-                this.closeModal();
-                this.saveState();
-                this.render(this.state.view);
-                alert('Venda registrada e enviada para o faturamento!');
             }
+            
+            this.closeModal();
+            this.saveState();
+            this.render(this.state.view);
+            alert('Venda registrada e enviada para o faturamento!');
         } catch (error) {
-            console.error('Erro ao finalizar OS:', error);
-            alert('Erro ao finalizar: ' + error.message);
+            console.error('Erro fatal ao finalizar OS:', error);
+            alert('Ocorreu um erro inesperado: ' + error.message);
         }
     },
 
