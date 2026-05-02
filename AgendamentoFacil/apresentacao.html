@@ -85,17 +85,23 @@
 
         /* RESPONSIVIDADE MOBILE */
         @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
             .hero-title-premium {
-                font-size: 2.2rem;
+                font-size: 2rem;
+                padding: 0 10px;
             }
             .presentation-hero {
-                padding: 100px 20px 60px 20px;
+                padding: 80px 10px 40px 10px;
             }
             .feature-showcase {
                 grid-template-columns: 1fr;
-                gap: 30px;
-                padding: 40px 20px;
+                gap: 20px;
+                padding: 30px 15px;
                 text-align: center;
+                width: 100%;
+                overflow: hidden;
             }
             .feature-showcase.reverse {
                 direction: ltr;
@@ -103,46 +109,70 @@
             .feature-showcase ul {
                 text-align: left;
                 padding-left: 0;
+                font-size: 0.9rem;
             }
             .mockup-img {
                 max-width: 100%;
+                height: auto;
                 margin: 0 auto;
+                border-width: 4px;
             }
             .comparison-table {
                 display: block;
+                width: 100%;
                 overflow-x: auto;
-                white-space: nowrap;
-                font-size: 0.8rem;
+                -webkit-overflow-scrolling: touch;
+                font-size: 0.75rem;
             }
             .comparison-table th, .comparison-table td {
-                padding: 12px;
+                padding: 10px 8px;
+                min-width: 120px; /* Garante que as colunas apareçam no scroll */
+            }
+            .roi-section {
+                padding: 40px 15px;
+                margin: 30px 10px;
+                border-radius: 20px;
             }
             .roi-section h2 {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
             .roi-section .container > div {
-                gap: 20px !important;
+                gap: 15px !important;
+                display: block !important; /* Stack for vertical ROI */
             }
             .roi-section [style*="border-left"] {
                 display: none;
             }
-            .roi-section > div > div > div {
-                width: 100%;
+            .roi-section > div > div {
+                margin-bottom: 25px;
             }
             .roi-section h3 {
-                font-size: 2.2rem !important;
+                font-size: 2.5rem !important;
             }
             .final-cta {
-                padding: 30px !important;
+                padding: 30px 20px !important;
+                margin: 0 10px !important;
             }
             .final-cta h3 {
-                font-size: 1.5rem !important;
+                font-size: 1.4rem !important;
             }
             .final-cta div {
                 flex-direction: column;
+                gap: 10px;
+            }
+            .final-cta .btn {
+                width: 100%;
+                padding: 15px !important;
+                font-size: 1rem !important;
             }
             .nav-links {
                 display: none;
+            }
+            .section-title h2 {
+                font-size: 1.5rem;
+            }
+            .section-title p {
+                font-size: 0.9rem;
             }
         }
     </style>
