@@ -951,26 +951,7 @@ const app = {
                     ${this.state.user.role === 'barber' ? `
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
                     ` : `
-                        <div class="menu-item" onclick="app.toggleSubmenu('submenu-relatorios', 'icon-relatorios')">
-                            <i>📄</i> Relatórios <span id="icon-relatorios" class="submenu-toggle-icon">▼</span>
-                        </div>
-                        <div id="submenu-relatorios" class="submenu-list">
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Acompanhamentos')"><i>👤</i> Acompanhamentos</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Agendamentos')"><i>📅</i> Agendamentos</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Atendimentos')"><i>✂️</i> Atendimentos</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Avaliações')"><i>⭐</i> Avaliações</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Caixas')"><i>💵</i> Caixas</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Clientes')"><i>👥</i> Clientes</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Crédito em dinheiro')"><i>💳</i> Crédito em dinheiro</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Descontos')"><i>📉</i> Descontos</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Estatísticas')"><i>📈</i> Estatísticas</a>
-                            <a class="menu-item submenu-item" onclick="app.exportDatabase()"><i>📥</i> Exportações</a>
-                            <a class="menu-item submenu-item" onclick="app.navigateTo('admin-faturamento')"><i>💰</i> Faturamento</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Financeiro/Contábil')"><i>🏦</i> Financeiro / Contábil</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Ordens de serviço')"><i>📝</i> Ordens de serviço</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Pagamentos')"><i>💎</i> Pagamentos</a>
-                            <a class="menu-item submenu-item" onclick="alert('Funcionalidade em breve - Perfis de acesso')"><i>🔐</i> Perfis de acesso</a>
-                        </div>
+
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa Base</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales Base</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos Básicos</a>
