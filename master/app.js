@@ -179,6 +179,7 @@ const app = {
                         <button onclick="app.toggleBlock('${key}')" class="btn" style="width: 100%; font-size: 0.7rem; background: ${t.isBlocked ? '#10b981' : '#475569'}; color: white; border: none; margin-top: 5px;">
                             ${t.isBlocked ? '🔓 Desbloquear Acesso' : '🚫 Bloquear Acesso'}
                         </button>
+                        <button onclick="app.deleteTenant('${key}')" class="btn-outline" style="width: 100%; font-size: 0.7rem; color: #ef4444; border-color: #fecaca; margin-top: 5px; background: #fff1f2;">🗑️ Excluir Sistema</button>
                     </div>
 
                 </div>
@@ -692,8 +693,32 @@ const app = {
             console.error(e);
             alert('Erro ao excluir.');
         }
+    },
+
+    async deleteTenant(slug) {
+        if (slug === 'centauro-legacy') return alert('Não é possível excluir o sistema legado por aqui.');
+        
+        const confirm1 = confirm(`⚠️ ATENÇÃO: Você está prestes a EXCLUIR TOTALMENTE a loja "${slug}".\n\nTodos os dados de agendamentos, clientes e financeiro desta loja serão apagados para sempre.\n\nDeseja continuar?`);
+        if (!confirm1) return;
+
+        const confirm2 = confirm(`Deseja REALMENTE apagar tudo? Esta ação não tem volta.`);
+        if (!confirm2) return;
+
+        try {
+            // 1. Remove do Master
+            await set(ref(this.db, 'master/tenants/' + slug), null);
+            // 2. Remove o banco de dados da loja
+            await set(ref(this.db, 'tenants/' + slug), null);
+            
+            alert('✅ Loja excluída com sucesso!');
+            this.render();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao excluir loja.');
+        }
     }
 };
+
 
 
 window.app = app;
