@@ -826,6 +826,13 @@ const app = {
     },
 
     navigateTo(view) {
+        // [Segurança] Impedir barbeiros de acessar telas administrativas sensíveis
+        if (view.startsWith('admin-') && this.state.user.role !== 'admin') {
+            console.warn(`Acesso negado à view ${view} para o papel ${this.state.user.role}`);
+            this.navigateTo(this.state.user.role === 'barber' ? 'barber-dash' : 'home');
+            return;
+        }
+
         // Fechar sidebar se estiver aberta (mobile)
         const sidebar = document.getElementById('sidebar');
         const overlay = document.querySelector('.sidebar-overlay');
@@ -929,8 +936,12 @@ const app = {
                     <a class="menu-item ${view === (this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash') ? 'active' : ''}" 
                        onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
                     <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
-                    <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
-                    <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')" style="background: rgba(167, 139, 250, 0.1); border-left: 3px solid var(--accent-color);"><i>💳</i> Fatura do Sistema</a>
+                    ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
+                    ` : ''}
+                    ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')" style="background: rgba(167, 139, 250, 0.1); border-left: 3px solid var(--accent-color);"><i>💳</i> Fatura do Sistema</a>
+                    ` : ''}
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
@@ -1617,8 +1628,8 @@ const app = {
         const sub = this.state.subscription;
         let billingBanner = '';
         
-        // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz)
-        if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment) {
+        // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz) e apenas para ADMs
+        if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment && this.state.user.role === 'admin') {
             const nextDate = new Date(sub.nextPayment);
             const today = new Date();
             const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
