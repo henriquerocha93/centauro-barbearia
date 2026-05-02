@@ -149,7 +149,8 @@ const app = {
                     <div style="margin: 15px 0; font-size: 0.85rem; color: var(--text-muted);">
                         <p><strong>Vencimento:</strong> ${nextPaymentDate.toLocaleDateString('pt-BR')}</p>
                         <p><strong>Valor:</strong> R$ ${(t.subscriptionPrice || 0).toFixed(2)}</p>
-                        <p><strong>Slug:</strong> /?loja=${key}</p>
+                        <p><strong>Link:</strong> ${key}</p>
+                        ${t.sellerId ? `<p style="color: #10b981; font-weight: 700; margin-top: 5px;">🤝 Vendedor: ${t.sellerId}</p>` : ''}
                     </div>
                     <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <a href="../index.html?loja=${key}" target="_blank" class="t-link" style="width: 100%; text-align: center; margin-bottom: 5px;">↗ Acessar Sistema</a>
@@ -357,6 +358,7 @@ const app = {
                                                 <strong>${l.shopName}</strong><br>
                                                 <span style="font-size: 0.8rem; color: var(--text-muted);">${l.name}</span>
                                             </td>
+
                                             <td style="padding: 12px;">
                                                 ${l.email}<br>
                                                 <a href="https://wa.me/55${l.phone.replace(/\D/g,'')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 600;">📱 WhatsApp</a>
