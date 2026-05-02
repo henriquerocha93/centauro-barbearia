@@ -871,19 +871,23 @@ const app = {
         }
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_centauro.png';
-        const name = (s.shopName || 'CENTAURO').toUpperCase();
+        const name = s.shopName || 'Centauro';
+        const subtitle = s.subtitle || 'Barbearia de Elite';
 
-        // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
+        // Se for view pública, reconstruir o DOM da landing page usando o layout clássico
         appContainer.innerHTML = `
-            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
-                <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
-                    <img src="${logo}" alt="Logo" class="integrated-logo" style="width: 40px; ${!s.logoUrl ? 'filter: invert(1) brightness(2);' : 'border-radius: 8px;'}">
-                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">${name}</span>
+            <!-- VERSION INDICATOR -->
+            <div style="background: var(--accent-color); color: #000; padding: 5px; text-align: center; font-size: 0.7rem; font-weight: bold; opacity: 0.8;">
+                 SISTEMA ATUALIZADO (v4.5) - MULTI-SERVIÇOS LIBERADO
+            </div>
+            <header class="fade-in">
+                <div class="logo-container">
+                    <img src="${logo}" alt="Logo" id="main-logo" style="${!s.logoUrl ? '' : 'border-radius: 8px; width: 120px; height: 120px; object-fit: cover;'}">
                 </div>
-                <button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>
+                <h1 id="shop-title">${name} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span></h1>
+                <p id="shop-subtitle" style="color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">${subtitle}</p>
             </header>
             <main id="main-content"></main>
-            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
         `;
         const newMain = document.getElementById('main-content');
 
@@ -1503,105 +1507,47 @@ const app = {
     },
 
     renderHome(container) {
+    renderHome(container) {
         const s = this.state.settings || {};
-        const subtitle = s.subtitle || 'Excelência & Tradição';
-        const name = s.shopName || 'Centauro Barbearia';
-        const welcome = s.welcomeMessage || 'Agendar Horário';
+        const welcome = s.welcomeMessage || 'Excelência em cada corte.';
 
         container.innerHTML = `
-            <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
-                <div class="hero-content fade-in">
-                    <p>${subtitle}</p>
-                    <h1>${name}</h1>
-                    <div style="width: 100px; height: 3px; background: var(--accent-color); margin: 20px auto;"></div>
-                    <button class="btn-primary" style="margin-top: 20px; padding: 15px 50px; font-size: 1.1rem;" onclick="app.navigateTo('booking')">Agendar Horário</button>
+            <section id="home-view" class="fade-in">
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2 id="welcome-title" style="margin-bottom: 10px;">${welcome}</h2>
+                    <p style="color: var(--text-secondary);">Agende seu horário com os melhores profissionais da região.</p>
                 </div>
-            </section>
 
-            <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💈</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Profissionais de Elite</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Nossa equipe é composta por especialistas em cortes clássicos e modernos, garantindo perfeição em cada detalhe.</p>
-                    </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🥃</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Ambiente Premium</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Desfrute de uma experiência única em um ambiente clássico e climatizado, pensado para o seu total conforto.</p>
-                    </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📅</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Agendamento Prático</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Reserve seu horário em segundos através do nosso sistema online, sem esperas e sem complicações.</p>
-                    </div>
+                <div class="actions" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn-primary" onclick="app.navigateTo('booking')">Agendar Agora</button>
+                    <button class="btn-secondary" onclick="app.navigateTo('login')">Área Administrativa</button>
                 </div>
-            </section>
-            
-            ${(s.address || s.phone) ? `
-            <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
-                <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
-                ${s.address ? `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
-                ${s.phone ? `<p style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
-            </div>
-            ` : ''}
-        `;
 
-
-            <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
-                <h2 class="section-title">Onde Estamos</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
-                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
-                        <img src="map_real.png" style="width: 100%; height: 250px; object-fit: cover;">
-                        <div style="padding: 20px; color: white;">
-                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">Rua Tenente Alpoim, 516</p>
-                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">Vila João Pessoa, Porto Alegre, RS</p>
-                             <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color);">📍 Clique para abrir no Google Maps</p>
+                <div style="margin-top: 50px;">
+                    <h3 class="section-title">Nossos Serviços</h3>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Corte</h4>
+                            <p>Degradê, tesoura ou social</p>
                         </div>
-                    </a>
-                    <div class="glass" style="padding:30px;">
-                        <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--accent-color); text-align: center;">Horários de Atendimento</h3>
-                        <div class="hours-container" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>09:00 - 20:00</span></div>
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>09:00 - 21:00</span></div>
-                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>Fechado</span></div>
+                        <div class="service-price">R$ 35</div>
+                    </div>
+                    <div class="service-card glass">
+                        <div class="service-info">
+                            <h4>Barba</h4>
+                            <p>Toalha quente e cuidados profissionais</p>
                         </div>
-                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--glass-border); text-align: center;">
-                            <p style="font-size: 0.85rem; margin-bottom: 15px;">Precisa de ajuda ou agendamento especial?</p>
-                            <a href="https://wa.me/5551999999999" target="_blank" class="btn-primary" style="background: #25D366; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: none;">
-                                💬 Falar no WhatsApp
-                            </a>
-                        </div>
+                        <div class="service-price">R$ 35</div>
                     </div>
                 </div>
-            </section>
 
-            <footer style="padding: 60px 20px; text-align: center; border-top: 1px solid var(--glass-border); margin-top: 60px;">
-                <div style="opacity: 0.6; font-size: 0.8rem;">
-                    <p>© 2026 Centauro Barbearia. Todos os direitos reservados.</p>
-                    <p style="margin-top: 10px;">Excelência em Barbearia Clássica.</p>
-                    <p style="margin-top: 20px;">
-                        <a style="color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: color 0.3s;" onclick="app.navigateTo('login')" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-secondary)'">Acesso Restrito</a>
-                    </p>
+                ${(s.address || s.phone) ? `
+                <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
+                    ${s.address ? `<p id="shop-address" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
+                    ${s.phone ? `<p id="shop-phone" style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
                 </div>
-            </footer>
-
-                    <div class="payment-section">
-                        <div class="payment-badges">
-                            <span class="p-badge">Crédito</span>
-                            <span class="p-badge">Dinheiro</span>
-                            <span class="p-badge">Débito</span>
-                            <span class="p-badge">PIX</span>
-                        </div>
-                    </div>
-
-                    <div class="contact-footer">
-                        <p>Fale conosco:</p>
-                        <a href="tel:+5551986551068" class="contact-phone">
-                            <span>📞</span> +55 (51) 98655-1068
-                        </a>
-                    </div>
-                </div>
+                ` : ''}
             </section>
         `;
     },
