@@ -952,9 +952,10 @@ const app = {
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
                     ` : `
 
-                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa Base</a>
-                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales Base</a>
-                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos Básicos</a>
+                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
+                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales (Barbeiros)</a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
+                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
                     `}
 
                     ${this.state.user.role === 'admin' ? `
@@ -986,6 +987,7 @@ const app = {
             case 'admin-stock': this.renderAdminStock(main); break;
             case 'admin-cashflow': this.renderAdminCashFlow(main); break;
             case 'admin-vouchers': this.renderAdminVouchers(main); break;
+            case 'admin-consumption': this.renderAdminConsumption(main); break;
             case 'admin-staff': this.renderAdminStaff(main); break;
             case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
@@ -3778,6 +3780,74 @@ const app = {
             this.saveState();
             this.render('admin-vouchers');
         }
+    },
+
+    renderAdminConsumption(container) {
+        const consumptionSales = (this.state.productSales || []).filter(s => s.target === 'adm' || s.target === 'barbeiro');
+        
+        // Agrupar por semana
+        const groups = {};
+        consumptionSales.forEach(s => {
+            const date = new Date(s.timestamp || s.date);
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - date.getDay()); // Domingo
+            const weekStr = startOfWeek.toLocaleDateString('pt-BR');
+            if (!groups[weekStr]) groups[weekStr] = [];
+            groups[weekStr].push(s);
+        });
+
+        const sortedWeeks = Object.keys(groups).sort((a,b) => {
+            const da = a.split('/').reverse().join('');
+            const db = b.split('/').reverse().join('');
+            return db.localeCompare(da);
+        });
+
+        container.innerHTML = `
+            <section id="consumption-report" class="fade-in">
+                <h2 class="section-title">Relatório de Consumo (Antifraude)</h2>
+                <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                        Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Uso Próprio de Barbeiros</strong>.
+                    </p>
+                </div>
+
+                ${sortedWeeks.length === 0 ? '<p style="text-align:center; padding:40px; color:var(--text-secondary);">Nenhum consumo registrado.</p>' : ''}
+
+                ${sortedWeeks.map(week => {
+                    const items = groups[week].sort((a,b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)).reverse();
+                    return `
+                        <div class="glass" style="padding: 15px; margin-bottom: 20px;">
+                            <h3 style="font-size: 0.9rem; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; display: flex; justify-content: space-between;">
+                                <span>Semana de ${week}</span>
+                                <span style="font-size: 0.7rem; color: var(--text-secondary);">${items.length} itens</span>
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                ${items.map(item => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                        <div style="flex: 1;">
+                                            <span style="font-weight: 700; color: var(--text-primary); display: block;">${item.qty}x ${item.productName}</span>
+                                            <span style="font-size: 0.72rem; color: var(--text-secondary);">
+                                                ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
+                                            </span>
+                                        </div>
+                                        <div style="text-align: right; min-width: 100px;">
+                                            <span style="padding: 3px 8px; border-radius: 4px; background: ${item.target === 'adm' ? 'rgba(148,163,184,0.2)' : 'rgba(124,58,237,0.2)'}; color: ${item.target === 'adm' ? '#94a3b8' : '#a78bfa'}; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">
+                                                ${item.target === 'adm' ? '⚙️ ADM' : `✂️ ${item.barberName || 'Barbeiro'}`}
+                                            </span>
+                                            <p style="font-size: 0.78rem; color: ${item.target === 'adm' ? 'var(--text-secondary)' : '#4ade80'}; font-weight: 700; margin-top: 4px;">
+                                                ${item.target === 'adm' ? 'Saída ADM' : `R$ ${item.total.toFixed(2)}`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
+            </section>
+        `;
     },
 
     renderBooking(container) {
