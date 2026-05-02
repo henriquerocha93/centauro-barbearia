@@ -65,6 +65,7 @@ const app = {
         pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
         serviceOrders: [],   // Ordens de Serviço
         productSales: [],    // Histórico de Vendas/Consumo
+        tips: [],            // Registro de Gorjetas
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -957,6 +958,7 @@ const app = {
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales (Barbeiros)</a>
+                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
                     `}
@@ -995,6 +997,7 @@ const app = {
             case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
+            case 'admin-tips': this.renderAdminTips(main); break;
             case 'admin-settings': this.renderAdminSettings(main); break;
             case 'admin-billing': this.renderAdminBilling(main); break;
             case 'admin-os': this.renderAdminOS(main); break;
@@ -2715,13 +2718,12 @@ const app = {
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
-                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
-                        <option value="">Selecione...</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
                     </select>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">Gorjeta (Opcional)</label>
+                    <input type="number" id="final-tip" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" placeholder="R$ 0,00" step="0.50">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS(${apt.id})">Concluir e Receber</button>
@@ -2765,6 +2767,20 @@ const app = {
             // Integrar com Fluxo de Caixa e salvar ID no agendamento
             const desc = `Serviço: ${apt.service} (${apt.customer})`;
             apt.transactionId = this.addTransaction('in', desc, apt.price, 'servico', mappedMethod);
+            
+            // Registrar Gorjeta se houver
+            const tipAmount = parseFloat(document.getElementById('final-tip').value || 0);
+            if (tipAmount > 0) {
+                if (!this.state.tips) this.state.tips = [];
+                this.state.tips.push({
+                    id: Date.now() + 1,
+                    barber: apt.barber,
+                    amount: tipAmount,
+                    date: apt.date,
+                    timestamp: new Date().toISOString()
+                });
+                this.addTransaction('in', `Gorjeta: ${apt.barber} (Corte)`, tipAmount, 'outros', mappedMethod);
+            }
             
             this.closeModal();
             this.saveState();
@@ -2930,6 +2946,107 @@ const app = {
         this.state.revenueStart = document.getElementById('rev-start').value;
         this.state.revenueEnd = document.getElementById('rev-end').value;
         this.renderAdminFaturamento(document.getElementById('main-content'));
+    },
+
+    renderAdminTips(container) {
+        const today = new Date().toISOString().split('T')[0];
+        const tipsToday = (this.state.tips || []).filter(t => t.date === today);
+        const allTips = this.state.tips || [];
+        
+        container.innerHTML = `
+            <section id="tips-view" class="fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin:0;">🪙 Gorjetas</h2>
+                    <button class="btn-primary" onclick="app.openTipModal()">+ Lançar Gorjeta</button>
+                </div>
+
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid #fbbf24;">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Gorjetas de Hoje</p>
+                    <p style="font-size: 2.2rem; font-weight: 700; color: #fbbf24;">R$ ${tipsToday.reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                </div>
+
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimos Lançamentos</h3>
+                <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px;">
+                    ${allTips.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma gorjeta registrada.</p>' : ''}
+                    ${allTips.slice(-30).reverse().map(t => `
+                        <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #fbbf24;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-weight: 700; color: var(--text-primary);">${t.barber}</span>
+                                <span style="font-size: 0.72rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="font-weight: 800; color: #fbbf24; font-size: 1.1rem;">R$ ${t.amount.toFixed(2)}</span>
+                                <button onclick="app.deleteTip(${t.id})" style="background:none; border:none; cursor:pointer; opacity:0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
+            </section>
+        `;
+    },
+
+    openTipModal() {
+        this.openModal('Lançar Gorjeta 🪙', `
+            <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Barbeiro</label>
+                    <select id="tip-barber" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);">
+                        ${this.state.staff.filter(s => s.role === 'barber').map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Valor da Gorjeta (R$)</label>
+                    <input type="number" id="tip-amount" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" step="0.50" placeholder="0.00">
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;" onclick="app.saveTip()">Confirmar Lançamento</button>
+            </div>
+        `);
+    },
+
+    saveTip() {
+        const barber = document.getElementById('tip-barber').value;
+        const amount = parseFloat(document.getElementById('tip-amount').value);
+
+        if (!barber || isNaN(amount) || amount <= 0) {
+            alert('Por favor, preencha o barbeiro e um valor válido.');
+            return;
+        }
+
+        if (!this.state.tips) this.state.tips = [];
+        const tipId = Date.now();
+        const now = new Date();
+        
+        this.state.tips.push({
+            id: tipId,
+            barber,
+            amount,
+            date: now.toISOString().split('T')[0],
+            timestamp: now.toISOString()
+        });
+
+        // Registrar no fluxo de caixa
+        this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', 'pix');
+
+        this.saveState();
+        this.closeModal();
+        this.render('admin-tips');
+        alert('✅ Gorjeta lançada com sucesso!');
+    },
+
+    deleteTip(id) {
+        if (confirm('Deseja realmente excluir este lançamento de gorjeta?')) {
+            const tip = (this.state.tips || []).find(t => t.id === id);
+            if (tip) {
+                // Tentar remover do caixa
+                this.state.transactions = (this.state.transactions || []).filter(t => 
+                    !(t.description === `Gorjeta: ${tip.barber}` && t.amount === tip.amount && t.date === tip.date)
+                );
+            }
+            this.state.tips = (this.state.tips || []).filter(t => t.id !== id);
+            this.saveState();
+            this.render('admin-tips');
+        }
     },
 
     renderAdminStock(container) {
