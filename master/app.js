@@ -141,7 +141,11 @@ const app = {
                         <a href="../index.html?loja=${key}" target="_blank" class="t-link" style="width: 100%; text-align: center; margin-bottom: 5px;">↗ Acessar Sistema</a>
                         <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
                         <button onclick="app.renewSubscription('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: ${statusColor}; color: white; border: none;">💰 Renovar</button>
+                        <button onclick="app.toggleBlock('${key}')" class="btn" style="width: 100%; font-size: 0.7rem; background: ${t.isBlocked ? '#10b981' : '#475569'}; color: white; border: none; margin-top: 5px;">
+                            ${t.isBlocked ? '🔓 Desbloquear Acesso' : '🚫 Bloquear Acesso'}
+                        </button>
                     </div>
+
                 </div>
             `;
         });
@@ -225,6 +229,25 @@ const app = {
             alert('Erro ao renovar mensalidade.');
         }
     },
+
+    async toggleBlock(slug) {
+        const t = this.tenants[slug];
+        const newStatus = !t.isBlocked;
+        const action = newStatus ? 'BLOQUEAR' : 'DESBLOQUEAR';
+        
+        if (!confirm(`Deseja ${action} o acesso da barbearia ${t.name}?`)) return;
+
+        try {
+            await update(ref(this.db, 'master/tenants/' + slug), {
+                isBlocked: newStatus
+            });
+            alert(`✅ Barbearia ${action} com sucesso!`);
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao alterar status de bloqueio.');
+        }
+    },
+
 
     async openEditTenantModal(slug) {
         document.getElementById('edit-tenant-modal').showModal();

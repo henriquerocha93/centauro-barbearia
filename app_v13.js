@@ -857,7 +857,15 @@ const app = {
 
     render(view) {
         const appContainer = document.getElementById('app');
+        
+        // [SaaS] Bloqueio Manual pelo Master
+        if (this.state.subscription?.isBlocked) {
+            this.renderBlockedScreen(appContainer);
+            return;
+        }
+
         const main = document.getElementById('main-content');
+
         
         // Toggle full-width for landing page
         if (view === 'home' || view === 'services') {
@@ -4613,7 +4621,30 @@ const app = {
                 </style>
             `;
         }
+        }
         return '';
+    },
+
+    renderBlockedScreen(container) {
+        container.className = ''; 
+        container.innerHTML = `
+            <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
+                <div class="glass fade-in" style="max-width: 500px; padding: 40px; border-top: 5px solid #ef4444;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🚫</div>
+                    <h1 style="font-family: 'Playfair Display'; font-size: 2rem; margin-bottom: 15px;">SISTEMA BLOQUEADO</h1>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 30px;">
+                        O acesso ao sistema desta barbearia foi temporariamente suspenso pela administração central por falta de pagamento ou pendências cadastrais.
+                    </p>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Para regularizar, entre em contato com o suporte:</p>
+                        <a href="https://wa.me/5551989069123?text=Olá!%20Meu%20sistema%20está%20bloqueado.%20Gostaria%20de%20regularizar." target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366;">
+                            Falar com Suporte (WhatsApp)
+                        </a>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">ID do Cliente: ${new URLSearchParams(window.location.search).get('loja')}</p>
+                </div>
+            </div>
+        `;
     }
 };
 
