@@ -2726,6 +2726,11 @@ const app = {
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
+                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
+                        <option value="">Selecione...</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
                     </select>
                 </div>
