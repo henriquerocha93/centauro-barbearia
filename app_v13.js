@@ -871,26 +871,27 @@ const app = {
         }
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_centauro.png';
-        const name = s.shopName || 'Centauro';
-        const subtitle = s.subtitle || 'Barbearia de Elite';
+        const name = (s.shopName || 'CENTAURO').toUpperCase();
 
-        // SaaS: Atualiza Header estático se existir
-        const mainLogo = document.getElementById('main-logo');
-        const shopTitle = document.getElementById('shop-title');
-        const shopSubtitle = document.getElementById('shop-subtitle');
-        
-        if (mainLogo) mainLogo.src = logo;
-        if (shopTitle) shopTitle.innerHTML = `${name} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
-        if (shopSubtitle) shopSubtitle.textContent = subtitle;
-
-        const mainContent = document.getElementById('main-content');
-        if (!mainContent) return;
+        // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
+        appContainer.innerHTML = `
+            <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
+                <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${logo}" alt="Logo" class="integrated-logo" style="width: 40px; ${!s.logoUrl ? 'filter: invert(1) brightness(2);' : 'border-radius: 8px;'}">
+                    <span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">${name}</span>
+                </div>
+                <button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>
+            </header>
+            <main id="main-content"></main>
+            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
+        `;
+        const newMain = document.getElementById('main-content');
 
         switch(view) {
-            case 'home': this.renderHome(mainContent); break;
-            case 'login': this.renderLogin(mainContent); break;
-            case 'booking': this.renderBooking(mainContent); break;
-            default: this.renderHome(mainContent);
+            case 'home': this.renderHome(newMain); break;
+            case 'login': this.renderLogin(newMain); break;
+            case 'booking': this.renderBooking(newMain); break;
+            default: this.renderHome(newMain);
         }
     },
 
@@ -1503,46 +1504,65 @@ const app = {
 
     renderHome(container) {
         const s = this.state.settings || {};
-        const welcome = s.welcomeMessage || 'Excelência em cada corte.';
+        const subtitle = s.subtitle || 'EXCELÊNCIA & TRADIÇÃO';
+        const name = s.shopName || 'Centauro Barbearia';
+        const welcome = s.welcomeMessage || 'AGENDAR HORÁRIO';
 
         container.innerHTML = `
-            <section id="home-view" class="fade-in">
-                <div style="text-align: center; margin-bottom: 40px;">
-                    <h2 id="welcome-title" style="margin-bottom: 10px;">${welcome}</h2>
-                    <p style="color: var(--text-secondary);">Agende seu horário com os melhores profissionais da região.</p>
+            <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
+                <div class="hero-content fade-in">
+                    <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px;">${subtitle}</p>
+                    <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; margin-bottom: 15px;">${name}</h1>
+                    <div style="width: 80px; height: 3px; background: var(--accent-color); margin: 0 auto 30px;"></div>
+                    <button class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem; font-weight: 700;" onclick="app.navigateTo('booking')">${welcome}</button>
                 </div>
-
-                <div class="actions" style="display: flex; flex-direction: column; gap: 15px;">
-                    <button class="btn-primary" onclick="app.navigateTo('booking')">Agendar Agora</button>
-                    <button class="btn-secondary" onclick="app.navigateTo('login')">Área Administrativa</button>
-                </div>
-
-                <div style="margin-top: 50px;">
-                    <h3 class="section-title">Nossos Serviços</h3>
-                    <div class="service-card glass">
-                        <div class="service-info">
-                            <h4>Corte</h4>
-                            <p>Degradê, tesoura ou social</p>
-                        </div>
-                        <div class="service-price">R$ 35</div>
-                    </div>
-                    <div class="service-card glass">
-                        <div class="service-info">
-                            <h4>Barba</h4>
-                            <p>Toalha quente e cuidados profissionais</p>
-                        </div>
-                        <div class="service-price">R$ 35</div>
-                    </div>
-                </div>
-
-                ${(s.address || s.phone) ? `
-                <div id="shop-contact" style="margin-top: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; padding-bottom: 50px;">
-                    <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-primary);">📍 Onde estamos</h3>
-                    ${s.address ? `<p id="shop-address" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${s.address}</p>` : ''}
-                    ${s.phone ? `<p id="shop-phone" style="color: var(--accent-color); font-weight: bold;">${s.phone}</p>` : ''}
-                </div>
-                ` : ''}
             </section>
+
+            <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💈</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Profissionais de Elite</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Nossa equipe é composta por especialistas em cortes clássicos e modernos, garantindo perfeição em cada detalhe.</p>
+                    </div>
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🥃</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Ambiente Premium</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Desfrute de uma experiência única em um ambiente clássico e climatizado, pensado para o seu total conforto.</p>
+                    </div>
+                    <div class="glass" style="padding: 40px 20px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📅</div>
+                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Agendamento Prático</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Reserve seu horário em segundos através do nosso sistema online, sem esperas e sem complicações.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
+                <h2 class="section-title" style="font-family: 'Playfair Display'; text-transform: uppercase; letter-spacing: 2px;">Onde Estamos</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
+                        <img src="map_real.png" style="width: 100%; height: 250px; object-fit: cover;">
+                        <div style="padding: 20px; color: white;">
+                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">Rua Tenente Alpoim, 516</p>
+                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">Vila João Pessoa, Porto Alegre, RS</p>
+                             <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color);">📍 Clique para abrir no Google Maps</p>
+                        </div>
+                    </a>
+                    <div class="glass" style="padding:30px;">
+                        <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--accent-color); text-align: center;">Horários de Atendimento</h3>
+                        <div class="hours-container" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>09:00 - 20:00</span></div>
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>09:00 - 21:00</span></div>
+                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>Fechado</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer style="padding: 40px 20px; text-align: center; opacity: 0.6; font-size: 0.8rem;">
+                <p>© 2026 ${name}. Todos os direitos reservados.</p>
+            </footer>
         `;
     },
 
