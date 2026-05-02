@@ -123,7 +123,12 @@ const app = {
             const now = new Date().getTime();
             this.state.lastUpdate = now;
             
-            const dbRef = ref(this.db, 'database/');
+            // Suporte a Multi-Tenant
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantId = urlParams.get('loja');
+            const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            
+            const dbRef = ref(this.db, dbPath);
             const stateToSave = {
                 services: this.state.services,
                 staff: this.state.staff,
@@ -407,8 +412,13 @@ const app = {
                 this.db = getDatabase(fbApp);
                 console.log('🔥 Firebase Initialized');
                 
+                // Suporte a Multi-Tenant
+                const urlParams = new URLSearchParams(window.location.search);
+                const tenantId = urlParams.get('loja');
+                const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                
                 // Escuta Ativa (Tempo Real)
-                const dbRef = ref(this.db, 'database/');
+                const dbRef = ref(this.db, dbPath);
                 onValue(dbRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -428,6 +438,17 @@ const app = {
                             this.state.appointments = data.appointments || [];
                             this.state.serviceOrders = data.serviceOrders || [];
                             this.state.lastUpdate = data.lastUpdate;
+
+                            // SaaS: Atualiza textos da interface com base no Tenant
+                            if (this.state.settings && this.state.settings.shopName) {
+                                const titleEl = document.getElementById('shop-title');
+                                if (titleEl) titleEl.innerHTML = `${this.state.settings.shopName} <span style="font-size: 0.6rem; opacity: 0.5;">v4.5</span>`;
+                                document.title = `${this.state.settings.shopName} | Premium Grooming`;
+                                
+                                // Para as telas internas (Landing Page interna)
+                                const internalTitle = document.querySelector('span[style*="CENTAURO"]');
+                                if (internalTitle) internalTitle.textContent = this.state.settings.shopName.toUpperCase();
+                            }
 
                             // Atualiza a tela se não estiver no meio de um agendamento
                             if (this.state.view !== 'booking') {
