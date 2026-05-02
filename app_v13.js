@@ -3294,9 +3294,26 @@ const app = {
                                    oninput="app.state.pdvDiscount = parseFloat(this.value)||0; app.renderPDVTotals();">
                         </div>
 
-                        <!-- Vendedor -->
+                        <!-- Destino da Venda -->
                         <div style="margin-bottom: 12px;">
-                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Vendedor (Barbeiro)</label>
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Destino da Venda</label>
+                            <select id="pdv-target" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" 
+                                    onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                                <option value="cliente">👤 Cliente</option>
+                                <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                            </select>
+                        </div>
+
+                        <div id="pdv-barber-wrapper" style="margin-bottom: 12px; display: none;">
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Quem está consumindo?</label>
+                            <select id="pdv-consumer" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                ${barbers.map(b => `<option value="${b.name}" ${this.state.user.name === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <!-- Vendedor -->
+                        <div id="pdv-seller-wrapper" style="margin-bottom: 12px;">
+                            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Vendedor (Comissão)</label>
                             <select id="pdv-seller" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" onchange="app.state.pdvSeller = this.value || null;">
                                 <option value="">-- Sem comissão --</option>
                                 ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
@@ -3304,7 +3321,7 @@ const app = {
                         </div>
 
                         <!-- Pagamento -->
-                        <div style="margin-bottom: 16px;">
+                        <div id="pdv-payment-wrapper" style="margin-bottom: 16px;">
                             <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Forma de Pagamento</label>
                             <select id="pdv-payment" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
                                 <option value="Dinheiro">Dinheiro</option>
@@ -3461,8 +3478,10 @@ const app = {
 
     finalizePDVSale() {
         const cart    = this.state.cart || [];
+        const target  = document.getElementById('pdv-target')?.value || 'cliente';
         const payment = document.getElementById('pdv-payment')?.value || 'Dinheiro';
         const seller  = document.getElementById('pdv-seller')?.value || null;
+        const consumer = document.getElementById('pdv-consumer')?.value || null;
         const discount = parseFloat(this.state.pdvDiscount || 0);
 
         if (cart.length === 0) return;
@@ -3500,23 +3519,39 @@ const app = {
                 unitPrice: item.unitPrice,
                 total: itemTotal,
                 commissionPct: item.commissionPct || 0,
-                sellerCommission: itemComm,
-                seller: seller || null,
-                payment, discount: 0,
+                sellerCommission: target === 'barbeiro' ? 0 : itemComm,
+                seller: target === 'barbeiro' ? null : (seller || null),
+                payment: target === 'barbeiro' ? 'Faturamento' : payment,
+                target: target,
+                barberName: target === 'barbeiro' ? consumer : null,
+                discount: 0,
                 date: saleDate,
                 timestamp: now.toISOString()
             });
         }
 
-        // Registrar no fluxo de caixa como única transação
-        let method = 'dinheiro';
-        if (payment === 'PIX') method = 'pix';
-        if (payment === 'Cartão de Débito') method = 'debito';
-        if (payment === 'Cartão de Crédito') method = 'credito';
-        const desc = cart.length === 1
-            ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-            : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
-        this.addTransaction('in', desc, total, 'produto', method);
+        if (target === 'barbeiro') {
+            // Lançar Vale
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: Date.now() + 3,
+                barber: consumer,
+                amount: total,
+                date: now.toISOString(),
+                note: `Consumo PDV: ${cart.length} item(ns)`
+            });
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
+            this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else {
+            let method = 'dinheiro';
+            if (payment === 'PIX') method = 'pix';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
+            const desc = cart.length === 1
+                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+                : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
+            this.addTransaction('in', desc, total, 'produto', method);
+        }
 
         // Limpar carrinho
         this.state.cart = [];
@@ -3525,8 +3560,12 @@ const app = {
         this.saveState();
         this.render('pdv');
 
-        const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
-        alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
+        if (target === 'barbeiro') {
+            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+        } else {
+            const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
+            alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
+        }
     },
 
     deleteProduct(productId) {
