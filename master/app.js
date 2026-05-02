@@ -65,6 +65,10 @@ const app = {
             return;
         }
 
+        let totalRevenue = 0;
+        let activeCount = 0;
+        let pendingCount = 0;
+
         keys.forEach(key => {
             if (key === 'centauro-legacy') {
                 list.innerHTML += `
@@ -84,23 +88,70 @@ const app = {
             }
 
             const t = this.tenants[key];
-            const date = new Date(t.createdAt).toLocaleDateString('pt-BR');
             
+            // Lógica de Mensalidade
+            const nextPaymentDate = t.nextPayment ? new Date(t.nextPayment) : new Date();
+            const today = new Date();
+            const diffDays = Math.ceil((nextPaymentDate - today) / (1000 * 60 * 60 * 24));
+            
+            let statusColor = '#10b981'; // Verde
+            let statusLabel = 'Em dia';
+            if (diffDays < 0) {
+                statusColor = '#ef4444'; // Vermelho
+                statusLabel = 'Atrasado';
+                pendingCount++;
+            } else if (diffDays <= 5) {
+                statusColor = '#f59e0b'; // Amarelo
+                statusLabel = `Vence em ${diffDays} dias`;
+            }
+            
+            if (statusLabel !== 'Atrasado') activeCount++;
+            totalRevenue += t.subscriptionPrice || 0;
+
             list.innerHTML += `
-                <div class="tenant-card">
+                <div class="tenant-card" style="border-top: 4px solid ${statusColor}">
                     <div class="t-header">
                         <span class="t-title">${t.name}</span>
-                        <span class="t-status">Ativo</span>
+                        <span class="t-status" style="background: ${statusColor}22; color: ${statusColor}">${statusLabel}</span>
                     </div>
-                    <p class="t-info"><strong>Criado em:</strong> ${date}</p>
-                    <p class="t-info"><strong>Slug:</strong> /?loja=${key}</p>
-                    <div class="t-actions">
-                        <a href="../index.html?loja=${key}" target="_blank" class="t-link">↗ Acessar Sistema</a>
-                        <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="color: var(--primary-color); border-color: var(--primary-color); padding: 4px 10px; font-size: 0.75rem;">✏️ Editar Visual</button>
+                    <div style="margin: 15px 0; font-size: 0.85rem; color: var(--text-muted);">
+                        <p><strong>Vencimento:</strong> ${nextPaymentDate.toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Valor:</strong> R$ ${(t.subscriptionPrice || 0).toFixed(2)}</p>
+                        <p><strong>Slug:</strong> /?loja=${key}</p>
+                    </div>
+                    <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <a href="../index.html?loja=${key}" target="_blank" class="t-link" style="width: 100%; text-align: center; margin-bottom: 5px;">↗ Acessar Sistema</a>
+                        <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
+                        <button onclick="app.renewSubscription('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: ${statusColor}; color: white; border: none;">💰 Renovar</button>
                     </div>
                 </div>
             `;
         });
+
+        // Atualiza Stats
+        document.getElementById('stats-revenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
+        document.getElementById('stats-active').textContent = activeCount;
+        document.getElementById('stats-pending').textContent = pendingCount;
+    },
+
+    async renewSubscription(slug) {
+        if (!confirm(`Confirmar recebimento de pagamento da barbearia ${slug} e renovar por mais 30 dias?`)) return;
+
+        try {
+            const currentNextPayment = new Date(this.tenants[slug].nextPayment || new Date());
+            // Se já estiver atrasado, renova a partir de HOJE. Se estiver em dia, renova a partir do vencimento.
+            const baseDate = currentNextPayment < new Date() ? new Date() : currentNextPayment;
+            baseDate.setDate(baseDate.getDate() + 30);
+
+            await update(ref(this.db, 'master/tenants/' + slug), {
+                nextPayment: baseDate.toISOString()
+            });
+
+            alert('✅ Mensalidade renovada com sucesso!');
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao renovar mensalidade.');
+        }
     },
 
     async openEditTenantModal(slug) {
@@ -213,6 +264,7 @@ const app = {
         const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
         const adminUser = document.getElementById('t-admin-user').value;
         const adminPass = document.getElementById('t-admin-pass').value;
+        const price = parseFloat(document.getElementById('t-price').value) || 0;
 
         if (this.tenants[slug]) {
             alert('Erro: Esse slug (link) já está em uso por outra barbearia!');
@@ -224,11 +276,17 @@ const app = {
         btn.disabled = true;
 
         try {
+            // Data de vencimento inicial: +30 dias
+            const nextPayment = new Date();
+            nextPayment.setDate(nextPayment.getDate() + 30);
+
             // 1. Salvar no Master
             await set(ref(this.db, 'master/tenants/' + slug), {
                 name: name,
                 slug: slug,
                 adminUser: adminUser,
+                subscriptionPrice: price,
+                nextPayment: nextPayment.toISOString(),
                 createdAt: new Date().toISOString()
             });
 

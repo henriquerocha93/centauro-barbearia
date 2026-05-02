@@ -45,9 +45,25 @@
             <div class="dash-header">
                 <div>
                     <h1>Clientes (Inquilinos)</h1>
-                    <p style="color: var(--text-muted);">Gerencie as barbearias que utilizam o seu sistema.</p>
+                    <p style="color: var(--text-muted);">Gerencie as barbearias e mensalidades da plataforma.</p>
                 </div>
                 <button class="btn btn-orange" onclick="app.openNewTenantModal()">+ Novo Cliente</button>
+            </div>
+
+            <!-- Resumo Financeiro -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Faturamento Mensal</p>
+                    <h2 id="stats-revenue" style="font-size: 1.8rem; color: #10b981; margin-top: 5px;">R$ 0,00</h2>
+                </div>
+                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Clientes Ativos</p>
+                    <h2 id="stats-active" style="font-size: 1.8rem; color: var(--primary-color); margin-top: 5px;">0</h2>
+                </div>
+                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Pagamentos Pendentes</p>
+                    <h2 id="stats-pending" style="font-size: 1.8rem; color: #ef4444; margin-top: 5px;">0</h2>
+                </div>
             </div>
 
             <div class="tenants-grid" id="tenants-list">
