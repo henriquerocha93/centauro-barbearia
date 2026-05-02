@@ -24,7 +24,7 @@ const app = {
             e.preventDefault();
             const pass = document.getElementById('master-password').value;
             // Senha mestra temporária
-            if (pass === 'Mestre@2026') {
+            if (pass === '1264') {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('dashboard-screen').classList.add('active');
                 this.loadTenants();
