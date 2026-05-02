@@ -34,25 +34,25 @@ const app = {
     },
 
     render() {
+        // Ocultar todas as possíveis views customizadas
+        const views = ['tenants-list', 'billing-view', 'leads-view', 'sellers-view', 'config-view'];
+        views.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
         if (this.state.tab === 'tenants') {
-            document.getElementById('tenants-list').style.display = 'grid';
-            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
-            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
+            const list = document.getElementById('tenants-list');
+            if (list) list.style.display = 'grid';
             this.renderTenants();
         } else if (this.state.tab === 'billing') {
-            document.getElementById('tenants-list').style.display = 'none';
-            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
             this.renderBilling();
         } else if (this.state.tab === 'leads') {
-            document.getElementById('tenants-list').style.display = 'none';
-            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
-            if (document.getElementById('sellers-view')) document.getElementById('sellers-view').style.display = 'none';
             this.renderLeads();
         } else if (this.state.tab === 'sellers') {
-            document.getElementById('tenants-list').style.display = 'none';
-            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
-            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
             this.renderSellers();
+        } else if (this.state.tab === 'config') {
+            this.renderConfig();
         }
     },
 
@@ -66,21 +66,24 @@ const app = {
             const login = document.getElementById('master-login').value.trim().toLowerCase();
             const pass = document.getElementById('master-password').value;
             
-            // 1. Verifica Administrador Mestre
-            if (login === 'admin' && pass === '1264') {
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('dashboard-screen').classList.add('active');
-                this.loadTenants();
-                return;
-            } 
-
-            // 2. Verifica se é um Vendedor
             try {
+                // 1. Verifica Administrador Mestre no Firebase
+                const adminRef = ref(this.db, 'master/config/admin');
+                const adminSnap = await get(adminRef);
+                const adminData = adminSnap.val() || { user: 'admin', pass: '1264' };
+
+                if (login === adminData.user && pass === adminData.pass) {
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('dashboard-screen').classList.add('active');
+                    this.loadTenants();
+                    return;
+                }
+
+                // 2. Verifica se é um Vendedor
                 const sellerRef = ref(this.db, 'master/sellers/' + login);
                 const snapshot = await get(sellerRef);
                 
                 if (snapshot.exists() && snapshot.val().password === pass) {
-                    // Redireciona para o painel do vendedor
                     window.location.href = 'vendedor.html?u=' + login + '&p=' + btoa(pass);
                     return;
                 }
@@ -89,6 +92,64 @@ const app = {
             }
 
             alert('Usuário ou senha incorretos!');
+        };
+    },
+
+    async renderConfig() {
+        const list = document.getElementById('tenants-list').parentElement;
+        let configView = document.getElementById('config-view');
+        
+        if (!configView) {
+            configView = document.createElement('div');
+            configView.id = 'config-view';
+            list.appendChild(configView);
+        }
+
+        configView.style.display = 'block';
+        
+        // Busca credenciais atuais
+        const adminRef = ref(this.db, 'master/config/admin');
+        const snap = await get(adminRef);
+        const adminData = snap.val() || { user: 'admin', pass: '1264' };
+
+        configView.innerHTML = `
+            <div class="glass-card" style="padding: 40px; border-radius: 12px; background: white; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <h2 style="color: var(--primary-color); margin-bottom: 10px;">🔐 Acesso Administrativo</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">Altere o login e senha mestre do painel.</p>
+                
+                <form id="master-credentials-form">
+                    <div class="form-group">
+                        <label>Novo Usuário de Login</label>
+                        <input type="text" id="new-master-user" value="${adminData.user}" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Nova Senha</label>
+                        <input type="text" id="new-master-pass" value="${adminData.pass}" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                        <small style="color: #666; margin-top:5px; display:block;">Guarde estas credenciais em local seguro.</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-purple" style="width: 100%; margin-top: 30px; padding: 15px;">Salvar Novas Credenciais</button>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('master-credentials-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const newUser = document.getElementById('new-master-user').value.trim().toLowerCase();
+            const newPass = document.getElementById('new-master-pass').value.trim();
+
+            if (!confirm('Tem certeza que deseja alterar o login mestre? Se esquecer, precisará resetar via banco de dados.')) return;
+
+            try {
+                await set(ref(this.db, 'master/config/admin'), {
+                    user: newUser,
+                    pass: newPass
+                });
+                alert('✅ Credenciais atualizadas com sucesso!');
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar no banco de dados.');
+            }
         };
     },
 
