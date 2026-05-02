@@ -155,6 +155,12 @@ const app = {
                 const statusLabel = document.getElementById('upload-status');
 
                 logoUrl = await new Promise((resolve, reject) => {
+                    // Timeout de segurança (15 segundos)
+                    const timeout = setTimeout(() => {
+                        uploadTask.cancel();
+                        reject(new Error('Tempo limite excedido. Verifique se o Storage está ativado no Firebase Console.'));
+                    }, 15000);
+
                     uploadTask.on('state_changed', 
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -162,10 +168,16 @@ const app = {
                             statusLabel.textContent = `Enviando imagem: ${Math.round(progress)}%...`;
                         }, 
                         (error) => {
-                            console.error('Erro no upload:', error);
-                            reject(error);
+                            clearTimeout(timeout);
+                            console.error('Erro detalhado no upload:', error);
+                            let msg = 'Erro no upload: ';
+                            if (error.code === 'storage/unauthorized') msg += 'Sem permissão. Verifique as "Rules" no Firebase Storage.';
+                            else if (error.code === 'storage/retry-limit-exceeded') msg += 'Falha na conexão. Verifique sua internet.';
+                            else msg += error.message;
+                            reject(new Error(msg));
                         }, 
                         () => {
+                            clearTimeout(timeout);
                             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                                 resolve(downloadURL);
                             });
@@ -193,7 +205,7 @@ const app = {
 
         } catch (error) {
             console.error('Erro ao salvar:', error);
-            alert('❌ Erro ao salvar as configurações.');
+            alert('❌ ' + error.message);
             btn.textContent = 'Salvar Alterações';
             btn.disabled = false;
         }
