@@ -119,6 +119,7 @@ const app = {
             productSales: this.state.productSales || [],
             appointments: this.state.appointments || [],
             serviceOrders: this.state.serviceOrders || [],
+            tips: this.state.tips || [],
             lastUpdate: this.state.lastUpdate || 0
         }));
         this.syncToFirebase();
@@ -148,6 +149,7 @@ const app = {
                 productSales: this.state.productSales || [],
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
+                tips: this.state.tips || [],
                 lastUpdate: now,
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
@@ -191,6 +193,7 @@ const app = {
                 productSales: this.state.productSales || [],
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
+                tips: this.state.tips || [],
                 lastSync: new Date().toISOString()
             };
 
@@ -269,6 +272,7 @@ const app = {
                     this.state.productSales = cloudState.productSales || [];
                     this.state.appointments = cloudState.appointments || [];
                     this.state.serviceOrders = cloudState.serviceOrders || [];
+                    this.state.tips = cloudState.tips || [];
                     
                     this.saveState();
                     alert('✅ Dados da nuvem carregados com sucesso!');
@@ -433,6 +437,7 @@ const app = {
                             this.state.productSales = data.productSales || [];
                             this.state.appointments = data.appointments || [];
                             this.state.serviceOrders = data.serviceOrders || [];
+                            this.state.tips = data.tips || [];
                             this.state.lastUpdate = data.lastUpdate;
 
                             // SaaS: Atualiza textos da interface com base no Tenant
