@@ -2197,6 +2197,13 @@ const app = {
         const staffProfile = this.state.staff.find(s => s.name === this.state.user.name) || { commission: 50 };
         const myCommission = grossTotal * (staffProfile.commission / 100);
 
+        const myTips = (this.state.tips || []).filter(t => {
+            const tDate = t.date || t.timestamp?.split('T')[0] || today;
+            return t.barber === this.state.user.name &&
+                   tDate >= startDate && tDate <= endDate;
+        });
+        const totalTips = myTips.reduce((sum, t) => sum + t.amount, 0);
+
         const myVouchers = this.state.vouchers.filter(v => {
             const vDate = v.date ? v.date.split('T')[0] : today;
             return v.barber === this.state.user.name &&
@@ -2204,7 +2211,7 @@ const app = {
         });
         const totalVouchers = myVouchers.reduce((sum, v) => sum + v.amount, 0);
 
-        const netPay = myCommission - totalVouchers;
+        const netPay = myCommission + totalTips - totalVouchers;
 
         container.innerHTML = `
             <section id="barber-financial" class="fade-in">
@@ -2225,29 +2232,34 @@ const app = {
                     </div>
                 ` : ''}
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Minhas Comissões</p>
-                        <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">R$ ${myCommission.toFixed(2)}</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Comissões</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-color);">R$ ${myCommission.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #fbbf24;">+ R$ ${totalTips.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #ff4444;">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Vales Lançados</p>
-                        <p style="font-size: 1.3rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Vales</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #44ff44; background: rgba(68, 255, 68, 0.05);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">A Receber Líquido</p>
-                        <p style="font-size: 1.5rem; font-weight: 800; color: #44ff44;">R$ ${netPay.toFixed(2)}</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Total Líquido</p>
+                        <p style="font-size: 1.3rem; font-weight: 800; color: #44ff44;">R$ ${netPay.toFixed(2)}</p>
                     </div>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1rem;">Detalhamento (Comissão Líquida)</h3>
+                <h3 class="section-title" style="font-size: 1rem;">Detalhamento</h3>
                 <div class="transaction-list">
-                    ${filteredApts.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum atendimento finalizado neste período.</p>' : ''}
+                    ${filteredApts.length === 0 && myTips.length === 0 && myVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum registro neste período.</p>' : ''}
+                    
                     ${filteredApts.map(a => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${a.customer}</span>
-                                <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission/100)).toFixed(2)}</span>
+                                <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission/100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>${a.service}</span>
@@ -2255,6 +2267,20 @@ const app = {
                             </div>
                         </div>
                     `).reverse().join('')}
+
+                    ${myTips.map(t => `
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid #fbbf24;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; color: var(--text-primary);">Gorjeta Recebida</span>
+                                <span style="font-weight: 700; color: #fbbf24;">+ R$ ${t.amount.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                                <span>Reconhecimento de Cliente</span>
+                                <span>${new Date(t.date || t.timestamp).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    `).reverse().join('')}
+
                     ${myVouchers.map(v => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid #ff4444;">
                             <div style="display: flex; justify-content: space-between;">
