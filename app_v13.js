@@ -4484,7 +4484,7 @@ const app = {
                 </div>
             </div>
         `;
-    }
+    },
     async renderAdminBilling(container) {
         const urlParams = new URLSearchParams(window.location.search);
         const tenantId = urlParams.get('loja');
