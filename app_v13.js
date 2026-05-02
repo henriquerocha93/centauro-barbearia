@@ -3824,11 +3824,15 @@ const app = {
                             <div style="display: flex; flex-direction: column; gap: 12px;">
                                 ${items.map(item => `
                                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                                        <div style="flex: 1;">
-                                            <span style="font-weight: 700; color: var(--text-primary); display: block;">${item.qty}x ${item.productName}</span>
-                                            <span style="font-size: 0.72rem; color: var(--text-secondary);">
-                                                ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
-                                            </span>
+                                        <div style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                                            <button class="glass" style="padding: 5px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; font-size: 0.7rem;" 
+                                                    onclick="app.deleteConsumptionRecord(${item.id})" title="Apagar Registro">🗑️</button>
+                                            <div>
+                                                <span style="font-weight: 700; color: var(--text-primary); display: block;">${item.qty}x ${item.productName}</span>
+                                                <span style="font-size: 0.72rem; color: var(--text-secondary);">
+                                                    ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div style="text-align: right; min-width: 100px;">
                                             <span style="padding: 3px 8px; border-radius: 4px; background: ${item.target === 'adm' ? 'rgba(148,163,184,0.2)' : 'rgba(124,58,237,0.2)'}; color: ${item.target === 'adm' ? '#94a3b8' : '#a78bfa'}; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">
@@ -3848,6 +3852,30 @@ const app = {
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
             </section>
         `;
+    },
+
+    deleteConsumptionRecord(saleId) {
+        const sale = this.state.productSales.find(s => s.id === saleId);
+        if (!sale) return;
+
+        const confirmMsg = sale.target === 'barbeiro' 
+            ? `Deseja realmente apagar este consumo?\n\n⚠️ O estoque será devolvido, mas o VALE de R$ ${sale.total.toFixed(2)} lançado para ${sale.barberName} DEVE ser apagado manualmente na aba de Vales.`
+            : `Deseja realmente apagar este registro de consumo ADM?\nO estoque (${sale.qty} un.) será devolvido automaticamente.`;
+
+        if (confirm(confirmMsg)) {
+            // Restaurar estoque
+            const product = this.state.products.find(p => p.id === sale.productId);
+            if (product) {
+                product.stock += sale.qty;
+            }
+
+            // Remover do histórico
+            this.state.productSales = this.state.productSales.filter(s => s.id !== saleId);
+
+            this.saveState();
+            this.render('admin-consumption');
+            alert('✅ Registro removido e estoque restaurado.');
+        }
     },
 
     renderBooking(container) {
