@@ -7,7 +7,13 @@ const app = {
 
     // AVISO: Usando o MESMO config do seu app.js (Certifique-se de ser o mesmo projeto)
     firebaseConfig: {
-        databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+        authDomain: "centauro-barbearia.firebaseapp.com",
+        projectId: "centauro-barbearia",
+        storageBucket: "centauro-barbearia.firebasestorage.app",
+        messagingSenderId: "96712816127",
+        appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+        databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
     },
 
     init() {
