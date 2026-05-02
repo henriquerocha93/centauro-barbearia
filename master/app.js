@@ -271,7 +271,12 @@ const app = {
             document.getElementById('e-address').value = s.address || '';
             document.getElementById('e-phone').value = s.phone || '';
             
+            // Carrega valor do contrato (do Master)
+            const masterT = this.tenants[slug];
+            document.getElementById('e-price').value = masterT.subscriptionPrice || 0;
+            
         } catch (e) {
+
             console.error('Erro ao carregar configuracoes:', e);
         }
 
@@ -330,7 +335,13 @@ const app = {
                 phone: document.getElementById('e-phone').value
             });
 
+            // Atualiza Valor no Master
+            await update(ref(this.db, 'master/tenants/' + slug), {
+                subscriptionPrice: parseFloat(document.getElementById('e-price').value) || 0
+            });
+
             // Sucesso
+
             document.getElementById('edit-tenant-modal').close();
             btn.textContent = 'Salvar Alterações';
             btn.disabled = false;
