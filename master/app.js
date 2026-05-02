@@ -24,8 +24,26 @@ const app = {
         this.db = getDatabase(fbApp);
         this.storage = getStorage(fbApp);
         
+        this.state = { tab: 'tenants' };
         this.setupLogin();
     },
+
+    setTab(tab) {
+        this.state.tab = tab;
+        this.render();
+    },
+
+    render() {
+        if (this.state.tab === 'tenants') {
+            document.getElementById('tenants-list').style.display = 'grid';
+            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
+            this.renderTenants();
+        } else {
+            document.getElementById('tenants-list').style.display = 'none';
+            this.renderBilling();
+        }
+    },
+
 
     setupLogin() {
         const form = document.getElementById('master-login-form');
@@ -133,6 +151,60 @@ const app = {
         document.getElementById('stats-active').textContent = activeCount;
         document.getElementById('stats-pending').textContent = pendingCount;
     },
+
+    renderBilling() {
+        const list = document.getElementById('tenants-list').parentElement;
+        let billingView = document.getElementById('billing-view');
+        
+        if (!billingView) {
+            billingView = document.createElement('div');
+            billingView.id = 'billing-view';
+            list.appendChild(billingView);
+        }
+        
+        billingView.style.display = 'block';
+        billingView.innerHTML = `
+            <div class="glass-card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                <h3 style="margin-bottom: 20px;">Relatório Geral de Faturamentos (SaaS)</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #f3f4f6; color: var(--text-muted);">
+                                <th style="padding: 12px;">Cliente</th>
+                                <th style="padding: 12px;">Vencimento</th>
+                                <th style="padding: 12px;">Valor</th>
+                                <th style="padding: 12px;">Status</th>
+                                <th style="padding: 12px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(this.tenants).map(key => {
+                                const t = this.tenants[key];
+                                const nextDate = new Date(t.nextPayment);
+                                const isLate = nextDate < new Date();
+                                return `
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 12px; font-weight: 600;">${t.name}</td>
+                                        <td style="padding: 12px;">${nextDate.toLocaleDateString('pt-BR')}</td>
+                                        <td style="padding: 12px; font-weight: 700; color: var(--primary-color);">R$ ${(t.subscriptionPrice || 0).toFixed(2)}</td>
+                                        <td style="padding: 12px;">
+                                            <span style="padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; background: ${isLate ? '#fee2e2; color: #b91c1c' : '#dcfce7; color: #15803d'};">
+                                                ${isLate ? 'Atrasado' : 'Em dia'}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            <button class="btn-outline" style="padding: 5px 10px; font-size: 0.7rem;" onclick="app.renewSubscription('${key}')">Registrar Pagamento</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    },
+
 
     async renewSubscription(slug) {
         if (!confirm(`Confirmar recebimento de pagamento da barbearia ${slug} e renovar por mais 30 dias?`)) return;

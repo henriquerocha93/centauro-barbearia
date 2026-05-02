@@ -1,6 +1,6 @@
 // Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const app = {
     state: {
@@ -412,10 +412,20 @@ const app = {
                 this.db = getDatabase(fbApp);
                 console.log('🔥 Firebase Initialized');
                 
-                // Suporte a Multi-Tenant
                 const urlParams = new URLSearchParams(window.location.search);
                 const tenantId = urlParams.get('loja');
                 const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                
+                // SaaS: Buscar dados da assinatura se for inquilino
+                if (tenantId && tenantId !== 'centauro') {
+                    get(ref(this.db, `master/tenants/${tenantId}`)).then(snapshot => {
+                        this.state.subscription = snapshot.val();
+                        // Se houver aviso crítico, re-renderiza para mostrar o banner
+                        if (this.state.subscription) {
+                            this.render(this.state.view);
+                        }
+                    }).catch(e => console.error('Erro ao buscar assinatura:', e));
+                }
                 
                 // Escuta Ativa (Tempo Real)
                 const dbRef = ref(this.db, dbPath);
@@ -900,6 +910,7 @@ const app = {
         appContainer.className = 'app-layout'; // Ativa Grid com Sidebar
         
         appContainer.innerHTML = `
+            ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
                 <div style="font-family: 'Playfair Display'; font-weight:700; color:var(--accent-color); flex: 1; text-align: center;">CENTAURO</div>
@@ -920,6 +931,7 @@ const app = {
                        onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
                     <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
                     <a class="menu-item ${view === 'admin-os' ? 'active' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
+                    <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')" style="background: rgba(167, 139, 250, 0.1); border-left: 3px solid var(--accent-color);"><i>💳</i> Fatura do Sistema</a>
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
@@ -990,6 +1002,7 @@ const app = {
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
             case 'admin-settings': this.renderAdminSettings(main); break;
+            case 'admin-billing': this.renderAdminBilling(main); break;
             case 'admin-os': this.renderAdminOS(main); break;
             case 'pdv': this.renderPDV(main); break;
             default: 
@@ -1619,7 +1632,38 @@ const app = {
     },
 
     renderAdminDash(container) {
-        container.innerHTML = this.getBirthdaysHTML() + `<div id="dash-agenda-wrapper"></div>`;
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('loja');
+        const sub = this.state.subscription;
+        let billingBanner = '';
+        
+        // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz)
+        if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment) {
+            const nextDate = new Date(sub.nextPayment);
+            const today = new Date();
+            const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
+            const isCritical = diffDays <= 4;
+
+            billingBanner = `
+                <div class="glass fade-in" style="padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isCritical ? '#ef4444' : 'var(--accent-color)'}; background: ${isCritical ? 'rgba(239, 68, 68, 0.05)' : 'transparent'};">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 1.5rem;">${isCritical ? '⚠️' : '💳'}</div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Fatura do Sistema</h4>
+                            <p style="margin: 3px 0 0; font-size: 0.78rem; color: var(--text-secondary);">
+                                Seu plano expira em: <strong style="color: ${isCritical ? '#ef4444' : 'var(--accent-color)'};">${nextDate.toLocaleDateString('pt-BR')}</strong>
+                                ${isCritical ? ' - <span style="color: #ef4444; font-weight: 700;">Renovação Pendente</span>' : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="padding: 8px 16px; font-size: 0.75rem; background: ${isCritical ? '#ef4444' : 'var(--accent-color)'};" onclick="app.navigateTo('admin-billing')">
+                        Pagar / Ver Fatura
+                    </button>
+                </div>
+            `;
+        }
+
+        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `<div id="dash-agenda-wrapper"></div>`;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
     },
 
@@ -4440,6 +4484,136 @@ const app = {
                 </div>
             </div>
         `;
+    }
+    async renderAdminBilling(container) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('loja');
+        
+        if (!tenantId || tenantId === 'centauro') {
+            container.innerHTML = `
+                <div class="glass" style="padding: 40px; text-align: center; border-top: 4px solid var(--accent-color);">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🛡️</div>
+                    <h2 style="font-family: 'Playfair Display';">Conta Matriz (Ilimitada)</h2>
+                    <p style="color: var(--text-secondary); margin-top: 10px; max-width: 400px; margin: 10px auto;">Você possui acesso vitalício e ilimitado por ser a unidade principal do sistema.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">⌛ Carregando dados da assinatura...</div>';
+
+        try {
+            const masterRef = ref(this.db, `master/tenants/${tenantId}`);
+            const snapshot = await get(masterRef);
+            const data = snapshot.val();
+
+            if (!data) {
+                container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">❌ Erro ao localizar dados da assinatura.</div>';
+                return;
+            }
+
+            const nextPaymentDate = new Date(data.nextPayment);
+            const today = new Date();
+            const diffDays = Math.ceil((nextPaymentDate - today) / (1000 * 60 * 60 * 24));
+            
+            let statusColor = '#10b981'; // Verde
+            let statusLabel = 'ATIVA';
+            let statusBg = 'rgba(16, 185, 129, 0.1)';
+            
+            if (diffDays < 0) {
+                statusColor = '#ef4444'; // Vermelho
+                statusLabel = 'EXPIRADA / BLOQUEADA';
+                statusBg = 'rgba(239, 68, 68, 0.1)';
+            } else if (diffDays <= 5) {
+                statusColor = '#f59e0b'; // Amarelo
+                statusLabel = 'VENCE EM BREVE';
+                statusBg = 'rgba(245, 158, 11, 0.1)';
+            }
+
+            container.innerHTML = `
+                <section class="fade-in" style="max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
+                    <h2 class="section-title" style="margin-bottom: 25px;">💳 Fatura e Assinatura</h2>
+                    
+                    <div class="glass" style="padding: 30px; margin-bottom: 25px; border-left: 5px solid ${statusColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                            <div>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Status do Sistema</p>
+                                <div style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: ${statusBg}; color: ${statusColor}; font-weight: 800; font-size: 0.9rem; margin-top: 8px;">
+                                    ${statusLabel}
+                                </div>
+                                <p style="font-size: 1rem; color: var(--text-primary); margin-top: 15px;">Próximo Vencimento: <strong style="color: ${statusColor};">${nextPaymentDate.toLocaleDateString('pt-BR')}</strong></p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Valor do Plano</p>
+                                <h3 style="color: var(--text-primary); font-size: 2.2rem; font-weight: 800; margin-top: 5px;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}<span style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">/mês</span></h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass" style="padding: 30px; border-top: 1px solid var(--glass-border);">
+                        <h4 style="margin-bottom: 18px; color: var(--accent-color); font-size: 1.1rem;">Como realizar a renovação?</h4>
+                        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px;">
+                            O sistema de faturamento é pré-pago. Para renovar seu acesso por mais 30 dias, realize o pagamento via <strong>PIX</strong> e nosso suporte fará a liberação imediata.
+                        </p>
+                        
+                        <div style="background: var(--surface-dark); padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 30px;">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ / E-MAIL)</p>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-color); font-size: 1.3rem; letter-spacing: 1px;">henriquerocha93@gmail.com</h3>
+                                <button onclick="navigator.clipboard.writeText('henriquerocha93@gmail.com'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Henrique Rocha</strong></p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                            <a href="https://wa.me/5551989069123?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${data.name}).%20Segue%20o%20comprovante." target="_blank" class="btn-primary" style="text-align: center; background: #25D366; text-decoration: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">📱</span> Enviar Comprovante no WhatsApp
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.03); text-align: center; border: 1px solid var(--glass-border);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">
+                            Precisa de nota fiscal ou suporte com sua fatura? <br>
+                            Fale com nosso time comercial.
+                        </p>
+                    </div>
+                </section>
+            `;
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">❌ Erro ao conectar com o servidor financeiro.</div>';
+        }
+    },
+
+    getSubscriptionWarningHTML() {
+        if (!this.state.subscription || !this.state.subscription.nextPayment) return '';
+        
+        const nextPaymentDate = new Date(this.state.subscription.nextPayment);
+        const today = new Date();
+        const diffTime = nextPaymentDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Apenas para Admin
+        if (this.state.user?.role !== 'admin') return '';
+
+        if (diffDays <= 4) {
+            const isExpired = diffDays < 0;
+            const msg = isExpired 
+                ? 'SISTEMA BLOQUEADO / EXPIRADO POR FALTA DE PAGAMENTO.' 
+                : `EM BREVE SEU SISTEMA SERÁ BLOQUEADO POR FALTA DE PAGAMENTO. Vence em ${diffDays} dia${diffDays === 1 ? '' : 's'}.`;
+            
+            return `
+                <div style="background: #ef4444; color: white; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 9999; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; gap: 15px; animation: slideDown 0.5s ease-out;">
+                    <span>⚠️ ${msg}</span>
+                    <button onclick="app.navigateTo('admin-billing')" style="background: white; color: #ef4444; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 900; cursor: pointer; text-transform: uppercase;">Regularizar Agora</button>
+                </div>
+                <style>
+                    @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+                </style>
+            `;
+        }
+        return '';
     }
 };
 
