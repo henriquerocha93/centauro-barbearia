@@ -1168,7 +1168,23 @@ const app = {
                             </select>
                         </div>
 
-                        <div style="margin-bottom:14px;">
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Destino da Venda</label>
+                            <select id="totem-pdv-target" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
+                                    onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                                <option value="cliente">👤 Cliente</option>
+                                <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                            </select>
+                        </div>
+
+                        <div id="totem-pdv-barber-wrapper" style="margin-bottom:10px; display:none;">
+                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Quem está consumindo?</label>
+                            <select id="totem-pdv-consumer" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
+                                ${barbers.map(b=>`<option value="${b.name}">${b.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div id="totem-pdv-payment-wrapper" style="margin-bottom:14px;">
                             <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Pagamento</label>
                             <select id="totem-pdv-payment" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
                                 <option value="Dinheiro">Dinheiro</option>
@@ -1213,8 +1229,10 @@ const app = {
     },
 
     _totemFinalizeSale() {
+        const target  = document.getElementById('totem-pdv-target')?.value || 'cliente';
         const payment = document.getElementById('totem-pdv-payment')?.value || 'Dinheiro';
         const seller  = document.getElementById('totem-pdv-seller')?.value || null;
+        const consumer = document.getElementById('totem-pdv-consumer')?.value || null;
         const discount = parseFloat(this.state.pdvDiscount || 0);
         const cart    = this.state.cart || [];
 
@@ -1231,37 +1249,69 @@ const app = {
 
         if (!this.state.productSales) this.state.productSales = [];
         const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
             product.stock -= item.qty;
             const itemTotal = item.unitPrice * item.qty;
             const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
             totalComm += itemComm;
+            
             this.state.productSales.push({
-                id: Date.now() + Math.random(), productId: item.productId, productName: item.name,
-                qty: item.qty, unitPrice: item.unitPrice, total: itemTotal,
-                commissionPct: item.commissionPct || 0, sellerCommission: itemComm,
-                seller: seller || null, payment, discount: 0,
-                date: now.toISOString().split('T')[0], timestamp: now.toISOString()
+                id: Date.now() + Math.random(), 
+                productId: item.productId, 
+                productName: item.name,
+                qty: item.qty, 
+                unitPrice: item.unitPrice, 
+                total: itemTotal,
+                commissionPct: item.commissionPct || 0, 
+                sellerCommission: target === 'barbeiro' ? 0 : itemComm,
+                seller: target === 'barbeiro' ? null : (seller || null), 
+                payment: target === 'barbeiro' ? 'Faturamento' : payment,
+                target: target,
+                barberName: target === 'barbeiro' ? consumer : null,
+                discount: 0,
+                date: dateStr, 
+                timestamp: now.toISOString()
             });
         }
 
-        let method = 'dinheiro';
-        if (payment==='PIX') method='pix';
-        if (payment==='Cartão de Débito') method='debito';
-        if (payment==='Cartão de Crédito') method='credito';
-        const desc = cart.length === 1
-            ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-            : `PDV: ${cart.length} produtos`;
-        this.addTransaction('in', desc, total, 'produto', method);
+        if (target === 'barbeiro') {
+            // Lançar Vale para o barbeiro consumidor
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: Date.now() + 2,
+                barber: consumer,
+                amount: total,
+                date: now.toISOString(),
+                note: `Consumo PDV Totem: ${cart.length} item(ns)`
+            });
+            // Transação via faturamento
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
+            this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else {
+            let method = 'dinheiro';
+            if (payment==='PIX') method='pix';
+            if (payment==='Cartão de Débito') method='debito';
+            if (payment==='Cartão de Crédito') method='credito';
+            const desc = cart.length === 1
+                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+                : `PDV: ${cart.length} produtos`;
+            this.addTransaction('in', desc, total, 'produto', method);
+        }
 
         this.state.cart = [];
         this.state.pdvDiscount = 0;
         this.state.pdvSeller = seller || null;
         this.saveState();
 
-        const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
-        alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
+        if (target === 'barbeiro') {
+            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+        } else {
+            const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
+            alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
+        }
         this.setTotemTab('pdv');
     },
 
@@ -1275,9 +1325,11 @@ const app = {
                         <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;background:#7c3aed;" onclick="app._totemScanEstoque()">
                             📶 Leitor USB
                         </button>
-                        <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;" onclick="app.openProductModal(null); app._afterProductSaveCallback=()=>app.setTotemTab('estoque');">
-                            + Novo Produto
-                        </button>
+                        ${this.state.user.role === 'admin' ? `
+                            <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;" onclick="app.openProductModal(null); app._afterProductSaveCallback=()=>app.setTotemTab('estoque');">
+                                + Novo Produto
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -1310,13 +1362,17 @@ const app = {
                     <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock<=3&&p.stock>0?' ⚠️':p.stock<=0?' ❌ Esgotado':''}</p>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
-                    <div style="display:flex;align-items:center;gap:4px;">
-                        <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},-1);app.saveState();app.setTotemTab('estoque')">−</button>
-                        <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock}</span>
-                        <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},1);app.saveState();app.setTotemTab('estoque')">+</button>
-                    </div>
-                    <button class="glass" style="padding:5px 12px;font-size:0.75rem;color:var(--accent-color);border:1px solid var(--glass-border);"
-                            onclick="app.openProductModal(${p.id})">✏️ Editar</button>
+                    ${this.state.user.role === 'admin' ? `
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},-1);app.saveState();app.setTotemTab('estoque')">−</button>
+                            <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock}</span>
+                            <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},1);app.saveState();app.setTotemTab('estoque')">+</button>
+                        </div>
+                        <button class="glass" style="padding:5px 12px;font-size:0.75rem;color:var(--accent-color);border:1px solid var(--glass-border);"
+                                onclick="app.openProductModal(${p.id})">✏️ Editar</button>
+                    ` : `
+                        <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock} un.</span>
+                    `}
                 </div>
             </div>`;
         }).join('');
@@ -2774,9 +2830,11 @@ const app = {
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; background: #7c3aed; display: flex; align-items: center; gap: 6px;" id="btn-scan-barcode">
                             📶 Leitor USB
                         </button>
-                        <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="btn-add-stock">
-                            + Novo Produto
-                        </button>
+                        ${this.state.user.role === 'admin' ? `
+                            <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="btn-add-stock">
+                                + Novo Produto
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -2824,15 +2882,19 @@ const app = {
                     <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; flex-shrink: 0;">
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="−1" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
-                        <span style="min-width: 26px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
-                        <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="+1" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
-                    </div>
+                    ${this.state.user.role === 'admin' ? `
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="−1" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
+                            <span style="min-width: 26px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="+1" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
+                        </div>
+                    ` : ''}
                     <div style="display: flex; gap: 5px;">
                         <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #4ade80; border: 1px solid rgba(74,222,128,0.3);" onclick="app.openProductFoundModal(app.state.products.find(x=>x.id===${p.id}))">💰 Vender</button>
-                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
-                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">🗑️</button>
+                        ${this.state.user.role === 'admin' ? `
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">🗑️</button>
+                        ` : ''}
                     </div>
                 </div>
             </div>`;
@@ -2939,16 +3001,35 @@ const app = {
                     <p style="font-size: 0.85rem;">Estoque: <strong style="color: ${stockColor};">${product.stock} un.</strong></p>
                 </div>
 
-                <!-- Venda rápida -->
+                <!-- Destino da Venda -->
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quantidade a Vender</label>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Venda para:</label>
+                    <select id="sale-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('sale-barber-select-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('sale-payment-wrapper').style.display = this.value === 'barbeiro' ? 'none' : 'block';">
+                        <option value="cliente">👤 Cliente</option>
+                        <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                    </select>
+                </div>
+
+                <div id="sale-barber-select-wrapper" style="margin-bottom: 15px; display: none;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quem está consumindo?</label>
+                    <select id="sale-barber-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
+                        ${this.state.staff.filter(s => s.role === 'barber').map(s => `
+                            <option value="${s.name}" ${this.state.user.name === s.name ? 'selected' : ''}>${s.name}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
+                <!-- Quantidade -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quantidade</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); if(i.value>1)i.value=parseInt(i.value)-1;">−</button>
                         <input type="number" id="sale-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" value="1" min="1" max="${product.stock}">
                         <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); i.value=parseInt(i.value)+1;">+</button>
                     </div>
                 </div>
-                <div style="margin-bottom: 20px;">
+
+                <div id="sale-payment-wrapper" style="margin-bottom: 20px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Forma de Pagamento</label>
                     <select id="sale-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                         <option value="Dinheiro">Dinheiro</option>
@@ -2974,7 +3055,9 @@ const app = {
     doQuickSale(productId) {
         const product = this.state.products.find(p => p.id === productId);
         const qty     = parseInt(document.getElementById('sale-qty').value) || 1;
+        const target  = document.getElementById('sale-target').value;
         const payment = document.getElementById('sale-payment').value;
+        const bName   = document.getElementById('sale-barber-name').value;
 
         if (!product) return;
         if (product.stock < qty) {
@@ -2994,22 +3077,43 @@ const app = {
             qty,
             unitPrice: product.price,
             total,
-            payment,
+            payment: target === 'barbeiro' ? 'Faturamento' : payment,
+            target: target,
+            barberName: target === 'barbeiro' ? bName : null,
             date: new Date().toISOString().split('T')[0],
             timestamp: new Date().toISOString()
         });
 
-        // Integrar com fluxo de caixa
-        let method = 'dinheiro';
-        if (payment === 'PIX') method = 'pix';
-        if (payment === 'Cartão de Débito') method = 'debito';
-        if (payment === 'Cartão de Crédito') method = 'credito';
-        this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
+        if (target === 'barbeiro') {
+            // Lançar Vale para o barbeiro
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: Date.now() + 1,
+                barber: bName,
+                amount: total,
+                date: new Date().toISOString(),
+                note: `Consumo de Produto: ${product.name} (x${qty})`
+            });
+            // Transação de entrada via faturamento (não entra no caixa físico)
+            this.addTransaction('in', `Venda (Uso Próprio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
+        } else {
+            // Integrar com fluxo de caixa normal
+            let method = 'dinheiro';
+            if (payment === 'PIX') method = 'pix';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
+            this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
+        }
 
         this.saveState();
         this.closeModal();
-        this.render('admin-stock');
-        alert(`✅ Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
+        this.render(this.state.view);
+        
+        if (target === 'barbeiro') {
+            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${bName.split(' ')[0]}.`);
+        } else {
+            alert(`✅ Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
+        }
     },
 
     // ─── Modal de Produto ─────────────────────────────────────────────────────
@@ -3441,7 +3545,8 @@ const app = {
             dinheiro: 0,
             pix: 0,
             debito: 0,
-            credito: 0
+            credito: 0,
+            faturamento: 0
         };
 
         transactionsToday.forEach(t => {
@@ -3475,6 +3580,10 @@ const app = {
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Crédito</p>
                         <p style="font-weight: 700;">R$ ${totals.credito.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #94a3b8; background: rgba(148, 163, 184, 0.05);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">📉 Faturamento (Desc.)</p>
+                        <p style="font-weight: 700;">R$ ${totals.faturamento.toFixed(2)}</p>
                     </div>
                 </div>
 
