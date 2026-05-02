@@ -922,7 +922,8 @@ const app = {
             ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
-                <div style="flex: 1; text-align: center;"><img src="logo.png" alt="Agendamento Fácil" style="height: 60px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
+                <div style="flex: 1; text-align: center;"><img src="logo.png" alt="Agendamento Fácil" style="height: 100px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
+
 
 
                 <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
@@ -931,8 +932,9 @@ const app = {
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
 
             <aside class="sidebar glass" id="sidebar">
-                <div class="sidebar-logo" style="text-align: center; padding: 20px 10px;">
-                    <img src="logo.png" alt="Agendamento Fácil" style="height: 100px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
+                <div class="sidebar-logo" style="text-align: center; padding: 20px 5px;">
+                    <img src="logo.png" alt="Agendamento Fácil" style="height: 160px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
+
 
 
                     <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
