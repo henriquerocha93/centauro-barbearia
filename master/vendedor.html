@@ -128,52 +128,68 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        window.onerror = function(msg, url, line) {
+            alert("Erro no sistema: " + msg + "\nLinha: " + line);
+            return false;
+        };
+
         let currentSeller = null;
 
-        // Auto-login from URL (redirected from Master)
-        window.addEventListener('DOMContentLoaded', async () => {
+        // Auto-login from URL
+        window.addEventListener('load', () => {
             const params = new URLSearchParams(window.location.search);
             const u = params.get('u');
             const p = params.get('p');
             if (u && p) {
                 document.getElementById('s-login').value = u;
                 document.getElementById('s-pass').value = atob(p);
-                document.getElementById('seller-login-form').dispatchEvent(new Event('submit'));
+                setTimeout(() => {
+                    document.getElementById('seller-login-form').dispatchEvent(new Event('submit'));
+                }, 500);
             }
         });
 
         // Login Logic
-        document.getElementById('seller-login-form').onsubmit = async (e) => {
+        document.getElementById('seller-login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button');
             const user = document.getElementById('s-login').value.trim().toLowerCase();
             const pass = document.getElementById('s-pass').value;
 
-            console.log('Tentando login vendedor:', user);
+            if (!user || !pass) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Autenticando...';
 
             try {
-                const sellerRef = ref(db, 'master/sellers/' + user);
-                const snapshot = await get(sellerRef);
+                const sellerPath = 'master/sellers/' + user;
+                const snapshot = await get(ref(db, sellerPath));
                 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    console.log('Vendedor encontrado, validando senha...');
                     if (data.password === pass) {
                         currentSeller = { ...data, username: user };
-                        document.getElementById('login-screen').classList.remove('active');
+                        document.getElementById('login-screen').style.display = 'none';
                         document.getElementById('dashboard-screen').classList.add('active');
-                        document.getElementById('welcome-name').textContent = 'Olá, ' + currentSeller.name;
+                        document.getElementById('welcome-name').textContent = 'Olá, ' + (data.name || user);
                         loadMyClients();
                     } else {
-                        alert('Senha incorreta para o vendedor: ' + user);
+                        alert('Senha incorreta para o vendedor!');
                     }
                 } else {
-                    alert('Usuário vendedor "' + user + '" não encontrado no sistema.');
+                    alert('Usuário "' + user + '" não encontrado.');
                 }
             } catch (err) {
-                console.error('Erro ao acessar banco de dados:', err);
-                alert('Erro técnico ao conectar com o banco de dados. Verifique sua conexão.');
+                console.error(err);
+                alert('Erro de conexão: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar no Painel';
             }
-        };
+        });
 
 
         async function loadMyClients() {
