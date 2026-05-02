@@ -1541,11 +1541,12 @@ const app = {
             <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
                 <h2 class="section-title" style="font-family: 'Playfair Display'; text-transform: uppercase; letter-spacing: 2px;">Onde Estamos</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
-                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Tenente+Alpoim,516,Vila+Jo%C3%A3o+Pessoa,Porto+Alegre,RS" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Rua Tenente Alpoim, 516, Porto Alegre')}" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
                         <img src="map_real.png" style="width: 100%; height: 250px; object-fit: cover;">
                         <div style="padding: 20px; color: white;">
-                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">Rua Tenente Alpoim, 516</p>
-                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">Vila João Pessoa, Porto Alegre, RS</p>
+                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">${s.address || 'Rua Tenente Alpoim, 516'}</p>
+                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">${s.address ? '' : 'Vila João Pessoa, Porto Alegre, RS'}</p>
+                             ${s.phone ? `<p style="font-weight: bold; color: var(--accent-color); margin-top: 5px;">📞 ${s.phone}</p>` : ''}
                              <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color);">📍 Clique para abrir no Google Maps</p>
                         </div>
                     </a>
