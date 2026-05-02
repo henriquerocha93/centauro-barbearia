@@ -107,8 +107,15 @@
                 
                 <h4 style="margin-bottom: 10px; color: var(--primary-color);">Identidade Visual</h4>
                 <div class="form-group">
-                    <label>URL da Logo (Link da imagem)</label>
-                    <input type="url" id="e-logo" placeholder="https://site.com/logo.png">
+                    <label>Logo da Barbearia</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+                        <input type="file" id="e-logo-file" accept="image/*" style="flex: 1; font-size: 0.8rem; border: 1px dashed #ccc; padding: 8px;">
+                        <input type="hidden" id="e-logo-url">
+                    </div>
+                    <div id="upload-progress-container" style="display: none; width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+                        <div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                    <small id="upload-status" style="color: var(--text-muted); font-size: 0.75rem;">Selecione uma imagem do computador ou celular.</small>
                 </div>
                 
                 <div style="display: flex; gap: 15px;">

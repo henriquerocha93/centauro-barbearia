@@ -1,8 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getStorage, ref as refStorage, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const app = {
     db: null,
+    storage: null,
     tenants: {},
 
     // AVISO: Usando o MESMO config do seu app.js (Certifique-se de ser o mesmo projeto)
@@ -20,6 +22,7 @@ const app = {
         // Init Firebase
         const fbApp = initializeApp(this.firebaseConfig);
         this.db = getDatabase(fbApp);
+        this.storage = getStorage(fbApp);
         
         this.setupLogin();
     },
@@ -112,7 +115,10 @@ const app = {
             document.getElementById('e-slug').value = slug;
             document.getElementById('e-name').value = s.shopName || '';
             document.getElementById('e-subtitle').value = s.subtitle || '';
-            document.getElementById('e-logo').value = s.logoUrl || '';
+            document.getElementById('e-logo-url').value = s.logoUrl || '';
+            document.getElementById('e-logo-file').value = ''; // Limpa o input de arquivo
+            document.getElementById('upload-status').textContent = s.logoUrl ? 'Imagem atual carregada (Link salvo).' : 'Selecione uma imagem do computador ou celular.';
+            document.getElementById('upload-progress-container').style.display = 'none';
             document.getElementById('e-color-primary').value = s.primaryColor || '#000000';
             document.getElementById('e-color-accent').value = s.accentColor || '#f97316';
             document.getElementById('e-welcome-title').value = s.welcomeMessage || '';
@@ -136,10 +142,42 @@ const app = {
         btn.disabled = true;
 
         try {
+            let logoUrl = document.getElementById('e-logo-url').value;
+            const fileInput = document.getElementById('e-logo-file');
+
+            // Se houver um arquivo selecionado, faz o upload primeiro
+            if (fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const storageRef = refStorage(this.storage, `logos/${slug}/${file.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                document.getElementById('upload-progress-container').style.display = 'block';
+                const statusLabel = document.getElementById('upload-status');
+
+                logoUrl = await new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed', 
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            document.getElementById('upload-progress-bar').style.width = progress + '%';
+                            statusLabel.textContent = `Enviando imagem: ${Math.round(progress)}%...`;
+                        }, 
+                        (error) => {
+                            console.error('Erro no upload:', error);
+                            reject(error);
+                        }, 
+                        () => {
+                            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                                resolve(downloadURL);
+                            });
+                        }
+                    );
+                });
+            }
+
             await update(ref(this.db, 'tenants/' + slug + '/settings'), {
                 shopName: document.getElementById('e-name').value,
                 subtitle: document.getElementById('e-subtitle').value,
-                logoUrl: document.getElementById('e-logo').value,
+                logoUrl: logoUrl,
                 primaryColor: document.getElementById('e-color-primary').value,
                 accentColor: document.getElementById('e-color-accent').value,
                 welcomeMessage: document.getElementById('e-welcome-title').value,
