@@ -1548,18 +1548,21 @@ const app = {
 
     // --- Helpers de Dados ---
     addTransaction(type, description, amount, category, method = 'dinheiro') {
+        const transId = Date.now() + Math.floor(Math.random() * 1000);
         const transaction = {
-            id: Date.now(),
-            date: new Date().toISOString(),
+            id: transId,
+            date: new Date().toISOString().split('T')[0], // Usamos YYYY-MM-DD para consistência no filtro
+            timestamp: new Date().toISOString(),
             type, // 'in' ou 'out'
             description,
-            amount,
+            amount: parseFloat(amount),
             category, // 'servico', 'produto', 'despesa', 'vale'
             method // 'dinheiro', 'pix', 'debito', 'credito'
         };
+        if (!this.state.transactions) this.state.transactions = [];
         this.state.transactions.push(transaction);
         this.saveState();
-        return transaction;
+        return transId;
     },
 
     updateStock(productId, quantityChange) {
@@ -3078,6 +3081,33 @@ const app = {
         product.stock -= qty;
         const total = product.price * qty;
 
+        let transactionId = null;
+        let voucherId = null;
+
+        if (target === 'barbeiro') {
+            // Lançar Vale para o barbeiro
+            voucherId = Date.now() + 1;
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: voucherId,
+                barber: bName,
+                amount: total,
+                date: new Date().toISOString(),
+                note: `Consumo de Produto: ${product.name} (x${qty})`
+            });
+            // Transação de entrada via faturamento (não entra no caixa físico)
+            transactionId = this.addTransaction('in', `Venda (Uso Próprio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque
+        } else {
+            // Integrar com fluxo de caixa normal
+            let method = 'dinheiro';
+            if (payment === 'PIX') method = 'pix';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
+            transactionId = this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
+        }
+
         // Registrar no histórico de vendas de produtos
         if (!this.state.productSales) this.state.productSales = [];
         this.state.productSales.push({
@@ -3091,31 +3121,10 @@ const app = {
             target: target,
             barberName: target === 'barbeiro' ? bName : null,
             date: new Date().toISOString().split('T')[0],
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            transactionId,
+            voucherId
         });
-
-        if (target === 'barbeiro') {
-            // Lançar Vale para o barbeiro
-            if (!this.state.vouchers) this.state.vouchers = [];
-            this.state.vouchers.push({
-                id: Date.now() + 1,
-                barber: bName,
-                amount: total,
-                date: new Date().toISOString(),
-                note: `Consumo de Produto: ${product.name} (x${qty})`
-            });
-            // Transação de entrada via faturamento (não entra no caixa físico)
-            this.addTransaction('in', `Venda (Uso Próprio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
-        } else if (target === 'adm') {
-            // Apenas baixa de estoque
-        } else {
-            // Integrar com fluxo de caixa normal
-            let method = 'dinheiro';
-            if (payment === 'PIX') method = 'pix';
-            if (payment === 'Cartão de Débito') method = 'debito';
-            if (payment === 'Cartão de Crédito') method = 'credito';
-            this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
-        }
 
         this.saveState();
         this.closeModal();
@@ -3519,12 +3528,40 @@ const app = {
         const now = new Date();
         const saleDate = now.toISOString().split('T')[0];
 
+        let transactionId = null;
+        let voucherId = null;
+
+        if (target === 'barbeiro') {
+            // Lançar Vale
+            voucherId = Date.now() + 10;
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push({
+                id: voucherId,
+                barber: consumer,
+                amount: total,
+                date: now.toISOString(),
+                note: `Consumo PDV: ${cart.length} item(ns)`
+            });
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
+            transactionId = this.addTransaction('in', desc, total, 'produto', 'faturamento');
+        } else if (target === 'adm') {
+            // Apenas baixa de estoque
+        } else {
+            let method = 'dinheiro';
+            if (payment === 'PIX') method = 'pix';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
+            const desc = cart.length === 1
+                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+                : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
+            transactionId = this.addTransaction('in', desc, total, 'produto', method);
+        }
+
+        // Registrar histórico individual (para estoque e relatório de consumo)
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
-            product.stock -= item.qty;
             const itemTotal = item.unitPrice * item.qty;
             const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
-            totalCommission += itemComm;
 
             this.state.productSales.push({
                 id: Date.now() + Math.random(),
@@ -3539,35 +3576,11 @@ const app = {
                 payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
                 target: target,
                 barberName: target === 'barbeiro' ? consumer : null,
-                discount: 0,
                 date: saleDate,
-                timestamp: now.toISOString()
+                timestamp: now.toISOString(),
+                transactionId, // Vinculado à transação do grupo
+                voucherId     // Vinculado ao vale do grupo
             });
-        }
-
-        if (target === 'barbeiro') {
-            // Lançar Vale
-            if (!this.state.vouchers) this.state.vouchers = [];
-            this.state.vouchers.push({
-                id: Date.now() + 3,
-                barber: consumer,
-                amount: total,
-                date: now.toISOString(),
-                note: `Consumo PDV: ${cart.length} item(ns)`
-            });
-            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
-            this.addTransaction('in', desc, total, 'produto', 'faturamento');
-        } else if (target === 'adm') {
-            // Apenas baixa de estoque
-        } else {
-            let method = 'dinheiro';
-            if (payment === 'PIX') method = 'pix';
-            if (payment === 'Cartão de Débito') method = 'debito';
-            if (payment === 'Cartão de Crédito') method = 'credito';
-            const desc = cart.length === 1
-                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-                : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
-            this.addTransaction('in', desc, total, 'produto', method);
         }
 
         // Limpar carrinho
@@ -3884,23 +3897,31 @@ const app = {
 
             // Remover transação e vale se for consumo de barbeiro
             if (sale.target === 'barbeiro') {
-                // Remover Transação
-                this.state.transactions = this.state.transactions.filter(t => {
-                    const isMatch = (t.description.includes("Uso Próprio") || t.description.includes("Consumo")) && 
-                                    t.description.includes(sale.productName.split(' ')[0]) && 
-                                    Math.abs(t.amount - sale.total) < 0.01 &&
-                                    t.date === sale.date;
-                    return !isMatch;
-                });
+                // 1. Tentar por ID (Novo sistema)
+                if (sale.transactionId) {
+                    this.state.transactions = this.state.transactions.filter(t => t.id !== sale.transactionId);
+                } else {
+                    // 2. Fallback: Busca por similaridade (Dados antigos)
+                    this.state.transactions = this.state.transactions.filter(t => {
+                        const isMatch = (t.description.includes("Uso Próprio") || t.description.includes("Consumo")) && 
+                                        (t.description.includes(sale.productName.split(' ')[0]) || t.amount === sale.total) && 
+                                        t.date === sale.date;
+                        return !isMatch;
+                    });
+                }
 
                 // Remover Vale (Voucher)
                 if (this.state.vouchers) {
-                    this.state.vouchers = this.state.vouchers.filter(v => {
-                        const isMatch = v.barber === sale.barberName && 
-                                        Math.abs(v.amount - sale.total) < 0.01 &&
-                                        v.date.startsWith(sale.date);
-                        return !isMatch;
-                    });
+                    if (sale.voucherId) {
+                        this.state.vouchers = this.state.vouchers.filter(v => v.id !== sale.voucherId);
+                    } else {
+                        this.state.vouchers = this.state.vouchers.filter(v => {
+                            const isMatch = v.barber === sale.barberName && 
+                                            Math.abs(v.amount - sale.total) < 0.1 &&
+                                            v.date.startsWith(sale.date);
+                            return !isMatch;
+                        });
+                    }
                 }
             }
 
