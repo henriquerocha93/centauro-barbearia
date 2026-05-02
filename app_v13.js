@@ -2997,6 +2997,25 @@ const app = {
                                 <span style="font-weight: 700;">R$ ${productGross.toFixed(2)}</span>
                             </div>
                         </div>
+                    </div>
+                    <div class="glass" style="padding: 15px;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas</p>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>Total Atendimentos</span>
+                                <span style="font-weight: 700;">${appointments.length}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>Ticket Médio</span>
+                                <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (serviceGross / appointments.length).toFixed(2) : '0.00'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        `;
+    },
+
     renderAdminTips(container) {
         const today = new Date().toISOString().split('T')[0];
         const allTips = this.state.tips || [];
