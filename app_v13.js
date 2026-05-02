@@ -2747,58 +2747,67 @@ const app = {
     },
 
     doFinalizeOS(aptId) {
-        const name = document.getElementById('final-cust-name').value;
-        const payment = document.getElementById('final-payment').value;
+        try {
+            const name = document.getElementById('final-cust-name').value;
+            const payment = document.getElementById('final-payment').value;
 
-        if (!name || !payment) {
-            alert('Nome do cliente e forma de pagamento são obrigatórios.');
-            return;
-        }
-
-        const apt = this.state.appointments.find(a => a.id === aptId);
-        if (apt) {
-            apt.customer = name;
-            apt.payment = payment;
-            apt.status = 'finalizado';
-            
-            // Integrar com CRM (Histórico do Cliente)
-            const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
-            if (customer) {
-                customer.history.push({
-                    date: apt.date,
-                    service: apt.service,
-                    barber: apt.barber
-                });
+            if (!name || !payment) {
+                alert('Nome do cliente e forma de pagamento são obrigatórios.');
+                return;
             }
 
-            // Mapear modalidades para os IDs que usamos no balanço
-            let mappedMethod = 'dinheiro';
-            if (payment === 'PIX') mappedMethod = 'pix';
-            if (payment === 'Cartão de Débito') mappedMethod = 'debito';
-            if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
+            const apt = this.state.appointments.find(a => a.id === aptId);
+            if (apt) {
+                apt.customer = name;
+                apt.payment = payment;
+                apt.status = 'finalizado';
+                
+                // Integrar com CRM (Histórico do Cliente)
+                const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+                if (customer) {
+                    if (!customer.history) customer.history = [];
+                    customer.history.push({
+                        date: apt.date || new Date().toISOString().split('T')[0],
+                        service: apt.service || 'Serviço',
+                        barber: apt.barber || 'Barbeiro'
+                    });
+                }
 
-            // Integrar com Fluxo de Caixa e salvar ID no agendamento
-            const desc = `Serviço: ${apt.service} (${apt.customer})`;
-            apt.transactionId = this.addTransaction('in', desc, apt.price, 'servico', mappedMethod);
-            
-            // Registrar Gorjeta se houver
-            const tipAmount = parseFloat(document.getElementById('final-tip').value || 0);
-            if (tipAmount > 0) {
-                if (!this.state.tips) this.state.tips = [];
-                this.state.tips.push({
-                    id: Date.now() + 1,
-                    barber: apt.barber,
-                    amount: tipAmount,
-                    date: apt.date,
-                    timestamp: new Date().toISOString()
-                });
-                this.addTransaction('in', `Gorjeta: ${apt.barber} (Corte)`, tipAmount, 'outros', mappedMethod);
+                // Mapear modalidades para os IDs que usamos no balanço
+                let mappedMethod = 'dinheiro';
+                if (payment === 'PIX') mappedMethod = 'pix';
+                if (payment === 'Cartão de Débito') mappedMethod = 'debito';
+                if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
+
+                // Integrar com Fluxo de Caixa e salvar ID no agendamento
+                const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
+                const price = parseFloat(apt.price || 0);
+                apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
+                
+                // Registrar Gorjeta se houver
+                const tipInput = document.getElementById('final-tip');
+                const tipAmount = tipInput ? parseFloat(tipInput.value || 0) : 0;
+                
+                if (!isNaN(tipAmount) && tipAmount > 0) {
+                    if (!this.state.tips) this.state.tips = [];
+                    this.state.tips.push({
+                        id: Date.now() + 1,
+                        barber: apt.barber,
+                        amount: tipAmount,
+                        date: apt.date || new Date().toISOString().split('T')[0],
+                        timestamp: new Date().toISOString()
+                    });
+                    this.addTransaction('in', `Gorjeta: ${apt.barber} (Corte)`, tipAmount, 'outros', mappedMethod);
+                }
+                
+                this.closeModal();
+                this.saveState();
+                this.render(this.state.view);
+                alert('Venda registrada e enviada para o faturamento!');
             }
-            
-            this.closeModal();
-            this.saveState();
-            this.render(this.state.view);
-            alert('Venda registrada e enviada para o faturamento!');
+        } catch (error) {
+            console.error('Erro ao finalizar OS:', error);
+            alert('Erro ao finalizar: ' + error.message);
         }
     },
 
