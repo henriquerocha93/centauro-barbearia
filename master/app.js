@@ -166,7 +166,7 @@ const app = {
 
             // Sucesso
             document.getElementById('new-tenant-modal').close();
-            form.reset();
+            document.getElementById('new-tenant-form').reset();
             btn.textContent = 'Criar Sistema';
             btn.disabled = false;
             
