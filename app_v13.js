@@ -827,7 +827,7 @@ const app = {
 
     navigateTo(view) {
         // [Segurança] Impedir barbeiros de acessar telas administrativas sensíveis
-        if (view.startsWith('admin-') && this.state.user.role !== 'admin' && view !== 'admin-os' && view !== 'admin-stock') {
+        if (view.startsWith('admin-') && this.state.user.role !== 'admin' && view !== 'admin-os' && view !== 'admin-stock' && view !== 'admin-consumption') {
             console.warn(`Acesso negado à view ${view} para o papel ${this.state.user.role}`);
             this.navigateTo(this.state.user.role === 'barber' ? 'barber-dash' : 'home');
             return;
@@ -950,6 +950,7 @@ const app = {
                     <div class="menu-category">Administração</div>
                     ${this.state.user.role === 'barber' ? `
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
                     ` : `
 
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
@@ -3783,7 +3784,14 @@ const app = {
     },
 
     renderAdminConsumption(container) {
-        const consumptionSales = (this.state.productSales || []).filter(s => s.target === 'adm' || s.target === 'barbeiro');
+        const isAdmin = this.state.user.role === 'admin';
+        const userName = this.state.user.name;
+
+        // Se for admin vê tudo, se for barbeiro vê só o dele
+        const consumptionSales = (this.state.productSales || []).filter(s => {
+            if (isAdmin) return (s.target === 'adm' || s.target === 'barbeiro');
+            return (s.target === 'barbeiro' && s.barberName === userName);
+        });
         
         // Agrupar por semana
         const groups = {};
@@ -3804,10 +3812,12 @@ const app = {
 
         container.innerHTML = `
             <section id="consumption-report" class="fade-in">
-                <h2 class="section-title">Relatório de Consumo (Antifraude)</h2>
+                <h2 class="section-title">${isAdmin ? 'Relatório de Consumo (Antifraude)' : 'Meu Consumo de Produtos'}</h2>
                 <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
                     <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
-                        Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Uso Próprio de Barbeiros</strong>.
+                        ${isAdmin 
+                            ? 'Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Barbeiros</strong>.'
+                            : 'Aqui você pode acompanhar todos os produtos retirados para seu uso próprio, que são descontados automaticamente do seu faturamento.'}
                     </p>
                 </div>
 
@@ -3825,8 +3835,10 @@ const app = {
                                 ${items.map(item => `
                                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
                                         <div style="flex: 1; display: flex; align-items: center; gap: 10px;">
-                                            <button class="glass" style="padding: 5px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; font-size: 0.7rem;" 
-                                                    onclick="app.deleteConsumptionRecord(${item.id})" title="Apagar Registro">🗑️</button>
+                                            ${isAdmin ? `
+                                                <button class="glass" style="padding: 5px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; font-size: 0.7rem;" 
+                                                        onclick="app.deleteConsumptionRecord(${item.id})" title="Apagar Registro">🗑️</button>
+                                            ` : ''}
                                             <div>
                                                 <span style="font-weight: 700; color: var(--text-primary); display: block;">${item.qty}x ${item.productName}</span>
                                                 <span style="font-size: 0.72rem; color: var(--text-secondary);">
@@ -3849,7 +3861,7 @@ const app = {
                     `;
                 }).join('')}
 
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('${isAdmin ? 'admin-dash' : 'barber-dash'}')">Voltar ao Painel</button>
             </section>
         `;
     },
