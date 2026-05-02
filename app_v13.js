@@ -3624,9 +3624,17 @@ const app = {
         }
     },
 
+    deleteTransaction(id) {
+        if (confirm('Deseja realmente excluir esta movimentação? Isso afetará o saldo total permanentemente.')) {
+            this.state.transactions = (this.state.transactions || []).filter(t => t.id !== id);
+            this.saveState();
+            this.render('admin-cashflow');
+        }
+    },
+
     renderAdminCashFlow(container) {
         const today = new Date().toISOString().split('T')[0];
-        const transactionsToday = this.state.transactions.filter(t => t.date.startsWith(today));
+        const transactionsToday = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(today));
         
         const totals = {
             dinheiro: 0,
@@ -3640,12 +3648,11 @@ const app = {
             if (t.type === 'in') {
                 totals[t.method || 'dinheiro'] += t.amount;
             } else {
-                // Saídas geralmente são em dinheiro (vales/despesas)
                 totals['dinheiro'] -= t.amount;
             }
         });
 
-        const totalGeral = this.state.transactions.reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
+        const totalGeral = (this.state.transactions || []).reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
         
         container.innerHTML = `
             <section id="cashflow-view" class="fade-in">
@@ -3680,18 +3687,21 @@ const app = {
                 </div>
 
                 <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimas Movimentações</h3>
-                <div class="transaction-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
                     ${this.state.transactions.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação</p>' : ''}
-                    ${this.state.transactions.slice(-20).map(t => `
+                    ${this.state.transactions.slice(-50).map(t => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? '#4ade80' : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; flex-direction: column;">
                                     <span style="font-weight: 600;">${t.description}</span>
                                     <span style="font-size: 0.7rem; color: var(--text-secondary);">${t.category.toUpperCase()} | ${t.method ? t.method.toUpperCase() : 'DINHEIRO'}</span>
                                 </div>
-                                <span style="font-weight: 700; color: ${t.type === 'in' ? '#4ade80' : '#f87171'}">
-                                    ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
-                                </span>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-weight: 700; color: ${t.type === 'in' ? '#4ade80' : '#f87171'}">
+                                        ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
+                                    </span>
+                                    <button onclick="app.deleteTransaction(${t.id})" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
+                                </div>
                             </div>
                         </div>
                     `).reverse().join('')}
