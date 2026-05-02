@@ -1502,7 +1502,6 @@ const app = {
     },
 
     renderHome(container) {
-    renderHome(container) {
         const s = this.state.settings || {};
         const welcome = s.welcomeMessage || 'Excelência em cada corte.';
 
