@@ -50,8 +50,10 @@
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem;" onclick="app.setTab('tenants')">👥 Clientes</button>
                     <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #8b5cf6;" onclick="app.setTab('billing')">💳 Faturas (SaaS)</button>
-                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #2563eb;" onclick="app.setTab('leads')">🎯 Leads (Captação)</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #2563eb;" onclick="app.setTab('leads')">🎯 Leads</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #10b981;" onclick="app.setTab('sellers')">🤝 Vendedores</button>
                     <button class="btn btn-orange" style="padding: 8px 15px; font-size: 0.85rem;" onclick="app.openNewTenantModal()">+ Novo Cliente</button>
+
 
                 </div>
             </div>
@@ -235,6 +237,29 @@
                 </div>
             </form>
         </div>
+    </dialog>
+
+    <!-- Modal Novo Vendedor -->
+    <dialog id="new-seller-modal" class="glass-card" style="width: 90%; max-width: 400px; padding: 25px; border: none; border-radius: 15px;">
+        <h3 style="margin-bottom: 20px; color: var(--primary-color);">+ Cadastrar Vendedor</h3>
+        <form onsubmit="app.saveNewSeller(event)">
+            <div class="form-group">
+                <label>Nome do Vendedor</label>
+                <input type="text" id="s-name" required placeholder="Ex: João Silva" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+            </div>
+            <div class="form-group">
+                <label>Usuário (Login)</label>
+                <input type="text" id="s-username" required placeholder="Ex: joao.vendas" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+            </div>
+            <div class="form-group">
+                <label>Senha de Acesso</label>
+                <input type="text" id="s-password" required placeholder="Defina a senha" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+            </div>
+            <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-outline" onclick="document.getElementById('new-seller-modal').close()" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">Cancelar</button>
+                <button type="submit" class="btn btn-purple" style="padding: 10px 20px; border-radius: 8px; background: #581c87; color: white; border: none; cursor: pointer;">Cadastrar</button>
+            </div>
+        </form>
     </dialog>
 
     <script type="module" src="app.js?v=2"></script>

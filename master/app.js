@@ -46,9 +46,16 @@ const app = {
         } else if (this.state.tab === 'leads') {
             document.getElementById('tenants-list').style.display = 'none';
             if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
+            if (document.getElementById('sellers-view')) document.getElementById('sellers-view').style.display = 'none';
             this.renderLeads();
+        } else if (this.state.tab === 'sellers') {
+            document.getElementById('tenants-list').style.display = 'none';
+            if (document.getElementById('billing-view')) document.getElementById('billing-view').style.display = 'none';
+            if (document.getElementById('leads-view')) document.getElementById('leads-view').style.display = 'none';
+            this.renderSellers();
         }
     },
+
 
 
 
@@ -567,8 +574,106 @@ const app = {
             btn.textContent = 'Criar Sistema';
             btn.disabled = false;
         }
+    },
+
+    async saveNewSeller(event) {
+        event.preventDefault();
+        const name = document.getElementById('s-name').value;
+        const username = document.getElementById('s-username').value.trim().toLowerCase();
+        const password = document.getElementById('s-password').value;
+
+        try {
+            await set(ref(this.db, 'master/sellers/' + username), {
+                name,
+                password,
+                createdAt: new Date().toISOString(),
+                totalSales: 0
+            });
+            alert('✅ Vendedor cadastrado com sucesso!');
+            event.target.reset();
+            document.getElementById('new-seller-modal').close();
+            this.render();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao cadastrar vendedor.');
+        }
+    },
+
+    async renderSellers() {
+        const list = document.getElementById('tenants-list').parentElement;
+        let sellersView = document.getElementById('sellers-view');
+        
+        if (!sellersView) {
+            sellersView = document.createElement('div');
+            sellersView.id = 'sellers-view';
+            list.appendChild(sellersView);
+        }
+
+        sellersView.style.display = 'block';
+        sellersView.innerHTML = '<div style="padding: 20px; text-align: center;">⌛ Carregando vendedores...</div>';
+
+        try {
+            const sellersRef = ref(this.db, 'master/sellers');
+            const snapshot = await get(sellersRef);
+            const sellers = snapshot.val() || {};
+
+            sellersView.innerHTML = `
+                <div class="glass-card" style="padding: 30px; border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="color: var(--primary-color);">🤝 Gestão de Vendedores</h2>
+                        <button class="btn btn-purple" onclick="document.getElementById('new-seller-modal').showModal()">+ Novo Vendedor</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px;">Nome</th>
+                                    <th style="padding: 12px;">Usuário/Login</th>
+                                    <th style="padding: 12px;">Senha</th>
+                                    <th style="padding: 12px;">Data Cadastro</th>
+                                    <th style="padding: 12px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.keys(sellers).map(key => {
+                                    const s = sellers[key];
+                                    return `
+                                        <tr style="border-bottom: 1px solid #f3f4f6;">
+                                            <td style="padding: 12px; font-weight: 600;">${s.name}</td>
+                                            <td style="padding: 12px;"><code>${key}</code></td>
+                                            <td style="padding: 12px;"><code>${s.password}</code></td>
+                                            <td style="padding: 12px;">${new Date(s.createdAt).toLocaleDateString('pt-BR')}</td>
+                                            <td style="padding: 12px;">
+                                                <button class="btn-outline" style="color: #ef4444; border-color: #fecaca;" onclick="app.deleteSeller('${key}')">Excluir</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        ${Object.keys(sellers).length === 0 ? '<p style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum vendedor cadastrado.</p>' : ''}
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+            sellersView.innerHTML = '<div style="padding: 20px; color: red;">Erro ao carregar vendedores.</div>';
+        }
+    },
+
+    async deleteSeller(username) {
+        if (!confirm(`Deseja realmente excluir o vendedor ${username}?`)) return;
+        try {
+            await set(ref(this.db, 'master/sellers/' + username), null);
+            alert('Vendedor removido.');
+            this.render();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao excluir.');
+        }
     }
 };
+
 
 window.app = app;
 app.init();
