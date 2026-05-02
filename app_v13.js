@@ -827,7 +827,7 @@ const app = {
 
     navigateTo(view) {
         // [Segurança] Impedir barbeiros de acessar telas administrativas sensíveis
-        if (view.startsWith('admin-') && this.state.user.role !== 'admin') {
+        if (view.startsWith('admin-') && this.state.user.role !== 'admin' && view !== 'admin-os' && view !== 'admin-stock') {
             console.warn(`Acesso negado à view ${view} para o papel ${this.state.user.role}`);
             this.navigateTo(this.state.user.role === 'barber' ? 'barber-dash' : 'home');
             return;
