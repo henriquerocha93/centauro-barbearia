@@ -157,7 +157,7 @@ const app = {
                 const formData = new FormData();
                 formData.append('image', file);
                 
-                const response = await fetch('https://api.imgbb.com/1/upload?key=6716186358cc9c78d488e04068307d7c', {
+                const response = await fetch('https://api.imgbb.com/1/upload?key=fcc0bfe132d674ac2646f3f9c75e7748', {
                     method: 'POST',
                     body: formData
                 });
