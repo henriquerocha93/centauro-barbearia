@@ -954,6 +954,7 @@ const app = {
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
                     ` : `
 
+                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales (Barbeiros)</a>
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
@@ -2795,54 +2796,140 @@ const app = {
     },
 
     renderAdminFaturamento(container) {
-        const currentDate = new Date();
-        const currentMonthPrefix = currentDate.toISOString().slice(0, 7); // ex: "2026-04"
+        const period = this.state.revenuePeriod || 'month';
+        const now = new Date();
+        let startDate, endDate;
 
-        // 1. Filtrar as transações do mês baseando na data ISO das transações
-        const transactionsMonth = this.state.transactions.filter(t => t.date.startsWith(currentMonthPrefix));
+        if (period === 'day') {
+            startDate = new Date(now.setHours(0,0,0,0));
+            endDate = new Date(now.setHours(23,59,59,999));
+        } else if (period === 'week') {
+            const day = now.getDay();
+            const diff = now.getDate() - day;
+            startDate = new Date(now.setDate(diff));
+            startDate.setHours(0,0,0,0);
+            endDate = new Date();
+            endDate.setHours(23,59,59,999);
+        } else if (period === 'month') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        } else if (period === 'custom') {
+            startDate = new Date(this.state.revenueStart + 'T00:00:00');
+            endDate = new Date(this.state.revenueEnd + 'T23:59:59');
+        }
 
-        // 2. Faturamento Bruto de Tudo do Mês (Entradas + Saídas se houver)
-        const grossRevenue = transactionsMonth.reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
+        const dateFilter = (dateStr) => {
+            const d = new Date(dateStr + 'T12:00:00');
+            return d >= startDate && d <= endDate;
+        };
 
-        // 3. Agrupamento de Serviços Executados
-        const servicesCount = {};
-        transactionsMonth.forEach(t => {
-            if (t.type === 'in' && t.category === 'servico') {
-                // description format is usually: Serviço: NOME DO SERVICO (CLIENTE)
-                const match = t.description.match(/Serviço:\s*(.*?)\s*\(/);
-                if (match && match[1]) {
-                    const serviceName = match[1].trim();
-                    if (!servicesCount[serviceName]) servicesCount[serviceName] = 0;
-                    servicesCount[serviceName]++;
-                }
-            }
+        // 1. Calcular de Agendamentos Finalizados (Serviços)
+        const appointments = this.state.appointments.filter(a => a.status === 'finalizado' && dateFilter(a.date));
+        let serviceGross = 0;
+        let serviceCommissions = 0;
+
+        appointments.forEach(apt => {
+            serviceGross += apt.price;
+            // Pegar comissão do barbeiro
+            const barber = this.state.staff.find(s => s.name === apt.barber);
+            const pct = barber ? (barber.commissionPct || 50) : 50;
+            serviceCommissions += apt.price * (pct / 100);
         });
 
-        // Converte o dicionário em um array para ordenação e renderização
-        const servicesList = Object.entries(servicesCount).sort((a, b) => b[1] - a[1]); // Order by count (descending)
+        // 2. Calcular de Vendas de Produtos (exceto ADM)
+        const productSales = (this.state.productSales || []).filter(s => s.target !== 'adm' && dateFilter(s.date));
+        let productGross = 0;
+        let productCommissions = 0;
+
+        productSales.forEach(s => {
+            productGross += s.total;
+            productCommissions += (s.sellerCommission || 0);
+        });
+
+        const totalGross = serviceGross + productGross;
+        const totalCommissions = serviceCommissions + productCommissions;
+        const netRevenue = totalGross - totalCommissions;
 
         container.innerHTML = `
             <section id="faturamento-view" class="fade-in">
-                <h2 class="section-title">Relatório: Faturamento</h2>
-                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento Mensal Bruto (Atual)</p>
-                    <p style="font-size: 2.5rem; font-weight: 700; color: ${grossRevenue >= 0 ? '#4ade80' : '#f87171'}">R$ ${grossRevenue.toFixed(2)}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin:0;">📈 Faturamento</h2>
+                    <select class="glass" style="padding: 8px; color: var(--text-primary); font-size: 0.85rem;" 
+                            onchange="app.state.revenuePeriod = this.value; app.renderAdminFaturamento(document.getElementById('main-content'))">
+                        <option value="day" ${period === 'day' ? 'selected' : ''}>Hoje</option>
+                        <option value="week" ${period === 'week' ? 'selected' : ''}>Esta Semana</option>
+                        <option value="month" ${period === 'month' ? 'selected' : ''}>Este Mês</option>
+                        <option value="custom" ${period === 'custom' ? 'selected' : ''}>Personalizado</option>
+                    </select>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Serviços Executados no Mês</h3>
-                <div class="service-list" style="display: flex; flex-direction: column; gap: 10px;">
-                    ${servicesList.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum serviço registrado neste mês.</p>' : ''}
-                    ${servicesList.map(([name, count]) => `
-                        <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-weight: 600; font-size: 0.95rem;">${name}</span>
-                            <span style="background: var(--surface-dark); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--accent-color);">
-                                ${count}x vezes
-                            </span>
+                ${period === 'custom' ? `
+                    <div class="glass" style="padding: 15px; margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Início</label>
+                            <input type="date" id="rev-start" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" value="${this.state.revenueStart || ''}">
                         </div>
-                    `).join('')}
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Fim</label>
+                            <input type="date" id="rev-end" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" value="${this.state.revenueEnd || ''}">
+                        </div>
+                        <button class="btn-primary" style="padding: 10px;" onclick="app.applyRevenueFilter()">Filtrar</button>
+                    </div>
+                ` : ''}
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #4ade80;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Faturamento Bruto</p>
+                        <p style="font-size: 1.6rem; font-weight: 800; color: #4ade80;">R$ ${totalGross.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #f87171;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Comissões (Custo)</p>
+                        <p style="font-size: 1.6rem; font-weight: 800; color: #f87171;">R$ ${totalCommissions.toFixed(2)}</p>
+                    </div>
+                </div>
+
+                <div class="glass" style="padding: 25px; margin-bottom: 20px; text-align: center; background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(124,58,237,0.05)); border: 1px solid var(--accent-color);">
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 8px;">Faturamento Líquido (Lucro Operacional)</p>
+                    <p style="font-size: 2.8rem; font-weight: 900; color: var(--accent-color); letter-spacing: -1px;">R$ ${netRevenue.toFixed(2)}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">* Valor após o pagamento de comissões aos barbeiros</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div class="glass" style="padding: 15px;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Composição por Tipo</p>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>💈 Serviços</span>
+                                <span style="font-weight: 700;">R$ ${serviceGross.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>📦 Produtos</span>
+                                <span style="font-weight: 700;">R$ ${productGross.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass" style="padding: 15px;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas</p>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>Total Atendimentos</span>
+                                <span style="font-weight: 700;">${appointments.length}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>Ticket Médio</span>
+                                <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (serviceGross / appointments.length).toFixed(2) : '0.00'}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         `;
+    },
+
+    applyRevenueFilter() {
+        this.state.revenueStart = document.getElementById('rev-start').value;
+        this.state.revenueEnd = document.getElementById('rev-end').value;
+        this.renderAdminFaturamento(document.getElementById('main-content'));
     },
 
     renderAdminStock(container) {
