@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,23 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
     <div id="login-screen" class="screen active">
         <div class="login-card">
             <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color); margin-bottom: 15px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="color: var(--primary-color); margin-bottom: 15px;">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
                 <h2>Master Access</h2>
             </div>
-            <p style="text-align: center; color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem;">Área restrita à administração da plataforma.</p>
-            
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem;">Área
+                restrita à administração da plataforma.</p>
+
             <form id="master-login-form">
                 <div class="form-group">
                     <label>Senha de Acesso</label>
@@ -31,7 +39,11 @@
         <header class="master-header">
             <div class="container header-container">
                 <div class="logo-small">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
                     Master Panel
                 </div>
                 <div>
@@ -48,28 +60,44 @@
                     <p style="color: var(--text-muted);">Gerencie as barbearias e mensalidades da plataforma.</p>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem;" onclick="app.setTab('tenants')">👥 Clientes</button>
-                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #8b5cf6;" onclick="app.setTab('billing')">💳 Faturas (SaaS)</button>
-                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #2563eb;" onclick="app.setTab('leads')">🎯 Leads</button>
-                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #10b981;" onclick="app.setTab('sellers')">🤝 Vendedores</button>
-                    <button class="btn btn-orange" style="padding: 8px 15px; font-size: 0.85rem;" onclick="app.openNewTenantModal()">+ Novo Cliente</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem;"
+                        onclick="app.setTab('tenants')">👥 Clientes</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #8b5cf6;"
+                        onclick="app.setTab('billing')">💳 Faturas (SaaS)</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #2563eb;"
+                        onclick="app.setTab('leads')">🎯 Leads</button>
+                    <button class="btn btn-purple" style="padding: 8px 15px; font-size: 0.85rem; background: #10b981;"
+                        onclick="app.setTab('sellers')">🤝 Vendedores</button>
+                    <button class="btn btn-orange" style="padding: 8px 15px; font-size: 0.85rem;"
+                        onclick="app.openNewTenantModal()">+ Novo Cliente</button>
 
 
                 </div>
             </div>
 
             <!-- Resumo Financeiro -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
-                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Faturamento Mensal</p>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <div class="glass-card"
+                    style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p
+                        style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+                        Faturamento Mensal</p>
                     <h2 id="stats-revenue" style="font-size: 1.8rem; color: #10b981; margin-top: 5px;">R$ 0,00</h2>
                 </div>
-                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Clientes Ativos</p>
-                    <h2 id="stats-active" style="font-size: 1.8rem; color: var(--primary-color); margin-top: 5px;">0</h2>
+                <div class="glass-card"
+                    style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p
+                        style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+                        Clientes Ativos</p>
+                    <h2 id="stats-active" style="font-size: 1.8rem; color: var(--primary-color); margin-top: 5px;">0
+                    </h2>
                 </div>
-                <div class="glass-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Pagamentos Pendentes</p>
+                <div class="glass-card"
+                    style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <p
+                        style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+                        Pagamentos Pendentes</p>
                     <h2 id="stats-pending" style="font-size: 1.8rem; color: #ef4444; margin-top: 5px;">0</h2>
                 </div>
             </div>
@@ -94,10 +122,11 @@
                 </div>
                 <div class="form-group">
                     <label>Identificador no Link (Slug)</label>
-                    <input type="text" id="t-slug" placeholder="ex: barbearia-joao" required pattern="[a-z0-9-]+" title="Apenas letras minúsculas, números e traços">
+                    <input type="text" id="t-slug" placeholder="ex: barbearia-joao" required pattern="[a-z0-9-]+"
+                        title="Apenas letras minúsculas, números e traços">
                     <small>O cliente acessará: seu-site.com/?loja=<b>barbearia-joao</b></small>
                 </div>
-                
+
                 <hr style="border:none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
                 <h4 style="margin-bottom: 10px;">Acesso do Dono</h4>
 
@@ -117,7 +146,9 @@
                 </div>
 
                 <div style="text-align: right; margin-top: 10px;">
-                    <button type="button" class="btn btn-outline" style="color: var(--text-main); border-color: #d1d5db;" onclick="document.getElementById('new-tenant-modal').close()">Cancelar</button>
+                    <button type="button" class="btn btn-outline"
+                        style="color: var(--text-main); border-color: #d1d5db;"
+                        onclick="document.getElementById('new-tenant-modal').close()">Cancelar</button>
                     <button type="submit" class="btn btn-purple" id="btn-create-tenant">Criar Sistema</button>
                 </div>
             </form>
@@ -132,36 +163,44 @@
         <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
             <form id="edit-tenant-form">
                 <input type="hidden" id="e-slug">
-                
+
                 <h4 style="margin-bottom: 10px; color: var(--primary-color);">Identidade Visual</h4>
                 <div class="form-group">
                     <label>Logo da Barbearia</label>
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
-                        <input type="file" id="e-logo-file" accept="image/*" style="flex: 1; font-size: 0.8rem; border: 1px dashed #ccc; padding: 8px;">
+                        <input type="file" id="e-logo-file" accept="image/*"
+                            style="flex: 1; font-size: 0.8rem; border: 1px dashed #ccc; padding: 8px;">
                         <input type="hidden" id="e-logo-url">
                     </div>
-                    <div id="upload-progress-container" style="display: none; width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 5px; overflow: hidden;">
-                        <div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    <div id="upload-progress-container"
+                        style="display: none; width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+                        <div id="upload-progress-bar"
+                            style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;">
+                        </div>
                     </div>
-                    <small id="upload-status" style="color: var(--text-muted); font-size: 0.75rem;">Selecione uma imagem do computador ou celular.</small>
+                    <small id="upload-status" style="color: var(--text-muted); font-size: 0.75rem;">Selecione uma imagem
+                        do computador ou celular.</small>
                 </div>
 
                 <hr style="border:none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
                 <h4 style="margin-bottom: 10px; color: var(--primary-color);">Dados do Contrato (SaaS)</h4>
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label>Valor da Mensalidade (R$)</label>
-                    <input type="number" id="e-price" step="0.01" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db;">
+                    <input type="number" id="e-price" step="0.01" required
+                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db;">
                 </div>
 
-                
+
                 <div style="display: flex; gap: 15px;">
                     <div class="form-group" style="flex: 1;">
                         <label>Cor Primária (Fundo)</label>
-                        <input type="color" id="e-color-primary" value="#000000" style="padding: 2px; height: 40px; cursor: pointer;">
+                        <input type="color" id="e-color-primary" value="#000000"
+                            style="padding: 2px; height: 40px; cursor: pointer;">
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label>Cor de Destaque (Botões)</label>
-                        <input type="color" id="e-color-accent" value="#f97316" style="padding: 2px; height: 40px; cursor: pointer;">
+                        <input type="color" id="e-color-accent" value="#f97316"
+                            style="padding: 2px; height: 40px; cursor: pointer;">
                     </div>
                 </div>
 
@@ -192,7 +231,9 @@
                 </div>
 
                 <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn btn-outline" style="color: var(--text-main); border-color: #d1d5db;" onclick="document.getElementById('edit-tenant-modal').close()">Cancelar</button>
+                    <button type="button" class="btn btn-outline"
+                        style="color: var(--text-main); border-color: #d1d5db;"
+                        onclick="document.getElementById('edit-tenant-modal').close()">Cancelar</button>
                     <button type="submit" class="btn btn-purple" id="btn-save-tenant">Salvar Alterações</button>
                 </div>
             </form>
@@ -200,7 +241,8 @@
     </dialog>
 
     <!-- Modal de Plano -->
-    <dialog id="plan-modal" class="glass-card" style="width: 90%; max-width: 400px; padding: 0; border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);">
+    <dialog id="plan-modal" class="glass-card"
+        style="width: 90%; max-width: 400px; padding: 0; border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);">
         <div style="background: var(--primary-color); padding: 20px; color: white;">
             <h3 style="margin: 0;">⚙️ Configurar Plano</h3>
             <p id="plan-tenant-name" style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;"></p>
@@ -208,60 +250,74 @@
         <div style="padding: 25px; background: white;">
             <form onsubmit="app.savePlanConfig(event)">
                 <input type="hidden" id="plan-slug">
-                
+
                 <div class="form-group" style="margin-bottom: 25px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Valor do Plano Mensal (R$)</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Valor do Plano
+                        Mensal (R$)</label>
                     <div style="position: relative;">
-                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;">R$</span>
-                        <input type="number" id="plan-price" step="0.01" style="width: 100%; padding: 12px 12px 12px 35px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1.1rem; font-weight: 700;">
+                        <span
+                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;">R$</span>
+                        <input type="number" id="plan-price" step="0.01"
+                            style="width: 100%; padding: 12px 12px 12px 35px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1.1rem; font-weight: 700;">
                     </div>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button type="submit" class="btn btn-purple" style="width: 100%; padding: 14px;">Salvar Valor do Plano</button>
-                    
+                    <button type="submit" class="btn btn-purple" style="width: 100%; padding: 14px;">Salvar Valor do
+                        Plano</button>
+
                     <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
                         <hr style="flex: 1; border: none; border-top: 1px solid #e5e7eb;">
                         <span style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">Ou</span>
                         <hr style="flex: 1; border: none; border-top: 1px solid #e5e7eb;">
                     </div>
 
-                    <button type="button" class="btn" style="width: 100%; padding: 14px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;" 
-                            onclick="app.activateTrial(document.getElementById('plan-slug').value)">
+                    <button type="button" class="btn"
+                        style="width: 100%; padding: 14px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;"
+                        onclick="app.activateTrial(document.getElementById('plan-slug').value)">
                         🎁 Ativar Teste Grátis (7 Dias)
                     </button>
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button type="button" style="background: none; border: none; color: #9ca3af; cursor: pointer; text-decoration: underline; font-size: 0.85rem;" onclick="document.getElementById('plan-modal').close()">Fechar</button>
+                    <button type="button"
+                        style="background: none; border: none; color: #9ca3af; cursor: pointer; text-decoration: underline; font-size: 0.85rem;"
+                        onclick="document.getElementById('plan-modal').close()">Fechar</button>
                 </div>
             </form>
         </div>
     </dialog>
 
     <!-- Modal Novo Vendedor -->
-    <dialog id="new-seller-modal" class="glass-card" style="width: 90%; max-width: 400px; padding: 25px; border: none; border-radius: 15px;">
+    <dialog id="new-seller-modal" class="glass-card"
+        style="width: 90%; max-width: 400px; padding: 25px; border: none; border-radius: 15px;">
         <h3 style="margin-bottom: 20px; color: var(--primary-color);">+ Cadastrar Vendedor</h3>
         <form onsubmit="app.saveNewSeller(event)">
             <div class="form-group">
                 <label>Nome do Vendedor</label>
-                <input type="text" id="s-name" required placeholder="Ex: João Silva" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+                <input type="text" id="s-name" required placeholder="Ex: João Silva"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
             </div>
             <div class="form-group">
                 <label>Usuário (Login)</label>
-                <input type="text" id="s-username" required placeholder="Ex: joao.vendas" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+                <input type="text" id="s-username" required placeholder="Ex: joao.vendas"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
             </div>
             <div class="form-group">
                 <label>Senha de Acesso</label>
-                <input type="text" id="s-password" required placeholder="Defina a senha" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+                <input type="text" id="s-password" required placeholder="Defina a senha"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
             </div>
             <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn-outline" onclick="document.getElementById('new-seller-modal').close()" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">Cancelar</button>
-                <button type="submit" class="btn btn-purple" style="padding: 10px 20px; border-radius: 8px; background: #581c87; color: white; border: none; cursor: pointer;">Cadastrar</button>
+                <button type="button" class="btn-outline" onclick="document.getElementById('new-seller-modal').close()"
+                    style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">Cancelar</button>
+                <button type="submit" class="btn btn-purple"
+                    style="padding: 10px 20px; border-radius: 8px; background: #581c87; color: white; border: none; cursor: pointer;">Cadastrar</button>
             </div>
         </form>
     </dialog>
 
     <script type="module" src="app.js?v=2"></script>
 </body>
+
 </html>

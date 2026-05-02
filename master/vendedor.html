@@ -130,6 +130,18 @@
 
         let currentSeller = null;
 
+        // Auto-login from URL (redirected from Master)
+        window.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const u = params.get('u');
+            const p = params.get('p');
+            if (u && p) {
+                document.getElementById('s-login').value = u;
+                document.getElementById('s-pass').value = atob(p);
+                document.getElementById('seller-login-form').dispatchEvent(new Event('submit'));
+            }
+        });
+
         // Login Logic
         document.getElementById('seller-login-form').onsubmit = async (e) => {
             e.preventDefault();

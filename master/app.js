@@ -61,19 +61,38 @@ const app = {
 
     setupLogin() {
         const form = document.getElementById('master-login-form');
-        form.onsubmit = (e) => {
+        form.onsubmit = async (e) => {
             e.preventDefault();
+            const login = document.getElementById('master-login').value.trim().toLowerCase();
             const pass = document.getElementById('master-password').value;
-            // Senha mestra temporária
-            if (pass === '1264') {
+            
+            // 1. Verifica Administrador Mestre
+            if (login === 'admin' && pass === '1264') {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('dashboard-screen').classList.add('active');
                 this.loadTenants();
-            } else {
-                alert('Senha incorreta!');
+                return;
+            } 
+
+            // 2. Verifica se é um Vendedor
+            try {
+                const sellerRef = ref(this.db, 'master/sellers/' + login);
+                const snapshot = await get(sellerRef);
+                
+                if (snapshot.exists() && snapshot.val().password === pass) {
+                    // Redireciona para o painel do vendedor
+                    window.location.href = 'vendedor.html?u=' + login + '&p=' + btoa(pass);
+                    return;
+                }
+            } catch(err) {
+                console.error('Erro no login:', err);
             }
+
+            alert('Usuário ou senha incorretos!');
         };
     },
+
+
 
     loadTenants() {
         const tenantsRef = ref(this.db, 'master/tenants/');
