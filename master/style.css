@@ -39,10 +39,14 @@ body {
 /* LOGIN */
 #login-screen {
     height: 100vh;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+}
+
+#login-screen.active {
+    display: flex;
 }
 
 .login-card {
