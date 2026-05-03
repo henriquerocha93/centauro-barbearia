@@ -671,3 +671,28 @@ section {
 .github-config-block {
     border-left: 4px solid var(--accent-color) !important;
 }
+
+/* Notificação de Ordens de Serviço */
+@keyframes pulse-notification {
+    0% { background: rgba(212, 175, 55, 0.05); }
+    50% { background: rgba(212, 175, 55, 0.25); border-left: 4px solid var(--accent-color); box-shadow: inset 5px 0 10px rgba(212, 175, 55, 0.1); }
+    100% { background: rgba(212, 175, 55, 0.05); }
+}
+
+.pulse-os {
+    animation: pulse-notification 2s infinite ease-in-out;
+    position: relative;
+}
+
+.pulse-os::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: #fbbf24;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #fbbf24;
+}
