@@ -755,18 +755,38 @@ const app = {
                             <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
                             <option value="15" ${s.intervalMin == 15 ? 'selected' : ''}>A cada 15 minutos</option>
                             <option value="20" ${s.intervalMin == 20 ? 'selected' : ''}>A cada 20 minutos</option>
-                            <option value="30" ${s.intervalMin == 30 ? 'selected' : ''}>A cada 30 minutos</option>
-                            <option value="60" ${s.intervalMin == 60 ? 'selected' : ''}>A cada 1 hora</option>
-                        </select>
-                    </div>
-
-                    <div style="overflow-x: auto;">
+                         <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
                                     <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Dia</th>
                                     <th style="padding: 10px 12px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 120px;">Status</th>
-                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Horário (Abertura → Fechamento)</th>
+                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Horário (Abertura — Fechamento)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${scheduleRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BLOCO 1.1: Feriados e Exceções -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #f87171;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 1.5rem;">📅</div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Feriados e Exceções</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Configure dias específicos onde o horário será diferente do padrão.</p>
+                            </div>
+                        </div>
+                        <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; background: #f87171;" onclick="app.openAddHolidayModal()">+ Adicionar Data</button>
+                    </div>
+                    <div id="holiday-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                        ${this.renderHolidayList()}
+                    </div>
+                </div>/th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -4753,7 +4773,19 @@ const app = {
         const dateObj = new Date(bs.date + 'T00:00:00');
         const dayOfWeek = dateObj.getDay();
         const { intervalMin, schedule } = this.state.settings.agenda;
-        const dayConfig = schedule[dayOfWeek];
+        
+        // Verificar se é uma data de exceção (feriado)
+        const holidays = this.state.settings.holidays || [];
+        const holidayConfig = holidays.find(h => h.date === bs.date);
+        
+        let dayConfig;
+        if (holidayConfig) {
+            if (holidayConfig.status === 'closed') return [];
+            dayConfig = { active: true, open: holidayConfig.open, close: holidayConfig.close };
+        } else {
+            dayConfig = schedule[dayOfWeek];
+        }
+
         if (!dayConfig || !dayConfig.active) return [];
 
         const slots = [];
@@ -5240,7 +5272,92 @@ const app = {
         
         this.saveState();
         this.closeModal();
-        this.render('admin-services');
+        this.render('admin-settings');
+    },
+
+    renderHolidayList() {
+        const holidays = this.state.settings.holidays || [];
+        if (holidays.length === 0) {
+            return `<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">Nenhum feriado configurado.</p>`;
+        }
+
+        return holidays.map((h, index) => `
+            <div class="glass" style="padding: 15px; border-left: 3px solid ${h.status === 'open' ? '#4ade80' : '#f87171'}; position: relative;">
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 5px;">${new Date(h.date + 'T00:00:00').toLocaleDateString('pt-BR')}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">${h.label || 'Feriado/Exceção'}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: ${h.status === 'open' ? '#4ade80' : '#f87171'};">
+                        ${h.status === 'open' ? `Aberto: ${h.open} - ${h.close}` : 'Fechado'}
+                    </span>
+                    <button onclick="app.deleteHoliday(${index})" style="background: none; border: none; cursor: pointer; opacity: 0.6; padding: 5px;">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    openAddHolidayModal() {
+        this.openModal('Configurar Data Especial 📅', `
+            <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Data</label>
+                    <input type="date" id="holiday-date" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" min="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Descrição (Ex: Natal)</label>
+                    <input type="text" id="holiday-label" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Feriado Local">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Status do Dia</label>
+                    <select id="holiday-status" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" onchange="document.getElementById('holiday-hours-wrap').style.display = this.value === 'open' ? 'flex' : 'none';">
+                        <option value="closed">⛔ FECHADO</option>
+                        <option value="open">✅ ABERTO (Horário Especial)</option>
+                    </select>
+                </div>
+                <div id="holiday-hours-wrap" style="display: none; gap: 10px; align-items: center;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Abre às</label>
+                        <input type="time" id="holiday-open" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="09:00">
+                    </div>
+                    <div style="margin-top: 20px; color: var(--text-secondary);">até</div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Fecha às</label>
+                        <input type="time" id="holiday-close" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="18:00">
+                    </div>
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;" onclick="app.saveHoliday()">Salvar Exceção</button>
+            </div>
+        `);
+    },
+
+    saveHoliday() {
+        const date = document.getElementById('holiday-date').value;
+        const label = document.getElementById('holiday-label').value;
+        const status = document.getElementById('holiday-status').value;
+        const open = document.getElementById('holiday-open').value;
+        const close = document.getElementById('holiday-close').value;
+
+        if (!date) { alert('Selecione uma data!'); return; }
+
+        if (!this.state.settings.holidays) this.state.settings.holidays = [];
+        
+        // Evitar duplicados para a mesma data
+        this.state.settings.holidays = this.state.settings.holidays.filter(h => h.date !== date);
+
+        this.state.settings.holidays.push({ date, label, status, open, close });
+        this.state.settings.holidays.sort((a,b) => a.date.localeCompare(b.date));
+
+        this.saveState();
+        this.closeModal();
+        this.render('admin-settings');
+        alert('📅 Data configurada com sucesso!');
+    },
+
+    deleteHoliday(index) {
+        if (confirm('Deseja remover esta exceção de horário?')) {
+            this.state.settings.holidays.splice(index, 1);
+            this.saveState();
+            this.render('admin-settings');
+        }
     },
 
     deleteService(serviceId) {
