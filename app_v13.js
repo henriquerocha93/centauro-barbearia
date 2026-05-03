@@ -92,6 +92,12 @@ const app = {
                 surface: '#2D241E',
                 text: '#EAD7BB',
                 textSecondary: '#A69076',
+                shopTerm: 'Barbearia',
+                workerTerm: 'Barbeiro',
+                workersTerm: 'Colaboradores',
+                serviceIcon: '💈',
+                workerIcon: '✂️',
+                voucherTerm: 'Vales (Barbeiros)',
                 features: [
                     { icon: '💈', title: 'Profissionais de Elite', desc: 'Especialistas em cortes clássicos e modernos, garantindo perfeição.' },
                     { icon: '🥃', title: 'Ambiente Premium', desc: 'Desfrute de uma experiência única em um ambiente clássico e climatizado.' },
@@ -107,6 +113,12 @@ const app = {
                 surface: '#ffffff',
                 text: '#1f2937',
                 textSecondary: '#6b7280',
+                shopTerm: 'Salão',
+                workerTerm: 'Profissional',
+                workersTerm: 'Colaboradores',
+                serviceIcon: '💆‍♀️',
+                workerIcon: '👩‍💼',
+                voucherTerm: 'Vales (Colaboradores)',
                 features: [
                     { icon: '💇‍♀️', title: 'Cabelo e Estética', desc: 'Transformamos sua autoestima com as melhores técnicas de beleza.' },
                     { icon: '✨', title: 'Produtos Premium', desc: 'Utilizamos apenas produtos de alta linha para o seu cuidado.' },
@@ -122,6 +134,12 @@ const app = {
                 surface: '#ffffff',
                 text: '#1f2937',
                 textSecondary: '#6b7280',
+                shopTerm: 'Esmalteria',
+                workerTerm: 'Manicure',
+                workersTerm: 'Manicures',
+                serviceIcon: '💅',
+                workerIcon: '✨',
+                voucherTerm: 'Vales (Manicures)',
                 features: [
                     { icon: '💅', title: 'Nail Art Creative', desc: 'Designs exclusivos e acabamento impecável para suas unhas.' },
                     { icon: '🧼', title: 'Biossegurança', desc: 'Materiais 100% esterilizados e descartáveis para sua segurança.' },
@@ -137,6 +155,12 @@ const app = {
                 surface: '#ffffff',
                 text: '#1f2937',
                 textSecondary: '#6b7280',
+                shopTerm: 'Clínica',
+                workerTerm: 'Especialista',
+                workersTerm: 'Especialistas',
+                serviceIcon: '🩺',
+                workerIcon: '👩‍⚕️',
+                voucherTerm: 'Vales (Especialistas)',
                 features: [
                     { icon: '🩺', title: 'Equipe Especializada', desc: 'Profissionais da saúde dedicados ao seu bem-estar e estética.' },
                     { icon: '🔬', title: 'Tecnologia de Ponta', desc: 'Equipamentos modernos para resultados seguros e eficazes.' },
@@ -144,6 +168,12 @@ const app = {
                 ]
             }
         }
+    },
+
+    getTerm(key) {
+        const type = this.state.settings.businessType || 'barbershop';
+        const theme = this.state.themes[type] || this.state.themes.barbershop;
+        return theme[key] || key;
     },
 
     applyTheme() {
@@ -752,8 +782,8 @@ const app = {
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Nome da Barbearia</label>
-                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || 'Centauro Barbearia'}" placeholder="Ex: Centauro Barbearia">
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Estabelecimento</label>
+                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || 'Centauro ' + this.getTerm('shopTerm')}" placeholder="Ex: Centauro ${this.getTerm('shopTerm')}">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Telefone / WhatsApp</label>
@@ -1009,15 +1039,14 @@ const app = {
     renderLayout(view) {
         const appContainer = document.getElementById('app');
         appContainer.className = 'app-layout'; // Ativa Grid com Sidebar
+        const type = this.state.settings.businessType || 'barbershop';
+        const theme = this.state.themes[type] || this.state.themes.barbershop;
         
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
                 <div style="flex: 1; text-align: center;"><img src="logo.png" alt="Agendamento Fácil" style="height: 100px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
-
-
-
                 <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
             </div>
             
@@ -1026,9 +1055,6 @@ const app = {
             <aside class="sidebar glass" id="sidebar">
                 <div class="sidebar-logo" style="text-align: center; padding: 20px 5px;">
                     <img src="logo.png" alt="Agendamento Fácil" style="height: 160px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
-
-
-
                     <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
                 </div>
                 
@@ -1044,8 +1070,8 @@ const app = {
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')"><i>💈</i> Serviços</a>` : ''}
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')"><i>✂️</i> Colaboradores</a>` : ''}
+                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')"><i>${theme.serviceIcon}</i> Serviços</a>` : ''}
+                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')"><i>${theme.workerIcon}</i> ${theme.workersTerm}</a>` : ''}
                     <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')"><i>📦</i> Produtos</a>
                     
                     <div class="menu-category">Administração</div>
@@ -1053,10 +1079,9 @@ const app = {
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
                     ` : `
-
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
-                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> Vales (Barbeiros)</a>
+                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
                         <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
@@ -1121,7 +1146,7 @@ const app = {
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <img src="logo_centauro.png" style="width: 36px; filter: invert(1) brightness(2);">
                     <div>
-                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO BARBEARIA</h1>
+                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO ${this.getTerm('shopTerm').toUpperCase()}</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
@@ -1280,7 +1305,7 @@ const app = {
                             <select id="totem-pdv-target" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
                                     onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-payment-wrapper').style.display = (this.value === 'cliente') ? 'block' : 'none';">
                                 <option value="cliente">👤 Cliente</option>
-                                <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                                <option value="barbeiro">✂️ Uso Próprio (${this.getTerm('workerTerm')})</option>
                                 <option value="adm">⚙️ Uso Interno (ADM)</option>
                             </select>
                         </div>
@@ -1934,7 +1959,7 @@ const app = {
                                 </div>
                                 <p style="font-size:0.75rem;color:var(--text-secondary);">
                                     OS #${os.id.toString().slice(-5)} · ${new Date(os.createdAt).toLocaleDateString('pt-BR')}
-                                    ${os.barberName ? ` · Barbeiro: ${os.barberName}` : ''}
+                                    ${os.barberName ? ` · ${this.getTerm('workerTerm')}: ${os.barberName}` : ''}
                                 </p>
                             </div>
                             <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -2414,6 +2439,9 @@ const app = {
     },
 
     renderAgenda(container, barberFilter = null) {
+        const type = this.state.settings.businessType || 'barbershop';
+        const theme = this.state.themes[type] || this.state.themes.barbershop;
+
         const barbersToShow = barberFilter 
             ? this.state.staff.filter(s => s.name === barberFilter)
             : this.state.staff.filter(s => s.showInAgenda !== false);
@@ -2449,7 +2477,7 @@ const app = {
                 ${timeSlots.length === 0 ? `
                     <div class="glass" style="padding: 40px 20px; text-align: center; border: 2px dashed rgba(255,68,68,0.5); border-radius: 12px; margin-top: 20px; background: rgba(255,0,0,0.02);">
                         <div style="font-size: 3rem; margin-bottom: 15px;">😴</div>
-                        <h3 style="color: #ff4444; margin-bottom: 10px; font-size: 1.2rem; text-transform: uppercase;">Barbearia Fechada</h3>
+                        <h3 style="color: #ff4444; margin-bottom: 10px; font-size: 1.2rem; text-transform: uppercase;">${theme.shopTerm} Fechada</h3>
                         <p style="color: var(--text-secondary); font-size: 0.9rem;">De acordo com as configurações da agenda, não há expediente para este dia da semana.</p>
                     </div>
                 ` : `
@@ -4156,7 +4184,7 @@ const app = {
                 <h2 class="section-title">Lançar Vales</h2>
                 <div class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Barbeiro</label>
+                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">${this.getTerm('workerTerm')}</label>
                         <select id="barber-select" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                             ${this.state.staff.filter(s => s.role === 'barber' || s.id === 1).map(s => `
                                 <option value="${s.name}">${s.name}</option>
@@ -4980,7 +5008,7 @@ const app = {
                             <img src="${s.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: var(--surface-light); border: 2px solid var(--glass-border);">
                             <div style="flex: 1;">
                                 <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${s.name}</p>
-                                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">Login: <strong>${s.login}</strong> | Acesso: <strong>${s.role === 'admin' ? 'Administrativo' : 'Barbeiro'}</strong></p>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">Login: <strong>${s.login}</strong> | Acesso: <strong>${s.role === 'admin' ? 'Administrativo' : this.getTerm('workerTerm')}</strong></p>
                                 <div style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(72,193,126,0.1); color: var(--accent-color); font-size: 0.75rem; font-weight: 600;">
                                     Comissão p/ Serviço: ${s.commission}%
                                 </div>
