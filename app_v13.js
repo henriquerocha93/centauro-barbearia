@@ -2763,6 +2763,12 @@ const app = {
                     </div>
                 ` : `
                     <div style="display: flex; flex-direction: column; gap: 10px;">
+                        ${apt.status !== 'finalizado' ? `
+                            <button class="btn-primary" style="background: #25D366; width: 100%; border-radius: 8px; box-shadow: none; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="app.sendWhatsAppReminder(${apt.id})">
+                                <svg style="width: 18px; fill: currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.891 11.891-11.891 3.181 0 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.481 8.417 0 6.556-5.332 11.892-11.891 11.892-1.992 0-3.955-.499-5.694-1.447l-6.294 1.65zm6.757-3.391c1.513.899 3.1 1.373 4.76 1.373 5.181 0 9.396-4.215 9.396-9.396 0-2.512-.978-4.872-2.753-6.647-1.775-1.775-4.137-2.753-6.649-2.753-5.181 0-9.397 4.215-9.397 9.397 0 1.834.53 3.619 1.531 5.178l-.999 3.649 3.738-.981zM16.51 13.11c-.405-.203-2.395-1.181-2.766-1.316-.37-.135-.639-.203-.908.203-.269.405-1.042 1.316-1.278 1.587-.235.271-.471.304-.876.101-.405-.203-1.71-.63-3.256-2.011-1.202-1.072-2.012-2.395-2.248-2.8-.235-.405-.026-.624.177-.826.182-.181.405-.473.608-.709.202-.236.27-.405.405-.676.134-.27.067-.507-.034-.709-.101-.203-.908-2.193-1.243-3.004-.326-.788-.658-.681-.908-.694-.235-.011-.504-.014-.773-.014-.27 0-.708.101-1.078.507-.37.405-1.413 1.385-1.413 3.379 0 1.993 1.446 3.919 1.649 4.19.202.27 2.846 4.347 6.892 6.094.962.415 1.713.663 2.298.849 1.05.333 2.007.286 2.761.173.843-.127 2.395-.98 2.732-1.926.336-.946.336-1.758.235-1.927-.1-.168-.37-.27-.775-.473z"/></svg>
+                                ENVIAR LEMBRETE (WHATSAPP)
+                            </button>
+                        ` : ''}
                         ${apt.status === 'agendado' ? `
                             <button class="btn-primary" style="background: #2E8B57; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.updateAptStatus(${apt.id}, 'confirmado')">CONFIRMAR PRESENÇA</button>
                         ` : ''}
@@ -2864,6 +2870,33 @@ const app = {
             this.openAppointmentManagement(aptId);
             this.render(this.state.view);
         }
+    },
+
+    sendWhatsAppReminder(aptId) {
+        const apt = this.state.appointments.find(a => a.id === aptId);
+        if (!apt) return;
+
+        const customer = this.state.customers.find(c => c.name.toLowerCase() === apt.customer.toLowerCase());
+        if (!customer || !customer.phone) {
+            alert('Telefone do cliente não encontrado. Verifique o cadastro.');
+            return;
+        }
+
+        const shopName = this.state.settings.shopName || 'Nossa Loja';
+        
+        // Limpar número do telefone (apenas números)
+        const cleanPhone = customer.phone.replace(/\D/g, '');
+        
+        // Formatar data bonitinha
+        const dateObj = new Date(apt.date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        const message = `Olá, *${customer.name}*! 👋\n\nPassando para confirmar seu horário na *${shopName}*:\n\n📅 Data: *${formattedDate}*\n⏰ Hora: *${apt.time}*\n🛠️ Serviço: *${apt.service}*\n\nNos vemos em breve! 😊`;
+        
+        const encodedMsg = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMsg}`;
+        
+        window.open(whatsappUrl, '_blank');
     },
 
     openFinalizeOS(aptId) {
