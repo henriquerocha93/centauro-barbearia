@@ -116,6 +116,15 @@
                     <input type="text" id="t-name" placeholder="Ex: Barbearia do João" required>
                 </div>
                 <div class="form-group">
+                    <label>Tipo de Negócio (Layout)</label>
+                    <select id="t-type" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+                        <option value="barbershop">💈 Barbearia (Vintage/Gold)</option>
+                        <option value="beauty_salon">💇‍♀️ Estética Feminina (Pink/Gold)</option>
+                        <option value="manicure">💅 Manicure / Unhas (Lavender)</option>
+                        <option value="clinic">🏥 Clínica / Estética (Clean/Blue)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Identificador no Link (Slug)</label>
                     <input type="text" id="t-slug" placeholder="ex: barbearia-joao" required pattern="[a-z0-9-]+"
                         title="Apenas letras minúsculas, números e traços">

@@ -613,6 +613,7 @@ const app = {
 
     async createNewTenant() {
         const name = document.getElementById('t-name').value;
+        const businessType = document.getElementById('t-type').value;
         const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
         const adminUser = document.getElementById('t-admin-user').value;
         const adminPass = document.getElementById('t-admin-pass').value;
@@ -637,6 +638,7 @@ const app = {
             await set(ref(this.db, 'master/tenants/' + slug), {
                 name: name,
                 slug: slug,
+                businessType: businessType,
                 phone: phone,
                 adminUser: adminUser,
                 subscriptionPrice: price,
@@ -648,6 +650,7 @@ const app = {
             const initialData = {
                 settings: {
                     shopName: name,
+                    businessType: businessType,
                     agenda: {
                         intervalMin: 30,
                         schedule: {
