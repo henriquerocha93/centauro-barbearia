@@ -76,8 +76,17 @@
         <h2 style="margin-bottom: 20px; color: #065f46;">🛒 Cadastrar Novo Cliente</h2>
         <form id="new-client-form">
             <div class="form-group">
-                <label>Nome da Barbearia</label>
+                <label>Nome do Estabelecimento</label>
                 <input type="text" id="t-name" required placeholder="Ex: Barbearia do Zé">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Negócio (Layout)</label>
+                <select id="t-type" class="form-group" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                    <option value="barbershop">💈 Barbearia (Vintage/Gold)</option>
+                    <option value="beauty_salon">💇‍♀️ Estética Feminina (Pink/Gold)</option>
+                    <option value="manicure">💅 Manicure / Unhas (Lavender)</option>
+                    <option value="clinic">🏥 Clínica / Estética (Clean/Blue)</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>Link de Acesso (Link da Loja)</label>
@@ -267,6 +276,7 @@
 
             const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
             const name = document.getElementById('t-name').value;
+            const businessType = document.getElementById('t-type').value;
             const phone = document.getElementById('t-phone').value;
             const adminUser = document.getElementById('t-admin-user').value;
             const adminPass = document.getElementById('t-admin-pass').value;
@@ -290,6 +300,7 @@
                     name,
                     phone,
                     slug,
+                    businessType,
                     adminUser,
                     subscriptionPrice: price,
                     nextPayment: nextPayment.toISOString(),
@@ -300,7 +311,11 @@
 
                 // Create initial DB for tenant
                 const initialData = {
-                    settings: { shopName: name, agenda: { intervalMin: 30, schedule: { 0: { active: false, open: '09:00', close: '18:00' }, 1: { active: true, open: '09:00', close: '19:00' }, 2: { active: true, open: '09:00', close: '19:00' }, 3: { active: true, open: '09:00', close: '19:00' }, 4: { active: true, open: '09:00', close: '19:00' }, 5: { active: true, open: '09:00', close: '19:00' }, 6: { active: true, open: '09:00', close: '17:00' } } } },
+                    settings: { 
+                        shopName: name, 
+                        businessType: businessType,
+                        agenda: { intervalMin: 30, schedule: { 0: { active: false, open: '09:00', close: '18:00' }, 1: { active: true, open: '09:00', close: '19:00' }, 2: { active: true, open: '09:00', close: '19:00' }, 3: { active: true, open: '09:00', close: '19:00' }, 4: { active: true, open: '09:00', close: '19:00' }, 5: { active: true, open: '09:00', close: '19:00' }, 6: { active: true, open: '09:00', close: '17:00' } } } 
+                    },
                     staff: [ { id: 1, name: 'Dono Administrador', role: 'admin', login: adminUser, password: adminPass, showInAgenda: false } ],
                     services: [ { id: 1, name: 'Corte Tradicional', price: 35, duration: 30 } ],
                     lastUpdate: new Date().getTime(),

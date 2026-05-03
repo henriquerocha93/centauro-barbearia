@@ -81,7 +81,95 @@ const app = {
             repo: 'centauro-barbearia',
             path: 'database/db.json',
             branch: 'master'
+        },
+        themes: {
+            barbershop: {
+                subtitle: 'EXCELÊNCIA & TRADIÇÃO',
+                hero: 'hero_vintage.png',
+                primary: '#10b981',
+                accent: '#D4AF37',
+                bg: '#1A120B',
+                surface: '#2D241E',
+                text: '#EAD7BB',
+                textSecondary: '#A69076',
+                features: [
+                    { icon: '💈', title: 'Profissionais de Elite', desc: 'Especialistas em cortes clássicos e modernos, garantindo perfeição.' },
+                    { icon: '🥃', title: 'Ambiente Premium', desc: 'Desfrute de uma experiência única em um ambiente clássico e climatizado.' },
+                    { icon: '📅', title: 'Agendamento Prático', desc: 'Reserve seu horário em segundos através do nosso sistema online.' }
+                ]
+            },
+            beauty_salon: {
+                subtitle: 'ESTÉTICA & BELEZA',
+                hero: 'hero_beauty.png',
+                primary: '#ec4899',
+                accent: '#fbbf24',
+                bg: '#fff1f2',
+                surface: '#ffffff',
+                text: '#1f2937',
+                textSecondary: '#6b7280',
+                features: [
+                    { icon: '💇‍♀️', title: 'Cabelo e Estética', desc: 'Transformamos sua autoestima com as melhores técnicas de beleza.' },
+                    { icon: '✨', title: 'Produtos Premium', desc: 'Utilizamos apenas produtos de alta linha para o seu cuidado.' },
+                    { icon: '💆‍♀️', title: 'Momento Relax', desc: 'Um ambiente preparado para você relaxar enquanto cuidamos de você.' }
+                ]
+            },
+            manicure: {
+                subtitle: 'CUIDADO & ESTILO',
+                hero: 'hero_manicure.png',
+                primary: '#8b5cf6',
+                accent: '#a78bfa',
+                bg: '#f5f3ff',
+                surface: '#ffffff',
+                text: '#1f2937',
+                textSecondary: '#6b7280',
+                features: [
+                    { icon: '💅', title: 'Nail Art Creative', desc: 'Designs exclusivos e acabamento impecável para suas unhas.' },
+                    { icon: '🧼', title: 'Biossegurança', desc: 'Materiais 100% esterilizados e descartáveis para sua segurança.' },
+                    { icon: '💎', title: 'Durabilidade', desc: 'Técnicas avançadas que garantem unhas perfeitas por muito mais tempo.' }
+                ]
+            },
+            clinic: {
+                subtitle: 'BEM-ESTAR & SAÚDE',
+                hero: 'hero_clinic.png',
+                primary: '#0ea5e9',
+                accent: '#38bdf8',
+                bg: '#f0f9ff',
+                surface: '#ffffff',
+                text: '#1f2937',
+                textSecondary: '#6b7280',
+                features: [
+                    { icon: '🩺', title: 'Equipe Especializada', desc: 'Profissionais da saúde dedicados ao seu bem-estar e estética.' },
+                    { icon: '🔬', title: 'Tecnologia de Ponta', desc: 'Equipamentos modernos para resultados seguros e eficazes.' },
+                    { icon: '🌱', title: 'Cuidado Humanizado', desc: 'Atendimento personalizado focado na sua saúde e satisfação.' }
+                ]
+            }
         }
+    },
+
+    applyTheme() {
+        const type = this.state.settings.businessType || 'barbershop';
+        const theme = this.state.themes[type] || this.state.themes.barbershop;
+        const root = document.documentElement;
+
+        if (type === 'barbershop') {
+            root.style.setProperty('--bg-color', '#1A120B');
+            root.style.setProperty('--surface-color', '#2D241E');
+            root.style.setProperty('--accent-color', '#D4AF37');
+            root.style.setProperty('--text-primary', '#EAD7BB');
+            root.style.setProperty('--text-secondary', '#A69076');
+            root.style.setProperty('--glass-bg', 'rgba(45, 36, 30, 0.8)');
+        } else {
+            root.style.setProperty('--bg-color', theme.bg);
+            root.style.setProperty('--surface-color', theme.surface);
+            root.style.setProperty('--accent-color', theme.primary);
+            root.style.setProperty('--text-primary', theme.text);
+            root.style.setProperty('--text-secondary', theme.textSecondary);
+            root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
+        }
+        
+        // Cores Dinâmicas extras se existirem nas settings
+        if (this.state.settings.primaryColor) root.style.setProperty('--primary-color', this.state.settings.primaryColor);
+        if (this.state.settings.accentColor) root.style.setProperty('--accent-color', this.state.settings.accentColor);
     },
 
     openModal(title, contentHTML) {
@@ -448,9 +536,7 @@ const app = {
                                     document.title = `${s.shopName} | Premium Grooming`;
                                 }
                                 
-                                // Cores Dinâmicas (CSS Variables)
-                                if (s.primaryColor) document.documentElement.style.setProperty('--primary-color', s.primaryColor);
-                                if (s.accentColor) document.documentElement.style.setProperty('--accent-color', s.accentColor);
+                                this.applyTheme();
                             }
 
                             // Atualiza a tela se não estiver no meio de um agendamento
@@ -1595,12 +1681,16 @@ const app = {
 
     renderHome(container) {
         const s = this.state.settings || {};
-        const subtitle = s.subtitle || 'EXCELÊNCIA & TRADIÇÃO';
+        const type = s.businessType || 'barbershop';
+        const theme = this.state.themes[type] || this.state.themes.barbershop;
+
+        const subtitle = s.subtitle || theme.subtitle;
         const name = s.shopName || 'Centauro Barbearia';
         const welcome = s.welcomeMessage || 'AGENDAR HORÁRIO';
+        const heroImg = theme.hero;
 
         container.innerHTML = `
-            <section id="home-hero" class="hero" style="background-image: url('hero_vintage.png');">
+            <section id="home-hero" class="hero" style="background-image: url('${heroImg}');">
                 <div class="hero-content fade-in">
                     <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px;">${subtitle}</p>
                     <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; margin-bottom: 15px;">${name}</h1>
@@ -1611,21 +1701,13 @@ const app = {
 
             <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">💈</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Profissionais de Elite</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Nossa equipe é composta por especialistas em cortes clássicos e modernos, garantindo perfeição em cada detalhe.</p>
-                    </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">🥃</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Ambiente Premium</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Desfrute de uma experiência única em um ambiente clássico e climatizado, pensado para o seu total conforto.</p>
-                    </div>
-                    <div class="glass" style="padding: 40px 20px;">
-                        <div style="font-size: 2.5rem; margin-bottom: 20px;">📅</div>
-                        <h3 style="color: var(--accent-color); margin-bottom: 15px;">Agendamento Prático</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Reserve seu horário em segundos através do nosso sistema online, sem esperas e sem complicações.</p>
-                    </div>
+                    ${theme.features.map(f => `
+                        <div class="glass" style="padding: 40px 20px;">
+                            <div style="font-size: 2.5rem; margin-bottom: 20px;">${f.icon}</div>
+                            <h3 style="color: var(--accent-color); margin-bottom: 15px;">${f.title}</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary);">${f.desc}</p>
+                        </div>
+                    `).join('')}
                 </div>
             </section>
 
