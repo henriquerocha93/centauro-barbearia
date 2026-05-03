@@ -176,6 +176,11 @@ const app = {
         return theme[key] || key;
     },
 
+    normalizeString(str) {
+        if (!str) return '';
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    },
+
     applyTheme() {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
@@ -2876,9 +2881,13 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (!apt) return;
 
-        const customer = this.state.customers.find(c => c.name.toLowerCase() === apt.customer.toLowerCase());
+        // Busca robusta ignorando acentos, maiúsculas e espaços extras
+        const normalizedAptName = this.normalizeString(apt.customer);
+        const customer = this.state.customers.find(c => this.normalizeString(c.name) === normalizedAptName);
+
         if (!customer || !customer.phone) {
-            alert('Telefone do cliente não encontrado. Verifique o cadastro.');
+            console.warn('Cliente não encontrado para lembrete:', apt.customer);
+            alert(`⚠️ Telefone não encontrado para "${apt.customer}".\n\nCertifique-se que o cliente está cadastrado com o número de WhatsApp no menu Clientes.`);
             return;
         }
 
