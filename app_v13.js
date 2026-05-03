@@ -755,7 +755,12 @@ const app = {
                             <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
                             <option value="15" ${s.intervalMin == 15 ? 'selected' : ''}>A cada 15 minutos</option>
                             <option value="20" ${s.intervalMin == 20 ? 'selected' : ''}>A cada 20 minutos</option>
-                         <div style="overflow-x: auto;">
+                            <option value="30" ${s.intervalMin == 30 ? 'selected' : ''}>A cada 30 minutos</option>
+                            <option value="60" ${s.intervalMin == 60 ? 'selected' : ''}>A cada 1 hora</option>
+                        </select>
+                    </div>
+
+                    <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
@@ -785,14 +790,6 @@ const app = {
                     </div>
                     <div id="holiday-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                         ${this.renderHolidayList()}
-                    </div>
-                </div>/th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${scheduleRows}
-                            </tbody>
-                        </table>
                     </div>
                 </div>
 
