@@ -2881,13 +2881,27 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (!apt) return;
 
-        // Busca robusta ignorando acentos, maiúsculas e espaços extras
+        const customers = this.state.customers || [];
         const normalizedAptName = this.normalizeString(apt.customer);
-        const customer = this.state.customers.find(c => this.normalizeString(c.name) === normalizedAptName);
+        
+        // 1. Busca exata (normalizada)
+        let customer = customers.find(c => this.normalizeString(c.name) === normalizedAptName);
 
-        if (!customer || !customer.phone) {
-            console.warn('Cliente não encontrado para lembrete:', apt.customer);
-            alert(`⚠️ Telefone não encontrado para "${apt.customer}".\n\nCertifique-se que o cliente está cadastrado com o número de WhatsApp no menu Clientes.`);
+        // 2. Busca por "contém" (se não achou exato)
+        if (!customer) {
+            customer = customers.find(c => {
+                const name = this.normalizeString(c.name);
+                return name.includes(normalizedAptName) || normalizedAptName.includes(name);
+            });
+        }
+
+        if (!customer) {
+            alert(`⚠️ Cliente "${apt.customer}" não encontrado na base de dados.\n\nVerifique se o nome na agenda coincide com o nome cadastrado no menu Clientes.`);
+            return;
+        }
+
+        if (!customer.phone) {
+            alert(`⚠️ O cliente "${customer.name}" foi encontrado, mas não possui telefone cadastrado.\n\nPor favor, adicione o telefone no menu Clientes.`);
             return;
         }
 
