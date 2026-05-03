@@ -2953,6 +2953,10 @@ const app = {
                     const barberName = apt.barber || (this.state.user ? this.state.user.name : 'Indefinido');
                     const tipDate = new Date().toISOString().split('T')[0]; // Data de HOJE (quando o dinheiro entra)
 
+                    // Integrar com Fluxo de Caixa e salvar ID no agendamento para rastreio
+                    const tipDesc = `Gorjeta: ${barberName} (Corte)`;
+                    const tipTransactionId = this.addTransaction('in', tipDesc, tipAmount, 'outros', mappedMethod);
+
                     this.state.tips.push({
                         id: Date.now() + 1,
                         barber: barberName,
@@ -2960,10 +2964,11 @@ const app = {
                         date: tipDate,
                         aptDate: apt.date || tipDate,
                         timestamp: new Date().toISOString(),
-                        status: 'pending' // Novo sistema de aprovação
+                        status: 'pending', // Novo sistema de aprovação
+                        paymentMethod: mappedMethod,
+                        transactionId: tipTransactionId
                     });
                     
-                    this.addTransaction('in', `Gorjeta: ${barberName} (Corte)`, tipAmount, 'outros', mappedMethod);
                     console.log('Gorjeta registrada para:', barberName, tipAmount);
                 }
             }
@@ -3160,13 +3165,15 @@ const app = {
                     <h3 class="section-title" style="font-size: 1rem; color: #fbbf24;">⚠️ Aguardando Aprovação (${pendingTips.length})</h3>
                     <div class="transaction-list" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
                         ${pendingTips.map(t => `
-                            <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #fbbf24; background: rgba(251, 191, 36, 0.05);">
-                                <div style="display: flex; flex-direction: column;">
+                             <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #fbbf24; background: rgba(251, 191, 36, 0.05);">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
                                     <span style="font-weight: 700; color: var(--text-primary);">${t.barber}</span>
                                     <span style="font-size: 0.72rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
+                                    <span style="font-size: 0.65rem; color: #fbbf24; font-weight: 600; text-transform: uppercase;">💳 Pagamento: ${t.paymentMethod || 'Não informado'}</span>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="font-weight: 800; color: #fbbf24; font-size: 1.1rem; margin-right: 10px;">R$ ${t.amount.toFixed(2)}</span>
+                                    <button onclick="app.editTip('${t.id}')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #fff; font-size: 0.7rem;">✏️ EDITAR</button>
                                     <button onclick="app.approveTip('${t.id}')" style="background: #4ade80; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">APROVAR</button>
                                     <button onclick="app.rejectTip('${t.id}')" style="background: #f87171; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">RECUSAR</button>
                                 </div>
@@ -3209,6 +3216,15 @@ const app = {
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Valor da Gorjeta (R$)</label>
                     <input type="number" id="tip-amount" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" step="0.50" placeholder="0.00">
                 </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Forma de Pagamento</label>
+                    <select id="tip-payment" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);">
+                        <option value="pix">PIX</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="credito">Cartão de Crédito</option>
+                    </select>
+                </div>
                 <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;" onclick="app.saveTip()">Confirmar Lançamento</button>
             </div>
         `);
@@ -3217,6 +3233,7 @@ const app = {
     saveTip() {
         const barber = document.getElementById('tip-barber').value;
         const amount = parseFloat(document.getElementById('tip-amount').value);
+        const payment = document.getElementById('tip-payment').value;
 
         if (!barber || isNaN(amount) || amount <= 0) {
             alert('Por favor, preencha o barbeiro e um valor válido.');
@@ -3227,17 +3244,19 @@ const app = {
         const tipId = Date.now();
         const now = new Date();
         
+        // Registrar no fluxo de caixa e pegar ID
+        const transId = this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', payment);
+
         this.state.tips.push({
             id: tipId,
             barber,
             amount,
             date: now.toISOString().split('T')[0],
             timestamp: now.toISOString(),
-            status: 'approved'
+            status: 'approved',
+            paymentMethod: payment,
+            transactionId: transId
         });
-
-        // Registrar no fluxo de caixa
-        this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', 'pix');
 
         this.saveState();
         this.closeModal();
@@ -3272,13 +3291,59 @@ const app = {
         if (confirm('Deseja realmente excluir permanentemente este registro?')) {
             const tip = (this.state.tips || []).find(t => t.id == id);
             if (tip) {
-                // Tentar remover do caixa
-                this.state.transactions = (this.state.transactions || []).filter(t => 
-                    !(t.description.includes(`Gorjeta: ${tip.barber}`) && t.amount === tip.amount && t.date === tip.date)
-                );
+                // Tentar remover do caixa pelo transactionId ou fallback
+                if (tip.transactionId) {
+                    this.state.transactions = (this.state.transactions || []).filter(tr => tr.id !== tip.transactionId);
+                } else {
+                    this.state.transactions = (this.state.transactions || []).filter(t => 
+                        !(t.description.includes(`Gorjeta: ${tip.barber}`) && t.amount === tip.amount && t.date === tip.date)
+                    );
+                }
             }
             this.state.tips = (this.state.tips || []).filter(t => t.id != id);
             this.saveState();
+            this.render('admin-tips');
+        }
+    },
+
+    editTip(id) {
+        const tip = (this.state.tips || []).find(t => t.id == id);
+        if (!tip) return;
+
+        this.openModal('Editar Valor da Gorjeta ✏️', `
+            <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Ajuste o valor final para o ${this.getTerm('workerTerm')} <strong>${tip.barber}</strong>.</p>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Novo Valor (R$)</label>
+                    <input type="number" id="edit-tip-amount" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${tip.amount}" step="0.10">
+                </div>
+                <div style="font-size: 0.75rem; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px;">
+                    💡 Isso atualizará automaticamente o valor no fluxo de caixa também.
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 14px;" onclick="app.updateTipAmount('${id}')">Salvar e Voltar</button>
+            </div>
+        `);
+    },
+
+    updateTipAmount(id) {
+        const newAmount = parseFloat(document.getElementById('edit-tip-amount').value);
+        if (isNaN(newAmount) || newAmount <= 0) {
+            alert('Valor inválido!');
+            return;
+        }
+
+        const tip = (this.state.tips || []).find(t => t.id == id);
+        if (tip) {
+            tip.amount = newAmount;
+            
+            // Atualizar no fluxo de caixa se houver transação vinculada
+            if (tip.transactionId) {
+                const trans = (this.state.transactions || []).find(tr => tr.id === tip.transactionId);
+                if (trans) trans.amount = newAmount;
+            }
+            
+            this.saveState();
+            this.closeModal();
             this.render('admin-tips');
         }
     },
