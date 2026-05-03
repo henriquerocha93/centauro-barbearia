@@ -1087,8 +1087,8 @@ const app = {
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
-                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
+                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''} ${(this.state.tips || []).some(t => t.status === 'pending') ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${(this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && s.date === new Date().toISOString().split('T')[0]) ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
                     `}
 
