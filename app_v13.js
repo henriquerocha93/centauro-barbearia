@@ -293,6 +293,34 @@ const app = {
         }
     },
 
+    async syncFromFirebaseForce() {
+        if (!this.state.firebaseConfig || !this.db) return;
+        console.log('🔄 Forçando sincronização completa do Firebase...');
+        
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantId = urlParams.get('loja');
+            const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            
+            const snapshot = await get(ref(this.db, dbPath));
+            const data = snapshot.val();
+            if (data) {
+                // Merge inteligente ou substituição
+                this.state.transactions = data.transactions || [];
+                this.state.appointments = data.appointments || [];
+                this.state.productSales = data.productSales || [];
+                this.state.lastUpdate = data.lastUpdate;
+                
+                this.reconcileTransactions();
+                this.render(this.state.view);
+                alert('✅ Dados sincronizados e reconciliados com sucesso!');
+            }
+        } catch (e) {
+            console.error('Erro na sincronização forçada:', e);
+            alert('❌ Erro ao sincronizar dados da nuvem.');
+        }
+    },
+
     async syncToCloud() {
         const config = this.state.githubConfig;
         if (!config || !config.token || !config.repo) {
@@ -1743,6 +1771,51 @@ const app = {
         this.state.transactions.push(transaction);
         this.saveState();
         return transId;
+    },
+
+    reconcileTransactions() {
+        console.log('🔍 Iniciando reconciliação de transações...');
+        const appointments = (this.state.appointments || []).filter(a => a.status === 'finalizado');
+        const transactions = this.state.transactions || [];
+        let count = 0;
+
+        appointments.forEach(apt => {
+            // Se o agendamento não tem transactionId, ou se a transação referenciada não existe mais
+            const exists = transactions.find(t => t.id === apt.transactionId || (t.type === 'in' && t.description.includes(apt.customer) && t.amount === apt.price && t.date === apt.date));
+            
+            if (!exists && apt.price > 0) {
+                console.log('➕ Recuperando transação perdida para:', apt.customer);
+                
+                let mappedMethod = 'dinheiro';
+                const p = (apt.payment || '').toUpperCase();
+                if (p === 'PIX') mappedMethod = 'pix';
+                if (p.includes('DÉBITO') || p.includes('DEBITO')) mappedMethod = 'debito';
+                if (p.includes('CRÉDITO') || p.includes('CREDITO')) mappedMethod = 'credito';
+
+                const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer}) [Recuperado]`;
+                const transId = Date.now() + Math.floor(Math.random() * 1000);
+                
+                const transaction = {
+                    id: transId,
+                    date: apt.date || new Date().toLocaleDateString('en-CA'),
+                    timestamp: new Date().toISOString(),
+                    type: 'in',
+                    description: desc,
+                    amount: parseFloat(apt.price),
+                    category: 'servico',
+                    method: mappedMethod
+                };
+
+                this.state.transactions.push(transaction);
+                apt.transactionId = transId;
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            console.log(`✅ Reconciliação concluída: ${count} transações recuperadas.`);
+            this.saveState();
+        }
     },
 
     updateStock(productId, quantityChange) {
@@ -3278,6 +3351,7 @@ const app = {
     },
 
     renderAdminFaturamento(container) {
+        this.reconcileTransactions();
         const period = this.state.revenuePeriod || 'month';
         const now = new Date();
         let startDate, endDate;
@@ -4437,6 +4511,7 @@ const app = {
     },
 
     renderAdminCashFlow(container) {
+        this.reconcileTransactions();
         const today = new Date().toLocaleDateString('en-CA');
         const selectedDate = this.state.cashflowDate || today;
         
@@ -4489,7 +4564,9 @@ const app = {
                         <p style="font-size: 0.85rem; color: var(--text-secondary);">Consulte a movimentação financeira por data</p>
                     </div>
                     
-                    <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 10px;">
+                    <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 15px;">
+                        <button class="btn-primary" style="padding: 5px 12px; font-size: 0.75rem; background: #22c55e;" onclick="app.syncFromFirebaseForce()">🔄 Sincronizar Nuvem</button>
+                        <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1);"></div>
                         <span style="font-size: 0.8rem; color: var(--text-secondary);">📅 Data:</span>
                         <input type="date" value="${selectedDate}" class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
                                onchange="app.state.cashflowDate = this.value; app.render('admin-cashflow')">
