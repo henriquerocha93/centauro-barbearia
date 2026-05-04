@@ -293,34 +293,6 @@ const app = {
         }
     },
 
-    async syncFromFirebaseForce() {
-        if (!this.state.firebaseConfig || !this.db) return;
-        console.log('🔄 Forçando sincronização completa do Firebase...');
-        
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenantId = urlParams.get('loja');
-            const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
-            
-            const snapshot = await get(ref(this.db, dbPath));
-            const data = snapshot.val();
-            if (data) {
-                // Merge inteligente ou substituição
-                this.state.transactions = data.transactions || [];
-                this.state.appointments = data.appointments || [];
-                this.state.productSales = data.productSales || [];
-                this.state.lastUpdate = data.lastUpdate;
-                
-                this.reconcileTransactions();
-                this.render(this.state.view);
-                alert('✅ Dados sincronizados e reconciliados com sucesso!');
-            }
-        } catch (e) {
-            console.error('Erro na sincronização forçada:', e);
-            alert('❌ Erro ao sincronizar dados da nuvem.');
-        }
-    },
-
     async syncToCloud() {
         const config = this.state.githubConfig;
         if (!config || !config.token || !config.repo) {
@@ -4564,9 +4536,7 @@ const app = {
                         <p style="font-size: 0.85rem; color: var(--text-secondary);">Consulte a movimentação financeira por data</p>
                     </div>
                     
-                    <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 15px;">
-                        <button class="btn-primary" style="padding: 5px 12px; font-size: 0.75rem; background: #22c55e;" onclick="app.syncFromFirebaseForce()">🔄 Sincronizar Nuvem</button>
-                        <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                    <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 0.8rem; color: var(--text-secondary);">📅 Data:</span>
                         <input type="date" value="${selectedDate}" class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
                                onchange="app.state.cashflowDate = this.value; app.render('admin-cashflow')">
