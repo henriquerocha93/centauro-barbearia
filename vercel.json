@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/AgendamentoFacil/index.html",
+      "permanent": true
+    }
+  ]
+}
