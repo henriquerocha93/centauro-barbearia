@@ -2604,7 +2604,15 @@ const app = {
                     <div class="agenda-grid" style="grid-template-columns: 80px repeat(${barbersToShow.length}, 1fr);">
                         <!-- Header -->
                         <div class="agenda-header" style="background: var(--surface-light);">Hora</div>
-                        ${barbersToShow.map(b => `<div class="agenda-header">${b.name}</div>`).join('')}
+                        ${barbersToShow.map(b => `
+                            <div class="agenda-header">
+                                <div>${b.name}</div>
+                                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === b.name) ? `
+                                    <button style="margin-top: 5px; background: none; border: 1px solid rgba(255,68,68,0.3); color: #ff4444; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer;" 
+                                            onclick="app.blockFullDay('${b.name}', '${this.state.currentDate}')">🚫 Bloquear Dia</button>
+                                ` : ''}
+                            </div>
+                        `).join('')}
 
                         <!-- Rows -->
                         ${timeSlots.map(time => `
@@ -2634,6 +2642,14 @@ const app = {
             'confirmado': '#3ba369', /* Verde mais forte */
             'finalizado': '#9CA3AF'  /* Cinza para concluídos */
         };
+
+        if (apt.status === 'bloqueado') {
+            return `
+                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;">
+                    <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">BLOQUEADO</div>
+                </div>
+            `;
+        }
 
         return `
             <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};">
@@ -2698,6 +2714,13 @@ const app = {
                     <button class="btn-primary" style="flex: 1;" onclick="app.saveNewWalkIn('${barber}', '${time}')">Salvar</button>
                     <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
                 </div>
+                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === barber) ? `
+                    <div style="margin-top: 15px;">
+                        <button class="btn-secondary" style="width: 100%; border: 1px solid #ff4444; color: #ff4444;" onclick="app.blockTimeSlot('${barber}', '${time}')">
+                            🚫 Bloquear Este Horário
+                        </button>
+                    </div>
+                ` : ''}
             </section>
         `);
     },
@@ -2799,6 +2822,65 @@ const app = {
         this.render(this.state.view);
     },
 
+    blockTimeSlot(barber, time) {
+        if (!confirm(`Deseja bloquear a agenda de ${barber} às ${time}?`)) return;
+        
+        const apt = { 
+            id: Date.now(), 
+            barber, 
+            time, 
+            date: this.state.currentDate, 
+            customer: 'BLOQUEADO', 
+            service: 'Indisponível', 
+            price: 0, 
+            status: 'bloqueado' 
+        };
+        
+        if (!this.state.appointments) this.state.appointments = [];
+        this.state.appointments.push(apt);
+        this.saveState();
+        this.closeModal();
+        this.render(this.state.view);
+    },
+
+    blockFullDay(barber, date) {
+        if (!confirm(`ATENÇÃO: Deseja bloquear TODOS os horários livres de ${barber} no dia ${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')}?`)) return;
+        
+        const timeSlots = this.generateTimeSlots();
+        let addedBlocks = 0;
+        
+        timeSlots.forEach(time => {
+            // Verifica se já existe um agendamento neste horário
+            const exists = this.state.appointments.find(a => 
+                a.barber === barber && 
+                a.time === time && 
+                (a.date === date || (!a.date && date === new Date().toISOString().split('T')[0]))
+            );
+            
+            if (!exists) {
+                this.state.appointments.push({ 
+                    id: Date.now() + Math.floor(Math.random() * 10000), // Random para evitar conflito de IDs gerados no mesmo milissegundo
+                    barber, 
+                    time, 
+                    date, 
+                    customer: 'BLOQUEADO', 
+                    service: 'Indisponível', 
+                    price: 0, 
+                    status: 'bloqueado' 
+                });
+                addedBlocks++;
+            }
+        });
+
+        if (addedBlocks > 0) {
+            this.saveState();
+            this.render(this.state.view);
+            alert(`${addedBlocks} horários foram bloqueados com sucesso.`);
+        } else {
+            alert('A agenda já estava totalmente ocupada ou bloqueada neste dia.');
+        }
+    },
+
     promptQuickRegistration() {
         const { name } = this.state.pendingWalkIn;
         this.openModal('Detectado: Cliente Novo 🎉', `
@@ -2865,6 +2947,24 @@ const app = {
         if (!apt) return;
 
         const isReadOnly = apt.status === 'finalizado' && this.state.user.role !== 'admin';
+
+        if (apt.status === 'bloqueado') {
+            this.openModal('Horário Bloqueado', `
+                <section class="fade-in" style="padding-top: 10px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🚫</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                        Este horário está bloqueado para agendamentos.
+                    </p>
+                    ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === apt.barber) ? `
+                        <button class="btn-primary" style="background: #ff4444; width: 100%; border-radius: 8px; box-shadow: none; margin-bottom: 10px;" onclick="app.cancelApt(${apt.id})">
+                            Desbloquear Horário
+                        </button>
+                    ` : ''}
+                    <button class="btn-secondary" style="width: 100%; border-radius: 8px;" onclick="app.closeModal()">Voltar</button>
+                </section>
+            `);
+            return;
+        }
 
         this.openModal('Gerenciar Atendimento', `
             <section class="fade-in" style="padding-top: 10px;">
