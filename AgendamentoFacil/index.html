@@ -46,7 +46,7 @@
                 <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0 12px !important; font-size: 0.7rem; white-space: nowrap; display: inline-flex !important; height: 32px !important; align-items: center; justify-content: center; line-height: 1; border-radius: 6px !important;">Painel Master</a>
             </div>
             
-            <button class="mobile-menu-btn" style="background: none; border: none; color: white; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 5px; flex-shrink: 0;">
+            <button class="mobile-menu-btn" onclick="toggleMenu()" style="background: none; border: none; color: white; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 5px; flex-shrink: 0;">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
         </div>
@@ -556,6 +556,34 @@
                 btn.disabled = false;
             }
         };
+
+        // Mobile Menu Toggle
+        window.toggleMenu = () => {
+            const mobileMenu = document.getElementById('mobileMenuOverlay');
+            if (mobileMenu.style.display === 'flex') {
+                mobileMenu.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            } else {
+                mobileMenu.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        };
     </script>
+
+    <!-- MENU MOBILE OVERLAY -->
+    <div id="mobileMenuOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(59, 7, 100, 0.98); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 30px; animation: fadeIn 0.3s ease;">
+        <button onclick="toggleMenu()" style="position: absolute; top: 30px; right: 30px; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">✕</button>
+        <img src="logo_br.png" alt="Agendamento Fácil BR" style="height: 100px; margin-bottom: 20px;">
+        <a href="#planos" onclick="toggleMenu()" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: 600;">Planos</a>
+        <a href="apresentacao.html" onclick="toggleMenu()" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: 600;">Por que nós?</a>
+        <a href="#segmentos" onclick="toggleMenu()" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: 600;">Segmentos</a>
+        <a href="ajuda.html" onclick="toggleMenu()" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: 600;">Como Usar</a>
+        <a href="#contato" onclick="toggleMenu()" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: 600;">Contato</a>
+        <a href="javascript:void(0)" onclick="toggleMenu(); window.openModal()" class="btn btn-orange" style="margin-top: 20px; padding: 15px 40px; font-size: 1.2rem;">Começar Agora</a>
+    </div>
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </body>
 </html>
