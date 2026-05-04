@@ -4280,32 +4280,35 @@ const app = {
             </section>
         `;
 
-        // Adicionar o histórico logo abaixo
-        container.innerHTML += `
-            <section style="padding: 0 20px 40px 20px;">
-                <h3 style="font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                    🕒 Vendas Recentes (Hoje)
-                </h3>
-                <div class="glass" style="padding: 0; overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 700px;">
-                        <thead>
-                            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
-                                <th style="padding: 12px 15px;">Horário</th>
-                                <th style="padding: 12px 15px;">Produto</th>
-                                <th style="padding: 12px 15px;">Destino</th>
-                                <th style="padding: 12px 15px;">Vendedor</th>
-                                <th style="padding: 12px 15px;">Pagamento</th>
-                                <th style="padding: 12px 15px; text-align: right;">Comissão</th>
-                                <th style="padding: 12px 15px; text-align: right;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${this.getRecentPDVSalesHTML()}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        `;
+        // [ADM ONLY] Adicionar o histórico logo abaixo
+        if (this.state.user.role === 'admin') {
+            container.innerHTML += `
+                <section style="padding: 0 20px 40px 20px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                        🕒 Histórico de Vendas (Hoje) - <small style="color:var(--text-secondary); font-weight:normal;">Visão exclusiva ADM</small>
+                    </h3>
+                    <div class="glass" style="padding: 0; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 850px;">
+                            <thead>
+                                <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
+                                    <th style="padding: 12px 15px;">Horário</th>
+                                    <th style="padding: 12px 15px;">Produto</th>
+                                    <th style="padding: 12px 15px;">Destino</th>
+                                    <th style="padding: 12px 15px;">Origem</th>
+                                    <th style="padding: 12px 15px;">Vendedor</th>
+                                    <th style="padding: 12px 15px;">Pagamento</th>
+                                    <th style="padding: 12px 15px; text-align: right;">Comissão</th>
+                                    <th style="padding: 12px 15px; text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.getRecentPDVSalesHTML()}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            `;
+        }
         
         // Torna o layout fluido no mobile
         const main = document.getElementById('main-content');
@@ -4323,7 +4326,7 @@ const app = {
             .slice(0, 10);
 
         if (sales.length === 0) {
-            return `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-secondary);">Nenhuma venda realizada hoje.</td></tr>`;
+            return `<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--text-secondary);">Nenhuma venda realizada hoje.</td></tr>`;
         }
 
         return sales.map(s => {
@@ -4332,14 +4335,17 @@ const app = {
             if (s.target === 'barbeiro') targetLabel = `✂️ ${s.barberName || 'Barbeiro'}`;
             if (s.target === 'adm') targetLabel = '⚙️ Uso Interno';
 
-            // Lógica melhorada para mostrar o vendedor
+            // Lógica melhorada para mostrar o vendedor e origem
             let sellerDisplay = '--';
             if (s.seller) {
                 sellerDisplay = s.seller.split(' ')[0];
             } else if (s.target === 'barbeiro') {
                 sellerDisplay = s.barberName ? s.barberName.split(' ')[0] : '--';
+            } else if (s.loggedUser) {
+                sellerDisplay = s.loggedUser.split(' ')[0] + ' (log)';
             }
 
+            const origin = s.origin || 'App';
             const comm = parseFloat(s.sellerCommission || 0);
 
             return `
@@ -4350,6 +4356,7 @@ const app = {
                         <span style="font-size: 0.75rem; color: var(--text-secondary);"> (x${s.qty})</span>
                     </td>
                     <td style="padding: 12px 15px;">${targetLabel}</td>
+                    <td style="padding: 12px 15px; color: var(--text-secondary); font-size: 0.75rem;">${origin}</td>
                     <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerDisplay}</td>
                     <td style="padding: 12px 15px; font-size: 0.75rem; color: var(--text-secondary);">${(s.payment || 'Dinheiro').toUpperCase()}</td>
                     <td style="padding: 12px 15px; text-align: right; color: #4ade80; font-weight: 600;">${comm > 0 ? `R$ ${comm.toFixed(2)}` : '--'}</td>
@@ -4563,7 +4570,9 @@ const app = {
                 date: saleDate,
                 timestamp: now.toISOString(),
                 transactionId, // Vinculado à transação do grupo
-                voucherId     // Vinculado ao vale do grupo
+                voucherId,     // Vinculado ao vale do grupo
+                origin: this.state.user.role === 'totem' ? 'Totem' : 'App',
+                loggedUser: this.state.user.name
             });
         }
 
