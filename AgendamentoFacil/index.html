@@ -506,6 +506,19 @@
                 const leadsRef = ref(db, 'master/leads');
                 await push(leadsRef, data);
 
+                // 1.1 Registra como Unidade Ativa no Master
+                const tenantMasterRef = ref(db, `master/tenants/${slug}`);
+                await set(tenantMasterRef, {
+                    name: shopName,
+                    owner: data.name,
+                    email: data.email,
+                    slug: slug,
+                    createdAt: data.date,
+                    nextPayment: data.trialEndDate,
+                    subscriptionPrice: 59.90,
+                    isBlocked: false
+                });
+
                 // 2. Inicializa a estrutura básica da nova loja
                 const shopRef = ref(db, `tenants/${slug}/settings`);
                 await set(shopRef, {
