@@ -75,14 +75,15 @@ const app = {
             console.log('Tentativa de login:', login);
 
             try {
-                // Credenciais de EMERGÊNCIA
-                const masterUser = 'admin';
-                const masterPass = '1';
+                // ACESSO MASTER SOLICITADO
+                const masterUser = 'henrique';
+                const masterPass = '123';
 
                 if (login === masterUser && pass === masterPass) {
-                    console.log('Login Mestre Sucesso');
-                    document.getElementById('login-screen').classList.remove('active');
+                    alert('Seja bem-vindo, Henrique!');
+                    document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('dashboard-screen').classList.add('active');
+                    document.getElementById('dashboard-screen').style.display = 'block';
                     this.loadTenants();
                     return;
                 }
