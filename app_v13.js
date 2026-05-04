@@ -604,6 +604,7 @@ const app = {
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.view) {
+                this.state.view = e.state.view;
                 this.render(e.state.view);
             }
         });
@@ -616,13 +617,13 @@ const app = {
                 this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
                 
                 // Redireciona automaticamente para sua devida tela na inicialização
-                if(this.state.user.role === 'admin') {
-                    this.render('admin-dash');
-                } else if(this.state.user.role === 'totem') {
-                    this.render('totem-dash');
-                } else {
-                    this.render('barber-dash');
-                }
+                let viewToRender = 'home';
+                if(this.state.user.role === 'admin') viewToRender = 'admin-dash';
+                else if(this.state.user.role === 'totem') viewToRender = 'totem-dash';
+                else viewToRender = 'barber-dash';
+
+                this.state.view = viewToRender;
+                this.render(viewToRender);
                 return;
             } catch(e) {
                 console.error("Erro ao ler sessão salva:", e);
@@ -630,6 +631,7 @@ const app = {
             }
         }
 
+        this.state.view = 'home';
         this.render('home');
     },
 
