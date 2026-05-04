@@ -4280,9 +4280,73 @@ const app = {
             </section>
         `;
 
+        // Adicionar o histórico logo abaixo
+        container.innerHTML += `
+            <section style="padding: 0 20px 40px 20px;">
+                <h3 style="font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    🕒 Vendas Recentes (Hoje)
+                </h3>
+                <div class="glass" style="padding: 0; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 700px;">
+                        <thead>
+                            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
+                                <th style="padding: 12px 15px;">Horário</th>
+                                <th style="padding: 12px 15px;">Produto</th>
+                                <th style="padding: 12px 15px;">Destino</th>
+                                <th style="padding: 12px 15px;">Vendedor</th>
+                                <th style="padding: 12px 15px;">Pagamento</th>
+                                <th style="padding: 12px 15px; text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.getRecentPDVSalesHTML()}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        `;
+        
         // Torna o layout fluido no mobile
         const main = document.getElementById('main-content');
         if (main) main.style.overflow = 'auto';
+
+        // Focar no scanner automaticamente
+        setTimeout(() => document.getElementById('pdv-scanner-input')?.focus(), 100);
+    },
+
+    getRecentPDVSalesHTML() {
+        const today = new Date().toLocaleDateString('en-CA');
+        const sales = (this.state.productSales || [])
+            .filter(s => s.date === today)
+            .reverse()
+            .slice(0, 10);
+
+        if (sales.length === 0) {
+            return `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-secondary);">Nenhuma venda realizada hoje.</td></tr>`;
+        }
+
+        return sales.map(s => {
+            const time = s.timestamp ? new Date(s.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            let targetLabel = '👤 Cliente';
+            if (s.target === 'barbeiro') targetLabel = `✂️ ${s.barberName || 'Barbeiro'}`;
+            if (s.target === 'adm') targetLabel = '⚙️ Uso Interno';
+
+            const sellerName = s.seller ? s.seller.split(' ')[0] : '--';
+
+            return `
+                <tr style="border-bottom: 1px solid var(--glass-border);">
+                    <td style="padding: 12px 15px; color: var(--text-secondary);">${time}</td>
+                    <td style="padding: 12px 15px;">
+                        <span style="font-weight: 600;">${s.productName}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);"> (x${s.qty})</span>
+                    </td>
+                    <td style="padding: 12px 15px;">${targetLabel}</td>
+                    <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerName}</td>
+                    <td style="padding: 12px 15px; font-size: 0.75rem; color: var(--text-secondary);">${(s.payment || 'Dinheiro').toUpperCase()}</td>
+                    <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: var(--accent-color);">R$ ${parseFloat(s.total || 0).toFixed(2)}</td>
+                </tr>
+            `;
+        }).join('');
     },
 
     getPDVProductCards(products, query) {
