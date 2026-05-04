@@ -4345,9 +4345,17 @@ const app = {
                 sellerDisplay = s.loggedUser.split(' ')[0] + ' (log)';
             }
 
-            const origin = s.origin || 'App';
-            const user = s.loggedUser ? ` (${s.loggedUser.split(' ')[0]})` : '';
-            const originFull = origin + user;
+            // Lógica de Origem e Usuário (com fallback para dados antigos)
+            const originBase = s.origin || (s.target === 'barbeiro' ? 'App' : 'Sistema');
+            let userSuffix = '';
+            
+            if (s.loggedUser) {
+                userSuffix = ` (${s.loggedUser.split(' ')[0]})`;
+            } else if (s.target === 'barbeiro' && s.barberName) {
+                userSuffix = ` (${s.barberName.split(' ')[0]})`;
+            }
+
+            const originFull = originBase + userSuffix;
             const comm = parseFloat(s.sellerCommission || 0);
 
             return `
@@ -4358,7 +4366,7 @@ const app = {
                         <span style="font-size: 0.75rem; color: var(--text-secondary);"> (x${s.qty})</span>
                     </td>
                     <td style="padding: 12px 15px;">${targetLabel}</td>
-                    <td style="padding: 12px 15px; color: var(--text-secondary); font-size: 0.75rem;">${originFull}</td>
+                    <td style="padding: 12px 15px; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600;">${originFull}</td>
                     <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerDisplay}</td>
                     <td style="padding: 12px 15px; font-size: 0.75rem; color: var(--text-secondary);">${(s.payment || 'Dinheiro').toUpperCase()}</td>
                     <td style="padding: 12px 15px; text-align: right; color: #4ade80; font-weight: 600;">${comm > 0 ? `R$ ${comm.toFixed(2)}` : '--'}</td>
