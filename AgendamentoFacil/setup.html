@@ -224,6 +224,7 @@
                 const shopRef = ref(db, `tenants/${slug}/settings`);
                 await update(shopRef, {
                     primaryColor: selectedHex,
+                    accentColor: selectedHex, // Mapeia para o centauro dashboard
                     welcomeMessage: welcome,
                     setupComplete: true
                 });

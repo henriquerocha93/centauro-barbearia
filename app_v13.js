@@ -184,15 +184,16 @@ const app = {
     applyTheme() {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
+        const s = this.state.settings || {};
         const root = document.documentElement;
 
         if (type === 'barbershop') {
-            root.style.setProperty('--bg-color', '#1A120B');
-            root.style.setProperty('--surface-color', '#2D241E');
-            root.style.setProperty('--accent-color', '#D4AF37');
-            root.style.setProperty('--text-primary', '#EAD7BB');
-            root.style.setProperty('--text-secondary', '#A69076');
-            root.style.setProperty('--glass-bg', 'rgba(45, 36, 30, 0.8)');
+            root.style.setProperty('--bg-color', s.bgColor || '#1A120B');
+            root.style.setProperty('--surface-color', s.surfaceColor || '#2D241E');
+            root.style.setProperty('--accent-color', s.accentColor || '#D4AF37');
+            root.style.setProperty('--text-primary', s.textPrimary || '#EAD7BB');
+            root.style.setProperty('--text-secondary', s.textSecondary || '#A69076');
+            root.style.setProperty('--glass-bg', s.glassBg || 'rgba(45, 36, 30, 0.8)');
         } else {
             root.style.setProperty('--bg-color', theme.bg);
             root.style.setProperty('--surface-color', theme.surface);
@@ -202,9 +203,9 @@ const app = {
             root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
         }
         
-        // Cores Dinâmicas extras se existirem nas settings
-        if (this.state.settings.primaryColor) root.style.setProperty('--primary-color', this.state.settings.primaryColor);
-        if (this.state.settings.accentColor) root.style.setProperty('--accent-color', this.state.settings.accentColor);
+        // Cores Dinâmicas extras se existirem nas settings (Sobrescreve tudo)
+        if (s.primaryColor) root.style.setProperty('--primary-color', s.primaryColor);
+        if (s.accentColor) root.style.setProperty('--accent-color', s.accentColor);
     },
 
     openModal(title, contentHTML) {

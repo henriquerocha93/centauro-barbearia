@@ -496,7 +496,7 @@
                 // 2. Inicializa a estrutura básica da nova loja
                 const shopRef = ref(db, `tenants/${slug}/settings`);
                 await set(shopRef, {
-                    name: shopName,
+                    shopName: shopName,
                     owner: data.name,
                     email: data.email,
                     segment: data.segment,
