@@ -2607,7 +2607,7 @@ const app = {
                         ${barbersToShow.map(b => `
                             <div class="agenda-header">
                                 <div>${b.name}</div>
-                                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === b.name) ? `
+                                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === b.name) ? `
                                     <button style="margin-top: 5px; background: none; border: 1px solid rgba(255,68,68,0.3); color: #ff4444; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer;" 
                                             onclick="app.blockFullDay('${b.name}', '${this.state.currentDate}')">🚫 Bloquear Dia</button>
                                 ` : ''}
@@ -2714,7 +2714,7 @@ const app = {
                     <button class="btn-primary" style="flex: 1;" onclick="app.saveNewWalkIn('${barber}', '${time}')">Salvar</button>
                     <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
                 </div>
-                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === barber) ? `
+                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === barber) ? `
                     <div style="margin-top: 15px;">
                         <button class="btn-secondary" style="width: 100%; border: 1px solid #ff4444; color: #ff4444;" onclick="app.blockTimeSlot('${barber}', '${time}')">
                             🚫 Bloquear Este Horário
@@ -2955,7 +2955,7 @@ const app = {
                     <p style="color: var(--text-secondary); margin-bottom: 25px;">
                         Este horário está bloqueado para agendamentos.
                     </p>
-                    ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === apt.barber) ? `
+                    ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === apt.barber) ? `
                         <button class="btn-primary" style="background: #ff4444; width: 100%; border-radius: 8px; box-shadow: none; margin-bottom: 10px;" onclick="app.cancelApt(${apt.id})">
                             Desbloquear Horário
                         </button>
