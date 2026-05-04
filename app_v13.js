@@ -1102,6 +1102,7 @@ const app = {
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
                     ` : `
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')"><i>🏆</i> Desempenho da Equipe</a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
                         <a class="menu-item ${view === 'admin-tips' ? 'active' : ''} ${(this.state.tips || []).some(t => t.status === 'pending') ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
@@ -1143,6 +1144,7 @@ const app = {
             case 'admin-services': this.renderAdminServices(main); break;
             case 'admin-payments': this.renderAdminPayments(main); break;
             case 'admin-faturamento': this.renderAdminFaturamento(main); break;
+            case 'admin-team-performance': this.renderAdminTeamPerformance(main); break;
             case 'admin-tips': this.renderAdminTips(main); break;
             case 'admin-settings': this.renderAdminSettings(main); break;
             case 'admin-billing': this.renderAdminBilling(main); break;
@@ -4513,37 +4515,15 @@ const app = {
         if (confirm(confirmMsg)) {
             // Restaurar estoque
             const product = this.state.products.find(p => p.id === sale.productId);
-            if (product) {
-                product.stock += sale.qty;
-            }
+            if (product) { product.stock += sale.qty; }
 
             // Remover transação e vale se for consumo de barbeiro
             if (sale.target === 'barbeiro') {
-                // 1. Tentar por ID (Novo sistema)
                 if (sale.transactionId) {
                     this.state.transactions = this.state.transactions.filter(t => t.id !== sale.transactionId);
-                } else {
-                    // 2. Fallback: Busca por similaridade (Dados antigos)
-                    this.state.transactions = this.state.transactions.filter(t => {
-                        const isMatch = (t.description.includes("Uso Próprio") || t.description.includes("Consumo")) && 
-                                        (t.description.includes(sale.productName.split(' ')[0]) || t.amount === sale.total) && 
-                                        t.date === sale.date;
-                        return !isMatch;
-                    });
                 }
-
-                // Remover Vale (Voucher)
-                if (this.state.vouchers) {
-                    if (sale.voucherId) {
-                        this.state.vouchers = this.state.vouchers.filter(v => v.id !== sale.voucherId);
-                    } else {
-                        this.state.vouchers = this.state.vouchers.filter(v => {
-                            const isMatch = v.barber === sale.barberName && 
-                                            Math.abs(v.amount - sale.total) < 0.1 &&
-                                            v.date.startsWith(sale.date);
-                            return !isMatch;
-                        });
-                    }
+                if (sale.voucherId) {
+                    this.state.vouchers = this.state.vouchers.filter(v => v.id !== sale.voucherId);
                 }
             }
 
@@ -4554,6 +4534,137 @@ const app = {
             this.render('admin-consumption');
             alert('✅ Registro removido, estoque restaurado e financeiro atualizado.');
         }
+    },
+
+    renderAdminTeamPerformance(container) {
+        const now = new Date();
+        const currentMonth = (this.state.perfMonth !== undefined) ? this.state.perfMonth : (now.getMonth() + 1);
+        const currentYear = (this.state.perfYear !== undefined) ? this.state.perfYear : now.getFullYear();
+        
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        // Cálculo de Performance
+        const stats = {};
+
+        // 1. Inicializar stats para cada barbeiro
+        this.state.staff.filter(s => s.role === 'barber').forEach(b => {
+            stats[b.name] = {
+                name: b.name,
+                photo: b.photo,
+                appointments: 0,
+                serviceRevenue: 0,
+                productRevenue: 0,
+                totalRevenue: 0
+            };
+        });
+
+        // 2. Processar Atendimentos do Mês
+        this.state.appointments.forEach(a => {
+            if (a.status !== 'finalizado') return;
+            const aDate = new Date(a.date + 'T12:00:00');
+            if ((aDate.getMonth() + 1) === currentMonth && aDate.getFullYear() === currentYear) {
+                if (stats[a.barber]) {
+                    stats[a.barber].appointments++;
+                    stats[a.barber].serviceRevenue += (a.price || 0);
+                }
+            }
+        });
+
+        // 3. Processar Vendas de Produtos do Mês
+        (this.state.productSales || []).forEach(s => {
+            const sDate = new Date((s.timestamp || s.date) + (s.timestamp ? '' : 'T12:00:00'));
+            if ((sDate.getMonth() + 1) === currentMonth && sDate.getFullYear() === currentYear) {
+                if (s.seller && stats[s.seller]) {
+                    stats[s.seller].productRevenue += (s.total || 0);
+                }
+            }
+        });
+
+        // 4. Calcular Totais e transformar em Array para Rank
+        const rank = Object.values(stats).map(s => {
+            s.totalRevenue = s.serviceRevenue + s.productRevenue;
+            return s;
+        }).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+        const totalMonthRevenue = rank.reduce((acc, r) => acc + r.totalRevenue, 0);
+        const totalMonthApts = rank.reduce((acc, r) => acc + r.appointments, 0);
+
+        container.innerHTML = `
+            <section class="fade-in" style="padding-bottom: 50px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 5px;">🏆 Desempenho da Equipe</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Ranking de produtividade e faturamento por colaborador</p>
+                    </div>
+                    
+                    <div class="glass" style="padding: 10px; display: flex; gap: 10px; align-items: center;">
+                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;" 
+                                onchange="app.state.perfMonth = parseInt(this.value); app.render('admin-team-performance')">
+                            ${monthNames.map((m, i) => `<option value="${i+1}" ${currentMonth === (i+1) ? 'selected' : ''}>${m}</option>`).join('')}
+                        </select>
+                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
+                                onchange="app.state.perfYear = parseInt(this.value); app.render('admin-team-performance')">
+                            ${[2024, 2025, 2026].map(y => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Resumo Rápido -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Receita Total Equipe</p>
+                        <p style="font-size: 1.8rem; font-weight: 800; color: var(--accent-color); margin-top: 5px;">R$ ${totalMonthRevenue.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #4ade80;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Total Atendimentos</p>
+                        <p style="font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-top: 5px;">${totalMonthApts}</p>
+                    </div>
+                </div>
+
+                <div class="glass" style="padding: 0; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
+                                <th style="padding: 15px; text-align: left; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Colaborador</th>
+                                <th style="padding: 15px; text-align: center; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Atendimentos</th>
+                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Serviços</th>
+                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Produtos</th>
+                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Total Gerado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rank.length === 0 ? `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-secondary);">Nenhum dado encontrado para este período.</td></tr>` : 
+                            rank.map((r, i) => `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                    <td style="padding: 15px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="position: relative;">
+                                                <img src="${r.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid ${i === 0 ? 'var(--accent-color)' : 'var(--glass-border)'};">
+                                                ${i === 0 ? `<span style="position: absolute; top: -8px; right: -8px; font-size: 1.2rem;">👑</span>` : ''}
+                                            </div>
+                                            <div>
+                                                <p style="font-weight: 700; color: var(--text-primary); margin: 0;">${r.name}</p>
+                                                <p style="font-size: 0.65rem; color: ${i === 0 ? 'var(--accent-color)' : 'var(--text-secondary)'}; text-transform: uppercase; font-weight: 800;">${i === 0 ? 'Destaque do Mês' : 'Colaborador'}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 15px; text-align: center; font-weight: 700; color: #4ade80;">${r.appointments}</td>
+                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">R$ ${r.serviceRevenue.toFixed(2)}</td>
+                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">R$ ${r.productRevenue.toFixed(2)}</td>
+                                    <td style="padding: 15px; text-align: right;">
+                                        <span style="font-weight: 800; color: var(--accent-color); font-size: 1.1rem;">R$ ${r.totalRevenue.toFixed(2)}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 25px; text-align: center;">
+                    <button class="btn-secondary" style="padding: 10px 30px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
+                </div>
+            </section>
+        `;
     },
 
     renderBooking(container) {
