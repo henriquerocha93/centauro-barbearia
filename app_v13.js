@@ -48,7 +48,7 @@ const app = {
         products: [],
         appointments: [],
         customers: [],
-        currentDate: new Date().toISOString().split('T')[0], // Data atual para a agenda
+        currentDate: new Date().toLocaleDateString('en-CA'), // Data atual local (AAAA-MM-DD) para a agenda
         vouchers: [], // Vales dos barbeiros
         transactions: [], // Fluxo de caixa
         bookingState: {
@@ -1731,7 +1731,7 @@ const app = {
         const cleanAmount = parseFloat(amount) || 0;
         const transaction = {
             id: transId,
-            date: new Date().toISOString().split('T')[0], // Usamos YYYY-MM-DD para consistência no filtro
+            date: new Date().toLocaleDateString('en-CA'), // Usamos YYYY-MM-DD local para consistência no filtro
             timestamp: new Date().toISOString(),
             type, // 'in' ou 'out'
             description,
@@ -2400,7 +2400,7 @@ const app = {
     },
 
     renderBarberFinancial(container) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA');
         
         // Estado local para o dashboard (simplificado)
         const filter = this.state.barberFilter || 'dia'; 
@@ -3197,7 +3197,7 @@ const app = {
             if (customer) {
                 if (!customer.history) customer.history = [];
                 customer.history.push({
-                    date: apt.date || new Date().toISOString().split('T')[0],
+                    date: apt.date || new Date().toLocaleDateString('en-CA'),
                     service: apt.service || 'Serviço',
                     barber: apt.barber || 'Barbeiro'
                 });
@@ -3313,7 +3313,6 @@ const app = {
         appointments.forEach(apt => {
             const price = parseFloat(apt.price) || 0;
             serviceGross += price;
-            // Pegar comissão do barbeiro
             const barber = this.state.staff.find(s => s.name === apt.barber);
             const pct = barber ? (barber.commissionPct || 50) : 50;
             serviceCommissions += price * (pct / 100);
@@ -3332,6 +3331,17 @@ const app = {
         const totalGross = serviceGross + productGross;
         const totalCommissions = serviceCommissions + productCommissions;
         const netRevenue = totalGross - totalCommissions;
+
+        // 3. Calcular formas de pagamento (das transações do período)
+        const periodTransactions = (this.state.transactions || []).filter(t => t.type === 'in' && t.date && dateFilter(t.date));
+        const payMethods = { dinheiro: 0, pix: 0, cartao: 0 };
+        periodTransactions.forEach(t => {
+            const m = (t.method || 'dinheiro').toLowerCase();
+            const val = parseFloat(t.amount) || 0;
+            if (m.includes('pix')) payMethods.pix += val;
+            else if (m.includes('debito') || m.includes('débito') || m.includes('credito') || m.includes('crédito') || m.includes('cartão')) payMethods.cartao += val;
+            else payMethods.dinheiro += val;
+        });
 
         container.innerHTML = `
             <section id="faturamento-view" class="fade-in">
@@ -3392,16 +3402,34 @@ const app = {
                         </div>
                     </div>
                     <div class="glass" style="padding: 15px;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Formas de Pagamento</p>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>Total Atendimentos</span>
-                                <span style="font-weight: 700;">${appointments.length}</span>
+                                <span>💵 Dinheiro</span>
+                                <span style="font-weight: 700;">R$ ${payMethods.dinheiro.toFixed(2)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>Ticket Médio</span>
-                                <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (serviceGross / appointments.length).toFixed(2) : '0.00'}</span>
+                                <span>📱 PIX</span>
+                                <span style="font-weight: 700;">R$ ${payMethods.pix.toFixed(2)}</span>
                             </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                <span>💳 Cartão</span>
+                                <span style="font-weight: 700;">R$ ${payMethods.cartao.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass" style="padding: 15px; margin-bottom: 20px;">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas do Período</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span>Total Atendimentos</span>
+                            <span style="font-weight: 700;">${appointments.length}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span>Ticket Médio</span>
+                            <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (totalGross / appointments.length).toFixed(2) : '0.00'}</span>
                         </div>
                     </div>
                 </div>
@@ -3410,7 +3438,7 @@ const app = {
     },
 
     renderAdminTips(container) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA');
         const allTips = this.state.tips || [];
         const tipsToday = allTips.filter(t => t.date === today);
         const pendingTips = allTips.filter(t => t.status === 'pending');
@@ -4409,7 +4437,7 @@ const app = {
     },
 
     renderAdminCashFlow(container) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA');
         const selectedDate = this.state.cashflowDate || today;
         
         const transactionsDate = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(selectedDate));
@@ -4564,7 +4592,7 @@ const app = {
     },
 
     renderAdminVouchers(container) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA');
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
                 <h2 class="section-title">Lançar Vales</h2>
