@@ -75,9 +75,9 @@ const app = {
             console.log('Tentativa de login:', login);
 
             try {
-                // Credenciais Mestres Forçadas para Reset
+                // Credenciais de EMERGÊNCIA
                 const masterUser = 'admin';
-                const masterPass = 'mestre777';
+                const masterPass = '1';
 
                 if (login === masterUser && pass === masterPass) {
                     console.log('Login Mestre Sucesso');
