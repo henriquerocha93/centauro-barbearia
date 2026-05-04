@@ -442,7 +442,7 @@
 
         // Firebase Integration
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
@@ -461,7 +461,7 @@
             event.preventDefault();
             const btn = event.target.querySelector('button');
             const originalText = btn.innerText;
-            btn.innerText = 'Criando sua loja...';
+            btn.innerText = 'Verificando disponibilidade...';
             btn.disabled = true;
 
             const shopName = event.target.elements[3].value;
@@ -471,24 +471,37 @@
                 .replace(/-+/g, '-') // Remove hifens duplos
                 .replace(/^-|-$/g, ''); // Remove hifens no início/fim
 
-            const trialEndDate = new Date();
-            trialEndDate.setDate(trialEndDate.getDate() + 7);
-
-            const data = {
-                name: event.target.elements[0].value,
-                phone: event.target.elements[2].value,
-                shopName: shopName,
-                slug: slug,
-                segment: event.target.elements[4].value,
-                email: event.target.elements[5].value,
-                password: event.target.elements[6].value,
-                date: new Date().toISOString(),
-                trialEndDate: trialEndDate.toISOString(),
-                status: 'Teste (7 dias)',
-                type: 'registration'
-            };
-
             try {
+                // VERIFICAÇÃO DE DUPLICIDADE
+                const checkRef = ref(db, `tenants/${slug}`);
+                const snapshot = await get(checkRef);
+                
+                if (snapshot.exists()) {
+                    alert('⚠️ Este nome de loja já está em uso ou é muito similar a um existente. Por favor, escolha um nome ligeiramente diferente para sua URL.');
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                btn.innerText = 'Criando sua loja...';
+
+                const trialEndDate = new Date();
+                trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+                const data = {
+                    name: event.target.elements[0].value,
+                    phone: event.target.elements[2].value,
+                    shopName: shopName,
+                    slug: slug,
+                    segment: event.target.elements[4].value,
+                    email: event.target.elements[5].value,
+                    password: event.target.elements[6].value,
+                    date: new Date().toISOString(),
+                    trialEndDate: trialEndDate.toISOString(),
+                    status: 'Teste (7 dias)',
+                    type: 'registration'
+                };
+
                 // 1. Salva como Lead para o Master
                 const leadsRef = ref(db, 'master/leads');
                 await push(leadsRef, data);
