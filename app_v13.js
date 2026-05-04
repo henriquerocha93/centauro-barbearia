@@ -1787,9 +1787,9 @@ const app = {
                     <div class="glass" style="padding:30px;">
                         <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--accent-color); text-align: center;">Horários de Atendimento</h3>
                         <div class="hours-container" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>09:00 - 20:00</span></div>
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>09:00 - 21:00</span></div>
-                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>Fechado</span></div>
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>${s.hours1 || '09:00 - 20:00'}</span></div>
+                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>${s.hours2 || '09:00 - 21:00'}</span></div>
+                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>${s.hours3 || 'Fechado'}</span></div>
                         </div>
                     </div>
                 </div>

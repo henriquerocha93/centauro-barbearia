@@ -112,6 +112,7 @@
             <div class="step active" id="s1"></div>
             <div class="step" id="s2"></div>
             <div class="step" id="s3"></div>
+            <div class="step" id="s4"></div>
         </div>
 
         <!-- PASSO 1: IDENTIDADE -->
@@ -143,8 +144,39 @@
             <button class="btn-setup" onclick="nextStep(2)">Próximo Passo →</button>
         </div>
 
-        <!-- PASSO 2: SERVIÇOS -->
+        <!-- PASSO 2: LOCALIZAÇÃO E HORÁRIO -->
         <div class="setup-step" id="step2">
+            <h3>📍 Onde seus clientes te encontram?</h3>
+            <p style="margin-bottom: 25px; opacity: 0.8;">Informe seu endereço e horários de atendimento.</p>
+            
+            <div class="config-group">
+                <label>Endereço Completo</label>
+                <input type="text" id="addressInput" placeholder="Ex: Rua Tal, 123 - Centro" value="Rua Tenente Alpoim, 516, Vila João Pessoa, Porto Alegre, RS" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
+            </div>
+
+            <div class="config-group">
+                <label>Horários de Atendimento</label>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Segunda a Quarta</span>
+                        <input type="text" id="hours1" value="09:00 - 20:00" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Quinta a Sábado</span>
+                        <input type="text" id="hours2" value="09:00 - 21:00" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Domingos e Feriados</span>
+                        <input type="text" id="hours3" value="Fechado" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-setup" onclick="nextStep(3)">Próximo Passo →</button>
+        </div>
+
+        <!-- PASSO 3: SERVIÇOS -->
+        <div class="setup-step" id="step3">
             <h3>✂️ Seus Serviços</h3>
             <p style="margin-bottom: 25px; opacity: 0.8;">Quais serviços você oferece agora? (Você poderá mudar depois)</p>
             
@@ -159,11 +191,11 @@
                 </div>
             </div>
 
-            <button class="btn-setup" onclick="nextStep(3)">Finalizar Configuração ✨</button>
+            <button class="btn-setup" onclick="nextStep(4)">Quase lá! ✨</button>
         </div>
 
-        <!-- PASSO 3: FINALIZANDO -->
-        <div class="setup-step" id="step3" style="text-align: center;">
+        <!-- PASSO 4: FINALIZANDO -->
+        <div class="setup-step" id="step4" style="text-align: center;">
             <div style="font-size: 4rem; margin-bottom: 20px;">🚀</div>
             <h3>Tudo Pronto!</h3>
             <p style="margin-bottom: 30px; opacity: 0.8;">Estamos preparando sua página personalizada. Em instantes você poderá começar a agendar seus clientes.</p>
@@ -212,27 +244,36 @@
             document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.step').forEach((s, idx) => {
                 if(idx < num) s.classList.add('active');
+                else s.classList.remove('active');
             });
             document.getElementById(`step${num}`).classList.add('active');
         };
 
         window.finishSetup = async () => {
-            const btn = document.querySelector('#step3 button');
+            const btn = document.querySelector('#step4 button');
             const originalText = btn.innerText;
             btn.innerText = 'Salvando...';
             btn.disabled = true;
             
             const welcome = document.getElementById('welcomeMsg').value || 'Excelência e Tradição';
             const btnTxt = document.getElementById('buttonText').value || 'AGENDAR HORÁRIO';
+            const address = document.getElementById('addressInput').value || 'Rua Tenente Alpoim, 516';
+            const h1 = document.getElementById('hours1').value || '09:00 - 20:00';
+            const h2 = document.getElementById('hours2').value || '09:00 - 21:00';
+            const h3 = document.getElementById('hours3').value || 'Fechado';
 
             try {
                 // Atualiza as configurações da loja
                 const shopRef = ref(db, `tenants/${slug}/settings`);
                 await update(shopRef, {
                     primaryColor: selectedHex,
-                    accentColor: selectedHex, // Mapeia para o centauro dashboard
+                    accentColor: selectedHex,
                     welcomeMessage: welcome,
                     buttonText: btnTxt,
+                    address: address,
+                    hours1: h1,
+                    hours2: h2,
+                    hours3: h3,
                     setupComplete: true
                 });
 
