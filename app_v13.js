@@ -993,12 +993,6 @@ const app = {
     },
 
     navigateTo(view) {
-        // [Segurança] Impedir barbeiros de acessar telas administrativas sensíveis
-        if (view.startsWith('admin-') && this.state.user.role !== 'admin' && view !== 'admin-os' && view !== 'admin-stock' && view !== 'admin-consumption') {
-            console.warn(`Acesso negado à view ${view} para o papel ${this.state.user.role}`);
-            this.navigateTo(this.state.user.role === 'barber' ? 'barber-dash' : 'home');
-            return;
-        }
 
         // Fechar sidebar se estiver aberta (mobile)
         const sidebar = document.getElementById('sidebar');
@@ -1020,6 +1014,20 @@ const app = {
         if (this.state.subscription?.isBlocked) {
             this.renderBlockedScreen(appContainer);
             return;
+        }
+
+        // [Segurança] Bloqueio de acesso não autorizado ou deslogado
+        if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
+            if (!this.state.user) {
+                console.warn("Redirecionando: Tentativa de acesso restrito sem login.");
+                this.render('login');
+                return;
+            }
+            // Bloqueio de barbeiro em telas admin (exceto as permitidas)
+            if (this.state.user.role !== 'admin' && view.startsWith('admin-') && view !== 'admin-os' && view !== 'admin-stock' && view !== 'admin-consumption' && view !== 'admin-team-performance') {
+                this.render('barber-dash');
+                return;
+            }
         }
 
         const main = document.getElementById('main-content');
@@ -1114,6 +1122,7 @@ const app = {
                     ${this.state.user.role === 'barber' ? `
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
                         <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')"><i>🏆</i> Ranking da Equipe</a>
                     ` : `
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
                         <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')"><i>🏆</i> Desempenho da Equipe</a>
@@ -1842,6 +1851,9 @@ const app = {
                 
                 if (document.getElementById('keep-logged-in').checked) {
                     localStorage.setItem('centauros_user', JSON.stringify(matchedUser));
+                } else {
+                    // Limpa sessão anterior se não quiser manter logado
+                    localStorage.removeItem('centauros_user');
                 }
 
                 if (matchedUser.role === 'admin') {
@@ -1855,6 +1867,66 @@ const app = {
                 alert('Credenciais inválidas: Verifique o nome de usuário (' + user + ') ou senha digitados.');
             }
         };
+    },
+
+    renderSetupWizard(container) {
+        const s = this.state.settings.shopInfo || {};
+        container.innerHTML = `
+            <section class="fade-in" style="max-width: 600px; margin: 40px auto; padding: 20px;">
+                <div class="glass" style="padding: 40px; border-top: 5px solid var(--accent-color); border-radius: 24px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 3.5rem; margin-bottom: 15px;">🚀</div>
+                        <h2 style="font-family: 'Playfair Display'; font-size: 2rem; color: var(--text-primary); margin-bottom: 10px;">Quase Pronto!</h2>
+                        <p style="color: var(--text-secondary); line-height: 1.6;">Para começar a usar o sistema, precisamos de algumas informações básicas da sua barbearia.</p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Telefone / WhatsApp *</label>
+                            <input type="text" id="setup-phone" class="glass" style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;" placeholder="(00) 00000-0000">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Instagram (opcional)</label>
+                            <input type="text" id="setup-instagram" class="glass" style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;" placeholder="@suabarbearia">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Endereço Completo *</label>
+                            <input type="text" id="setup-address" class="glass" style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;" placeholder="Rua, Número, Bairro - Cidade">
+                        </div>
+                        
+                        <div style="margin-top: 10px; padding: 15px; background: rgba(212, 175, 55, 0.05); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                                💡 <strong>Dica:</strong> Você poderá configurar seus horários de atendimento e serviços no menu de configurações após concluir este setup.
+                            </p>
+                        </div>
+
+                        <button class="btn-primary" style="padding: 18px; font-size: 1.1rem; margin-top: 10px;" onclick="app.saveSetupWizard()">
+                            CONCLUIR E ACESSAR PAINEL
+                        </button>
+                    </div>
+                </div>
+            </section>
+        `;
+    },
+
+    saveSetupWizard() {
+        const phone = document.getElementById('setup-phone').value.trim();
+        const instagram = document.getElementById('setup-instagram').value.trim();
+        const address = document.getElementById('setup-address').value.trim();
+
+        if (!phone || !address) {
+            alert('Por favor, preencha o Telefone e o Endereço para continuar.');
+            return;
+        }
+
+        if (!this.state.settings.shopInfo) this.state.settings.shopInfo = {};
+        this.state.settings.shopInfo.phone = phone;
+        this.state.settings.shopInfo.instagram = instagram;
+        this.state.settings.shopInfo.address = address;
+
+        this.saveState();
+        this.render('admin-dash');
+        alert('✅ Perfil configurado com sucesso! Bem-vindo ao Agendamento Fácil BR.');
     },
 
     renderAdminDash(container) {
@@ -1887,6 +1959,13 @@ const app = {
                     </button>
                 </div>
             `;
+        }
+
+        // [NOVO] Setup Wizard Check
+        const si = this.state.settings.shopInfo || {};
+        if (this.state.user.role === 'admin' && (!si.phone || !si.address)) {
+            this.renderSetupWizard(container);
+            return;
         }
 
         container.innerHTML = this.getBirthdaysHTML() + billingBanner + `<div id="dash-agenda-wrapper"></div>`;
@@ -4244,15 +4323,26 @@ const app = {
         };
 
         transactionsDate.forEach(t => {
+            const method = (t.method || 'dinheiro').toLowerCase();
+            const amount = parseFloat(t.amount) || 0;
+            
             if (t.type === 'in') {
-                totals[t.method || 'dinheiro'] += t.amount;
-                if (t.category === 'produto') {
-                    totals.produtos += t.amount;
-                } else if (t.category === 'serviço' || t.category === 'agendamento') {
-                    totals.servicos += t.amount;
+                // Mapeamento de métodos para as chaves do objeto totals
+                if (method.includes('dinheiro')) totals.dinheiro += amount;
+                else if (method.includes('pix')) totals.pix += amount;
+                else if (method.includes('débito') || method.includes('debito')) totals.debito += amount;
+                else if (method.includes('crédito') || method.includes('credito')) totals.credito += amount;
+
+                // Contabilização por categoria
+                const cat = (t.category || '').toLowerCase();
+                if (cat === 'produto') {
+                    totals.produtos += amount;
+                } else if (cat === 'serviço' || cat === 'servico' || cat === 'agendamento') {
+                    totals.servicos += amount;
                 }
             } else {
-                totals['dinheiro'] -= t.amount;
+                // Despesas saem do dinheiro
+                totals.dinheiro -= amount;
             }
         });
 
@@ -4341,13 +4431,18 @@ const app = {
         if (selectedDate === today) {
             document.getElementById('btn-add-in').onclick = () => {
                 const desc = prompt('Descrição da entrada:');
-                const val = parseFloat(prompt('Valor:'));
-                const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
-                
+                const val = parseFloat(prompt('Valor (ex: 30.50):'));
                 if (desc && val) {
+                    const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
+                    const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
+                    
                     const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
                     const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
-                    this.addTransaction('in', desc, val, 'outros', selectedMethod);
+                    
+                    const validCats = ['servico', 'produto', 'outros'];
+                    const selectedCat = validCats.includes(category) ? category : 'outros';
+                    
+                    this.addTransaction('in', desc, val, selectedCat, selectedMethod);
                     this.render('admin-cashflow');
                 }
             };
@@ -4662,6 +4757,7 @@ const app = {
                 </div>
 
                 <!-- Resumo Rápido -->
+                ${this.state.user.role === 'admin' ? `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
                     <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Receita Total Equipe</p>
@@ -4672,6 +4768,14 @@ const app = {
                         <p style="font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-top: 5px;">${totalMonthApts}</p>
                     </div>
                 </div>
+                ` : `
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #4ade80;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Total Atendimentos da Equipe</p>
+                        <p style="font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-top: 5px;">${totalMonthApts}</p>
+                    </div>
+                </div>
+                `}
 
                 <div class="glass" style="padding: 0; overflow: hidden;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -4701,10 +4805,10 @@ const app = {
                                         </div>
                                     </td>
                                     <td style="padding: 15px; text-align: center; font-weight: 700; color: #4ade80;">${r.appointments}</td>
-                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">R$ ${r.serviceRevenue.toFixed(2)}</td>
-                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">R$ ${r.productRevenue.toFixed(2)}</td>
+                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">${this.state.user.role === 'admin' ? 'R$ ' + r.serviceRevenue.toFixed(2) : '---'}</td>
+                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">${this.state.user.role === 'admin' ? 'R$ ' + r.productRevenue.toFixed(2) : '---'}</td>
                                     <td style="padding: 15px; text-align: right;">
-                                        <span style="font-weight: 800; color: var(--accent-color); font-size: 1.1rem;">R$ ${r.totalRevenue.toFixed(2)}</span>
+                                        <span style="font-weight: 800; color: var(--accent-color); font-size: 1.1rem;">${this.state.user.role === 'admin' ? 'R$ ' + r.totalRevenue.toFixed(2) : '---'}</span>
                                     </td>
                                 </tr>
                             `).join('')}
