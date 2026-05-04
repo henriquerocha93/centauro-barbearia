@@ -1734,9 +1734,9 @@ const app = {
         const type = s.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
-        const subtitle = s.subtitle || theme.subtitle;
+        const subtitle = s.welcomeMessage || s.subtitle || theme.subtitle;
         const name = s.shopName || 'Centauro Barbearia';
-        const welcome = s.welcomeMessage || 'AGENDAR HORÁRIO';
+        const buttonText = s.buttonText || 'AGENDAR HORÁRIO';
         const heroImg = theme.hero;
 
         container.innerHTML = `
@@ -1745,7 +1745,7 @@ const app = {
                     <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px;">${subtitle}</p>
                     <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; margin-bottom: 15px;">${name}</h1>
                     <div style="width: 80px; height: 3px; background: var(--accent-color); margin: 0 auto 30px;"></div>
-                    <button class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem; font-weight: 700;" onclick="app.navigateTo('booking')">${welcome}</button>
+                    <button class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem; font-weight: 700;" onclick="app.navigateTo('booking')">${buttonText}</button>
                 </div>
             </section>
 

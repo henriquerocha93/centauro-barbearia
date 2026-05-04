@@ -131,8 +131,13 @@
             </div>
 
             <div class="config-group">
-                <label>Frase de Boas-vindas (Hero)</label>
+                <label>Subtítulo do Topo (Frase Curta)</label>
                 <input type="text" id="welcomeMsg" placeholder="Ex: Excelência e Tradição" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
+            </div>
+
+            <div class="config-group">
+                <label>Texto do Botão de Agendamento</label>
+                <input type="text" id="buttonText" placeholder="Ex: Agendar Horário" value="AGENDAR HORÁRIO" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
             </div>
 
             <button class="btn-setup" onclick="nextStep(2)">Próximo Passo →</button>
@@ -218,6 +223,7 @@
             btn.disabled = true;
             
             const welcome = document.getElementById('welcomeMsg').value || 'Excelência e Tradição';
+            const btnTxt = document.getElementById('buttonText').value || 'AGENDAR HORÁRIO';
 
             try {
                 // Atualiza as configurações da loja
@@ -226,6 +232,7 @@
                     primaryColor: selectedHex,
                     accentColor: selectedHex, // Mapeia para o centauro dashboard
                     welcomeMessage: welcome,
+                    buttonText: btnTxt,
                     setupComplete: true
                 });
 
