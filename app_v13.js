@@ -4295,6 +4295,7 @@ const app = {
                                 <th style="padding: 12px 15px;">Destino</th>
                                 <th style="padding: 12px 15px;">Vendedor</th>
                                 <th style="padding: 12px 15px;">Pagamento</th>
+                                <th style="padding: 12px 15px; text-align: right;">Comissão</th>
                                 <th style="padding: 12px 15px; text-align: right;">Total</th>
                             </tr>
                         </thead>
@@ -4331,7 +4332,15 @@ const app = {
             if (s.target === 'barbeiro') targetLabel = `✂️ ${s.barberName || 'Barbeiro'}`;
             if (s.target === 'adm') targetLabel = '⚙️ Uso Interno';
 
-            const sellerName = s.seller ? s.seller.split(' ')[0] : '--';
+            // Lógica melhorada para mostrar o vendedor
+            let sellerDisplay = '--';
+            if (s.seller) {
+                sellerDisplay = s.seller.split(' ')[0];
+            } else if (s.target === 'barbeiro') {
+                sellerDisplay = s.barberName ? s.barberName.split(' ')[0] : '--';
+            }
+
+            const comm = parseFloat(s.sellerCommission || 0);
 
             return `
                 <tr style="border-bottom: 1px solid var(--glass-border);">
@@ -4341,8 +4350,9 @@ const app = {
                         <span style="font-size: 0.75rem; color: var(--text-secondary);"> (x${s.qty})</span>
                     </td>
                     <td style="padding: 12px 15px;">${targetLabel}</td>
-                    <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerName}</td>
+                    <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerDisplay}</td>
                     <td style="padding: 12px 15px; font-size: 0.75rem; color: var(--text-secondary);">${(s.payment || 'Dinheiro').toUpperCase()}</td>
+                    <td style="padding: 12px 15px; text-align: right; color: #4ade80; font-weight: 600;">${comm > 0 ? `R$ ${comm.toFixed(2)}` : '--'}</td>
                     <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: var(--accent-color);">R$ ${parseFloat(s.total || 0).toFixed(2)}</td>
                 </tr>
             `;
