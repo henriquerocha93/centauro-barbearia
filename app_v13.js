@@ -4282,11 +4282,20 @@ const app = {
 
         // [ADM ONLY] Adicionar o histórico logo abaixo
         if (this.state.user.role === 'admin') {
+            const auditDate = this.state.pdvAuditDate || new Date().toLocaleDateString('en-CA');
             container.innerHTML += `
                 <section style="padding: 0 20px 40px 20px;">
-                    <h3 style="font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                        🕒 Histórico de Vendas (Hoje) - <small style="color:var(--text-secondary); font-weight:normal;">Visão exclusiva ADM</small>
-                    </h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                            🕒 Histórico de Vendas — <small style="color:var(--text-secondary); font-weight:normal;">Auditoria ADM</small>
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Filtrar Data:</label>
+                            <input type="date" value="${auditDate}" class="glass" 
+                                   style="padding: 6px 10px; color: var(--text-primary); font-size: 0.85rem;"
+                                   onchange="app.state.pdvAuditDate = this.value; app.render('pdv');">
+                        </div>
+                    </div>
                     <div class="glass" style="padding: 0; overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 850px;">
                             <thead>
@@ -4302,7 +4311,7 @@ const app = {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${this.getRecentPDVSalesHTML()}
+                                ${this.getRecentPDVSalesHTML(auditDate)}
                             </tbody>
                         </table>
                     </div>
@@ -4318,15 +4327,16 @@ const app = {
         setTimeout(() => document.getElementById('pdv-scanner-input')?.focus(), 100);
     },
 
-    getRecentPDVSalesHTML() {
+    getRecentPDVSalesHTML(filterDate) {
         const today = new Date().toLocaleDateString('en-CA');
+        const targetDate = filterDate || today;
         const sales = (this.state.productSales || [])
-            .filter(s => s.date === today)
+            .filter(s => s.date === targetDate)
             .reverse()
-            .slice(0, 10);
+            .slice(0, 50); // Aumentar limite para auditoria
 
         if (sales.length === 0) {
-            return `<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--text-secondary);">Nenhuma venda realizada hoje.</td></tr>`;
+            return `<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--text-secondary);">Nenhuma venda realizada em ${new Date(targetDate + 'T12:00:00').toLocaleDateString('pt-BR')}.</td></tr>`;
         }
 
         return sales.map(s => {
