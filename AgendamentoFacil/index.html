@@ -61,7 +61,7 @@
                 <p class="hero-subtitle">Com o <strong>Agendamento Fácil BR</strong> você deixa a gestão da sua barbearia, clínica de estética ou salão mais simples, inteligente e automatizada.</p>
 
                 <div style="margin-bottom: 40px; display: flex; gap: 15px;">
-                    <a href="#contato" class="btn btn-orange">Começar Teste Grátis</a>
+                    <a href="javascript:void(0)" class="btn btn-orange" onclick="window.openModal()">Começar Teste Grátis</a>
                     <a href="apresentacao.html" class="btn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">Apresentação</a>
                 </div>
 
@@ -343,6 +343,56 @@
         </div>
     </footer>
 
+    <!-- MODAL DE CADASTRO -->
+    <div class="modal-overlay" id="registrationModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="window.closeModal()">✕</button>
+            <div class="modal-header">
+                <img src="logo_br.png" alt="Agendamento Fácil BR">
+                <h2>Venha fazer parte da nossa rede</h2>
+                <p>Cadastre sua empresa em menos de 1 minuto 🚀</p>
+            </div>
+            <form id="registrationForm" class="form-grid" onsubmit="window.submitRegistration(event)">
+                <div class="form-group form-full">
+                    <label>Qual o seu nome?</label>
+                    <input type="text" placeholder="Seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label>DDI</label>
+                    <select disabled><option>🇧🇷 +55</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Seu telefone/whatsapp</label>
+                    <input type="tel" placeholder="(00) 00000-0000" required>
+                </div>
+                <div class="form-group form-full">
+                    <label>Qual é o nome da sua empresa?</label>
+                    <input type="text" placeholder="Ex: Barbearia do João" required>
+                </div>
+                <div class="form-group form-full">
+                    <label>Qual é o segmento da sua empresa?</label>
+                    <select required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="barbearia">Barbearia</option>
+                        <option value="salao">Salão de Beleza</option>
+                        <option value="clinica">Clínica de Estética</option>
+                        <option value="manicure">Manicure / Podologia</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>E-mail para acesso</label>
+                    <input type="email" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Crie uma senha de acesso</label>
+                    <input type="password" placeholder="********" required>
+                </div>
+                <button type="submit" class="btn-submit form-full">Começar agora com o Agendamento Fácil</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Accordion Logic
         document.querySelectorAll('.accordion-header').forEach(button => {
@@ -377,6 +427,68 @@
         };
         window.addEventListener('scroll', revealElements);
         window.addEventListener('load', revealElements);
+
+        // Modal Logic
+        const modal = document.getElementById('registrationModal');
+        window.openModal = () => {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        // Firebase Integration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+            authDomain: "centauro-barbearia.firebaseapp.com",
+            projectId: "centauro-barbearia",
+            storageBucket: "centauro-barbearia.firebasestorage.app",
+            messagingSenderId: "96712816127",
+            appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+            databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.submitRegistration = async (event) => {
+            event.preventDefault();
+            const btn = event.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Processando...';
+            btn.disabled = true;
+
+            const data = {
+                name: event.target.elements[0].value,
+                phone: event.target.elements[2].value,
+                shopName: event.target.elements[3].value,
+                segment: event.target.elements[4].value,
+                email: event.target.elements[5].value,
+                password: event.target.elements[6].value,
+                date: new Date().toISOString(),
+                status: 'Novo Lead',
+                type: 'registration'
+            };
+
+            try {
+                const leadsRef = ref(db, 'master/leads');
+                await push(leadsRef, data);
+                alert('🚀 Cadastro realizado com sucesso! Nossa equipe entrará em contato em breve para liberar seu acesso.');
+                window.closeModal();
+                event.target.reset();
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao processar cadastro. Tente novamente.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
     </script>
 </body>
 </html>
