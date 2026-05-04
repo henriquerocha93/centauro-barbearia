@@ -61,6 +61,7 @@ const app = {
             customerPhone: '',
             customerBirth: ''
         },
+        openingBalances: {}, // Saldo inicial por data { 'YYYY-MM-DD': 100.00 }
         cart: [],           // Carrinho do PDV
         pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
         serviceOrders: [],   // Ordens de Serviço
@@ -241,6 +242,7 @@ const app = {
             transactions: this.state.transactions,
             products: this.state.products,
             productSales: this.state.productSales || [],
+            openingBalances: this.state.openingBalances || {},
             appointments: this.state.appointments || [],
             serviceOrders: this.state.serviceOrders || [],
             tips: this.state.tips || [],
@@ -272,6 +274,7 @@ const app = {
                 transactions: this.state.transactions,
                 products: this.state.products,
                 productSales: this.state.productSales || [],
+                openingBalances: this.state.openingBalances || {},
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
                 tips: this.state.tips || [],
@@ -570,6 +573,7 @@ const app = {
                             this.state.transactions = data.transactions || [];
                             this.state.products = data.products || [];
                             this.state.productSales = data.productSales || [];
+                            this.state.openingBalances = data.openingBalances || {};
                             this.state.appointments = data.appointments || [];
                             this.state.serviceOrders = data.serviceOrders || [];
                             this.state.tips = data.tips || [];
@@ -1743,6 +1747,13 @@ const app = {
         this.state.transactions.push(transaction);
         this.saveState();
         return transId;
+    },
+
+    saveOpeningBalance(date, amount) {
+        if (!this.state.openingBalances) this.state.openingBalances = {};
+        this.state.openingBalances[date] = parseFloat(amount) || 0;
+        this.saveState();
+        this.render('admin-cashflow');
     },
 
     reconcileTransactions() {
@@ -4636,6 +4647,20 @@ const app = {
         
         const transactionsDate = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(selectedDate));
         
+        // --- Cálculo do Saldo Inicial (Carry-Over) ---
+        const openingBalance = (this.state.openingBalances && this.state.openingBalances[selectedDate]) || 0;
+        
+        // Sugestão baseada no dia anterior
+        const prevDateObj = new Date(selectedDate + 'T12:00:00');
+        prevDateObj.setDate(prevDateObj.getDate() - 1);
+        const prevDate = prevDateObj.toLocaleDateString('en-CA');
+        
+        let prevDayFinalBalance = 0;
+        const prevOpening = (this.state.openingBalances && this.state.openingBalances[prevDate]) || 0;
+        const prevTransactions = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(prevDate));
+        const prevDayTotal = prevTransactions.reduce((acc, t) => t.type === 'in' ? acc + (parseFloat(t.amount) || 0) : acc - (parseFloat(t.amount) || 0), 0);
+        prevDayFinalBalance = prevOpening + prevDayTotal;
+
         const totals = {
             dinheiro: 0,
             pix: 0,
@@ -4651,24 +4676,23 @@ const app = {
             const amount = parseFloat(t.amount) || 0;
             
             if (t.type === 'in') {
-                // Mapeamento de métodos para as chaves do objeto totals
                 if (method.includes('pix')) totals.pix += amount;
                 else if (method.includes('débito') || method.includes('debito')) totals.debito += amount;
                 else if (method.includes('crédito') || method.includes('credito')) totals.credito += amount;
                 else totals.dinheiro += amount;
 
-                // Contabilização por categoria
                 const cat = (t.category || '').toLowerCase();
-                if (cat === 'produto') {
-                    totals.produtos += amount;
-                } else {
-                    totals.servicos += amount;
-                }
+                if (cat === 'produto') totals.produtos += amount;
+                else totals.servicos += amount;
             } else {
-                // Despesas saem do dinheiro
+                // Despesas saem do dinheiro físico (sangria)
                 totals.dinheiro -= amount;
             }
         });
+
+        // Balanço do dia atual considerando o saldo inicial
+        const dailyTotal = transactionsDate.reduce((acc, t) => t.type === 'in' ? acc + (parseFloat(t.amount) || 0) : acc - (parseFloat(t.amount) || 0), 0);
+        const finalBalanceOfDay = openingBalance + dailyTotal;
 
         const totalGeral = (this.state.transactions || []).reduce((acc, t) => {
             const val = parseFloat(t.amount) || 0;
@@ -4679,8 +4703,8 @@ const app = {
             <section id="cashflow-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom: 5px;">Balanço Diário</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Consulte a movimentação financeira por data</p>
+                        <h2 class="section-title" style="margin-bottom: 5px;">📊 Fluxo de Caixa</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Controle diário e saldo inicial (Carry-over)</p>
                     </div>
                     
                     <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 10px;">
@@ -4689,23 +4713,49 @@ const app = {
                                onchange="app.state.cashflowDate = this.value; app.render('admin-cashflow')">
                     </div>
                 </div>
+
+                <!-- BLOCO: Saldo Inicial (Carry-Over) -->
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; border-top: 4px solid var(--accent-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h3 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">💰 Saldo Inicial do Dia</h3>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary);">Dinheiro que ficou no caixa do dia anterior.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            ${prevDayFinalBalance > 0 ? `
+                                <div style="text-align: right; cursor: pointer;" onclick="document.getElementById('opening-bal-input').value = ${prevDayFinalBalance.toFixed(2)}; app.saveOpeningBalance('${selectedDate}', ${prevDayFinalBalance.toFixed(2)})">
+                                    <p style="font-size: 0.65rem; color: var(--text-secondary);">Sugerido (ontem):</p>
+                                    <p style="font-size: 0.85rem; color: var(--accent-color); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
+                                </div>
+                            ` : ''}
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--text-secondary);">R$</span>
+                                <input type="number" id="opening-bal-input" class="glass" 
+                                       style="padding: 10px 10px 10px 35px; width: 130px; color: var(--accent-color); font-weight: 800; font-size: 1.1rem; border: 1.5px solid var(--glass-border);" 
+                                       value="${openingBalance.toFixed(2)}" step="0.01"
+                                       onblur="app.saveOpeningBalance('${selectedDate}', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💵 Dinheiro</p>
-                        <p style="font-weight: 700;">R$ ${totals.dinheiro.toFixed(2)}</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💵 Dinheiro (Físico)</p>
+                        <p style="font-weight: 700; font-size: 1.1rem;">R$ ${(totals.dinheiro + openingBalance).toFixed(2)}</p>
+                        <small style="font-size: 0.65rem; opacity: 0.6;">(Incl. Saldo Inicial)</small>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #22d3ee;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">📱 PIX</p>
-                        <p style="font-weight: 700;">R$ ${totals.pix.toFixed(2)}</p>
+                        <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.pix.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Débito</p>
-                        <p style="font-weight: 700;">R$ ${totals.debito.toFixed(2)}</p>
+                        <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.debito.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Crédito</p>
-                        <p style="font-weight: 700;">R$ ${totals.credito.toFixed(2)}</p>
+                        <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.credito.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -4720,14 +4770,19 @@ const app = {
                     </div>
                 </div>
 
-                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(255,255,255,0.02);">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Geral Acumulado (Caixa)</p>
-                    <p style="font-size: 1.8rem; font-weight: 700; color: ${totalGeral >= 0 ? '#4ade80' : '#ff4444'}">R$ ${totalGeral.toFixed(2)}</p>
+                <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1.5px solid var(--accent-color);">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Final Esperado no Caixa (Dinheiro)</p>
+                    <p style="font-size: 2.2rem; font-weight: 800; color: var(--accent-color);">R$ ${(openingBalance + totals.dinheiro).toFixed(2)}</p>
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; font-size: 0.75rem; opacity: 0.8;">
+                        <span>Inicial: R$ ${openingBalance.toFixed(2)}</span>
+                        <span>+</span>
+                        <span>Movimentação: R$ ${totals.dinheiro.toFixed(2)}</span>
+                    </div>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Movimentações do Dia</h3>
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">📜 Movimentações de ${selectedDate.split('-').reverse().join('/')}</h3>
                 <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                    ${transactionsDate.length === 0 ? `<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação em ${selectedDate.split('-').reverse().join('/')}</p>` : ''}
+                    ${transactionsDate.length === 0 ? `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhuma movimentação registrada.</p>` : ''}
                     ${transactionsDate.slice().reverse().map(t => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -4747,13 +4802,43 @@ const app = {
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-                    <button class="btn-primary" style="background: #228b22; box-shadow: none;" id="btn-add-in" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Entrada</button>
-                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Saída</button>
+                    <button class="btn-primary" style="background: #2E8B57; box-shadow: none;" id="btn-add-in" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Entrada</button>
+                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Saída (Sangria)</button>
                 </div>
-                ${selectedDate !== today ? '<p style="font-size: 0.7rem; color: #ff4444; text-align: center; margin-top: 5px;">⚠️ Só é possível lançar entradas/saídas no dia atual.</p>' : ''}
-                <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
+                ${selectedDate !== today ? '<p style="font-size: 0.7rem; color: #ff4444; text-align: center; margin-top: 8px;">⚠️ Lançamentos permitidos apenas para o dia de hoje.</p>' : ''}
+                <button class="btn-secondary" style="width: 100%; margin-top: 15px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
             </section>
         `;
+
+        if (selectedDate === today) {
+            document.getElementById('btn-add-in').onclick = () => {
+                const desc = prompt('Descrição da entrada:');
+                const val = parseFloat(prompt('Valor (ex: 30.50):'));
+                if (desc && val) {
+                    const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
+                    const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
+                    
+                    const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
+                    const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
+                    
+                    const validCats = ['servico', 'produto', 'outros'];
+                    const selectedCat = validCats.includes(category) ? category : 'outros';
+                    
+                    this.addTransaction('in', desc, val, selectedCat, selectedMethod);
+                    this.render('admin-cashflow');
+                }
+            };
+
+            document.getElementById('btn-add-out').onclick = () => {
+                const desc = prompt('Descrição da saída (Ex: Sangria, Pagamento luz...):');
+                const val = parseFloat(prompt('Valor:'));
+                if (desc && val) {
+                    this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
+                    this.render('admin-cashflow');
+                }
+            };
+        }
+    },
 
         if (selectedDate === today) {
             document.getElementById('btn-add-in').onclick = () => {
