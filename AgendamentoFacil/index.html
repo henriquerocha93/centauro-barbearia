@@ -505,10 +505,10 @@
                     status: 'active'
                 });
 
-                alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVocê tem 7 dias de teste grátis liberados agora!`);
+                alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVamos configurar seu layout agora!`);
                 
-                // 3. Redireciona para a loja criada
-                window.location.href = `../index.html?loja=${slug}`;
+                // 3. Redireciona para o Setup Wizard
+                window.location.href = `setup.html?loja=${slug}`;
 
             } catch (e) {
                 console.error(e);

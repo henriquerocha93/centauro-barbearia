@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração Inicial | Agendamento Fácil BR</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        body {
+            background: radial-gradient(circle at top right, #3b0764, #0f172a);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .setup-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            color: white;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .step-indicator {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .step {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .step.active {
+            background: #f97316;
+            box-shadow: 0 0 15px #f97316;
+        }
+        .setup-step { display: none; }
+        .setup-step.active { display: block; animation: fadeIn 0.5s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .config-group {
+            margin-bottom: 25px;
+        }
+        .config-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .color-presets {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .color-option.selected {
+            border-color: white;
+            transform: scale(1.1);
+        }
+        .preview-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px dashed rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .btn-setup {
+            width: 100%;
+            padding: 15px;
+            background: #f97316;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="setup-card">
+        <div class="modal-header" style="text-align: left; margin-bottom: 40px;">
+            <img src="logo_br.png" alt="Logo" style="height: 60px; margin-bottom: 10px;">
+            <h1 style="font-size: 1.5rem;">Vamos configurar sua experiência</h1>
+            <p style="opacity: 0.7;">Personalize como seus clientes verão sua barbearia.</p>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="s1"></div>
+            <div class="step" id="s2"></div>
+            <div class="step" id="s3"></div>
+        </div>
+
+        <!-- PASSO 1: IDENTIDADE -->
+        <div class="setup-step active" id="step1">
+            <h3>🎨 Identidade Visual</h3>
+            <p style="margin-bottom: 25px; opacity: 0.8;">Escolha a cor que melhor representa sua marca.</p>
+            
+            <div class="config-group">
+                <label>Cor Principal do Sistema</label>
+                <div class="color-presets">
+                    <div class="color-option selected" style="background: #581c87;" onclick="selectColor(this, '#581c87')"></div>
+                    <div class="color-option" style="background: #1e3a8a;" onclick="selectColor(this, '#1e3a8a')"></div>
+                    <div class="color-option" style="background: #065f46;" onclick="selectColor(this, '#065f46')"></div>
+                    <div class="color-option" style="background: #991b1b;" onclick="selectColor(this, '#991b1b')"></div>
+                    <div class="color-option" style="background: #111827;" onclick="selectColor(this, '#111827')"></div>
+                </div>
+            </div>
+
+            <div class="config-group">
+                <label>Frase de Boas-vindas (Hero)</label>
+                <input type="text" id="welcomeMsg" placeholder="Ex: Excelência e Tradição" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
+            </div>
+
+            <button class="btn-setup" onclick="nextStep(2)">Próximo Passo →</button>
+        </div>
+
+        <!-- PASSO 2: SERVIÇOS -->
+        <div class="setup-step" id="step2">
+            <h3>✂️ Seus Serviços</h3>
+            <p style="margin-bottom: 25px; opacity: 0.8;">Quais serviços você oferece agora? (Você poderá mudar depois)</p>
+            
+            <div id="serviceList">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" placeholder="Nome do Serviço" value="Corte de Cabelo" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                    <input type="text" placeholder="Preço R$" value="35" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" placeholder="Nome do Serviço" value="Barba Completa" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                    <input type="text" placeholder="Preço R$" value="25" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                </div>
+            </div>
+
+            <button class="btn-setup" onclick="nextStep(3)">Finalizar Configuração ✨</button>
+        </div>
+
+        <!-- PASSO 3: FINALIZANDO -->
+        <div class="setup-step" id="step3" style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🚀</div>
+            <h3>Tudo Pronto!</h3>
+            <p style="margin-bottom: 30px; opacity: 0.8;">Estamos preparando sua página personalizada. Em instantes você poderá começar a agendar seus clientes.</p>
+            
+            <div class="preview-box">
+                Sua URL será:<br>
+                <strong id="finalUrl" style="color: #f97316;">carregando...</strong>
+            </div>
+
+            <button class="btn-setup" onclick="finishSetup()">Acessar minha Loja Agora</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+            authDomain: "centauro-barbearia.firebaseapp.com",
+            projectId: "centauro-barbearia",
+            storageBucket: "centauro-barbearia.firebasestorage.app",
+            messagingSenderId: "96712816127",
+            appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+            databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get('loja');
+        let selectedHex = '#581c87';
+
+        if(!slug) window.location.href = 'index.html';
+
+        document.getElementById('finalUrl').innerText = `centauro-barbearia.vercel.app/?loja=${slug}`;
+
+        window.selectColor = (el, hex) => {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedHex = hex;
+        };
+
+        window.nextStep = (num) => {
+            document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step').forEach((s, idx) => {
+                if(idx < num) s.classList.add('active');
+            });
+            document.getElementById(`step${num}`).classList.add('active');
+        };
+
+        window.finishSetup = async () => {
+            const btn = document.querySelector('#step3 button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+            
+            const welcome = document.getElementById('welcomeMsg').value || 'Excelência e Tradição';
+
+            try {
+                // Atualiza as configurações da loja
+                const shopRef = ref(db, `tenants/${slug}/settings`);
+                await update(shopRef, {
+                    primaryColor: selectedHex,
+                    welcomeMessage: welcome,
+                    setupComplete: true
+                });
+
+                // Cria serviços iniciais padrão
+                const servicesRef = ref(db, `tenants/${slug}/services`);
+                await set(servicesRef, [
+                    { id: Date.now(), name: "Corte de Cabelo", price: 35, duration: 30, category: "Geral" },
+                    { id: Date.now()+1, name: "Barba", price: 25, duration: 30, category: "Geral" }
+                ]);
+
+                window.location.href = `../index.html?loja=${slug}`;
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao salvar configurações.');
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
