@@ -151,7 +151,7 @@
             
             <div class="config-group">
                 <label>Endereço Completo</label>
-                <input type="text" id="addressInput" placeholder="Ex: Rua Tal, 123 - Centro" value="Rua Tenente Alpoim, 516, Vila João Pessoa, Porto Alegre, RS" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
+                <input type="text" id="addressInput" placeholder="Ex: Rua Tal, 123 - Centro" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px;">
             </div>
 
             <div class="config-group">
@@ -159,20 +159,20 @@
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span>Segunda a Quarta</span>
-                        <input type="text" id="hours1" value="09:00 - 20:00" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                        <input type="text" id="hours1" placeholder="Ex: 09:00 - 18:00" required style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span>Quinta a Sábado</span>
-                        <input type="text" id="hours2" value="09:00 - 21:00" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                        <input type="text" id="hours2" placeholder="Ex: 09:00 - 20:00" required style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span>Domingos e Feriados</span>
-                        <input type="text" id="hours3" value="Fechado" style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
+                        <input type="text" id="hours3" placeholder="Ex: Fechado" required style="width: 150px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; text-align: center;">
                     </div>
                 </div>
             </div>
 
-            <button class="btn-setup" onclick="nextStep(3)">Próximo Passo →</button>
+            <button class="btn-setup" onclick="validateStep2() ? nextStep(3) : null">Próximo Passo →</button>
         </div>
 
         <!-- PASSO 3: SERVIÇOS -->
@@ -247,6 +247,19 @@
                 else s.classList.remove('active');
             });
             document.getElementById(`step${num}`).classList.add('active');
+        };
+
+        window.validateStep2 = () => {
+            const addr = document.getElementById('addressInput').value.trim();
+            const h1 = document.getElementById('hours1').value.trim();
+            const h2 = document.getElementById('hours2').value.trim();
+            const h3 = document.getElementById('hours3').value.trim();
+
+            if(!addr || !h1 || !h2 || !h3) {
+                alert('⚠️ Por favor, preencha todos os campos de endereço e horário.');
+                return false;
+            }
+            return true;
         };
 
         window.finishSetup = async () => {
