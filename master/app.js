@@ -751,40 +751,43 @@ const app = {
             const sellers = snapshot.val() || {};
 
             sellersView.innerHTML = `
-                <div class="glass-card" style="padding: 30px; border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: var(--primary-color);">🤝 Gestão de Vendedores</h2>
-                        <button class="btn btn-purple" onclick="document.getElementById('new-seller-modal').showModal()">+ Novo Vendedor</button>
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 35px; border-radius: 24px; backdrop-filter: blur(10px);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">🤝 Equipe de Vendedores</h2>
+                            <p style="color: #94a3b8; margin: 5px 0 0 0;">Gerencie os acessos e acompanhe os cadastros.</p>
+                        </div>
+                        <button class="btn-action btn-main" onclick="document.getElementById('new-seller-modal').showModal()">+ CADASTRAR VENDEDOR</button>
                     </div>
                     <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <table style="width: 100%; border-collapse: collapse; color: #f1f5f9;">
                             <thead>
-                                <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
-                                    <th style="padding: 12px;">Nome</th>
-                                    <th style="padding: 12px;">Usuário/Login</th>
-                                    <th style="padding: 12px;">Senha</th>
-                                    <th style="padding: 12px;">Data Cadastro</th>
-                                    <th style="padding: 12px;">Ações</th>
+                                <tr style="text-align: left; border-bottom: 1px solid var(--glass-border); color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">
+                                    <th style="padding: 15px;">Vendedor</th>
+                                    <th style="padding: 15px;">Login / Usuário</th>
+                                    <th style="padding: 15px;">Senha de Acesso</th>
+                                    <th style="padding: 15px;">Cadastro</th>
+                                    <th style="padding: 15px; text-align: right;">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody style="font-size: 0.95rem;">
                                 ${Object.keys(sellers).map(key => {
                                     const s = sellers[key];
                                     return `
-                                        <tr style="border-bottom: 1px solid #f3f4f6;">
-                                            <td style="padding: 12px; font-weight: 600;">${s.name}</td>
-                                            <td style="padding: 12px;"><code>${key}</code></td>
-                                            <td style="padding: 12px;"><code>${s.password}</code></td>
-                                            <td style="padding: 12px;">${new Date(s.createdAt).toLocaleDateString('pt-BR')}</td>
-                                            <td style="padding: 12px;">
-                                                <button class="btn-outline" style="color: #ef4444; border-color: #fecaca;" onclick="app.deleteSeller('${key}')">Excluir</button>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                            <td style="padding: 18px; font-weight: 700;">${s.name}</td>
+                                            <td style="padding: 18px;"><code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #7c3aed;">${key}</code></td>
+                                            <td style="padding: 18px;"><code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #f97316;">${s.password}</code></td>
+                                            <td style="padding: 18px; color: #94a3b8;">${new Date(s.createdAt).toLocaleDateString('pt-BR')}</td>
+                                            <td style="padding: 18px; text-align: right;">
+                                                <button class="btn-action" style="padding: 8px 12px; color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 0.8rem; background: rgba(239, 68, 68, 0.05);" onclick="app.deleteSeller('${key}')">Remover</button>
                                             </td>
                                         </tr>
                                     `;
                                 }).join('')}
                             </tbody>
                         </table>
-                        ${Object.keys(sellers).length === 0 ? '<p style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum vendedor cadastrado.</p>' : ''}
+                        ${Object.keys(sellers).length === 0 ? '<p style="text-align: center; padding: 60px; color: #64748b; font-style: italic;">Nenhum vendedor cadastrado no sistema.</p>' : ''}
                     </div>
                 </div>
             `;
