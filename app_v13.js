@@ -1728,15 +1728,16 @@ const app = {
     // --- Helpers de Dados ---
     addTransaction(type, description, amount, category, method = 'dinheiro') {
         const transId = Date.now() + Math.floor(Math.random() * 1000);
+        const cleanAmount = parseFloat(amount) || 0;
         const transaction = {
             id: transId,
             date: new Date().toISOString().split('T')[0], // Usamos YYYY-MM-DD para consistência no filtro
             timestamp: new Date().toISOString(),
             type, // 'in' ou 'out'
             description,
-            amount: parseFloat(amount),
-            category, // 'servico', 'produto', 'despesa', 'vale'
-            method // 'dinheiro', 'pix', 'debito', 'credito'
+            amount: cleanAmount,
+            category: (category || 'outros').toLowerCase(), 
+            method: (method || 'dinheiro').toLowerCase()
         };
         if (!this.state.transactions) this.state.transactions = [];
         this.state.transactions.push(transaction);
@@ -3305,16 +3306,17 @@ const app = {
         };
 
         // 1. Calcular de Agendamentos Finalizados (Serviços)
-        const appointments = this.state.appointments.filter(a => a.status === 'finalizado' && dateFilter(a.date));
+        const appointments = (this.state.appointments || []).filter(a => a.status === 'finalizado' && a.date && dateFilter(a.date));
         let serviceGross = 0;
         let serviceCommissions = 0;
 
         appointments.forEach(apt => {
-            serviceGross += apt.price;
+            const price = parseFloat(apt.price) || 0;
+            serviceGross += price;
             // Pegar comissão do barbeiro
             const barber = this.state.staff.find(s => s.name === apt.barber);
             const pct = barber ? (barber.commissionPct || 50) : 50;
-            serviceCommissions += apt.price * (pct / 100);
+            serviceCommissions += price * (pct / 100);
         });
 
         // 2. Calcular de Vendas de Produtos (exceto ADM)
@@ -4428,16 +4430,16 @@ const app = {
             
             if (t.type === 'in') {
                 // Mapeamento de métodos para as chaves do objeto totals
-                if (method.includes('dinheiro')) totals.dinheiro += amount;
-                else if (method.includes('pix')) totals.pix += amount;
+                if (method.includes('pix')) totals.pix += amount;
                 else if (method.includes('débito') || method.includes('debito')) totals.debito += amount;
                 else if (method.includes('crédito') || method.includes('credito')) totals.credito += amount;
+                else totals.dinheiro += amount;
 
                 // Contabilização por categoria
                 const cat = (t.category || '').toLowerCase();
                 if (cat === 'produto') {
                     totals.produtos += amount;
-                } else if (cat === 'serviço' || cat === 'servico' || cat === 'agendamento') {
+                } else {
                     totals.servicos += amount;
                 }
             } else {
@@ -4446,7 +4448,10 @@ const app = {
             }
         });
 
-        const totalGeral = (this.state.transactions || []).reduce((acc, t) => t.type === 'in' ? acc + t.amount : acc - t.amount, 0);
+        const totalGeral = (this.state.transactions || []).reduce((acc, t) => {
+            const val = parseFloat(t.amount) || 0;
+            return t.type === 'in' ? acc + val : acc - val;
+        }, 0);
         
         container.innerHTML = `
             <section id="cashflow-view" class="fade-in">

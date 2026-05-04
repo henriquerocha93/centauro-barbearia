@@ -769,6 +769,12 @@ const app = {
                 settings: {
                     shopName: name,
                     businessType: businessType,
+                    shopInfo: {
+                        name: name,
+                        phone: '',
+                        instagram: '',
+                        address: ''
+                    },
                     agenda: {
                         intervalMin: 30,
                         schedule: {
