@@ -20,8 +20,10 @@
     backdrop-filter: blur(8px);
     display: none;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Permite rolar a partir do topo */
     z-index: 2000;
+    overflow-y: auto; /* Habilita o scroll */
+    padding: 40px 0;
 }
 
 .modal-content {
@@ -33,6 +35,7 @@
     position: relative;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     color: var(--text-main);
+    margin: auto; /* Centraliza horizontalmente e dá respiro no vertical */
 }
 
 .modal-close {
