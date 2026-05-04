@@ -527,7 +527,16 @@ const app = {
                 console.log('🔥 Firebase Initialized');
                 
                 const urlParams = new URLSearchParams(window.location.search);
-                const tenantId = urlParams.get('loja');
+                let tenantId = urlParams.get('loja');
+
+                // Suporte a URLs amigáveis: agendamentofacilbr.com.br/nome-da-loja
+                if (!tenantId) {
+                    const path = window.location.pathname.split('/').filter(p => p && p !== 'index.html')[0];
+                    if (path && path !== 'master' && path !== 'AgendamentoFacil' && path !== 'assets') {
+                        tenantId = path;
+                    }
+                }
+                
                 const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
                 
                 // SaaS: Buscar dados da assinatura se for inquilino

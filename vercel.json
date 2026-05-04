@@ -3,7 +3,13 @@
     {
       "source": "/",
       "destination": "/AgendamentoFacil/index.html",
-      "permanent": true
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!AgendamentoFacil|master|assets|.*\\.).*)",
+      "destination": "/index.html"
     }
   ]
 }
