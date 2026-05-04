@@ -1818,8 +1818,11 @@ const app = {
             const user = document.getElementById('username').value.trim().toLowerCase();
             const pass = document.getElementById('password').value.trim();
             
-            // Procura o usuário que cruza os dados
-            const matchedUser = this.state.staff.find(s => s.login && s.login.toLowerCase() === user && s.password === pass);
+            // Procura o usuário que cruza os dados (Aceita Login ou Email)
+            const matchedUser = this.state.staff.find(s => 
+                ((s.login && s.login.toLowerCase() === user) || (s.email && s.email.toLowerCase() === user)) && 
+                s.password === pass
+            );
             
             if (matchedUser) {
                 this.state.user = { id: matchedUser.id, name: matchedUser.name, role: matchedUser.role };
