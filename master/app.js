@@ -75,12 +75,11 @@ const app = {
             console.log('Tentativa de login:', login);
 
             try {
-                // 1. Verifica Administrador Mestre no Firebase
-                const adminRef = ref(this.db, 'master/config/admin');
-                const adminSnap = await get(adminRef);
-                const adminData = adminSnap.val() || { user: 'henrique', pass: '1234' };
+                // Credenciais Mestres Forçadas para Reset
+                const masterUser = 'admin';
+                const masterPass = 'mestre777';
 
-                if (login === adminData.user && pass === adminData.pass) {
+                if (login === masterUser && pass === masterPass) {
                     console.log('Login Mestre Sucesso');
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('dashboard-screen').classList.add('active');
