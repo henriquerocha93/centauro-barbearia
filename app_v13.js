@@ -1788,6 +1788,50 @@ const app = {
             console.log(`✅ Reconciliação concluída: ${count} transações recuperadas.`);
             this.saveState();
         }
+
+        // 2. Reconciliar Vendas de Produtos (PDV)
+        const productSales = (this.state.productSales || []).filter(s => s.target !== 'adm');
+        let pCount = 0;
+
+        productSales.forEach(sale => {
+            const exists = transactions.find(t => t.id === sale.transactionId || (t.type === 'in' && t.description.includes(sale.productName) && t.amount === sale.total && t.date === sale.date));
+
+            if (!exists && sale.total > 0) {
+                console.log('➕ Recuperando transação de produto perdida:', sale.productName);
+
+                let method = 'dinheiro';
+                if (sale.target === 'barbeiro') method = 'faturamento';
+                else {
+                    const p = (sale.payment || '').toUpperCase();
+                    if (p === 'PIX') method = 'pix';
+                    if (p.includes('DÉBITO') || p.includes('DEBITO')) method = 'debito';
+                    if (p.includes('CRÉDITO') || p.includes('CREDITO')) method = 'credito';
+                }
+
+                const desc = sale.target === 'barbeiro' ? `Consumo Barbeiro: ${sale.productName} (${sale.barberName})` : `Venda PDV: ${sale.productName}`;
+                const transId = Date.now() + Math.floor(Math.random() * 2000);
+
+                const transaction = {
+                    id: transId,
+                    date: sale.date || new Date().toLocaleDateString('en-CA'),
+                    timestamp: sale.timestamp || new Date().toISOString(),
+                    type: 'in',
+                    description: desc,
+                    amount: parseFloat(sale.total),
+                    category: 'produto',
+                    method: method
+                };
+
+                this.state.transactions.push(transaction);
+                sale.transactionId = transId;
+                pCount++;
+            }
+        });
+
+        if (pCount > 0) {
+            console.log(`✅ Reconciliação de PDV concluída: ${pCount} transações recuperadas.`);
+            this.saveState();
+        }
     },
 
     updateStock(productId, quantityChange) {
