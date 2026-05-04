@@ -4219,12 +4219,19 @@ const app = {
             pix: 0,
             debito: 0,
             credito: 0,
-            faturamento: 0
+            faturamento: 0,
+            produtos: 0,
+            servicos: 0
         };
 
         transactionsToday.forEach(t => {
             if (t.type === 'in') {
                 totals[t.method || 'dinheiro'] += t.amount;
+                if (t.category === 'produto') {
+                    totals.produtos += t.amount;
+                } else if (t.category === 'serviço' || t.category === 'agendamento') {
+                    totals.servicos += t.amount;
+                }
             } else {
                 totals['dinheiro'] -= t.amount;
             }
@@ -4253,36 +4260,43 @@ const app = {
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Crédito</p>
                         <p style="font-weight: 700;">R$ ${totals.credito.toFixed(2)}</p>
                     </div>
-                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #94a3b8; background: rgba(148, 163, 184, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">📉 Faturamento (Desc.)</p>
-                        <p style="font-weight: 700;">R$ ${totals.faturamento.toFixed(2)}</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.05);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Faturamento Serviços</p>
+                        <p style="font-weight: 700; color: var(--accent-color);">R$ ${totals.servicos.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Vendas de Produtos</p>
+                        <p style="font-weight: 700; color: #38bdf8;">R$ ${totals.produtos.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(255,255,255,0.02);">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Geral Acumulado</p>
-                    <p style="font-size: 1.8rem; font-weight: 700; color: ${totalGeral >= 0 ? 'var(--accent-color)' : '#ff4444'}">R$ ${totalGeral.toFixed(2)}</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Geral Acumulado (Caixa)</p>
+                    <p style="font-size: 1.8rem; font-weight: 700; color: ${totalGeral >= 0 ? '#4ade80' : '#ff4444'}">R$ ${totalGeral.toFixed(2)}</p>
                 </div>
 
                 <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimas Movimentações</h3>
                 <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                    ${this.state.transactions.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação</p>' : ''}
-                    ${this.state.transactions.slice(-50).map(t => `
-                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? '#4ade80' : '#f87171'}">
+                    ${transactionsToday.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação hoje</p>' : ''}
+                    ${transactionsToday.slice().reverse().map(t => `
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; flex-direction: column;">
                                     <span style="font-weight: 600;">${t.description}</span>
                                     <span style="font-size: 0.7rem; color: var(--text-secondary);">${t.category.toUpperCase()} | ${t.method ? t.method.toUpperCase() : 'DINHEIRO'}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-weight: 700; color: ${t.type === 'in' ? '#4ade80' : '#f87171'}">
+                                    <span style="font-weight: 700; color: ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                                         ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
                                     </span>
                                     <button onclick="app.deleteTransaction(${t.id})" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
                                 </div>
                             </div>
                         </div>
-                    `).reverse().join('')}
+                    `).join('')}
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
