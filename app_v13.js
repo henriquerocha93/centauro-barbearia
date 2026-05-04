@@ -1106,7 +1106,7 @@ const app = {
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
                         <a class="menu-item ${view === 'admin-tips' ? 'active' : ''} ${(this.state.tips || []).some(t => t.status === 'pending') ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${(this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && s.date === new Date().toISOString().split('T')[0]) ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${ (this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && new Date(s.timestamp || s.date).getTime() > (this.state.lastConsumptionView || 0)) ? 'pulse-os' : '' }" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
                     `}
 
@@ -4424,6 +4424,12 @@ const app = {
     renderAdminConsumption(container) {
         const isAdmin = this.state.user.role === 'admin';
         const userName = this.state.user.name;
+
+        // Marcar como visto para parar de piscar no menu
+        if (isAdmin) {
+            this.state.lastConsumptionView = Date.now();
+            this.saveState();
+        }
 
         // Se for admin vê tudo, se for barbeiro vê só o dele
         const consumptionSales = (this.state.productSales || []).filter(s => {
