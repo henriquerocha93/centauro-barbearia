@@ -8,36 +8,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @media (max-width: 992px) {
+            .desktop-only { display: none !important; }
+            .mobile-menu-btn { display: block !important; }
+            .navbar { min-height: 80px !important; }
+            .logo img { height: 60px !important; }
+        }
+        @media (max-width: 480px) {
+            .nav-links { width: 100%; justify-content: flex-end; }
+            .btn { padding: 6px 10px !important; font-size: 0.75rem !important; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- CABEÇALHO -->
-    <header class="navbar" style="min-height: 180px; display: flex; align-items: center;">
-        <div class="container nav-container">
+    <header class="navbar" style="min-height: 100px; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; background: rgba(59, 7, 100, 0.98); border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div class="container nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 20px;">
             <div class="logo">
-                <img src="logo_br.png" alt="Agendamento Fácil BR" style="height: 140px; width: auto; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));">
+                <img src="logo_br.png" alt="Agendamento Fácil BR" style="height: 80px; width: auto; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));">
             </div>
 
-
-
-
-
-            <nav class="nav-links">
-                <a href="#planos">Planos</a>
-                <a href="apresentacao.html">Por que nós?</a>
-                <a href="#segmentos">Segmentos</a>
-
-                <a href="#sobre">Sobre nós</a>
-                <a href="#solucoes">Soluções</a>
-                <a href="#contato">Contato</a>
+            <!-- Navegação Desktop (Esconde no Mobile via CSS do style.css ou inline se necessário) -->
+            <nav class="nav-links" style="display: flex; gap: 15px; align-items: center;">
+                <div class="desktop-only" style="display: flex; gap: 15px; align-items: center;">
+                    <a href="#planos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Planos</a>
+                    <a href="apresentacao.html" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Por que nós?</a>
+                    <a href="#segmentos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Segmentos</a>
+                    <a href="#contato" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Contato</a>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                    <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; font-size: 0.8rem; white-space: nowrap;">Painel Master</a>
+                    <a href="#" class="btn btn-orange" style="padding: 8px 15px; font-size: 0.8rem; white-space: nowrap;" onclick="const loja = prompt('Qual o link (slug) da sua barbearia?'); if(loja) window.location.href = '../index.html?loja=' + loja;">Já sou cliente</a>
+                </div>
             </nav>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3);">Painel Master</a>
-                <a href="#" class="btn btn-orange" onclick="const loja = prompt('Qual o link (slug) da sua barbearia?'); if(loja) window.location.href = '../index.html?loja=' + loja;">Já sou cliente</a>
-            </div>
             
-            <button class="mobile-menu-btn" aria-label="Abrir Menu">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <button class="mobile-menu-btn" style="background: none; border: none; color: white; cursor: pointer; display: none;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
         </div>
     </header>
