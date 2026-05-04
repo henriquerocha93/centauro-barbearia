@@ -244,6 +244,7 @@ const app = {
             appointments: this.state.appointments || [],
             serviceOrders: this.state.serviceOrders || [],
             tips: this.state.tips || [],
+            lastConsumptionView: this.state.lastConsumptionView || 0,
             lastUpdate: this.state.lastUpdate || 0
         }));
         this.syncToFirebase();
@@ -274,6 +275,7 @@ const app = {
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
                 tips: this.state.tips || [],
+                lastConsumptionView: this.state.lastConsumptionView || 0,
                 lastUpdate: now,
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
