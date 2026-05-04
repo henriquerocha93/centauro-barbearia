@@ -78,7 +78,7 @@ const app = {
                 // 1. Verifica Administrador Mestre no Firebase
                 const adminRef = ref(this.db, 'master/config/admin');
                 const adminSnap = await get(adminRef);
-                const adminData = adminSnap.val() || { user: 'admin', pass: '1264' };
+                const adminData = adminSnap.val() || { user: 'henrique', pass: '1234' };
 
                 if (login === adminData.user && pass === adminData.pass) {
                     console.log('Login Mestre Sucesso');
@@ -125,7 +125,7 @@ const app = {
         // Busca credenciais atuais
         const adminRef = ref(this.db, 'master/config/admin');
         const snap = await get(adminRef);
-        const adminData = snap.val() || { user: 'admin', pass: '1264' };
+        const adminData = snap.val() || { user: 'henrique', pass: '1234' };
 
         configView.innerHTML = `
             <div class="glass-card" style="padding: 40px; border-radius: 12px; background: white; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
