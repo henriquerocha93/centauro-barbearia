@@ -12,9 +12,11 @@
     <style>
         @media (max-width: 992px) {
             .desktop-only { display: none !important; }
-            .mobile-menu-btn { display: block !important; }
-            .navbar { min-height: 80px !important; padding: 10px 0 !important; }
-            .logo img { height: 70px !important; }
+            .mobile-menu-btn { display: flex !important; }
+            .navbar { min-height: 80px !important; padding: 5px 0 !important; }
+            .logo { flex: 1; min-width: 100px; }
+            .logo img { height: 60px !important; }
+            .nav-container { gap: 10px !important; padding: 0 10px !important; }
         }
         @media (max-width: 480px) {
             .nav-links { width: 100%; justify-content: flex-end; }
@@ -44,8 +46,8 @@
                 <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0 12px !important; font-size: 0.7rem; white-space: nowrap; display: inline-flex !important; height: 32px !important; align-items: center; justify-content: center; line-height: 1; border-radius: 6px !important;">Painel Master</a>
             </div>
             
-            <button class="mobile-menu-btn" style="background: none; border: none; color: white; cursor: pointer; display: none;">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <button class="mobile-menu-btn" style="background: none; border: none; color: white; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 5px; flex-shrink: 0;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
         </div>
     </header>
