@@ -35,7 +35,7 @@ const app = {
 
     render() {
         // Ocultar todas as possíveis views customizadas
-        const views = ['tenants-list', 'billing-view', 'leads-view', 'sellers-view', 'config-view'];
+        const views = ['tenants-list', 'billing-view', 'leads-view', 'sellers-view', 'config-view', 'ads-view'];
         views.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -53,6 +53,8 @@ const app = {
             this.renderSellers();
         } else if (this.state.tab === 'config') {
             this.renderConfig();
+        } else if (this.state.tab === 'ads') {
+            this.renderAds();
         }
     },
 
@@ -335,6 +337,93 @@ const app = {
         `;
     },
 
+
+    renderAds() {
+        const list = document.getElementById('tenants-list').parentElement;
+        let adsView = document.getElementById('ads-view');
+        
+        if (!adsView) {
+            adsView = document.createElement('div');
+            adsView.id = 'ads-view';
+            list.appendChild(adsView);
+        }
+
+        adsView.style.display = 'block';
+        adsView.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                <!-- CARD GOOGLE ADS -->
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 24px; backdrop-filter: blur(10px);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span style="font-size: 2rem;">🔍</span>
+                        <h3 style="margin: 0; color: #fff;">Google Ads (Fundo de Funil)</h3>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">O segredo aqui é aparecer para quem já está procurando uma solução. Use o <strong>Google Pesquisa</strong>.</p>
+                    
+                    <h4 style="color: #7c3aed; margin-top: 20px; font-size: 0.8rem; text-transform: uppercase;">Palavras-Chave de Ouro:</h4>
+                    <ul style="color: #f1f5f9; font-size: 0.85rem; padding-left: 20px; line-height: 1.8;">
+                        <li>"Sistema para barbearia com PDV"</li>
+                        <li>"App de agendamento barbearia"</li>
+                        <li>"Melhor software para gestão de barbearia"</li>
+                        <li>"Sistema para salão de beleza grátis" (Isca para Trial)</li>
+                    </ul>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-top: 20px;">
+                        <strong style="color: #fff; font-size: 0.8rem;">Dica Pro:</strong>
+                        <p style="color: #94a3b8; font-size: 0.8rem; margin: 5px 0 0 0;">Crie um anúncio focando no <strong>PDV com Leitor de Código de Barras</strong>. Isso te diferencia 90% da concorrência.</p>
+                    </div>
+                </div>
+
+                <!-- CARD META ADS -->
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 24px; backdrop-filter: blur(10px);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span style="font-size: 2rem;">📸</span>
+                        <h3 style="margin: 0; color: #fff;">Meta Ads (Instagram Reels)</h3>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">O Instagram é visual. O dono de barbearia compra o que ele vê funcionando.</p>
+                    
+                    <h4 style="color: #f97316; margin-top: 20px; font-size: 0.8rem; text-transform: uppercase;">Criativos Sugeridos:</h4>
+                    <ul style="color: #f1f5f9; font-size: 0.85rem; padding-left: 20px; line-height: 1.8;">
+                        <li><strong>O Vídeo "Uau":</strong> Grave a tela do PDV bipando um produto e saindo a venda.</li>
+                        <li><strong>A Dor do Papel:</strong> Mostre uma agenda de papel bagunçada vs. O Agendamento Fácil BR.</li>
+                        <li><strong>Prova Social:</strong> Depoimentos de barbeiros que faturam mais com o sistema.</li>
+                    </ul>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-top: 20px;">
+                        <strong style="color: #fff; font-size: 0.8rem;">Dica Pro:</strong>
+                        <p style="color: #94a3b8; font-size: 0.8rem; margin: 5px 0 0 0;">Use o botão <strong>"Enviar Mensagem no WhatsApp"</strong> como destino. É a conversão mais barata hoje.</p>
+                    </div>
+                </div>
+
+                <!-- CARD ESTRATÉGIA DE VENDAS -->
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 24px; backdrop-filter: blur(10px);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span style="font-size: 2rem;">💰</span>
+                        <h3 style="margin: 0; color: #fff;">Script de Fechamento</h3>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Quando o Lead chegar, não venda o "sistema", venda a "liberdade".</p>
+                    
+                    <div style="background: rgba(124, 58, 237, 0.1); border-left: 4px solid #7c3aed; padding: 15px; margin-top: 20px;">
+                        <p style="color: #f1f5f9; font-size: 0.85rem; margin: 0;">"Fulano, vi que você quer organizar sua barbearia. O nosso sistema faz o básico (agenda), mas ele te entrega o <strong>PDV profissional</strong> que controla seu estoque sozinho. Quer testar 7 dias grátis?"</p>
+                    </div>
+
+                    <h4 style="color: #10b981; margin-top: 20px; font-size: 0.8rem; text-transform: uppercase;">Gatilhos Mentais:</h4>
+                    <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.6;">
+                        <strong>1. Exclusividade:</strong> "Ouro em Gestão".<br>
+                        <strong>2. Prova Real:</strong> "Usado pela Centauro e mais de X barbearias".<br>
+                        <strong>3. Segurança:</strong> "Suporte humano via WhatsApp".
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; background: linear-gradient(135deg, #7c3aed, #4f46e5); padding: 40px; border-radius: 24px; text-align: center;">
+                <h2 style="color: #fff; margin: 0; font-size: 1.8rem;">Ouro em Gestão: O Plano de Guerra</h2>
+                <p style="color: rgba(255,255,255,0.8); margin: 15px 0 0 0; max-width: 700px; margin-left: auto; margin-right: auto;">
+                    O seu sistema é premium, o seu marketing deve ser agressivo. Foque em mostrar como o sistema **economiza tempo** do dono. 
+                    Se o dono da barbearia tem tempo para focar no corte, ele fatura mais. O seu sistema é o veículo para isso.
+                </p>
+            </div>
+        `;
+    },
 
     async renewSubscription(slug) {
         if (!confirm(`Confirmar recebimento de pagamento da barbearia ${slug} e renovar por mais 30 dias?`)) return;
