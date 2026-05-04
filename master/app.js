@@ -61,11 +61,19 @@ const app = {
 
     setupLogin() {
         const form = document.getElementById('master-login-form');
+        const btn = form.querySelector('button');
+        
         form.onsubmit = async (e) => {
             e.preventDefault();
+            const originalText = btn.textContent;
+            btn.textContent = 'Verificando...';
+            btn.disabled = true;
+
             const login = document.getElementById('master-login').value.trim().toLowerCase();
             const pass = document.getElementById('master-password').value;
             
+            console.log('Tentativa de login:', login);
+
             try {
                 // 1. Verifica Administrador Mestre no Firebase
                 const adminRef = ref(this.db, 'master/config/admin');
@@ -73,6 +81,7 @@ const app = {
                 const adminData = adminSnap.val() || { user: 'admin', pass: '1264' };
 
                 if (login === adminData.user && pass === adminData.pass) {
+                    console.log('Login Mestre Sucesso');
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('dashboard-screen').classList.add('active');
                     this.loadTenants();
@@ -84,14 +93,20 @@ const app = {
                 const snapshot = await get(sellerRef);
                 
                 if (snapshot.exists() && snapshot.val().password === pass) {
+                    console.log('Login Vendedor Sucesso');
                     window.location.href = 'vendedor.html?u=' + login + '&p=' + btoa(pass);
                     return;
                 }
+                
+                console.warn('Credenciais inválidas');
+                alert('Usuário ou senha incorretos!');
             } catch(err) {
-                console.error('Erro no login:', err);
+                console.error('Erro crítico no login:', err);
+                alert('Erro de conexão: ' + err.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
-
-            alert('Usuário ou senha incorretos!');
         };
     },
 
