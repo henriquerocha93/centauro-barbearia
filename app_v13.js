@@ -4212,7 +4212,9 @@ const app = {
 
     renderAdminCashFlow(container) {
         const today = new Date().toISOString().split('T')[0];
-        const transactionsToday = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(today));
+        const selectedDate = this.state.cashflowDate || today;
+        
+        const transactionsDate = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(selectedDate));
         
         const totals = {
             dinheiro: 0,
@@ -4224,7 +4226,7 @@ const app = {
             servicos: 0
         };
 
-        transactionsToday.forEach(t => {
+        transactionsDate.forEach(t => {
             if (t.type === 'in') {
                 totals[t.method || 'dinheiro'] += t.amount;
                 if (t.category === 'produto') {
@@ -4241,7 +4243,18 @@ const app = {
         
         container.innerHTML = `
             <section id="cashflow-view" class="fade-in">
-                <h2 class="section-title">Balanço de Hoje</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 5px;">Balanço Diário</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Consulte a movimentação financeira por data</p>
+                    </div>
+                    
+                    <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">📅 Data:</span>
+                        <input type="date" value="${selectedDate}" class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
+                               onchange="app.state.cashflowDate = this.value; app.render('admin-cashflow')">
+                    </div>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
@@ -4264,11 +4277,11 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Faturamento Serviços</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Serviços</p>
                         <p style="font-weight: 700; color: var(--accent-color);">R$ ${totals.servicos.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Vendas de Produtos</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Produtos</p>
                         <p style="font-weight: 700; color: #38bdf8;">R$ ${totals.produtos.toFixed(2)}</p>
                     </div>
                 </div>
@@ -4278,10 +4291,10 @@ const app = {
                     <p style="font-size: 1.8rem; font-weight: 700; color: ${totalGeral >= 0 ? '#4ade80' : '#ff4444'}">R$ ${totalGeral.toFixed(2)}</p>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Últimas Movimentações</h3>
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">Movimentações do Dia</h3>
                 <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                    ${transactionsToday.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação hoje</p>' : ''}
-                    ${transactionsToday.slice().reverse().map(t => `
+                    ${transactionsDate.length === 0 ? `<p style="text-align: center; color: var(--text-secondary);">Nenhuma movimentação em ${selectedDate.split('-').reverse().join('/')}</p>` : ''}
+                    ${transactionsDate.slice().reverse().map(t => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; flex-direction: column;">
@@ -4300,35 +4313,37 @@ const app = {
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-                    <button class="btn-primary" style="background: #228b22; box-shadow: none;" id="btn-add-in">+ Entrada</button>
-                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out">+ Saída</button>
+                    <button class="btn-primary" style="background: #228b22; box-shadow: none;" id="btn-add-in" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Entrada</button>
+                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Saída</button>
                 </div>
+                ${selectedDate !== today ? '<p style="font-size: 0.7rem; color: #ff4444; text-align: center; margin-top: 5px;">⚠️ Só é possível lançar entradas/saídas no dia atual.</p>' : ''}
                 <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
             </section>
         `;
 
-        document.getElementById('btn-add-in').onclick = () => {
-            const desc = prompt('Descrição da entrada:');
-            const val = parseFloat(prompt('Valor:'));
-            const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
-            
-            if (desc && val) {
-                const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
-                const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
-                this.addTransaction('in', desc, val, 'outros', selectedMethod);
-                this.render('admin-cashflow');
-            }
-        };
+        if (selectedDate === today) {
+            document.getElementById('btn-add-in').onclick = () => {
+                const desc = prompt('Descrição da entrada:');
+                const val = parseFloat(prompt('Valor:'));
+                const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
+                
+                if (desc && val) {
+                    const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
+                    const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
+                    this.addTransaction('in', desc, val, 'outros', selectedMethod);
+                    this.render('admin-cashflow');
+                }
+            };
 
-        document.getElementById('btn-add-out').onclick = () => {
-            const desc = prompt('Descrição da saída:');
-            const val = parseFloat(prompt('Valor:'));
-            if (desc && val) {
-                // Saídas deduzem do montante 'dinheiro' por padrão
-                this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
-                this.render('admin-cashflow');
-            }
-        };
+            document.getElementById('btn-add-out').onclick = () => {
+                const desc = prompt('Descrição da saída:');
+                const val = parseFloat(prompt('Valor:'));
+                if (desc && val) {
+                    this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
+                    this.render('admin-cashflow');
+                }
+            };
+        }
     },
 
     renderAdminVouchers(container) {
