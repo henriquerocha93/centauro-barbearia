@@ -461,30 +461,58 @@
             event.preventDefault();
             const btn = event.target.querySelector('button');
             const originalText = btn.innerText;
-            btn.innerText = 'Processando...';
+            btn.innerText = 'Criando sua loja...';
             btn.disabled = true;
+
+            const shopName = event.target.elements[3].value;
+            const slug = shopName.toLowerCase().trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+                .replace(/[^a-z0-9]/g, '-') // Troca caracteres especiais por hífen
+                .replace(/-+/g, '-') // Remove hifens duplos
+                .replace(/^-|-$/g, ''); // Remove hifens no início/fim
+
+            const trialEndDate = new Date();
+            trialEndDate.setDate(trialEndDate.getDate() + 7);
 
             const data = {
                 name: event.target.elements[0].value,
                 phone: event.target.elements[2].value,
-                shopName: event.target.elements[3].value,
+                shopName: shopName,
+                slug: slug,
                 segment: event.target.elements[4].value,
                 email: event.target.elements[5].value,
                 password: event.target.elements[6].value,
                 date: new Date().toISOString(),
-                status: 'Novo Lead',
+                trialEndDate: trialEndDate.toISOString(),
+                status: 'Teste (7 dias)',
                 type: 'registration'
             };
 
             try {
+                // 1. Salva como Lead para o Master
                 const leadsRef = ref(db, 'master/leads');
                 await push(leadsRef, data);
-                alert('🚀 Cadastro realizado com sucesso! Nossa equipe entrará em contato em breve para liberar seu acesso.');
-                window.closeModal();
-                event.target.reset();
+
+                // 2. Inicializa a estrutura básica da nova loja
+                const shopRef = ref(db, `tenants/${slug}/settings`);
+                await set(shopRef, {
+                    name: shopName,
+                    owner: data.name,
+                    email: data.email,
+                    segment: data.segment,
+                    trialEndDate: data.trialEndDate,
+                    createdAt: data.date,
+                    status: 'active'
+                });
+
+                alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVocê tem 7 dias de teste grátis liberados agora!`);
+                
+                // 3. Redireciona para a loja criada
+                window.location.href = `../index.html?loja=${slug}`;
+
             } catch (e) {
                 console.error(e);
-                alert('Erro ao processar cadastro. Tente novamente.');
+                alert('Erro ao criar sua loja. Tente novamente ou entre em contato com o suporte.');
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
