@@ -4840,36 +4840,6 @@ const app = {
         }
     },
 
-        if (selectedDate === today) {
-            document.getElementById('btn-add-in').onclick = () => {
-                const desc = prompt('Descrição da entrada:');
-                const val = parseFloat(prompt('Valor (ex: 30.50):'));
-                if (desc && val) {
-                    const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
-                    const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
-                    
-                    const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
-                    const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
-                    
-                    const validCats = ['servico', 'produto', 'outros'];
-                    const selectedCat = validCats.includes(category) ? category : 'outros';
-                    
-                    this.addTransaction('in', desc, val, selectedCat, selectedMethod);
-                    this.render('admin-cashflow');
-                }
-            };
-
-            document.getElementById('btn-add-out').onclick = () => {
-                const desc = prompt('Descrição da saída:');
-                const val = parseFloat(prompt('Valor:'));
-                if (desc && val) {
-                    this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
-                    this.render('admin-cashflow');
-                }
-            };
-        }
-    },
-
     renderAdminVouchers(container) {
         const today = new Date().toLocaleDateString('en-CA');
         container.innerHTML = `
