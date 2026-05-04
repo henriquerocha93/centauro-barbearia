@@ -393,7 +393,7 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
         // Accordion Logic
         document.querySelectorAll('.accordion-header').forEach(button => {
             button.addEventListener('click', () => {
@@ -419,7 +419,7 @@
             reveals.forEach(el => {
                 const windowHeight = window.innerHeight;
                 const elementTop = el.getBoundingClientRect().top;
-                const elementVisible = 150;
+                const elementVisible = 100;
                 if (elementTop < windowHeight - elementVisible) {
                     el.classList.add('active');
                 }
@@ -427,6 +427,7 @@
         };
         window.addEventListener('scroll', revealElements);
         window.addEventListener('load', revealElements);
+        setTimeout(revealElements, 100); // Forçar execução inicial
 
         // Modal Logic
         const modal = document.getElementById('registrationModal');
