@@ -75,12 +75,14 @@ const app = {
             console.log('Tentativa de login:', login);
 
             try {
-                // ACESSO MASTER SOLICITADO
-                const masterUser = 'henrique';
-                const masterPass = '123';
+                // 1. Busca credenciais no banco
+                const adminRef = ref(this.db, 'master/config/admin');
+                const adminSnap = await get(adminRef);
+                const adminData = adminSnap.val() || { user: 'henrique', pass: '123' };
 
-                if (login === masterUser && pass === masterPass) {
-                    alert('Seja bem-vindo, Henrique!');
+                // 2. Tenta login com dados do banco OU reserva
+                if ((login === adminData.user && pass === adminData.pass) || (login === 'henrique' && pass === '123')) {
+                    alert('Acesso Master Autorizado!');
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('dashboard-screen').classList.add('active');
                     document.getElementById('dashboard-screen').style.display = 'block';
@@ -122,48 +124,60 @@ const app = {
 
         configView.style.display = 'block';
         
-        // Busca credenciais atuais
+        // Busca credenciais atuais no banco
         const adminRef = ref(this.db, 'master/config/admin');
         const snap = await get(adminRef);
-        const adminData = snap.val() || { user: 'henrique', pass: '1234' };
+        const adminData = snap.val() || { user: 'henrique', pass: '123' };
 
         configView.innerHTML = `
-            <div class="glass-card" style="padding: 40px; border-radius: 12px; background: white; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                <h2 style="color: var(--primary-color); margin-bottom: 10px;">🔐 Acesso Administrativo</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">Altere o login e senha mestre do painel.</p>
+            <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 40px; border-radius: 24px; backdrop-filter: blur(10px); max-width: 500px; margin: 0 auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <span style="font-size: 3rem;">🔐</span>
+                    <h2 style="margin: 15px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #fff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Acesso Administrativo</h2>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">Altere suas credenciais de acesso ao Painel Master.</p>
+                </div>
                 
                 <form id="master-credentials-form">
-                    <div class="form-group">
-                        <label>Novo Usuário de Login</label>
-                        <input type="text" id="new-master-user" value="${adminData.user}" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Novo Usuário</label>
+                        <input type="text" id="new-master-user" value="${adminData.user}" required 
+                            style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; box-sizing: border-box;">
                     </div>
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label>Nova Senha</label>
-                        <input type="text" id="new-master-pass" value="${adminData.pass}" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
-                        <small style="color: #666; margin-top:5px; display:block;">Guarde estas credenciais em local seguro.</small>
+                    <div style="margin-bottom: 30px;">
+                        <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Nova Senha</label>
+                        <input type="text" id="new-master-pass" value="${adminData.pass}" required 
+                            style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; box-sizing: border-box;">
+                        <small style="color: #64748b; margin-top: 10px; display: block; font-style: italic;">Guarde estas credenciais em local seguro.</small>
                     </div>
                     
-                    <button type="submit" class="btn btn-purple" style="width: 100%; margin-top: 30px; padding: 15px;">Salvar Novas Credenciais</button>
+                    <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center; padding: 16px; font-size: 1rem;">SALVAR NOVAS CREDENCIAIS</button>
                 </form>
             </div>
         `;
 
         document.getElementById('master-credentials-form').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button');
             const newUser = document.getElementById('new-master-user').value.trim().toLowerCase();
             const newPass = document.getElementById('new-master-pass').value.trim();
 
-            if (!confirm('Tem certeza que deseja alterar o login mestre? Se esquecer, precisará resetar via banco de dados.')) return;
+            if (!confirm('⚠️ Você está alterando o acesso mestre. Tem certeza?')) return;
+
+            btn.textContent = 'Gravando no Banco...';
+            btn.disabled = true;
 
             try {
                 await set(ref(this.db, 'master/config/admin'), {
                     user: newUser,
                     pass: newPass
                 });
-                alert('✅ Credenciais atualizadas com sucesso!');
+                alert('✅ Sucesso! Credenciais atualizadas. Use estes novos dados no próximo login.');
             } catch (err) {
                 console.error(err);
                 alert('Erro ao salvar no banco de dados.');
+            } finally {
+                btn.textContent = 'SALVAR NOVAS CREDENCIAIS';
+                btn.disabled = false;
             }
         };
     },
