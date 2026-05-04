@@ -30,22 +30,19 @@
                 <img src="logo_br.png" alt="Agendamento Fácil BR" style="height: 150px; width: auto; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));">
             </div>
 
-            <!-- Navegação Desktop (Esconde no Mobile via CSS do style.css ou inline se necessário) -->
-            <nav class="nav-links" style="display: flex; gap: 15px; align-items: center;">
-                <div class="desktop-only" style="display: flex; gap: 15px; align-items: center;">
-                    <a href="#planos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Planos</a>
-                    <a href="apresentacao.html" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Por que nós?</a>
-                    <a href="#segmentos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Segmentos</a>
-                    <a href="ajuda.html" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Como Usar</a>
-                    <a href="#contato" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Contato</a>
-                </div>
-                
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                    <a href="javascript:void(0)" onclick="window.openModal()" class="btn btn-orange" style="padding: 8px 12px; font-size: 0.75rem; white-space: nowrap;">Teste Grátis</a>
-                    <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; font-size: 0.75rem; white-space: nowrap;">Painel Master</a>
-                    <a href="#" class="btn btn-orange desktop-only" style="padding: 8px 15px; font-size: 0.75rem; white-space: nowrap;" onclick="const loja = prompt('Qual o link (slug) da sua barbearia?'); if(loja) window.location.href = '../index.html?loja=' + loja;">Já sou cliente</a>
-                </div>
+            <!-- Navegação Desktop -->
+            <nav class="nav-links desktop-only" style="display: flex; gap: 15px; align-items: center;">
+                <a href="#planos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Planos</a>
+                <a href="apresentacao.html" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Por que nós?</a>
+                <a href="#segmentos" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Segmentos</a>
+                <a href="ajuda.html" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Como Usar</a>
+                <a href="#contato" style="color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.8;">Contato</a>
             </nav>
+
+            <div class="header-actions" style="display: flex; gap: 8px; align-items: center; justify-content: flex-end;">
+                <a href="javascript:void(0)" onclick="window.openModal()" class="btn btn-orange" style="padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; display: flex !important;">Teste Grátis</a>
+                <a href="../master/index.html" class="btn" style="color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; font-size: 0.75rem; white-space: nowrap;">Painel Master</a>
+            </div>
             
             <button class="mobile-menu-btn" style="background: none; border: none; color: white; cursor: pointer; display: none;">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
