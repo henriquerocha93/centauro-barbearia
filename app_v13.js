@@ -2723,11 +2723,11 @@ const app = {
                         <div class="agenda-header" style="background: var(--surface-light);">Hora</div>
                         ${barbersToShow.map(b => `
                             <div class="agenda-header">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                                     <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
                                          class="desktop-only" 
-                                         style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color);">
-                                    <span>${b.name}</span>
+                                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
+                                    <span style="font-weight: 700; font-size: 0.95rem;">${b.name}</span>
                                 </div>
                                 ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === b.name) ? `
                                     <button style="margin-top: 5px; background: none; border: 1px solid rgba(255,68,68,0.3); color: #ff4444; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer;" 
