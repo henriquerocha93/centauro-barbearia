@@ -1086,78 +1086,153 @@ const app = {
 
     renderLayout(view) {
         const appContainer = document.getElementById('app');
-        appContainer.className = 'app-layout'; // Ativa Grid com Sidebar
+        appContainer.className = 'app-layout'; 
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
+        const s = this.state.settings || {};
+        const shopName = s.shopName || 'Agendamento Fácil BR';
+
+        // Mapeamento de títulos para as páginas
+        const viewTitles = {
+            'admin-dash': 'Agenda Geral',
+            'barber-dash': 'Minha Agenda',
+            'barber-financial': 'Meu Faturamento',
+            'admin-customers': 'Gestão de Clientes',
+            'admin-stock': 'Estoque de Produtos',
+            'admin-cashflow': 'Fluxo de Caixa',
+            'admin-vouchers': theme.voucherTerm,
+            'admin-consumption': 'Relatório de Consumo',
+            'admin-staff': theme.workersTerm,
+            'admin-services': 'Serviços',
+            'admin-payments': 'Auditoria de Pagamentos',
+            'admin-faturamento': 'Faturamento Global',
+            'admin-team-performance': 'Ranking da Equipe',
+            'admin-tips': 'Gestão de Gorjetas',
+            'admin-settings': 'Configurações do Sistema',
+            'admin-billing': 'Fatura do Sistema',
+            'admin-os': 'Ordens de Serviço',
+            'pdv': 'Ponto de Venda (PDV)'
+        };
 
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML()}
+            
             <div class="mobile-header">
-                <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
-                <div style="flex: 1; text-align: center;"><img src="logo_agendamento.png" alt="Agendamento Fácil BR" style="height: 100px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
-                <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
+                <button class="hamburger" onclick="app.toggleSidebar()">
+                    <i data-lucide="menu"></i>
+                </button>
+                <span style="font-weight: 800; color: var(--accent-color); font-size: 0.9rem;">${shopName}</span>
+                <div id="sync-status-indicator" style="font-size: 0.5rem; opacity: 0.6;">⚡</div>
             </div>
             
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
 
-            <aside class="sidebar glass" id="sidebar">
-                <div class="sidebar-logo" style="text-align: center; padding: 20px 5px;">
-                    <img src="logo_agendamento.png" alt="Agendamento Fácil BR" style="height: 160px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
-                    <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-logo">
+                    <img src="${s.logoUrl || 'logo_agendamento.png'}" alt="Logo">
+                    <span>${shopName.split(' ')[0]}</span>
                 </div>
                 
                 <nav class="sidebar-menu">
                     <div class="menu-category">Acompanhamento</div>
-                    <a class="menu-item ${view === (this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash') ? 'active' : ''}" 
-                       onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')"><i>📅</i> Agenda</a>
-                    <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')" style="background: ${view === 'pdv' ? '' : 'linear-gradient(135deg,rgba(124,58,237,0.15),transparent)'}; border-left: ${view === 'pdv' ? '' : '3px solid rgba(124,58,237,0.5)'};"><i>💵</i> Vendas (PDV)</a>
-                    <a class="menu-item ${view === 'admin-os' ? 'active' : ''} ${(this.state.serviceOrders || []).some(os => os.status === 'open' || os.status === 'progress' || !os.status) ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-os')"><i>📝</i> Ordens de Serviço</a>
-                    ${this.state.user.role === 'admin' ? `
-                        <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')" style="background: rgba(167, 139, 250, 0.1); border-left: 3px solid var(--accent-color);"><i>💳</i> Fatura do Sistema</a>
-                    ` : ''}
+                    <a class="menu-item ${view === 'admin-dash' || view === 'barber-dash' ? 'active' : ''}" 
+                       onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">
+                       <i data-lucide="calendar"></i> Agenda
+                    </a>
+                    <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')">
+                       <i data-lucide="shopping-cart"></i> Vendas (PDV)
+                    </a>
+                    <a class="menu-item ${view === 'admin-os' ? 'active' : ''} ${(this.state.serviceOrders || []).some(os => os.status === 'open' || os.status === 'progress' || !os.status) ? 'pulse-os' : ''}" 
+                       onclick="app.navigateTo('admin-os')">
+                       <i data-lucide="file-text"></i> O.S.
+                    </a>
                     
                     <div class="menu-category">Cadastros</div>
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')"><i>👥</i> Clientes</a>` : ''}
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')"><i>${theme.serviceIcon}</i> Serviços</a>` : ''}
-                    ${this.state.user.role === 'admin' ? `<a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')"><i>${theme.workerIcon}</i> ${theme.workersTerm}</a>` : ''}
-                    <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')"><i>📦</i> Produtos</a>
+                    ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')">
+                            <i data-lucide="users"></i> Clientes
+                        </a>
+                        <a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')">
+                            <i data-lucide="scissors"></i> Serviços
+                        </a>
+                        <a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')">
+                            <i data-lucide="user-cog"></i> Profissionais
+                        </a>
+                    ` : ''}
+                    <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')">
+                        <i data-lucide="package"></i> Estoque
+                    </a>
                     
-                    <div class="menu-category">Administração</div>
+                    <div class="menu-category">Financeiro</div>
                     ${this.state.user.role === 'barber' ? `
-                        <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')"><i>💰</i> Meu Faturamento</a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Meu Consumo</a>
-                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')"><i>🏆</i> Ranking da Equipe</a>
+                        <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')">
+                            <i data-lucide="dollar-sign"></i> Meu Faturamento
+                        </a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')">
+                            <i data-lucide="coffee"></i> Meu Consumo
+                        </a>
                     ` : `
-                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')"><i>📈</i> Faturamento</a>
-                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')"><i>🏆</i> Desempenho da Equipe</a>
-                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
-                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
-                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''} ${(this.state.tips || []).some(t => t.status === 'pending') ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${(this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && new Date(s.timestamp || s.date).getTime() > (this.state.lastConsumptionView || 0)) ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
-                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
+                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')">
+                            <i data-lucide="trending-up"></i> Faturamento
+                        </a>
+                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')">
+                            <i data-lucide="banknote"></i> Fluxo de Caixa
+                        </a>
+                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')">
+                            <i data-lucide="coins"></i> Gorjetas
+                        </a>
+                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')">
+                            <i data-lucide="ticket"></i> Vales
+                        </a>
+                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')">
+                            <i data-lucide="check-circle"></i> Auditoria
+                        </a>
                     `}
 
+                    <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
-                        <div class="menu-category">Sistema</div>
-                        <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="app.navigateTo('admin-settings')"><i>⚙️</i> Configurações</a>
+                        <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="app.navigateTo('admin-settings')">
+                            <i data-lucide="settings"></i> Configurações
+                        </a>
+                        <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')">
+                            <i data-lucide="credit-card"></i> Pagamento App
+                        </a>
                     ` : ''}
-                    
-                    <div style="margin-top: auto; padding: 20px;">
-                        <button class="btn-secondary" style="width: 100%; font-size: 0.8rem;" onclick="app.logout()">Sair</button>
-                    </div>
+                    <a class="menu-item" onclick="app.logout()" style="color: #f87171; margin-top: 20px;">
+                        <i data-lucide="log-out"></i> Sair
+                    </a>
                 </nav>
             </aside>
-            <main id="main-content" class="dashboard-main">
-                <!-- Conteúdo da página será injetado aqui -->
+
+            <main class="main-content">
+                <header class="top-bar">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <h2 style="font-size: 1.1rem; letter-spacing: -0.5px;">${viewTitles[view] || 'Painel'}</h2>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div id="sync-status-indicator" style="font-size: 0.7rem; font-weight: 600; color: #4ade80; display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
+                            Tempo Real
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding-left: 20px; border-left: 1px solid var(--glass-border);">
+                            <span style="font-size: 0.85rem; font-weight: 600;">${this.state.user.name}</span>
+                            <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-color); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">
+                                ${this.state.user.name.charAt(0)}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                
+                <div id="main-content" class="view-content">
+                    <!-- Conteúdo da página será injetado aqui -->
+                </div>
             </main>
         `;
 
         const main = document.getElementById('main-content');
-        if (!main) {
-            console.error('Main content container no encontrado!');
-            return;
-        }
+        if (!main) return;
 
+        // Injetar view
         switch (view) {
             case 'admin-dash': this.renderAdminDash(main); break;
             case 'barber-dash': this.renderBarberDash(main); break;
@@ -1177,9 +1252,12 @@ const app = {
             case 'admin-billing': this.renderAdminBilling(main); break;
             case 'admin-os': this.renderAdminOS(main); break;
             case 'pdv': this.renderPDV(main); break;
-            default:
-                console.warn('View não reconhecida no layout:', view);
-                this.renderAdminDash(main);
+            default: this.renderAdminDash(main);
+        }
+
+        // Ativar ícones do Lucide
+        if (window.lucide) {
+            lucide.createIcons();
         }
     },
 
@@ -2723,50 +2801,64 @@ const app = {
         const isPastDate = this.state.currentDate < todayStr;
 
         container.innerHTML = `
-            <section id="agenda-view" class="fade-in">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
-                    <div>
-                        <h2 class="section-title" style="margin-bottom: 5px;">Agenda</h2>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary);">${barberFilter || 'Todos os Profissionais'}</p>
-                    </div>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <button class="glass" style="padding: 10px;" onclick="app.changeAgendaDate(-1)">❮</button>
-                        <div class="glass" style="padding: 10px 15px; border-radius: 8px; font-size: 0.8rem; min-width: 140px; text-align: center;">
-                            ${new Date(this.state.currentDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            <div id="agenda-view" class="fade-in">
+                <!-- Agenda Controls -->
+                <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-radius: 15px; background: rgba(255,255,255,0.02);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="glass" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 10px;" onclick="app.changeAgendaDate(-1)">
+                            <i data-lucide="chevron-left" style="width: 18px;"></i>
+                        </button>
+                        <div style="text-align: center; min-width: 140px;">
+                            <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Data Selecionada</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--accent-color);">
+                                ${new Date(this.state.currentDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                            </div>
                         </div>
-                        <button class="glass" style="padding: 10px;" onclick="app.changeAgendaDate(1)">❯</button>
-                        <button class="glass" style="padding: 10px; color: var(--accent-color);" onclick="app.state.currentDate = new Date().toISOString().split('T')[0]; app.render(app.state.view)">Hoje</button>
-                        ${this.state.user && this.state.user.role === 'admin' ? `<button class="glass" style="padding: 10px; font-size: 0.9rem; color: #9CA3AF;" onclick="app.openAgendaConfig()">⚙️</button>` : ''}
+                        <button class="glass" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 10px;" onclick="app.changeAgendaDate(1)">
+                            <i data-lucide="chevron-right" style="width: 18px;"></i>
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="glass" style="padding: 8px 15px; font-size: 0.8rem; font-weight: 600;" onclick="app.state.currentDate = new Date().toISOString().split('T')[0]; app.render(app.state.view)">
+                            Hoje
+                        </button>
+                        ${this.state.user && this.state.user.role === 'admin' ? `
+                            <button class="glass" style="width: 38px; height: 38px; color: var(--text-secondary);" onclick="app.openAgendaConfig()">
+                                <i data-lucide="settings-2" style="width: 18px;"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
 
                 ${isPastDate ? `
-                    <div class="glass" style="padding: 8px 15px; border-left: 4px solid #ff4444; margin-bottom: 15px; font-size: 0.8rem; color: #ff4444;">
-                        📜 Você está visualizando o histórico. Edições não permitidas.
+                    <div class="glass" style="padding: 10px 15px; border-left: 4px solid #ef4444; margin-bottom: 20px; font-size: 0.75rem; color: #fca5a5; background: rgba(239, 68, 68, 0.05);">
+                        <i data-lucide="history" style="width: 14px; vertical-align: middle; margin-right: 5px;"></i>
+                        Você está visualizando o histórico. Edições não permitidas.
                     </div>
                 ` : ''}
 
                 ${timeSlots.length === 0 ? `
-                    <div class="glass" style="padding: 40px 20px; text-align: center; border: 2px dashed rgba(255,68,68,0.5); border-radius: 12px; margin-top: 20px; background: rgba(255,0,0,0.02);">
+                    <div class="glass" style="padding: 60px 20px; text-align: center; border: 2px dashed rgba(255,255,255,0.05); border-radius: 20px;">
                         <div style="font-size: 3rem; margin-bottom: 15px;">😴</div>
-                        <h3 style="color: #ff4444; margin-bottom: 10px; font-size: 1.2rem; text-transform: uppercase;">${theme.shopTerm} Fechada</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">De acordo com as configurações da agenda, não há expediente para este dia da semana.</p>
+                        <h3 style="color: var(--text-primary); margin-bottom: 10px;">${theme.shopTerm} Fechada</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Sem expediente configurado para este dia.</p>
                     </div>
                 ` : `
                     <div class="agenda-grid" style="grid-template-columns: 80px repeat(${barbersToShow.length}, 1fr);">
                         <!-- Header -->
-                        <div class="agenda-header" style="background: var(--surface-light);">Hora</div>
+                        <div class="agenda-header" style="z-index: 60; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; font-weight: 800;">
+                            Horário
+                        </div>
                         ${barbersToShow.map(b => `
                             <div class="agenda-header">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
-                                         class="desktop-only" 
-                                         style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
-                                    <span>${b.name}</span>
-                                </div>
-                                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === b.name) ? `
-                                    <button style="margin-top: 5px; background: none; border: 1px solid rgba(255,68,68,0.3); color: #ff4444; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer;" 
-                                            onclick="app.blockFullDay('${b.name}', '${this.state.currentDate}')">🚫 Bloquear Dia</button>
+                                <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
+                                     class="barber-avatar" 
+                                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/4140/4140037.png'">
+                                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); white-space: nowrap;">${b.name.split(' ')[0]}</div>
+                                ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === b.name) ? `
+                                    <button style="margin-top: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer; font-weight: 600;" 
+                                            onclick="app.blockFullDay('${b.name}', '${this.state.currentDate}')">BLOQUEAR DIA</button>
                                 ` : ''}
                             </div>
                         `).join('')}
@@ -2775,52 +2867,50 @@ const app = {
                         ${timeSlots.map(time => `
                             <div class="time-col">${time}</div>
                             ${barbersToShow.map(b => {
-            const apt = this.state.appointments.find(a =>
-                a.barber === b.name &&
-                a.time === time &&
-                (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
-            );
-            return `
+                                const apt = (this.state.appointments || []).find(a =>
+                                    a.barber === b.name &&
+                                    a.time === time &&
+                                    (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
+                                );
+                                return `
                                     <div class="agenda-cell" onclick="app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})">
                                         ${apt ? this.getAppointmentBlock(apt) : ''}
                                     </div>
                                 `;
-        }).join('')}
+                            }).join('')}
                         `).join('')}
                     </div>
                 `}
-            </section>
+            </div>
         `;
+
+        if (window.lucide) lucide.createIcons();
     },
 
     getAppointmentBlock(apt) {
-        const bgColors = {
-            'agendado': 'var(--accent-color)', /* Verde claro */
-            'confirmado': '#3ba369', /* Verde mais forte */
-            'finalizado': '#9CA3AF'  /* Cinza para concluídos */
+        const colors = {
+            'agendado': '#38bdf8', /* Azul */
+            'confirmado': '#4ade80', /* Verde */
+            'finalizado': '#94a3b8', /* Cinza */
+            'bloqueado': '#f87171'  /* Vermelho */
         };
 
+        const statusColor = colors[apt.status] || var(--accent-color);
+
         if (apt.status === 'bloqueado') {
-            const blockedOrigin = apt.origin || 'Manual';
             return `
-                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;" title="Horário bloqueado (${blockedOrigin})">
-                    <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">BLOQUEADO</div>
+                <div class="appointment-block" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
+                    <span class="customer-name" style="font-size: 0.65rem;">BLOQUEADO</span>
+                    <span class="service-name">${apt.origin || 'Manual'}</span>
                 </div>
             `;
         }
 
-        const originStr = apt.origin || 'Não informado';
-        const serviceStr = apt.service || '—';
-        const priceStr = apt.price ? `R$ ${parseFloat(apt.price).toFixed(2)}` : 'R$ 0,00';
-        const statusStr = apt.status === 'finalizado' ? `✅ Finalizado (${apt.payment || 'Pago'})` : '⏳ Pendente';
-
-        const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n💰 Valor: ${priceStr}\n📊 Status: ${statusStr}\n📍 Origem: ${originStr}`;
-        console.log(`Renderizando bloco: ${apt.customer} | Origem: ${originStr}`);
-
         return `
-            <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};" title="${tooltip}">
-                <div style="font-size: 0.65rem; font-weight: 800; margin-bottom: 2px;">${apt.time}</div>
-                <div style="font-size: 0.8rem; font-weight: 500; line-height: 1.1;">${apt.customer}</div>
+            <div class="appointment-block" style="border-left-color: ${statusColor};">
+                <span class="customer-name">${apt.customer}</span>
+                <span class="service-name">${apt.service || 'Serviço'}</span>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px;">✓ Finalizado</div>` : ''}
             </div>
         `;
     },
