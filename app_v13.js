@@ -1058,7 +1058,7 @@ const app = {
             return;
         }
         const s = this.state.settings || {};
-        const logo = s.logoUrl || '/logo_br.png';
+        const logo = s.logoUrl || 'logo_agendamento.png';
         const name = (s.shopName || 'AGENDAMENTO FÁCIL BR').toUpperCase();
 
 
@@ -1094,7 +1094,7 @@ const app = {
             ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">☰</button>
-                <div style="flex: 1; text-align: center;"><img src="/logo_br.png" alt="Agendamento Fácil BR" style="height: 100px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
+                <div style="flex: 1; text-align: center;"><img src="logo_agendamento.png" alt="Agendamento Fácil BR" style="height: 100px; margin-top: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));"></div>
                 <div id="sync-status-indicator" style="font-size: 0.6rem; font-weight: bold; margin-right: 15px; opacity: 0.8;">⚡ Tempo Real</div>
             </div>
             
@@ -1102,7 +1102,7 @@ const app = {
 
             <aside class="sidebar glass" id="sidebar">
                 <div class="sidebar-logo" style="text-align: center; padding: 20px 5px;">
-                    <img src="/logo_br.png" alt="Agendamento Fácil BR" style="height: 160px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
+                    <img src="logo_agendamento.png" alt="Agendamento Fácil BR" style="height: 160px; width: auto; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));">
                     <p style="font-size: 0.75rem; color: var(--accent-color); margin-top:8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Olá, ${this.state.user.name.split(' ')[0]}</p>
                 </div>
                 
@@ -1195,7 +1195,7 @@ const app = {
             <!-- HEADER -->
             <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: sticky; top: 0; z-index: 50;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                    <img src="/logo_centauro.png" style="width: 36px; filter: invert(1) brightness(2);">
+                    <img src="logo_agendamento.png" style="width: 36px; filter: invert(1) brightness(2);">
                     <div>
                         <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO ${this.getTerm('shopTerm').toUpperCase()}</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
