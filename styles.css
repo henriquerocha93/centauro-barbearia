@@ -84,21 +84,23 @@ h1, h2, h3 {
 }
 
 .sidebar-logo {
-    padding: 30px 25px;
+    padding: 30px 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     border-bottom: 1px solid var(--glass-border);
     margin-bottom: 20px;
 }
 
 .sidebar-logo img {
-    width: 40px;
+    width: 50px;
+    height: auto;
+    filter: brightness(1.2);
 }
 
 .sidebar-logo span {
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--accent-color);
     letter-spacing: -0.5px;
 }
