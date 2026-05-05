@@ -11,12 +11,12 @@ const app = {
                 intervalMin: 15,
                 schedule: {
                     0: { active: false, open: '09:00', close: '09:01' }, // Dom
-                    1: { active: true,  open: '09:00', close: '20:00' }, // Seg
-                    2: { active: true,  open: '09:00', close: '20:00' }, // Ter
-                    3: { active: true,  open: '09:00', close: '20:00' }, // Qua
-                    4: { active: true,  open: '09:00', close: '21:00' }, // Qui
-                    5: { active: true,  open: '09:00', close: '21:00' }, // Sex
-                    6: { active: true,  open: '09:00', close: '21:00' }  // Sab
+                    1: { active: true, open: '09:00', close: '20:00' }, // Seg
+                    2: { active: true, open: '09:00', close: '20:00' }, // Ter
+                    3: { active: true, open: '09:00', close: '20:00' }, // Qua
+                    4: { active: true, open: '09:00', close: '21:00' }, // Qui
+                    5: { active: true, open: '09:00', close: '21:00' }, // Sex
+                    6: { active: true, open: '09:00', close: '21:00' }  // Sab
                 }
             } // Configuração Dinâmica Semanal
         },
@@ -203,7 +203,7 @@ const app = {
             root.style.setProperty('--text-secondary', theme.textSecondary);
             root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
         }
-        
+
         // Cores Dinâmicas extras se existirem nas settings (Sobrescreve tudo)
         if (s.primaryColor) root.style.setProperty('--primary-color', s.primaryColor);
         if (s.accentColor) root.style.setProperty('--accent-color', s.accentColor);
@@ -254,16 +254,16 @@ const app = {
 
     async syncToFirebase() {
         if (!this.state.firebaseConfig || !this.db) return;
-        
+
         try {
             const now = new Date().getTime();
             this.state.lastUpdate = now;
-            
+
             // Suporte a Multi-Tenant
             const urlParams = new URLSearchParams(window.location.search);
             const tenantId = urlParams.get('loja');
             const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
-            
+
             const dbRef = ref(this.db, dbPath);
             const stateToSave = {
                 services: this.state.services,
@@ -285,12 +285,12 @@ const app = {
 
             await set(dbRef, stateToSave);
             console.log('⚡ Sincronizado com Firebase (Tempo Real)');
-            
+
             // Salva o timestamp no localStorage também para consistência no reload
             const localState = JSON.parse(localStorage.getItem('centauro_state') || '{}');
             localState.lastUpdate = now;
             localStorage.setItem('centauro_state', JSON.stringify(localState));
-            
+
         } catch (error) {
             console.error('❌ Erro no Firebase Sync:', error);
         }
@@ -328,13 +328,13 @@ const app = {
 
             const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateToSave, null, 2))));
             const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
-            
+
             // 1. Tentar obter o SHA do arquivo atual
             let sha = '';
             const getRes = await fetch(url, {
                 headers: { 'Authorization': `token ${config.token}` }
             });
-            
+
             if (getRes.ok) {
                 const data = await getRes.json();
                 sha = data.sha;
@@ -402,7 +402,7 @@ const app = {
                     this.state.appointments = cloudState.appointments || [];
                     this.state.serviceOrders = cloudState.serviceOrders || [];
                     this.state.tips = cloudState.tips || [];
-                    
+
                     this.saveState();
                     alert('✅ Dados da nuvem carregados com sucesso!');
                     this.render(this.state.view);
@@ -463,15 +463,15 @@ const app = {
         const estado = localStorage.getItem('centauro_state');
         if (!estado) return alert('Nenhum dado salvo no sistema atual.');
 
-        const now  = new Date();
-        const pad  = n => String(n).padStart(2, '0');
-        const stamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
         const filename = `centauro_backup_${stamp}.json`;
 
         const blob = new Blob([estado], { type: 'application/json' });
-        const url  = URL.createObjectURL(blob);
-        const dl   = document.createElement('a');
-        dl.href     = url;
+        const url = URL.createObjectURL(blob);
+        const dl = document.createElement('a');
+        dl.href = url;
         dl.download = filename;
         document.body.appendChild(dl);
         dl.click();
@@ -490,7 +490,7 @@ const app = {
 
     importDatabase() {
         const input = document.createElement('input');
-        input.type   = 'file';
+        input.type = 'file';
         input.accept = '.json';
         input.onchange = (e) => {
             const file = e.target.files[0];
@@ -523,14 +523,14 @@ const app = {
 
     init() {
         this.loadState();
-        
+
         // Inicializar Firebase
         if (this.state.firebaseConfig) {
             try {
                 const fbApp = initializeApp(this.state.firebaseConfig);
                 this.db = getDatabase(fbApp);
                 console.log('🔥 Firebase Initialized');
-                
+
                 const urlParams = new URLSearchParams(window.location.search);
                 let tenantId = urlParams.get('loja');
 
@@ -541,9 +541,9 @@ const app = {
                         tenantId = path;
                     }
                 }
-                
+
                 const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
-                
+
                 // SaaS: Buscar dados da assinatura se for inquilino
                 if (tenantId && tenantId !== 'centauro') {
                     get(ref(this.db, `master/tenants/${tenantId}`)).then(snapshot => {
@@ -554,7 +554,7 @@ const app = {
                         }
                     }).catch(e => console.error('Erro ao buscar assinatura:', e));
                 }
-                
+
                 // Escuta Ativa (Tempo Real)
                 const dbRef = ref(this.db, dbPath);
                 onValue(dbRef, (snapshot) => {
@@ -564,7 +564,7 @@ const app = {
                         const localLastUpdate = this.state.lastUpdate || 0;
                         if (data.lastUpdate !== localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
-                            
+
                             this.state.services = data.services || [];
                             this.state.staff = data.staff || [];
                             this.state.customers = data.customers || [];
@@ -582,11 +582,11 @@ const app = {
                             // SaaS: Atualiza textos da interface com base no Tenant
                             if (this.state.settings) {
                                 const s = this.state.settings;
-                                
+
                                 if (s.shopName) {
                                     document.title = `${s.shopName} | Premium Grooming`;
                                 }
-                                
+
                                 this.applyTheme();
                             }
 
@@ -612,24 +612,24 @@ const app = {
                 this.render(e.state.view);
             }
         });
-        
+
         // Carregamento inicial com verificação de sessão (Manter Logado)
         const savedUserStr = localStorage.getItem('centauros_user');
         if (savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr);
                 this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
-                
+
                 // Redireciona automaticamente para sua devida tela na inicialização
                 let viewToRender = 'home';
-                if(this.state.user.role === 'admin') viewToRender = 'admin-dash';
-                else if(this.state.user.role === 'totem') viewToRender = 'totem-dash';
+                if (this.state.user.role === 'admin') viewToRender = 'admin-dash';
+                else if (this.state.user.role === 'totem') viewToRender = 'totem-dash';
                 else viewToRender = 'barber-dash';
 
                 this.state.view = viewToRender;
                 this.render(viewToRender);
                 return;
-            } catch(e) {
+            } catch (e) {
                 console.error("Erro ao ler sessão salva:", e);
                 localStorage.removeItem('centauros_user');
             }
@@ -642,7 +642,7 @@ const app = {
     generateTimeSlots() {
         const dateObj = new Date(this.state.currentDate + 'T00:00:00');
         const dayOfWeek = dateObj.getDay(); // 0 a 6
-        
+
         const { intervalMin, schedule } = this.state.settings.agenda;
         const dayConfig = schedule[dayOfWeek];
         if (!dayConfig || !dayConfig.active) return []; // Fechado neste dia
@@ -650,7 +650,7 @@ const app = {
         const slots = [];
         let [hour, min] = dayConfig.open.split(':').map(Number);
         const [endHour, endMin] = dayConfig.close.split(':').map(Number);
-        
+
         while (hour < endHour || (hour === endHour && min <= endMin)) {
             slots.push(`${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
             min += intervalMin;
@@ -666,7 +666,7 @@ const app = {
         if (!this.state.user || this.state.user.role !== 'admin') return;
         const s = this.state.settings.agenda;
         const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        
+
         let daysHtml = days.map((d, i) => {
             const sc = s.schedule[i];
             return `
@@ -769,7 +769,7 @@ const app = {
                     <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-dark); border-radius: 10px;">
                         <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">⏱ Intervalo padrão entre horários</label>
                         <select id="set-inter" class="glass" style="width: 100%; max-width: 300px; padding: 10px; color: var(--text-primary); font-size: 0.9rem;">
-                            <option value="5"  ${s.intervalMin == 5  ? 'selected' : ''}>A cada 5 minutos</option>
+                            <option value="5"  ${s.intervalMin == 5 ? 'selected' : ''}>A cada 5 minutos</option>
                             <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
                             <option value="15" ${s.intervalMin == 15 ? 'selected' : ''}>A cada 15 minutos</option>
                             <option value="20" ${s.intervalMin == 20 ? 'selected' : ''}>A cada 20 minutos</option>
@@ -858,11 +858,11 @@ const app = {
                         <span style="font-size:1.2rem;">🕐</span>
                         <p id="last-backup-info" style="font-size:0.82rem; color:var(--text-secondary);">
                             ${(() => {
-                                const lb = localStorage.getItem('centauro_last_backup');
-                                return lb
-                                    ? `✅ Último backup: ${new Date(lb).toLocaleString('pt-BR')}`
-                                    : '⚠️ Nenhum backup realizado ainda neste dispositivo.';
-                            })()}
+                const lb = localStorage.getItem('centauro_last_backup');
+                return lb
+                    ? `✅ Último backup: ${new Date(lb).toLocaleString('pt-BR')}`
+                    : '⚠️ Nenhum backup realizado ainda neste dispositivo.';
+            })()}
                         </p>
                     </div>
 
@@ -930,7 +930,7 @@ const app = {
 
             const checkbox = document.getElementById(`cfg-act-${i}`);
             if (checkbox) {
-                checkbox.addEventListener('change', function() {
+                checkbox.addEventListener('change', function () {
                     const label = this.nextElementSibling;
                     if (label) {
                         label.textContent = this.checked ? 'Aberto' : 'Fechado';
@@ -946,30 +946,30 @@ const app = {
         this.state.settings.agenda.intervalMin = parseInt(document.getElementById('set-inter').value);
         for (let i = 0; i < 7; i++) {
             this.state.settings.agenda.schedule[i].active = document.getElementById(`cfg-act-${i}`).checked;
-            this.state.settings.agenda.schedule[i].open   = document.getElementById(`cfg-open-${i}`).value;
-            this.state.settings.agenda.schedule[i].close  = document.getElementById(`cfg-close-${i}`).value;
+            this.state.settings.agenda.schedule[i].open = document.getElementById(`cfg-open-${i}`).value;
+            this.state.settings.agenda.schedule[i].close = document.getElementById(`cfg-close-${i}`).value;
         }
 
         // Salvar dados da barbearia
         if (!this.state.settings.shopInfo) this.state.settings.shopInfo = {};
-        this.state.settings.shopInfo.name      = document.getElementById('shop-name').value.trim();
-        this.state.settings.shopInfo.phone     = document.getElementById('shop-phone').value.trim();
+        this.state.settings.shopInfo.name = document.getElementById('shop-name').value.trim();
+        this.state.settings.shopInfo.phone = document.getElementById('shop-phone').value.trim();
         this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
-        this.state.settings.shopInfo.address   = document.getElementById('shop-address').value.trim();
- 
+        this.state.settings.shopInfo.address = document.getElementById('shop-address').value.trim();
+
         // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
         const ghToken = document.getElementById('gh-token');
         const ghOwner = document.getElementById('gh-owner');
-        const ghRepo  = document.getElementById('gh-repo');
-        const ghPath  = document.getElementById('gh-path');
+        const ghRepo = document.getElementById('gh-repo');
+        const ghPath = document.getElementById('gh-path');
         const ghBranch = document.getElementById('gh-branch');
 
         if (ghToken || ghOwner || ghRepo || ghPath || ghBranch) {
             if (!this.state.githubConfig) this.state.githubConfig = {};
-            if (ghToken)  this.state.githubConfig.token  = ghToken.value.trim();
-            if (ghOwner)  this.state.githubConfig.owner  = ghOwner.value.trim();
-            if (ghRepo)   this.state.githubConfig.repo   = ghRepo.value.trim();
-            if (ghPath)   this.state.githubConfig.path   = ghPath.value.trim();
+            if (ghToken) this.state.githubConfig.token = ghToken.value.trim();
+            if (ghOwner) this.state.githubConfig.owner = ghOwner.value.trim();
+            if (ghRepo) this.state.githubConfig.repo = ghRepo.value.trim();
+            if (ghPath) this.state.githubConfig.path = ghPath.value.trim();
             if (ghBranch) this.state.githubConfig.branch = ghBranch.value.trim();
         }
 
@@ -1013,7 +1013,7 @@ const app = {
 
     render(view) {
         const appContainer = document.getElementById('app');
-        
+
         // [SaaS] Bloqueio Manual pelo Master
         if (this.state.subscription?.isBlocked) {
             this.renderBlockedScreen(appContainer);
@@ -1036,14 +1036,14 @@ const app = {
 
         const main = document.getElementById('main-content');
 
-        
+
         // Toggle full-width for landing page
         if (view === 'home' || view === 'services') {
             appContainer.className = 'container full-width';
         } else {
             appContainer.className = 'container';
         }
-        
+
         // Desvio de layout para o TOTEM (sem sidebar, tela cheia)
         if (view === 'totem-dash') {
             appContainer.className = 'container full-width';
@@ -1076,7 +1076,7 @@ const app = {
         `;
         const newMain = document.getElementById('main-content');
 
-        switch(view) {
+        switch (view) {
             case 'home': this.renderHome(newMain); break;
             case 'login': this.renderLogin(newMain); break;
             case 'booking': this.renderBooking(newMain); break;
@@ -1089,7 +1089,7 @@ const app = {
         appContainer.className = 'app-layout'; // Ativa Grid com Sidebar
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
-        
+
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML()}
             <div class="mobile-header">
@@ -1133,7 +1133,7 @@ const app = {
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')"><i>📊</i> Fluxo de Caixa</a>
                         <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')"><i>💸</i> ${theme.voucherTerm}</a>
                         <a class="menu-item ${view === 'admin-tips' ? 'active' : ''} ${(this.state.tips || []).some(t => t.status === 'pending') ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-tips')"><i>🪙</i> Gorjetas</a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${ (this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && new Date(s.timestamp || s.date).getTime() > (this.state.lastConsumptionView || 0)) ? 'pulse-os' : '' }" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''} ${(this.state.productSales || []).some(s => (s.target === 'adm' || s.target === 'barbeiro') && new Date(s.timestamp || s.date).getTime() > (this.state.lastConsumptionView || 0)) ? 'pulse-os' : ''}" onclick="app.navigateTo('admin-consumption')"><i>🛒</i> Relatório de Consumo</a>
                         <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')"><i>💰</i> Pagamentos</a>
                     `}
 
@@ -1158,7 +1158,7 @@ const app = {
             return;
         }
 
-        switch(view) {
+        switch (view) {
             case 'admin-dash': this.renderAdminDash(main); break;
             case 'barber-dash': this.renderBarberDash(main); break;
             case 'barber-financial': this.renderBarberFinancial(main); break;
@@ -1177,7 +1177,7 @@ const app = {
             case 'admin-billing': this.renderAdminBilling(main); break;
             case 'admin-os': this.renderAdminOS(main); break;
             case 'pdv': this.renderPDV(main); break;
-            default: 
+            default:
                 console.warn('View não reconhecida no layout:', view);
                 this.renderAdminDash(main);
         }
@@ -1265,19 +1265,19 @@ const app = {
 
     // ─── TOTEM: PDV ───────────────────────────────────────────────────────────
     _renderTotemPDV(container) {
-        const cart      = this.state.cart || [];
-        const seller    = this.state.pdvSeller;
-        const barbers   = this.state.staff.filter(s => s.role === 'barber');
-        const products  = this.state.products;
-        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-        const discount  = parseFloat(this.state.pdvDiscount || 0);
-        const total     = Math.max(0, subtotal - discount);
+        const cart = this.state.cart || [];
+        const seller = this.state.pdvSeller;
+        const barbers = this.state.staff.filter(s => s.role === 'barber');
+        const products = this.state.products;
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+        const total = Math.max(0, subtotal - discount);
         const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
 
         container.innerHTML = `
             <div class="fade-in">
                 <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
-                    ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}
+                    ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
 
                 <!-- Barra Scanner USB -->
@@ -1315,8 +1315,8 @@ const app = {
 
                         <div style="max-height:240px; overflow-y:auto; margin-bottom:12px;">
                             ${cart.length === 0
-                                ? '<p style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">Nenhum item no carrinho</p>'
-                                : cart.map((item, idx) => `
+                ? '<p style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">Nenhum item no carrinho</p>'
+                : cart.map((item, idx) => `
                                     <div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--glass-border);">
                                         <div style="flex:1;min-width:0;">
                                             <p style="font-size:0.8rem;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</p>
@@ -1328,7 +1328,7 @@ const app = {
                                             <button class="glass" style="padding:3px 7px;font-size:0.8rem;" onclick="app.pdvChangeQty(${idx},1)">+</button>
                                         </div>
                                         <div style="text-align:right;flex-shrink:0;min-width:55px;">
-                                            <p style="font-size:0.82rem;font-weight:700;color:var(--accent-color);">R$ ${(item.unitPrice*item.qty).toFixed(2)}</p>
+                                            <p style="font-size:0.82rem;font-weight:700;color:var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
                                             <button style="font-size:0.62rem;color:#ff4444;background:none;border:none;cursor:pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
                                         </div>
                                     </div>
@@ -1347,7 +1347,7 @@ const app = {
                             <select id="totem-pdv-seller" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
                                     onchange="app.state.pdvSeller=this.value||null;">
                                 <option value="">-- Sem comissão --</option>
-                                ${barbers.map(b=>`<option value="${b.name}" ${seller===b.name?'selected':''}>${b.name}</option>`).join('')}
+                                ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
                             </select>
                         </div>
 
@@ -1364,7 +1364,7 @@ const app = {
                         <div id="totem-pdv-barber-wrapper" style="margin-bottom:10px; display:none;">
                             <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Quem está consumindo?</label>
                             <select id="totem-pdv-consumer" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
-                                ${barbers.map(b=>`<option value="${b.name}">${b.name}</option>`).join('')}
+                                ${barbers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}
                             </select>
                         </div>
 
@@ -1397,8 +1397,8 @@ const app = {
                         </div>
 
                         <button class="btn-primary"
-                                style="width:100%;font-size:1rem;padding:13px;background:${cart.length>0?'#2E8B57':'#555'};cursor:${cart.length>0?'pointer':'not-allowed'};"
-                                ${cart.length===0?'disabled':''} onclick="app._totemFinalizeSale()">
+                                style="width:100%;font-size:1rem;padding:13px;background:${cart.length > 0 ? '#2E8B57' : '#555'};cursor:${cart.length > 0 ? 'pointer' : 'not-allowed'};"
+                                ${cart.length === 0 ? 'disabled' : ''} onclick="app._totemFinalizeSale()">
                             ✅ Finalizar Venda
                         </button>
                     </div>
@@ -1413,12 +1413,12 @@ const app = {
     },
 
     _totemFinalizeSale() {
-        const target  = document.getElementById('totem-pdv-target')?.value || 'cliente';
+        const target = document.getElementById('totem-pdv-target')?.value || 'cliente';
         const payment = document.getElementById('totem-pdv-payment')?.value || 'Dinheiro';
-        const seller  = document.getElementById('totem-pdv-seller')?.value || null;
+        const seller = document.getElementById('totem-pdv-seller')?.value || null;
         const consumer = document.getElementById('totem-pdv-consumer')?.value || null;
         const discount = parseFloat(this.state.pdvDiscount || 0);
-        const cart    = this.state.cart || [];
+        const cart = this.state.cart || [];
 
         if (cart.length === 0) return;
 
@@ -1427,9 +1427,9 @@ const app = {
             if (!product || product.stock < item.qty) { alert(`Estoque insuficiente: ${item.name}`); return; }
         }
 
-        const subtotal = cart.reduce((s,i) => s + i.unitPrice * i.qty, 0);
-        const total    = Math.max(0, subtotal - discount);
-        let totalComm  = 0;
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const total = Math.max(0, subtotal - discount);
+        let totalComm = 0;
 
         if (!this.state.productSales) this.state.productSales = [];
         const now = new Date();
@@ -1456,9 +1456,9 @@ const app = {
             // Apenas baixa de estoque, sem transação financeira
         } else {
             let method = 'dinheiro';
-            if (payment==='PIX') method='pix';
-            if (payment==='Cartão de Débito') method='debito';
-            if (payment==='Cartão de Crédito') method='credito';
+            if (payment === 'PIX') method = 'pix';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
             const desc = cart.length === 1
                 ? `PDV: ${cart[0].name} (x${cart[0].qty})`
                 : `PDV: ${cart.length} produtos`;
@@ -1469,22 +1469,22 @@ const app = {
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
             const itemTotal = item.unitPrice * item.qty;
-            const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
-            
+            const itemComm = itemTotal * (item.commissionPct || 0) / 100;
+
             this.state.productSales.push({
-                id: Date.now() + Math.random(), 
-                productId: item.productId, 
+                id: Date.now() + Math.random(),
+                productId: item.productId,
                 productName: item.name,
-                qty: item.qty, 
-                unitPrice: target === 'adm' ? 0 : item.unitPrice, 
+                qty: item.qty,
+                unitPrice: target === 'adm' ? 0 : item.unitPrice,
                 total: target === 'adm' ? 0 : itemTotal,
-                commissionPct: target === 'adm' ? 0 : (item.commissionPct || 0), 
+                commissionPct: target === 'adm' ? 0 : (item.commissionPct || 0),
                 sellerCommission: (target === 'barbeiro' || target === 'adm') ? 0 : itemComm,
-                seller: (target === 'barbeiro' || target === 'adm') ? null : (seller || null), 
+                seller: (target === 'barbeiro' || target === 'adm') ? null : (seller || null),
                 payment: target === 'barbeiro' ? 'Faturamento' : (target === 'adm' ? 'Uso Interno' : payment),
                 target: target,
                 barberName: target === 'barbeiro' ? consumer : null,
-                date: dateStr, 
+                date: dateStr,
                 timestamp: now.toISOString(),
                 transactionId,
                 voucherId
@@ -1549,9 +1549,9 @@ const app = {
             <div class="glass" style="padding:13px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
                 <div style="flex:1;min-width:0;">
                     <p style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">${p.name}</p>
-                    ${p.barcode?`<p style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary);">🔖 ${p.barcode}</p>`:''}
+                    ${p.barcode ? `<p style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary);">🔖 ${p.barcode}</p>` : ''}
                     <p style="font-size:0.78rem;color:var(--text-secondary);">Venda: <strong style="color:var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
-                    <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock<=3&&p.stock>0?' ⚠️':p.stock<=0?' ❌ Esgotado':''}</p>
+                    <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
                     ${this.state.user.role === 'admin' ? `
@@ -1655,15 +1655,15 @@ const app = {
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     ${birthdays.map(c => {
-                        const phone = (c.phone || '').replace(/\D/g, '');
-                        const firstName = c.name ? c.name.split(' ')[0] : 'Cliente';
-                        const fullName  = c.name || 'Cliente';
-                        const age       = getAge(c.birthDate);
-                        const ageText   = age ? ` · ${age} anos` : '';
-                        const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
-                        const hasPhone  = phone.length >= 10;
+            const phone = (c.phone || '').replace(/\D/g, '');
+            const firstName = c.name ? c.name.split(' ')[0] : 'Cliente';
+            const fullName = c.name || 'Cliente';
+            const age = getAge(c.birthDate);
+            const ageText = age ? ` · ${age} anos` : '';
+            const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
+            const hasPhone = phone.length >= 10;
 
-                        return `
+            return `
                         <div style="
                             display:flex; flex-wrap:wrap; align-items:center;
                             justify-content:space-between; gap:10px;
@@ -1707,7 +1707,7 @@ const app = {
                                 ✓ Marcar como parabenizado
                             </button>`}
                         </div>`;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -1740,7 +1740,7 @@ const app = {
             type, // 'in' ou 'out'
             description,
             amount: cleanAmount,
-            category: (category || 'outros').toLowerCase(), 
+            category: (category || 'outros').toLowerCase(),
             method: (method || 'dinheiro').toLowerCase()
         };
         if (!this.state.transactions) this.state.transactions = [];
@@ -1751,13 +1751,13 @@ const app = {
 
     saveOpeningBalance(date, amount) {
         if (!this.state.openingBalances) this.state.openingBalances = {};
-        
+
         // Parsing robusto para valores monetários (troca vírgula por ponto)
         let cleanAmount = String(amount).replace(',', '.');
         this.state.openingBalances[date] = parseFloat(cleanAmount) || 0;
-        
+
         this.saveState();
-        
+
         // Feedback visual se estivermos na tela de cashflow
         const btn = document.querySelector('[onclick*="saveOpeningBalance"]');
         if (btn) {
@@ -1781,10 +1781,10 @@ const app = {
         appointments.forEach(apt => {
             // Se o agendamento não tem transactionId, ou se a transação referenciada não existe mais
             const exists = transactions.find(t => t.id === apt.transactionId || (t.type === 'in' && t.description.includes(apt.customer) && t.amount === apt.price && t.date === apt.date));
-            
+
             if (!exists && apt.price > 0) {
                 console.log('➕ Recuperando transação perdida para:', apt.customer);
-                
+
                 let mappedMethod = 'dinheiro';
                 const p = (apt.payment || '').toUpperCase();
                 if (p === 'PIX') mappedMethod = 'pix';
@@ -1793,7 +1793,7 @@ const app = {
 
                 const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer}) [Recuperado]`;
                 const transId = Date.now() + Math.floor(Math.random() * 1000);
-                
+
                 const transaction = {
                     id: transId,
                     date: apt.date || new Date().toLocaleDateString('en-CA'),
@@ -1956,16 +1956,16 @@ const app = {
         document.getElementById('btn-do-login').onclick = () => {
             const user = document.getElementById('username').value.trim().toLowerCase();
             const pass = document.getElementById('password').value.trim();
-            
+
             // Procura o usuário que cruza os dados (Aceita Login ou Email)
-            const matchedUser = this.state.staff.find(s => 
-                ((s.login && s.login.toLowerCase() === user) || (s.email && s.email.toLowerCase() === user)) && 
+            const matchedUser = this.state.staff.find(s =>
+                ((s.login && s.login.toLowerCase() === user) || (s.email && s.email.toLowerCase() === user)) &&
                 s.password === pass
             );
-            
+
             if (matchedUser) {
                 this.state.user = { id: matchedUser.id, name: matchedUser.name, role: matchedUser.role };
-                
+
                 if (document.getElementById('keep-logged-in').checked) {
                     localStorage.setItem('centauros_user', JSON.stringify(matchedUser));
                 } else {
@@ -2051,7 +2051,7 @@ const app = {
         const tenantId = urlParams.get('loja');
         const sub = this.state.subscription;
         let billingBanner = '';
-        
+
         // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz) e apenas para ADMs
         if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment && this.state.user.role === 'admin') {
             const nextDate = new Date(sub.nextPayment);
@@ -2094,7 +2094,7 @@ const app = {
     // ══════════════════════════════════════════════════════════════
 
     renderAdminOS(container) {
-        const isAdmin  = this.state.user?.role === 'admin';
+        const isAdmin = this.state.user?.role === 'admin';
         const userName = this.state.user?.name;
         const allOrders = this.state.serviceOrders || [];
 
@@ -2103,13 +2103,13 @@ const app = {
             ? allOrders
             : allOrders.filter(o => o.createdBy === userName);
 
-        const filter  = this.state.osFilter || 'all';
+        const filter = this.state.osFilter || 'all';
 
         const counts = {
-            all:     orders.length,
-            open:    orders.filter(o => o.status === 'open').length,
-            progress:orders.filter(o => o.status === 'progress').length,
-            resolved:orders.filter(o => o.status === 'resolved').length,
+            all: orders.length,
+            open: orders.filter(o => o.status === 'open').length,
+            progress: orders.filter(o => o.status === 'progress').length,
+            resolved: orders.filter(o => o.status === 'resolved').length,
         };
 
         const filtered = filter === 'all' ? orders
@@ -2120,26 +2120,26 @@ const app = {
 
         const statusBadge = (status) => {
             const map = {
-                open:     { label: 'Aberta',       color: '#ff4444', bg: 'rgba(255,68,68,0.15)' },
+                open: { label: 'Aberta', color: '#ff4444', bg: 'rgba(255,68,68,0.15)' },
                 progress: { label: 'Em andamento', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
-                resolved: { label: 'Resolvida',    color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+                resolved: { label: 'Resolvida', color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
             };
             const s = map[status] || map.open;
             return `<span style="padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;color:${s.color};background:${s.bg};">${s.label}</span>`;
         };
 
         const problemIcon = (type) => ({
-            'corte':    '✂️', 'quimica':  '🧪', 'coloracao': '🎨',
-            'barba':    '💈', 'produto':  '🧴', 'lesao':     '⚠️',
-            'outro':    '📋',
+            'corte': '✂️', 'quimica': '🧪', 'coloracao': '🎨',
+            'barba': '💈', 'produto': '🧴', 'lesao': '⚠️',
+            'outro': '📋',
         }[type] || '📋');
 
         const solutionLabel = (type) => ({
-            'refazer':  '🔄 Refazer o serviço',
+            'refazer': '🔄 Refazer o serviço',
             'desconto': '🏷️ Desconto na próxima visita',
             'reembolso_parcial': '💸 Reembolso parcial',
-            'reembolso_total':   '💸 Reembolso total',
-            'encaminhamento':    '📞 Encaminhamento externo',
+            'reembolso_total': '💸 Reembolso total',
+            'encaminhamento': '📞 Encaminhamento externo',
             'outro': '📝 Outro',
         }[type] || type || '—');
 
@@ -2160,16 +2160,16 @@ const app = {
                 <!-- Resumo por status -->
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:20px;">
                     ${[
-                        { key:'all',      label:'Total',         color:'#a78bfa', count: counts.all },
-                        { key:'open',     label:'Abertas',       color:'#ff4444', count: counts.open },
-                        { key:'progress', label:'Em andamento',  color:'#fbbf24', count: counts.progress },
-                        { key:'resolved', label:'Resolvidas',    color:'#4ade80', count: counts.resolved },
-                    ].map(s => `
+                { key: 'all', label: 'Total', color: '#a78bfa', count: counts.all },
+                { key: 'open', label: 'Abertas', color: '#ff4444', count: counts.open },
+                { key: 'progress', label: 'Em andamento', color: '#fbbf24', count: counts.progress },
+                { key: 'resolved', label: 'Resolvidas', color: '#4ade80', count: counts.resolved },
+            ].map(s => `
                         <div class="glass" onclick="app.state.osFilter='${s.key}'; app.navigateTo('admin-os');"
                              style="padding:14px;cursor:pointer;text-align:center;border-left:3px solid ${s.color};
-                                    ${filter===s.key?`background:rgba(255,255,255,0.06);`:''}transition:all 0.2s;"
+                                    ${filter === s.key ? `background:rgba(255,255,255,0.06);` : ''}transition:all 0.2s;"
                              onmouseover="this.style.background='rgba(255,255,255,0.06)'"
-                             onmouseout="this.style.background='${filter===s.key?'rgba(255,255,255,0.06)':'transparent'}'">
+                             onmouseout="this.style.background='${filter === s.key ? 'rgba(255,255,255,0.06)' : 'transparent'}'">
                             <p style="font-size:1.6rem;font-weight:800;color:${s.color};margin-bottom:2px;">${s.count}</p>
                             <p style="font-size:0.72rem;color:var(--text-secondary);">${s.label}</p>
                         </div>
@@ -2184,9 +2184,8 @@ const app = {
                         <button class="btn-primary" style="margin-top:16px;" onclick="app.openNewOSModal()">Criar primeira OS</button>
                     </div>
                 ` : sorted.map(os => `
-                    <div class="glass fade-in" style="padding:18px;margin-bottom:12px;border-left:4px solid ${
-                        os.status==='open' ? '#ff4444' : os.status==='progress' ? '#fbbf24' : '#4ade80'
-                    };">
+                    <div class="glass fade-in" style="padding:18px;margin-bottom:12px;border-left:4px solid ${os.status === 'open' ? '#ff4444' : os.status === 'progress' ? '#fbbf24' : '#4ade80'
+                };">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
                             <div style="flex:1;min-width:200px;">
                                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
@@ -2272,14 +2271,14 @@ const app = {
                         <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">⚠️ Tipo de Ocorrência *</label>
                         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;" id="os-problem-type-grid">
                             ${[
-                                { key:'corte',    label:'✂️ Corte Incorreto' },
-                                { key:'quimica',  label:'🧪 Química / Relaxamento' },
-                                { key:'coloracao',label:'🎨 Coloração / Luzes' },
-                                { key:'barba',    label:'💈 Barba Incorreta' },
-                                { key:'produto',  label:'🧴 Reação a Produto' },
-                                { key:'lesao',    label:'⚠️ Lesão / Ferimento' },
-                                { key:'outro',    label:'📋 Outro' },
-                            ].map(p => `
+                { key: 'corte', label: '✂️ Corte Incorreto' },
+                { key: 'quimica', label: '🧪 Química / Relaxamento' },
+                { key: 'coloracao', label: '🎨 Coloração / Luzes' },
+                { key: 'barba', label: '💈 Barba Incorreta' },
+                { key: 'produto', label: '🧴 Reação a Produto' },
+                { key: 'lesao', label: '⚠️ Lesão / Ferimento' },
+                { key: 'outro', label: '📋 Outro' },
+            ].map(p => `
                                 <button type="button" id="ospt-${p.key}"
                                         class="glass"
                                         style="padding:10px 8px;font-size:0.78rem;text-align:center;cursor:pointer;border-radius:8px;transition:all 0.2s;border:1px solid var(--glass-border);"
@@ -2332,7 +2331,7 @@ const app = {
 
         const q = query.toLowerCase();
         const apptNames = [...new Set((this.state.appointments || []).map(a => a.customerName).filter(Boolean))];
-        const regNames  = (this.state.customers || []).map(c => c.name).filter(Boolean);
+        const regNames = (this.state.customers || []).map(c => c.name).filter(Boolean);
         const all = [...new Set([...apptNames, ...regNames])].filter(n => n.toLowerCase().includes(q)).slice(0, 6);
 
         box.innerHTML = all.map(name => `
@@ -2349,44 +2348,44 @@ const app = {
         document.getElementById('os-problem-type').value = key;
         document.querySelectorAll('#os-problem-type-grid button').forEach(btn => {
             btn.style.borderColor = 'var(--glass-border)';
-            btn.style.background  = '';
-            btn.style.color       = 'var(--text-primary)';
+            btn.style.background = '';
+            btn.style.color = 'var(--text-primary)';
         });
         const selected = document.getElementById(`ospt-${key}`);
         if (selected) {
             selected.style.borderColor = 'var(--accent-color)';
-            selected.style.background  = 'rgba(212,175,55,0.12)';
-            selected.style.color       = 'var(--accent-color)';
+            selected.style.background = 'rgba(212,175,55,0.12)';
+            selected.style.color = 'var(--accent-color)';
         }
     },
 
     saveOS() {
-        const customerName    = document.getElementById('os-customer-search').value.trim();
-        const barberName      = document.getElementById('os-barber').value;
-        const problemType     = document.getElementById('os-problem-type').value;
-        const problemDesc     = document.getElementById('os-problem-desc').value.trim();
-        const solutionType    = document.getElementById('os-solution-type').value;
-        const solutionDesc    = document.getElementById('os-solution-desc').value.trim();
+        const customerName = document.getElementById('os-customer-search').value.trim();
+        const barberName = document.getElementById('os-barber').value;
+        const problemType = document.getElementById('os-problem-type').value;
+        const problemDesc = document.getElementById('os-problem-desc').value.trim();
+        const solutionType = document.getElementById('os-solution-type').value;
+        const solutionDesc = document.getElementById('os-solution-desc').value.trim();
 
         if (!customerName) { alert('Informe o nome do cliente.'); return; }
-        if (!problemType)  { alert('Selecione o tipo de ocorrência.'); return; }
-        if (!problemDesc)  { alert('Descreva o problema.'); return; }
+        if (!problemType) { alert('Selecione o tipo de ocorrência.'); return; }
+        if (!problemDesc) { alert('Descreva o problema.'); return; }
 
         if (!this.state.serviceOrders) this.state.serviceOrders = [];
 
         this.state.serviceOrders.push({
-            id:                 Date.now(),
+            id: Date.now(),
             customerName,
-            barberName:         barberName || null,
+            barberName: barberName || null,
             problemType,
             problemDescription: problemDesc,
-            solutionType:       solutionType || null,
-            solution:           solutionDesc || null,
-            status:             solutionType ? 'progress' : 'open',
-            createdAt:          Date.now(),
-            resolvedAt:         null,
-            resolvedBy:         null,
-            createdBy:          this.state.user?.name || 'Sistema',
+            solutionType: solutionType || null,
+            solution: solutionDesc || null,
+            status: solutionType ? 'progress' : 'open',
+            createdAt: Date.now(),
+            resolvedAt: null,
+            resolvedBy: null,
+            createdBy: this.state.user?.name || 'Sistema',
         });
 
         this.saveState();
@@ -2435,11 +2434,11 @@ const app = {
         const os = (this.state.serviceOrders || []).find(o => o.id === osId);
         if (!os) return;
 
-        os.status       = 'resolved';
+        os.status = 'resolved';
         os.solutionType = document.getElementById('resolve-solution-type').value;
-        os.solution     = document.getElementById('resolve-notes').value.trim() || os.solution;
-        os.resolvedAt   = Date.now();
-        os.resolvedBy   = this.state.user?.name || 'Sistema';
+        os.solution = document.getElementById('resolve-notes').value.trim() || os.solution;
+        os.resolvedAt = Date.now();
+        os.resolvedBy = this.state.user?.name || 'Sistema';
 
         this.saveState();
         this.closeModal();
@@ -2453,15 +2452,15 @@ const app = {
         const isAdmin = this.state.user?.role === 'admin';
 
         const solutionLabel = (type) => ({
-            'refazer':  '🔄 Refazer o serviço',
+            'refazer': '🔄 Refazer o serviço',
             'desconto': '🏷️ Desconto na próxima visita',
             'reembolso_parcial': '💸 Reembolso parcial',
-            'reembolso_total':   '💸 Reembolso total',
-            'encaminhamento':    '📞 Encaminhamento externo',
+            'reembolso_total': '💸 Reembolso total',
+            'encaminhamento': '📞 Encaminhamento externo',
             'outro': '📝 Outro',
         }[type] || type || '—');
 
-        const statusMap = { open:'🔴 Aberta', progress:'🟡 Em andamento', resolved:'🟢 Resolvida' };
+        const statusMap = { open: '🔴 Aberta', progress: '🟡 Em andamento', resolved: '🟢 Resolvida' };
 
         this.openModal(`📋 OS #${os.id.toString().slice(-5)}`, `
             <section class="fade-in">
@@ -2517,9 +2516,9 @@ const app = {
 
     renderBarberFinancial(container) {
         const today = new Date().toLocaleDateString('en-CA');
-        
+
         // Estado local para o dashboard (simplificado)
-        const filter = this.state.barberFilter || 'dia'; 
+        const filter = this.state.barberFilter || 'dia';
         let startDate, endDate;
 
         if (filter === 'dia') {
@@ -2536,10 +2535,10 @@ const app = {
 
         const filteredApts = this.state.appointments.filter(a => {
             const aptDate = a.date || today;
-            return a.barber === this.state.user.name && 
-                   a.status === 'finalizado' && 
-                   aptDate >= startDate && 
-                   aptDate <= endDate;
+            return a.barber === this.state.user.name &&
+                a.status === 'finalizado' &&
+                aptDate >= startDate &&
+                aptDate <= endDate;
         });
 
         const grossTotal = filteredApts.reduce((acc, a) => acc + a.price, 0);
@@ -2551,9 +2550,9 @@ const app = {
             const tBarber = (t.barber || '').trim().toLowerCase();
             const myName = (this.state.user.name || '').trim().toLowerCase();
             return tBarber === myName &&
-                   tDate >= startDate && tDate <= endDate;
+                tDate >= startDate && tDate <= endDate;
         });
-        
+
         // Somente gorjetas APROVADAS contam para o faturamento
         const totalTips = myTips
             .filter(t => t.status === 'approved')
@@ -2562,7 +2561,7 @@ const app = {
         const myVouchers = this.state.vouchers.filter(v => {
             const vDate = v.date ? v.date.split('T')[0] : today;
             return v.barber === this.state.user.name &&
-                   vDate >= startDate && vDate <= endDate;
+                vDate >= startDate && vDate <= endDate;
         });
         const totalVouchers = myVouchers.reduce((sum, v) => sum + v.amount, 0);
 
@@ -2614,7 +2613,7 @@ const app = {
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${a.customer}</span>
-                                <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission/100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
+                                <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>${a.service}</span>
@@ -2679,7 +2678,7 @@ const app = {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
-        const barbersToShow = barberFilter 
+        const barbersToShow = barberFilter
             ? this.state.staff.filter(s => s.name === barberFilter)
             : this.state.staff.filter(s => s.showInAgenda !== false);
 
@@ -2740,17 +2739,17 @@ const app = {
                         ${timeSlots.map(time => `
                             <div class="time-col">${time}</div>
                             ${barbersToShow.map(b => {
-                                const apt = this.state.appointments.find(a => 
-                                    a.barber === b.name && 
-                                    a.time === time && 
-                                    (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
-                                );
-                                return `
+            const apt = this.state.appointments.find(a =>
+                a.barber === b.name &&
+                a.time === time &&
+                (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
+            );
+            return `
                                     <div class="agenda-cell" onclick="app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})">
                                         ${apt ? this.getAppointmentBlock(apt) : ''}
                                     </div>
                                 `;
-                            }).join('')}
+        }).join('')}
                         `).join('')}
                     </div>
                 `}
@@ -2777,7 +2776,7 @@ const app = {
         const serviceStr = apt.service || '—';
         const priceStr = apt.price ? `R$ ${parseFloat(apt.price).toFixed(2)}` : 'R$ 0,00';
         const statusStr = apt.status === 'finalizado' ? `✅ Finalizado (${apt.payment || 'Pago'})` : '⏳ Pendente';
-        
+
         const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n💰 Valor: ${priceStr}\n📊 Status: ${statusStr}\n📍 Origem: ${originStr}`;
 
         return `
@@ -2857,7 +2856,7 @@ const app = {
     searchCustomer(query) {
         const results = document.getElementById('customer-results');
         const historyPreview = document.getElementById('cust-history-preview');
-        
+
         if (!query || query.length < 2) {
             results.style.display = 'none';
             historyPreview.style.display = 'none';
@@ -2865,7 +2864,7 @@ const app = {
         }
 
         const matches = this.state.customers.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-        
+
         if (matches.length > 0) {
             results.innerHTML = matches.map(c => `
                 <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" 
@@ -2885,11 +2884,11 @@ const app = {
         const total = Array.from(checked).reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
         const indicator = document.getElementById('walkin-service-count');
         if (indicator) {
-            indicator.innerHTML = count > 0 
+            indicator.innerHTML = count > 0
                 ? `<span style="color: var(--accent-color); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
                 : 'Nada selecionado';
         }
-        
+
         document.querySelectorAll('input[name="walkin-services"]').forEach(input => {
             const label = input.closest('label');
             const sId = parseInt(input.dataset.id);
@@ -2903,7 +2902,7 @@ const app = {
     selectCustomer(name) {
         document.getElementById('new-cust-name').value = name;
         document.getElementById('customer-results').style.display = 'none';
-        
+
         const customer = this.state.customers.find(c => c.name === name);
         if (customer && customer.history.length > 0) {
             const preview = document.getElementById('cust-history-preview');
@@ -2920,7 +2919,7 @@ const app = {
     saveNewWalkIn(barber, time) {
         const name = document.getElementById('new-cust-name').value.trim();
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="walkin-services"]:checked'));
-        
+
         if (!name) { alert('Por favor, informe o nome do cliente.'); return; }
         if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
@@ -2935,14 +2934,14 @@ const app = {
             return;
         }
 
-        const apt = { 
-            id: Date.now(), 
-            barber, 
-            time, 
-            date: this.state.currentDate, 
-            customer: customer.name, 
-            service: serviceNames, 
-            price: totalPrice, 
+        const apt = {
+            id: Date.now(),
+            barber,
+            time,
+            date: this.state.currentDate,
+            customer: customer.name,
+            service: serviceNames,
+            price: totalPrice,
             status: 'agendado',
             origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
@@ -2954,19 +2953,19 @@ const app = {
 
     blockTimeSlot(barber, time) {
         if (!confirm(`Deseja bloquear a agenda de ${barber} às ${time}?`)) return;
-        
-        const apt = { 
-            id: Date.now(), 
-            barber, 
-            time, 
-            date: this.state.currentDate, 
-            customer: 'BLOQUEADO', 
-            service: 'Indisponível', 
-            price: 0, 
+
+        const apt = {
+            id: Date.now(),
+            barber,
+            time,
+            date: this.state.currentDate,
+            customer: 'BLOQUEADO',
+            service: 'Indisponível',
+            price: 0,
             status: 'bloqueado',
             origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
-        
+
         if (!this.state.appointments) this.state.appointments = [];
         this.state.appointments.push(apt);
         this.saveState();
@@ -2976,27 +2975,27 @@ const app = {
 
     blockFullDay(barber, date) {
         if (!confirm(`ATENÇÃO: Deseja bloquear TODOS os horários livres de ${barber} no dia ${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')}?`)) return;
-        
+
         const timeSlots = this.generateTimeSlots();
         let addedBlocks = 0;
-        
+
         timeSlots.forEach(time => {
             // Verifica se já existe um agendamento neste horário
-            const exists = this.state.appointments.find(a => 
-                a.barber === barber && 
-                a.time === time && 
+            const exists = this.state.appointments.find(a =>
+                a.barber === barber &&
+                a.time === time &&
                 (a.date === date || (!a.date && date === new Date().toISOString().split('T')[0]))
             );
-            
+
             if (!exists) {
-                this.state.appointments.push({ 
-                    id: Date.now() + Math.floor(Math.random() * 10000), 
-                    barber, 
-                    time, 
-                    date, 
-                    customer: 'BLOQUEADO', 
-                    service: 'Indisponível', 
-                    price: 0, 
+                this.state.appointments.push({
+                    id: Date.now() + Math.floor(Math.random() * 10000),
+                    barber,
+                    time,
+                    date,
+                    customer: 'BLOQUEADO',
+                    service: 'Indisponível',
+                    price: 0,
                     status: 'bloqueado',
                     origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
                 });
@@ -3056,15 +3055,16 @@ const app = {
         const newCustomer = { id: Date.now(), name, phone, gender, birthDate, history: [] };
         this.state.customers.push(newCustomer);
 
-        const apt = { 
-            id: Date.now() + 1, 
-            barber, 
-            time, 
-            date: this.state.currentDate, 
-            customer: name, 
-            service, 
-            price, 
-            status: 'agendado' 
+        const apt = {
+            id: Date.now() + 1,
+            barber,
+            time,
+            date: this.state.currentDate,
+            customer: name,
+            service,
+            price,
+            status: 'agendado',
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
         this.state.appointments.push(apt);
         this.saveState(); // PERSISTÊNCIA ADICIONADA
@@ -3153,8 +3153,8 @@ const app = {
                     <div id="edit-walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Recalculando...</div>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 250px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => {
-                            const isSelected = currentServices.includes(s.name);
-                            return `
+            const isSelected = currentServices.includes(s.name);
+            return `
                                 <label class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; border-radius: 8px; 
                                        border: 2px solid ${isSelected ? 'var(--accent-color)' : 'var(--glass-border)'};
                                        background: ${isSelected ? 'rgba(212, 175, 55, 0.15)' : 'var(--glass-bg)'};">
@@ -3168,7 +3168,7 @@ const app = {
                                     </div>
                                 </label>
                             `;
-                        }).join('')}
+        }).join('')}
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -3186,11 +3186,11 @@ const app = {
         const total = Array.from(checked).reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
         const indicator = document.getElementById('edit-walkin-service-count');
         if (indicator) {
-            indicator.innerHTML = count > 0 
+            indicator.innerHTML = count > 0
                 ? `<span style="color: var(--accent-color); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
                 : 'Pelo menos um serviço deve ser selecionado';
         }
-        
+
         document.querySelectorAll('input[name="edit-services"]').forEach(input => {
             const label = input.closest('label');
             if (label) {
@@ -3203,7 +3203,7 @@ const app = {
     saveAptChanges(aptId) {
         const apt = this.state.appointments.find(a => a.id === aptId);
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="edit-services"]:checked'));
-        
+
         if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
         apt.service = checkedBoxes.map(cb => cb.dataset.name).join(', ');
@@ -3230,7 +3230,7 @@ const app = {
 
         const customers = this.state.customers || [];
         const normalizedAptName = this.normalizeString(apt.customer);
-        
+
         // 1. Busca exata (normalizada)
         let customer = customers.find(c => this.normalizeString(c.name) === normalizedAptName);
 
@@ -3253,19 +3253,19 @@ const app = {
         }
 
         const shopName = this.state.settings.shopName || 'Nossa Loja';
-        
+
         // Limpar número do telefone (apenas números)
         const cleanPhone = customer.phone.replace(/\D/g, '');
-        
+
         // Formatar data bonitinha
         const dateObj = new Date(apt.date + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
         const message = `Olá, *${customer.name}*! 👋\n\nPassando para confirmar seu horário na *${shopName}*:\n\n📅 Data: *${formattedDate}*\n⏰ Hora: *${apt.time}*\n🛠️ Serviço: *${apt.service}*\n\nNos vemos em breve! 😊`;
-        
+
         const encodedMsg = encodeURIComponent(message);
         const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMsg}`;
-        
+
         window.open(whatsappUrl, '_blank');
     },
 
@@ -3322,7 +3322,7 @@ const app = {
             apt.customer = name;
             apt.payment = payment;
             apt.status = 'finalizado';
-            
+
             // Integrar com CRM (Histórico do Cliente)
             const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
             if (customer) {
@@ -3344,14 +3344,14 @@ const app = {
             const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
             const price = parseFloat(apt.price || 0);
             apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
-            
+
             // Registrar Gorjeta se houver
             const tipInput = document.getElementById('final-tip');
             if (tipInput && tipInput.value) {
                 const tipAmount = parseFloat(tipInput.value);
                 if (!isNaN(tipAmount) && tipAmount > 0) {
                     if (!this.state.tips) this.state.tips = [];
-                    
+
                     // Usar o barbeiro do agendamento ou o logado como fallback
                     const barberName = apt.barber || (this.state.user ? this.state.user.name : 'Indefinido');
                     const tipDate = new Date().toISOString().split('T')[0]; // Data de HOJE (quando o dinheiro entra)
@@ -3371,11 +3371,11 @@ const app = {
                         paymentMethod: mappedMethod,
                         transactionId: tipTransactionId
                     });
-                    
+
                     console.log('Gorjeta registrada para:', barberName, tipAmount);
                 }
             }
-            
+
             this.closeModal();
             this.saveState();
             this.render(this.state.view);
@@ -3390,7 +3390,7 @@ const app = {
         if (confirm('Deseja realmente remover este agendamento?')) {
             const idToCancel = Number(aptId);
             const apt = this.state.appointments.find(a => a.id === idToCancel);
-            
+
             if (apt && apt.transactionId) {
                 // Remover transação financeira se existir
                 this.state.transactions = this.state.transactions.filter(t => t.id !== apt.transactionId);
@@ -3415,15 +3415,15 @@ const app = {
         let startDate, endDate;
 
         if (period === 'day') {
-            startDate = new Date(now.setHours(0,0,0,0));
-            endDate = new Date(now.setHours(23,59,59,999));
+            startDate = new Date(now.setHours(0, 0, 0, 0));
+            endDate = new Date(now.setHours(23, 59, 59, 999));
         } else if (period === 'week') {
             const day = now.getDay();
             const diff = now.getDate() - day;
             startDate = new Date(now.setDate(diff));
-            startDate.setHours(0,0,0,0);
+            startDate.setHours(0, 0, 0, 0);
             endDate = new Date();
-            endDate.setHours(23,59,59,999);
+            endDate.setHours(23, 59, 59, 999);
         } else if (period === 'month') {
             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
             endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -3676,7 +3676,7 @@ const app = {
         if (!this.state.tips) this.state.tips = [];
         const tipId = Date.now();
         const now = new Date();
-        
+
         // Registrar no fluxo de caixa e pegar ID
         const transId = this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', payment);
 
@@ -3728,7 +3728,7 @@ const app = {
                 if (tip.transactionId) {
                     this.state.transactions = (this.state.transactions || []).filter(tr => tr.id !== tip.transactionId);
                 } else {
-                    this.state.transactions = (this.state.transactions || []).filter(t => 
+                    this.state.transactions = (this.state.transactions || []).filter(t =>
                         !(t.description.includes(`Gorjeta: ${tip.barber}`) && t.amount === tip.amount && t.date === tip.date)
                     );
                 }
@@ -3768,13 +3768,13 @@ const app = {
         const tip = (this.state.tips || []).find(t => t.id == id);
         if (tip) {
             tip.amount = newAmount;
-            
+
             // Atualizar no fluxo de caixa se houver transação vinculada
             if (tip.transactionId) {
                 const trans = (this.state.transactions || []).find(tr => tr.id === tip.transactionId);
                 if (trans) trans.amount = newAmount;
             }
-            
+
             this.saveState();
             this.closeModal();
             this.render('admin-tips');
@@ -3871,7 +3871,7 @@ const app = {
             ? this.state.products.filter(p =>
                 p.name.toLowerCase().includes(q) ||
                 (p.barcode && p.barcode.toLowerCase().includes(q))
-              )
+            )
             : this.state.products;
         const container = document.getElementById('stock-list-container');
         if (container) container.innerHTML = this.renderStockItems(filtered);
@@ -3883,7 +3883,7 @@ const app = {
     openBarcodeScanner(forPDV = false) {
         this._scannerForPDV = forPDV;
         const title = forPDV ? '📶 Scanner — PDV' : '📶 Escanear Código de Barras';
-        const hint  = forPDV
+        const hint = forPDV
             ? 'Aponte o leitor para o produto. Ele será adicionado ao carrinho automaticamente.'
             : 'Aponte o leitor para o produto ou digite o código abaixo.';
 
@@ -3931,10 +3931,10 @@ const app = {
     },
 
     handleBarcodeResult(code) {
-        if (!code || !code.trim()) { 
+        if (!code || !code.trim()) {
             const inp = document.getElementById('usb-barcode-input');
             if (inp) { inp.value = ''; inp.focus(); }
-            return; 
+            return;
         }
         code = code.trim();
         this.closeModal();
@@ -4019,10 +4019,10 @@ const app = {
 
     doQuickSale(productId) {
         const product = this.state.products.find(p => p.id === productId);
-        const qty     = parseInt(document.getElementById('sale-qty').value) || 1;
-        const target  = document.getElementById('sale-target').value;
+        const qty = parseInt(document.getElementById('sale-qty').value) || 1;
+        const target = document.getElementById('sale-target').value;
         const payment = document.getElementById('sale-payment').value;
-        const bName   = document.getElementById('sale-barber-name').value;
+        const bName = document.getElementById('sale-barber-name').value;
 
         if (!product) return;
         if (product.stock < qty) {
@@ -4081,7 +4081,7 @@ const app = {
         this.saveState();
         this.closeModal();
         this.render(this.state.view);
-        
+
         if (target === 'barbeiro') {
             alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${bName.split(' ')[0]}.`);
         } else if (target === 'adm') {
@@ -4147,10 +4147,10 @@ const app = {
     },
 
     saveProduct(productId) {
-        const name          = document.getElementById('prod-name').value.trim();
-        const price         = parseFloat(document.getElementById('prod-price').value) || 0;
-        const stock         = parseInt(document.getElementById('prod-stock').value) || 0;
-        const barcode       = document.getElementById('prod-barcode').value.trim();
+        const name = document.getElementById('prod-name').value.trim();
+        const price = parseFloat(document.getElementById('prod-price').value) || 0;
+        const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+        const barcode = document.getElementById('prod-barcode').value.trim();
         const commissionPct = parseFloat(document.getElementById('prod-commission').value) || 0;
 
         if (!name) { alert('Informe o nome do produto.'); return; }
@@ -4178,15 +4178,15 @@ const app = {
     // ──────────────────────────────────────────────────────────────
 
     renderPDV(container) {
-        const cart     = this.state.cart || [];
-        const seller   = this.state.pdvSeller;
-        const barbers  = this.state.staff.filter(s => s.role === 'barber');
+        const cart = this.state.cart || [];
+        const seller = this.state.pdvSeller;
+        const barbers = this.state.staff.filter(s => s.role === 'barber');
         const products = this.state.products;
 
         // Totais do carrinho
-        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-        const discount  = parseFloat(this.state.pdvDiscount || 0);
-        const total     = Math.max(0, subtotal - discount);
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+        const total = Math.max(0, subtotal - discount);
         const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
 
         container.innerHTML = `
@@ -4194,7 +4194,7 @@ const app = {
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px;">
                     <div>
                         <h2 class="section-title" style="margin-bottom: 3px;">💵 PDV — Ponto de Venda</h2>
-                        <p style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'})}</p>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
                 </div>
 
@@ -4241,8 +4241,8 @@ const app = {
                         <!-- Itens do carrinho -->
                         <div style="max-height: 260px; overflow-y: auto; margin-bottom: 14px;">
                             ${cart.length === 0
-                                ? '<p style="text-align:center; color: var(--text-secondary); font-size: 0.85rem; padding: 20px 0;">Adicione produtos ao carrinho</p>'
-                                : cart.map((item, idx) => `
+                ? '<p style="text-align:center; color: var(--text-secondary); font-size: 0.85rem; padding: 20px 0;">Adicione produtos ao carrinho</p>'
+                : cart.map((item, idx) => `
                                     <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
                                         <div style="flex: 1; min-width: 0;">
                                             <p style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</p>
@@ -4360,7 +4360,7 @@ const app = {
                 </section>
             `;
         }
-        
+
         // Torna o layout fluido no mobile
         const main = document.getElementById('main-content');
         if (main) main.style.overflow = 'auto';
@@ -4382,7 +4382,7 @@ const app = {
         }
 
         return sales.map(s => {
-            const time = s.timestamp ? new Date(s.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            const time = s.timestamp ? new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
             let targetLabel = '👤 Cliente';
             if (s.target === 'barbeiro') targetLabel = `✂️ ${s.barberName || 'Barbeiro'}`;
             if (s.target === 'adm') targetLabel = '⚙️ Uso Interno';
@@ -4400,7 +4400,7 @@ const app = {
             // Lógica de Origem e Usuário (com fallback para dados antigos)
             const originBase = s.origin || (s.target === 'barbeiro' ? 'App' : 'Sistema');
             let userSuffix = '';
-            
+
             if (s.loggedUser) {
                 userSuffix = ` (${s.loggedUser.split(' ')[0]})`;
             } else if (s.target === 'barbeiro' && s.barberName) {
@@ -4485,11 +4485,11 @@ const app = {
     },
 
     renderPDVTotals() {
-        const cart      = this.state.cart || [];
-        const seller    = this.state.pdvSeller;
-        const subtotal  = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-        const discount  = parseFloat(this.state.pdvDiscount || 0);
-        const total     = Math.max(0, subtotal - discount);
+        const cart = this.state.cart || [];
+        const seller = this.state.pdvSeller;
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+        const total = Math.max(0, subtotal - discount);
         const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
         const el = document.getElementById('pdv-totals');
         if (el) el.innerHTML = this.getPDVTotalsHTML(subtotal, discount, total, commission, seller);
@@ -4554,10 +4554,10 @@ const app = {
     },
 
     finalizePDVSale() {
-        const cart    = this.state.cart || [];
-        const target  = document.getElementById('pdv-target')?.value || 'cliente';
+        const cart = this.state.cart || [];
+        const target = document.getElementById('pdv-target')?.value || 'cliente';
         const payment = document.getElementById('pdv-payment')?.value || 'Dinheiro';
-        const seller  = document.getElementById('pdv-seller')?.value || null;
+        const seller = document.getElementById('pdv-seller')?.value || null;
         const consumer = document.getElementById('pdv-consumer')?.value || null;
         const discount = parseFloat(this.state.pdvDiscount || 0);
 
@@ -4573,7 +4573,7 @@ const app = {
         }
 
         const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-        const total    = Math.max(0, subtotal - discount);
+        const total = Math.max(0, subtotal - discount);
         let totalCommission = 0;
 
         // Descontar estoque + registrar histórico
@@ -4606,7 +4606,7 @@ const app = {
             if (payment === 'Cartão de Crédito') method = 'credito';
             const desc = cart.length === 1
                 ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-                : `PDV: ${cart.length} produtos (${cart.map(i=>i.qty+'x '+i.name.split(' ')[0]).join(', ')})`;
+                : `PDV: ${cart.length} produtos (${cart.map(i => i.qty + 'x ' + i.name.split(' ')[0]).join(', ')})`;
             transactionId = this.addTransaction('in', desc, total, 'produto', method);
         }
 
@@ -4614,7 +4614,7 @@ const app = {
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
             const itemTotal = item.unitPrice * item.qty;
-            const itemComm  = itemTotal * (item.commissionPct || 0) / 100;
+            const itemComm = itemTotal * (item.commissionPct || 0) / 100;
 
             this.state.productSales.push({
                 id: Date.now() + Math.random(),
@@ -4675,17 +4675,17 @@ const app = {
         this.reconcileTransactions();
         const today = new Date().toLocaleDateString('en-CA');
         const selectedDate = this.state.cashflowDate || today;
-        
+
         const transactionsDate = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(selectedDate));
-        
+
         // --- Cálculo do Saldo Inicial (Carry-Over) ---
         const openingBalance = (this.state.openingBalances && this.state.openingBalances[selectedDate]) || 0;
-        
+
         // Sugestão baseada no dia anterior
         const prevDateObj = new Date(selectedDate + 'T12:00:00');
         prevDateObj.setDate(prevDateObj.getDate() - 1);
         const prevDate = prevDateObj.toLocaleDateString('en-CA');
-        
+
         let prevDayFinalBalance = 0;
         const prevOpening = (this.state.openingBalances && this.state.openingBalances[prevDate]) || 0;
         const prevTransactions = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(prevDate));
@@ -4705,7 +4705,7 @@ const app = {
         transactionsDate.forEach(t => {
             const method = (t.method || 'dinheiro').toLowerCase();
             const amount = parseFloat(t.amount) || 0;
-            
+
             if (t.type === 'in') {
                 if (method.includes('pix')) totals.pix += amount;
                 else if (method.includes('débito') || method.includes('debito')) totals.debito += amount;
@@ -4729,7 +4729,7 @@ const app = {
             const val = parseFloat(t.amount) || 0;
             return t.type === 'in' ? acc + val : acc - val;
         }, 0);
-        
+
         container.innerHTML = `
             <section id="cashflow-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
@@ -4856,17 +4856,17 @@ const app = {
             if (desc && val) {
                 const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
                 const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
-                
+
                 const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
                 const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
-                
+
                 const validCats = ['servico', 'produto', 'outros'];
                 const selectedCat = validCats.includes(category) ? category : 'outros';
-                
+
                 // Forçar a data selecionada na transação
                 const now = new Date();
                 const transactionDate = selectedDate + 'T' + now.toTimeString().split(' ')[0];
-                
+
                 this.state.transactions.push({
                     id: Date.now(),
                     type: 'in',
@@ -4878,7 +4878,7 @@ const app = {
                     origin: 'Admin (Manual)',
                     loggedUser: this.state.user.name
                 });
-                
+
                 this.saveState();
                 this.render('admin-cashflow');
             }
@@ -4947,11 +4947,11 @@ const app = {
                 <div class="voucher-list">
                     ${this.state.vouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum vale lançado</p>' : ''}
                     ${this.state.vouchers.map(v => {
-                        const discountLabel = v.discountDate
-                            ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(v.discountDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
-                            : '';
-                        const noteLabel = v.note ? `<span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">${v.note}</span>` : '';
-                        return `
+            const discountLabel = v.discountDate
+                ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(v.discountDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+                : '';
+            const noteLabel = v.note ? `<span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">${v.note}</span>` : '';
+            return `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                             <div style="display: flex; flex-direction: column; gap: 3px;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${v.barber}</span>
@@ -4978,16 +4978,16 @@ const app = {
             if (barber && amount) {
                 const voucherId = Date.now() + Math.floor(Math.random() * 100);
                 const desc = `Vale: ${barber}${note ? ' - ' + note : ''}`;
-                
+
                 // Salva ID da transação no voucher
                 const transactionId = this.addTransaction('out', desc, amount, 'vale', 'dinheiro');
-                
-                const voucher = { 
-                    id: voucherId, 
-                    barber, 
-                    amount, 
-                    date: new Date().toISOString(), 
-                    discountDate: discountDate || null, 
+
+                const voucher = {
+                    id: voucherId,
+                    barber,
+                    amount,
+                    date: new Date().toISOString(),
+                    discountDate: discountDate || null,
                     note: note || '',
                     transactionId
                 };
@@ -5031,7 +5031,7 @@ const app = {
             if (isAdmin) return (s.target === 'adm' || s.target === 'barbeiro');
             return (s.target === 'barbeiro' && s.barberName === userName);
         });
-        
+
         // Agrupar por semana
         const groups = {};
         consumptionSales.forEach(s => {
@@ -5043,7 +5043,7 @@ const app = {
             groups[weekStr].push(s);
         });
 
-        const sortedWeeks = Object.keys(groups).sort((a,b) => {
+        const sortedWeeks = Object.keys(groups).sort((a, b) => {
             const da = a.split('/').reverse().join('');
             const db = b.split('/').reverse().join('');
             return db.localeCompare(da);
@@ -5054,16 +5054,16 @@ const app = {
                 <h2 class="section-title">${isAdmin ? 'Relatório de Consumo (Antifraude)' : 'Meu Consumo de Produtos'}</h2>
                 <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
                     <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
-                        ${isAdmin 
-                            ? 'Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Barbeiros</strong>.'
-                            : 'Aqui você pode acompanhar todos os produtos retirados para seu uso próprio, que são descontados automaticamente do seu faturamento.'}
+                        ${isAdmin
+                ? 'Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Barbeiros</strong>.'
+                : 'Aqui você pode acompanhar todos os produtos retirados para seu uso próprio, que são descontados automaticamente do seu faturamento.'}
                     </p>
                 </div>
 
                 ${sortedWeeks.length === 0 ? '<p style="text-align:center; padding:40px; color:var(--text-secondary);">Nenhum consumo registrado.</p>' : ''}
 
                 ${sortedWeeks.map(week => {
-                    const items = groups[week].sort((a,b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)).reverse();
+                    const items = groups[week].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)).reverse();
                     return `
                         <div class="glass" style="padding: 15px; margin-bottom: 20px;">
                             <h3 style="font-size: 0.9rem; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; display: flex; justify-content: space-between;">
@@ -5109,7 +5109,7 @@ const app = {
         const sale = this.state.productSales.find(s => s.id === saleId);
         if (!sale) return;
 
-        const confirmMsg = sale.target === 'barbeiro' 
+        const confirmMsg = sale.target === 'barbeiro'
             ? `Deseja realmente apagar este consumo de ${sale.barberName}?\n\nO estoque será devolvido e o lançamento financeiro (Vale e Movimentação) será removido.`
             : `Deseja realmente apagar este registro de consumo ADM?\nO estoque (${sale.qty} un.) será devolvido automaticamente.`;
 
@@ -5141,7 +5141,7 @@ const app = {
         const now = new Date();
         const currentMonth = (this.state.perfMonth !== undefined) ? this.state.perfMonth : (now.getMonth() + 1);
         const currentYear = (this.state.perfYear !== undefined) ? this.state.perfYear : now.getFullYear();
-        
+
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
         // Cálculo de Performance
@@ -5201,7 +5201,7 @@ const app = {
                     <div class="glass" style="padding: 10px; display: flex; gap: 10px; align-items: center;">
                         <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;" 
                                 onchange="app.state.perfMonth = parseInt(this.value); app.render('admin-team-performance')">
-                            ${monthNames.map((m, i) => `<option value="${i+1}" ${currentMonth === (i+1) ? 'selected' : ''}>${m}</option>`).join('')}
+                            ${monthNames.map((m, i) => `<option value="${i + 1}" ${currentMonth === (i + 1) ? 'selected' : ''}>${m}</option>`).join('')}
                         </select>
                         <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
                                 onchange="app.state.perfYear = parseInt(this.value); app.render('admin-team-performance')">
@@ -5243,8 +5243,8 @@ const app = {
                             </tr>
                         </thead>
                         <tbody>
-                            ${rank.length === 0 ? `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-secondary);">Nenhum dado encontrado para este período.</td></tr>` : 
-                            rank.map((r, i) => `
+                            ${rank.length === 0 ? `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-secondary);">Nenhum dado encontrado para este período.</td></tr>` :
+                rank.map((r, i) => `
                                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                     <td style="padding: 15px;">
                                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -5279,7 +5279,7 @@ const app = {
 
     renderBooking(container) {
         const bs = this.state.bookingState;
-        
+
         container.innerHTML = `
             <section id="booking-view" class="fade-in">
                 <div class="booking-header" style="text-align: center; margin-bottom: 30px;">
@@ -5301,7 +5301,7 @@ const app = {
         `;
 
         const content = document.getElementById('booking-step-content');
-        
+
         if (bs.step === 1) this.renderBookingStep1(content);
         else if (bs.step === 2) this.renderBookingStep2(content);
         else if (bs.step === 3) this.renderBookingStep3(content);
@@ -5332,8 +5332,8 @@ const app = {
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Você pode selecionar vários procedimentos</p>
             <div id="booking-service-list" class="service-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
                 ${this.state.services.map(s => {
-                    const isSelected = selectedIds.includes(s.id);
-                    return `
+            const isSelected = selectedIds.includes(s.id);
+            return `
                         <label class="service-card glass" style="cursor: pointer; display: flex; align-items: center; gap: 15px; border: 2px solid ${isSelected ? 'var(--accent-color)' : 'transparent'}; margin-bottom: 0; padding: 15px; background: ${isSelected ? 'rgba(212, 175, 55, 0.1)' : 'var(--glass-bg)'};">
                             <input type="checkbox" data-id="${s.id}" style="width: 22px; height: 22px; accent-color: var(--accent-color);" 
                                    ${isSelected ? 'checked' : ''} 
@@ -5344,7 +5344,7 @@ const app = {
                             </div>
                         </label>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
             <div id="booking-confirm-area">
                 ${this.renderBookingConfirmButton()}
@@ -5441,20 +5441,20 @@ const app = {
     toggleBookingService(id, isChecked) {
         const service = this.state.services.find(s => s.id === id);
         if (!service) return;
-        
+
         const index = this.state.bookingState.services.findIndex(s => s.id === id);
         if (isChecked && index === -1) {
             this.state.bookingState.services.push(service);
         } else if (!isChecked && index > -1) {
             this.state.bookingState.services.splice(index, 1);
         }
-        
+
         // Atualização parcial para evitar scroll jump
         const confirmArea = document.getElementById('booking-confirm-area');
         if (confirmArea) {
             confirmArea.innerHTML = this.renderBookingConfirmButton();
         }
-        
+
         // Atualizar estilo visual do card sem renderizar tudo
         const labels = document.querySelectorAll('#booking-service-list label');
         labels.forEach(label => {
@@ -5492,11 +5492,11 @@ const app = {
         const dateObj = new Date(bs.date + 'T00:00:00');
         const dayOfWeek = dateObj.getDay();
         const { intervalMin, schedule } = this.state.settings.agenda;
-        
+
         // Verificar se é uma data de exceção (feriado)
         const holidays = this.state.settings.holidays || [];
         const holidayConfig = holidays.find(h => h.date === bs.date);
-        
+
         let dayConfig;
         if (holidayConfig) {
             if (holidayConfig.status === 'closed') return [];
@@ -5510,13 +5510,13 @@ const app = {
         const slots = [];
         let [hour, min] = dayConfig.open.split(':').map(Number);
         const [endHour, endMin] = dayConfig.close.split(':').map(Number);
-        
+
         while (hour < endHour || (hour === endHour && min < endMin)) {
             const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-            
-            const isOccupied = this.state.appointments.some(a => 
-                a.barber === bs.barber.name && 
-                a.time === time && 
+
+            const isOccupied = this.state.appointments.some(a =>
+                a.barber === bs.barber.name &&
+                a.time === time &&
                 (a.date === bs.date || (!a.date && bs.date === new Date().toISOString().split('T')[0])) &&
                 a.status !== 'cancelado'
             );
@@ -5573,9 +5573,9 @@ const app = {
 
         this.state.appointments.push(appointment);
         this.saveState();
-        
+
         alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name}!`);
-        
+
         this.state.bookingState = {
             step: 1, barber: null, services: [], time: null,
             date: new Date().toISOString().split('T')[0],
@@ -5657,12 +5657,12 @@ const app = {
 
     async loadConsolidatedBase() {
         if (!confirm("Isso irá SUBSTITUIR sua base de clientes atual pela base 'Cliente 1'. Deseja continuar?")) return;
-        
+
         try {
             const response = await fetch('customers_final.json');
             if (!response.ok) throw new Error('Arquivo de base não encontrado. Certifique-se de que o arquivo customers_final.json existe na raiz.');
             const data = await response.json();
-            
+
             this.state.customers = data;
             this.saveState();
             alert(`Sucesso! ${data.length} clientes carregados.`);
@@ -5675,7 +5675,7 @@ const app = {
     importJSONData() {
         const area = document.getElementById('import-json-area');
         const dataStr = area.value.trim();
-        
+
         if (!dataStr) {
             alert('Por favor, cole o conteúdo JSON antes de continuar.');
             return;
@@ -5752,7 +5752,7 @@ const app = {
     openStaffModal(staffId = null) {
         let title = 'Novo Colaborador';
         let staff = { name: '', role: 'barber', login: '', password: '', commission: 50, photo: '' };
-        
+
         if (staffId) {
             staff = this.state.staff.find(s => s.id === staffId);
             title = 'Editar Colaborador';
@@ -5853,14 +5853,14 @@ const app = {
             const newId = this.state.staff.length ? Math.max(...this.state.staff.map(s => s.id)) + 1 : 1;
             this.state.staff.push({ id: newId, name, photo, login, password, role, commission, showInAgenda });
         }
-        
+
         this.saveState();
         this.closeModal();
         this.render('admin-staff');
     },
 
     deleteStaff(staffId) {
-        if(confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
+        if (confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
             this.state.staff = this.state.staff.filter(s => s.id !== staffId);
             this.saveState();
             this.closeModal();
@@ -5936,7 +5936,7 @@ const app = {
     openServiceModal(serviceId = null) {
         let title = 'Novo Serviço';
         let service = { name: '', price: 0, duration: 30 };
-        
+
         if (serviceId) {
             service = this.state.services.find(s => s.id === serviceId);
             title = 'Editar Serviço';
@@ -5989,7 +5989,7 @@ const app = {
             const newId = this.state.services.length ? Math.max(...this.state.services.map(s => s.id)) + 1 : 1;
             this.state.services.push({ id: newId, name, price, duration });
         }
-        
+
         this.saveState();
         this.closeModal();
         this.render('admin-settings');
@@ -6059,12 +6059,12 @@ const app = {
         if (!date) { alert('Selecione uma data!'); return; }
 
         if (!this.state.settings.holidays) this.state.settings.holidays = [];
-        
+
         // Evitar duplicados para a mesma data
         this.state.settings.holidays = this.state.settings.holidays.filter(h => h.date !== date);
 
         this.state.settings.holidays.push({ date, label, status, open, close });
-        this.state.settings.holidays.sort((a,b) => a.date.localeCompare(b.date));
+        this.state.settings.holidays.sort((a, b) => a.date.localeCompare(b.date));
 
         this.saveState();
         this.closeModal();
@@ -6081,7 +6081,7 @@ const app = {
     },
 
     deleteService(serviceId) {
-        if(confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
+        if (confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
             this.state.services = this.state.services.filter(s => s.id !== serviceId);
             this.saveState();
             this.render('admin-services');
@@ -6091,12 +6091,12 @@ const app = {
     renderAdminPayments(container) {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
-        
+
         // Ciclo de 7 dias por padrão (7 dias atrás até hoje)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(today.getDate() - 7);
         const defaultStart = sevenDaysAgo.toISOString().split('T')[0];
-        
+
         let startDate = this.state.paymentFilterStart || defaultStart;
         let endDate = this.state.paymentFilterEnd || todayStr;
         let selectedStaffId = this.state.paymentFilterStaff || '';
@@ -6159,7 +6159,7 @@ const app = {
     renderPaymentResults() {
         const staffId = this.state.paymentFilterStaff;
         const resultsContainer = document.getElementById('payment-results');
-        
+
         if (!staffId) {
             resultsContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Por favor, selecione um colaborador para visualizar.</p>';
             return;
@@ -6172,23 +6172,23 @@ const app = {
         // Faturamento
         const appointments = this.state.appointments.filter(a => {
             const aptDate = a.date || start;
-            return a.barber === staff.name && 
-                   a.status === 'finalizado' &&
-                   aptDate >= start && aptDate <= end;
+            return a.barber === staff.name &&
+                a.status === 'finalizado' &&
+                aptDate >= start && aptDate <= end;
         });
         const grossRevenue = appointments.reduce((sum, a) => sum + a.price, 0);
         const staffCommission = grossRevenue * (staff.commission / 100);
 
         // Gorjetas Aprovadas
-        const tips = (this.state.tips || []).filter(t => 
-            t.barber === staff.name && 
+        const tips = (this.state.tips || []).filter(t =>
+            t.barber === staff.name &&
             t.status === 'approved' &&
             t.date >= start && t.date <= end
         );
         const totalTips = tips.reduce((sum, t) => sum + t.amount, 0);
 
         // Vales
-        const vouchers = this.state.vouchers.filter(v => 
+        const vouchers = this.state.vouchers.filter(v =>
             v.barber === staff.name &&
             v.date.split('T')[0] >= start && v.date.split('T')[0] <= end
         );
@@ -6233,7 +6233,7 @@ const app = {
                             </div>
                             <div style="text-align: right;">
                                 <strong style="color: var(--text-primary);">R$ ${a.price.toFixed(2)}</strong><br>
-                                <span style="color: var(--accent-color);">+ R$ ${(a.price * (staff.commission/100)).toFixed(2)} (comissão)</span>
+                                <span style="color: var(--accent-color);">+ R$ ${(a.price * (staff.commission / 100)).toFixed(2)} (comissão)</span>
                             </div>
                         </div>
                     `).join('')}
@@ -6267,7 +6267,7 @@ const app = {
     async renderAdminBilling(container) {
         const urlParams = new URLSearchParams(window.location.search);
         const tenantId = urlParams.get('loja');
-        
+
         if (!tenantId || tenantId === 'centauro') {
             container.innerHTML = `
                 <div class="glass" style="padding: 40px; text-align: center; border-top: 4px solid var(--accent-color);">
@@ -6294,11 +6294,11 @@ const app = {
             const nextPaymentDate = new Date(data.nextPayment);
             const today = new Date();
             const diffDays = Math.ceil((nextPaymentDate - today) / (1000 * 60 * 60 * 24));
-            
+
             let statusColor = '#10b981'; // Verde
             let statusLabel = 'ATIVA';
             let statusBg = 'rgba(16, 185, 129, 0.1)';
-            
+
             if (diffDays < 0) {
                 statusColor = '#ef4444'; // Vermelho
                 statusLabel = 'EXPIRADA / BLOQUEADA';
@@ -6367,7 +6367,7 @@ const app = {
 
     getSubscriptionWarningHTML() {
         if (!this.state.subscription || !this.state.subscription.nextPayment) return '';
-        
+
         const nextPaymentDate = new Date(this.state.subscription.nextPayment);
         const today = new Date();
         const diffTime = nextPaymentDate - today;
@@ -6378,10 +6378,10 @@ const app = {
 
         if (diffDays <= 4) {
             const isExpired = diffDays < 0;
-            const msg = isExpired 
-                ? 'SISTEMA BLOQUEADO / EXPIRADO POR FALTA DE PAGAMENTO.' 
+            const msg = isExpired
+                ? 'SISTEMA BLOQUEADO / EXPIRADO POR FALTA DE PAGAMENTO.'
                 : `EM BREVE SEU SISTEMA SERÁ BLOQUEADO POR FALTA DE PAGAMENTO. Vence em ${diffDays} dia${diffDays === 1 ? '' : 's'}.`;
-            
+
             return `
                 <div style="background: #ef4444; color: white; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 9999; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; gap: 15px; animation: slideDown 0.5s ease-out;">
                     <span>⚠️ ${msg}</span>
@@ -6396,7 +6396,7 @@ const app = {
     },
 
     renderBlockedScreen(container) {
-        container.className = ''; 
+        container.className = '';
         container.innerHTML = `
             <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
                 <div class="glass fade-in" style="max-width: 500px; padding: 40px; border-top: 5px solid #ef4444;">
