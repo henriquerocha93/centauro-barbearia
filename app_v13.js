@@ -3140,7 +3140,7 @@ const app = {
             service: serviceNames,
             price: totalPrice,
             status: 'agendado',
-            origin: this.state.user.role === 'admin' ? 'Encaixe (Recepção)' : (this.state.user.role === 'totem' ? 'Encaixe (Totem)' : `Encaixe (Barbeiro: ${this.state.user.name})`)
+            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
         this.state.appointments.push(apt);
         this.saveState(); // PERSISTÊNCIA ADICIONADA
@@ -3160,7 +3160,7 @@ const app = {
             service: 'Indisponível',
             price: 0,
             status: 'bloqueado',
-            origin: this.state.user.role === 'admin' ? 'Encaixe (Recepção)' : (this.state.user.role === 'totem' ? 'Encaixe (Totem)' : `Encaixe (Barbeiro: ${this.state.user.name})`)
+            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
 
         if (!this.state.appointments) this.state.appointments = [];
@@ -3194,7 +3194,7 @@ const app = {
                     service: 'Indisponível',
                     price: 0,
                     status: 'bloqueado',
-                    origin: this.state.user.role === 'admin' ? 'Encaixe (Recepção)' : (this.state.user.role === 'totem' ? 'Encaixe (Totem)' : `Encaixe (Barbeiro: ${this.state.user.name})`)
+                    origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
                 });
                 addedBlocks++;
             }
@@ -3261,7 +3261,7 @@ const app = {
             service,
             price,
             status: 'agendado',
-            origin: this.state.user.role === 'admin' ? 'Encaixe (Recepção)' : (this.state.user.role === 'totem' ? 'Encaixe (Totem)' : `Encaixe (Barbeiro: ${this.state.user.name})`)
+            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
         this.state.appointments.push(apt);
         this.saveState(); // PERSISTÊNCIA ADICIONADA
