@@ -2765,8 +2765,9 @@ const app = {
         };
 
         if (apt.status === 'bloqueado') {
+            const blockedOrigin = apt.origin || 'Manual';
             return `
-                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;" title="Horário bloqueado manualmente">
+                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;" title="Horário bloqueado (${blockedOrigin})">
                     <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">BLOQUEADO</div>
                 </div>
             `;
@@ -2778,6 +2779,7 @@ const app = {
         const statusStr = apt.status === 'finalizado' ? `✅ Finalizado (${apt.payment || 'Pago'})` : '⏳ Pendente';
 
         const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n💰 Valor: ${priceStr}\n📊 Status: ${statusStr}\n📍 Origem: ${originStr}`;
+        console.log(`Renderizando bloco: ${apt.customer} | Origem: ${originStr}`);
 
         return `
             <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};" title="${tooltip}">
