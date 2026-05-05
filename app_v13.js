@@ -1067,7 +1067,6 @@ const app = {
             <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
                 <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
                     ${s.logoUrl ? `<img src="${s.logoUrl}" alt="Logo" class="integrated-logo" style="width: 40px; border-radius: 8px;">` : ''}
-                    ${view !== 'login' ? `<span style="font-family: 'Playfair Display'; font-size: 1.5rem; color: var(--accent-color); font-weight: 700; letter-spacing: 2px;">${name}</span>` : ''}
                 </div>
                 ${view !== 'login' ? `<button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>` : ''}
             </header>
