@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
-    --bg-color: #1A120B; /* Ébano/Madeira Escura */
+    --bg-color: #1A120B; /* Ã‰bano/Madeira Escura */
     --surface-color: #2D241E; /* Madeira Profunda */
     --surface-light: #3D322A;
-    --accent-color: #D4AF37; /* Ouro/Latão */
+    --accent-color: #D4AF37; /* Ouro/LatÃ£o */
     --accent-glow: rgba(212, 175, 55, 0.2);
     --text-primary: #EAD7BB; /* Marfim suave */
     --text-secondary: #A69076;
@@ -52,11 +52,11 @@ h1, h2, h3 {
     color: var(--text-primary);
 }
 
-/* Estilo Vintage/Clássico para Cards */
+/* Estilo Vintage/ClÃ¡ssico para Cards */
 .glass {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 4px; /* Mais retangular/clássico */
+    border-radius: 4px; /* Mais retangular/clÃ¡ssico */
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     backdrop-filter: blur(10px);
 }
@@ -662,7 +662,7 @@ section {
     background: transparent !important;
 }
 
-/* Utilitários de Responsividade */
+/* UtilitÃ¡rios de Responsividade */
 @media (max-width: 600px) {
     .hero {
         height: 70vh;
@@ -694,7 +694,7 @@ section {
     border-left: 4px solid var(--accent-color) !important;
 }
 
-/* Notificação de Ordens de Serviço */
+/* NotificaÃ§Ã£o de Ordens de ServiÃ§o */
 @keyframes pulse-notification {
     0% { background: rgba(212, 175, 55, 0.05); }
     50% { background: rgba(212, 175, 55, 0.25); border-left: 4px solid var(--accent-color); box-shadow: inset 5px 0 10px rgba(212, 175, 55, 0.1); }
@@ -718,8 +718,6 @@ section {
     border-radius: 50%;
     box-shadow: 0 0 10px #fbbf24;
 }
-/ *  
- U t i l i t y  
- C l a s s e s  
- * /  
- 
+
+/* Utility Classes */
+@media (max-width: 768px) { .desktop-only { display: none !important; } }
