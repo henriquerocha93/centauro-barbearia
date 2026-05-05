@@ -2535,11 +2535,30 @@ const app = {
 
         const filteredApts = this.state.appointments.filter(a => {
             const aptDate = a.date || today;
-            return a.barber === this.state.user.name &&
+            const aptBarber = (a.barber || '').trim().toLowerCase();
+            const myName = (this.state.user.name || '').trim().toLowerCase();
+            
+            return aptBarber === myName &&
                 a.status === 'finalizado' &&
                 aptDate >= startDate &&
                 aptDate <= endDate;
         });
+
+        // Comissões de Produtos (PDV)
+        const myProductSales = (this.state.productSales || []).filter(s => {
+            const sDate = s.date || today;
+            const sSeller = (s.seller || '').trim().toLowerCase();
+            const myName = (this.state.user.name || '').trim().toLowerCase();
+            
+            return sSeller === myName &&
+                sDate >= startDate &&
+                sDate <= endDate;
+        });
+        const productCommission = myProductSales.reduce((acc, s) => {
+            const itemTotal = s.total || (s.unitPrice * s.qty);
+            const commPct = s.commissionPct || 0;
+            return acc + (itemTotal * commPct / 100);
+        }, 0);
 
         const grossTotal = filteredApts.reduce((acc, a) => acc + a.price, 0);
         const staffProfile = this.state.staff.find(s => s.name === this.state.user.name) || { commission: 50 };
@@ -2565,7 +2584,7 @@ const app = {
         });
         const totalVouchers = myVouchers.reduce((sum, v) => sum + v.amount, 0);
 
-        const netPay = myCommission + totalTips - totalVouchers;
+        const netPay = myCommission + productCommission + totalTips - totalVouchers;
 
         container.innerHTML = `
             <section id="barber-financial" class="fade-in">
@@ -2588,8 +2607,12 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Comissões</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Serviços</p>
                         <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-color);">R$ ${myCommission.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Produtos</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #a78bfa;">R$ ${productCommission.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
                         <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas (Aprov.)</p>
@@ -2618,6 +2641,19 @@ const app = {
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>${a.service}</span>
                                 <span>${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    `).reverse().join('')}
+
+                    ${myProductSales.map(s => `
+                        <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid #a78bfa;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600; color: var(--text-primary);">${s.productName} (x${s.qty})</span>
+                                <span style="font-weight: 700; color: #a78bfa;">+ R$ ${( (s.total || (s.unitPrice * s.qty)) * (s.commissionPct || 0) / 100).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${s.commissionPct}%)</small></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                                <span>Venda PDV</span>
+                                <span>${new Date(s.date + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
                         </div>
                     `).reverse().join('')}
