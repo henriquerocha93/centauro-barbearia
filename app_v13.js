@@ -1174,8 +1174,14 @@ const app = {
                         <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')">
                             <i data-lucide="trending-up"></i> Faturamento
                         </a>
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')">
+                            <i data-lucide="award"></i> Ranking
+                        </a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')">
                             <i data-lucide="banknote"></i> Fluxo de Caixa
+                        </a>
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')">
+                            <i data-lucide="shopping-bag"></i> Consumo
                         </a>
                         <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')">
                             <i data-lucide="coins"></i> Gorjetas
