@@ -1973,51 +1973,80 @@ const app = {
 
         container.innerHTML = `
             <section id="home-hero" class="hero" style="background-image: url('${heroImg}');">
-                <div class="hero-content fade-in">
-                    <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px;">${subtitle}</p>
-                    <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; margin-bottom: 15px;">${name}</h1>
-                    <div style="width: 80px; height: 3px; background: var(--accent-color); margin: 0 auto 30px;"></div>
-                    <button class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem; font-weight: 700;" onclick="app.navigateTo('booking')">${buttonText}</button>
+                <div class="hero-content fade-in-up">
+                    <p style="text-transform: uppercase; letter-spacing: 4px; font-size: 0.85rem; color: var(--accent-color); font-weight: 600; margin-bottom: 15px;">${subtitle}</p>
+                    <h1 style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px;">${name}</h1>
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 35px; line-height: 1.6;">
+                        A melhor experiência em ${this.getTerm('shopTerm').toLowerCase()} da região. Estilo, tradição e atendimento de excelência em um só lugar.
+                    </p>
+                    <button class="btn-primary" style="padding: 18px 45px; font-size: 1rem;" onclick="app.navigateTo('booking')">${buttonText}</button>
                 </div>
             </section>
 
-            <section id="features" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; text-align: center;">
-                    ${theme.features.map(f => `
-                        <div class="glass" style="padding: 40px 20px;">
-                            <div style="font-size: 2.5rem; margin-bottom: 20px;">${f.icon}</div>
-                            <h3 style="color: var(--accent-color); margin-bottom: 15px;">${f.title}</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-secondary);">${f.desc}</p>
-                        </div>
-                    `).join('')}
+            <section id="features" style="padding: 100px 20px; background: var(--bg-color);">
+                <div style="max-width: 1100px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 60px;">
+                        <h2 style="font-size: 2.2rem; margin-bottom: 15px;">Nossos Diferenciais</h2>
+                        <p style="color: var(--text-secondary);">Por que escolher a ${name}?</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                        ${theme.features.map(f => `
+                            <div class="glass fade-in-up" style="padding: 50px 30px; text-align: center; transition: transform 0.3s ease;">
+                                <div style="font-size: 3rem; margin-bottom: 25px; filter: drop-shadow(0 0 10px var(--accent-glow));">${f.icon}</div>
+                                <h3 style="color: var(--accent-color); margin-bottom: 18px; font-size: 1.3rem;">${f.title}</h3>
+                                <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7;">${f.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </section>
 
-            <section id="location" class="fade-in" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
-                <h2 class="section-title" style="font-family: 'Playfair Display'; text-transform: uppercase; letter-spacing: 2px;">Onde Estamos</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: start;">
-                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Rua Tenente Alpoim, 516, Porto Alegre')}" target="_blank" class="glass" style="overflow: hidden; text-decoration: none; display: block;">
-                        <img src="map_real.png" style="width: 100%; height: 250px; object-fit: cover;">
-                        <div style="padding: 20px; color: white;">
-                             <p style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);">${s.address || 'Rua Tenente Alpoim, 516'}</p>
-                             <p style="font-size: 0.9rem; margin-top: 5px; opacity: 0.8;">${s.address ? '' : 'Vila João Pessoa, Porto Alegre, RS'}</p>
-                             ${s.phone ? `<p style="font-weight: bold; color: var(--accent-color); margin-top: 5px;">📞 ${s.phone}</p>` : ''}
-                             <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color);">📍 Clique para abrir no Google Maps</p>
-                        </div>
-                    </a>
-                    <div class="glass" style="padding:30px;">
-                        <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--accent-color); text-align: center;">Horários de Atendimento</h3>
-                        <div class="hours-container" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Segunda a Quarta</span><span>${s.hours1 || '09:00 - 20:00'}</span></div>
-                            <div class="hour-row" style="display: flex; justify-content: space-between;"><span>Quinta a Sábado</span><span>${s.hours2 || '09:00 - 21:00'}</span></div>
-                            <div class="hour-row closed" style="display: flex; justify-content: space-between; color: #ff6b6b;"><span>Domingos e Feriados</span><span>${s.hours3 || 'Fechado'}</span></div>
+            <section id="location" style="padding: 100px 20px; background: var(--surface-color);">
+                <div style="max-width: 1100px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 60px;">
+                        <h2 style="font-size: 2.2rem; margin-bottom: 15px;">Localização & Contato</h2>
+                        <p style="color: var(--text-secondary);">Venha nos visitar e conhecer nosso espaço</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; align-items: stretch;">
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Rua Tenente Alpoim, 516, Porto Alegre')}" target="_blank" class="glass fade-in-up" style="overflow: hidden; text-decoration: none; display: flex; flex-direction: column;">
+                            <img src="map_real.png" style="width: 100%; height: 300px; object-fit: cover;">
+                            <div style="padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-color); margin-bottom: 10px;">${s.address || 'Rua Tenente Alpoim, 516'}</p>
+                                 <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Vila João Pessoa, Porto Alegre, RS'}</p>
+                                 ${s.phone ? `<p style="font-weight: bold; color: var(--accent-color); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
+                                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-color); font-size: 0.85rem; font-weight: 600;">
+                                     📍 VER NO GOOGLE MAPS
+                                 </div>
+                            </div>
+                        </a>
+                        <div class="glass fade-in-up" style="padding: 40px; display: flex; flex-direction: column; justify-content: center;">
+                            <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-color); text-align: center;">Horários de Funcionamento</h3>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
+                                    <span style="font-weight: 600;">Segunda a Quarta</span>
+                                    <span style="color: var(--text-secondary);">${s.hours1 || '09:00 - 20:00'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
+                                    <span style="font-weight: 600;">Quinta a Sábado</span>
+                                    <span style="color: var(--text-secondary);">${s.hours2 || '09:00 - 21:00'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 600;">Domingos & Feriados</span>
+                                    <span style="color: #f87171; font-weight: 700;">${s.hours3 || 'Fechado'}</span>
+                                </div>
+                            </div>
+                            <button class="btn-primary" style="margin-top: 40px; width: 100%;" onclick="app.navigateTo('booking')">Agendar Agora</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <footer style="padding: 40px 20px; text-align: center; opacity: 0.6; font-size: 0.8rem;">
-                <p>© 2026 ${name}. Todos os direitos reservados.</p>
+            <footer style="padding: 60px 20px; text-align: center; background: var(--bg-color); border-top: 1px solid var(--glass-border);">
+                <div style="margin-bottom: 25px;">
+                    <img src="${s.logoUrl || 'logo_agendamento.png'}" style="width: 120px; opacity: 0.8; filter: grayscale(1) brightness(2);">
+                </div>
+                <p style="opacity: 0.5; font-size: 0.85rem;">© 2026 ${name}. Todos os direitos reservados.</p>
+                <p style="opacity: 0.3; font-size: 0.7rem; margin-top: 10px;">Desenvolvido com excelência tecnológica.</p>
             </footer>
         `;
     },
