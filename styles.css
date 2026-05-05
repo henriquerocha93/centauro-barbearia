@@ -93,9 +93,9 @@ h1, h2, h3 {
 }
 
 .sidebar-logo img {
-    width: 50px;
+    width: 60px;
     height: auto;
-    filter: brightness(1.2);
+    filter: invert(1) brightness(2); /* Força visibilidade em fundo escuro */
 }
 
 .sidebar-logo span {
