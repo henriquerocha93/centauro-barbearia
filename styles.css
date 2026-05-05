@@ -71,7 +71,7 @@ h1, h2, h3 {
 }
 
 .sidebar {
-    width: 260px;
+    width: 240px;
     background: var(--sidebar-bg);
     border-right: 1px solid var(--glass-border);
     display: flex;
@@ -86,18 +86,17 @@ h1, h2, h3 {
 
 .sidebar-logo {
     flex-shrink: 0;
-    padding: 30px 20px;
+    padding: 20px 15px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: center;
     border-bottom: 1px solid var(--glass-border);
 }
 
 .sidebar-logo img {
-    width: 180px;
+    width: 140px;
     height: auto;
-    display: block;
-    margin: 0 auto; filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
 }
 
 .sidebar-logo span {
@@ -109,7 +108,9 @@ h1, h2, h3 {
 
 .sidebar-menu {
     flex: 1;
-    padding: 0 15px;
+    padding: 10px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .menu-category {
@@ -122,18 +123,17 @@ h1, h2, h3 {
 }
 
 .menu-item {
-    padding: 12px 15px;
-    margin: 4px 0;
+    padding: 10px 12px;
+    margin: 2px 0;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: var(--text-secondary);
     text-decoration: none;
     cursor: pointer;
-    border-radius: 10px;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
 }
 
 .menu-item lucide-icon, .menu-item i {
