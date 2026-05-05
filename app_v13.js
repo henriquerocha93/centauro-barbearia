@@ -5312,12 +5312,12 @@ const app = {
         const barbers = this.state.staff.filter(s => s.role === 'barber' && s.showInAgenda !== false);
         container.innerHTML = `
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha seu profissional</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px;">
                 ${barbers.map(b => `
                     <div class="glass" style="padding: 15px; text-align: center; cursor: pointer; border: 2px solid ${this.state.bookingState.barber?.id === b.id ? 'var(--accent-color)' : 'var(--glass-border)'}; border-radius: 12px; transition: all 0.3s; background: var(--surface-light);" 
                          onclick="app.selectBookingBarber(${b.id})">
                         <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
-                             style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
+                             style="width: 110px; height: 110px; border-radius: 12px; object-fit: cover; margin-bottom: 12px; border: 2px solid var(--accent-color); image-rendering: auto; transform: translateZ(0);">
                         <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
                         <p style="color: var(--accent-color); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
                     </div>
