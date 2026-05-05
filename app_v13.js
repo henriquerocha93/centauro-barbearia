@@ -2962,9 +2962,10 @@ const app = {
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
         const origin = apt.origin || 'Encaixe (Manual)';
-        const payment = apt.status === 'finalizado' ? (apt.paymentMethod || 'Informado na Venda') : 'Pendente';
+        const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
+        const price = parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nValor: ${price}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
