@@ -2895,7 +2895,7 @@ const app = {
             'bloqueado': '#f87171'  /* Vermelho */
         };
 
-        const statusColor = colors[apt.status] || var(--accent-color);
+        const statusColor = colors[apt.status] || 'var(--accent-color)';
 
         if (apt.status === 'bloqueado') {
             return `
