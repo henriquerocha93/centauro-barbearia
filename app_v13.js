@@ -3724,11 +3724,35 @@ const app = {
             else payMethods.dinheiro += val;
         });
 
+        // 4. Detalhamento por Barbeiro (Relatório de Pagamentos)
+        const staffReport = this.state.staff.filter(s => s.role === 'barber').map(barber => {
+            const bApts = appointments.filter(a => a.barber === barber.name);
+            const bProducts = productSales.filter(s => s.seller === barber.name);
+            const bVouchers = (this.state.vouchers || []).filter(v => v.barber === barber.name && dateFilter(v.discountDate || v.date.split('T')[0]));
+            const bTips = (this.state.tips || []).filter(t => t.barber === barber.name && t.status === 'approved' && dateFilter(t.date));
+
+            const sGross = bApts.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+            const pGross = bProducts.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+            const sComm = bApts.reduce((sum, a) => sum + ((parseFloat(a.price) || 0) * ((barber.commissionPct || 50) / 100)), 0);
+            const pComm = bProducts.reduce((sum, s) => sum + (parseFloat(s.sellerCommission) || 0), 0);
+            const vTotal = bVouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+            const tTotal = bTips.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+            return {
+                name: barber.name,
+                gross: sGross + pGross,
+                commission: sComm + pComm,
+                vouchers: vTotal,
+                tips: tTotal,
+                net: (sComm + pComm + tTotal) - vTotal
+            };
+        });
+
         container.innerHTML = `
-            <section id="faturamento-view" class="fade-in">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title" style="margin:0;">📈 Faturamento</h2>
-                    <select class="glass" style="padding: 8px; color: var(--text-primary); font-size: 0.85rem;" 
+            <section id="faturamento-view" class="fade-in" style="padding-bottom: 50px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2 class="section-title" style="margin:0;">📈 Auditoria e Faturamento</h2>
+                    <select class="glass" style="padding: 10px 15px; color: var(--text-primary); font-size: 0.85rem; border: 1px solid var(--glass-border);" 
                             onchange="app.state.revenuePeriod = this.value; app.renderAdminFaturamento(document.getElementById('main-content'))">
                         <option value="day" ${period === 'day' ? 'selected' : ''}>Hoje</option>
                         <option value="week" ${period === 'week' ? 'selected' : ''}>Esta Semana</option>
@@ -3738,79 +3762,99 @@ const app = {
                 </div>
 
                 ${period === 'custom' ? `
-                    <div class="glass" style="padding: 15px; margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="glass" style="padding: 20px; margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-end; border: 1px dashed var(--glass-border);">
                         <div style="flex: 1;">
-                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Início</label>
-                            <input type="date" id="rev-start" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" value="${this.state.revenueStart || ''}">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block;">Início</label>
+                            <input type="date" id="rev-start" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.revenueStart || ''}">
                         </div>
                         <div style="flex: 1;">
-                            <label style="font-size: 0.7rem; color: var(--text-secondary);">Fim</label>
-                            <input type="date" id="rev-end" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" value="${this.state.revenueEnd || ''}">
+                            <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block;">Fim</label>
+                            <input type="date" id="rev-end" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.revenueEnd || ''}">
                         </div>
-                        <button class="btn-primary" style="padding: 10px;" onclick="app.applyRevenueFilter()">Filtrar</button>
+                        <button class="btn-primary" style="padding: 12px 25px;" onclick="app.applyRevenueFilter()">Gerar Relatório</button>
                     </div>
                 ` : ''}
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #4ade80;">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Faturamento Bruto</p>
-                        <p style="font-size: 1.6rem; font-weight: 800; color: #4ade80;">R$ ${totalGross.toFixed(2)}</p>
+                <!-- Cards de Resumo -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #4ade80;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Bruto Total</p>
+                        <p style="font-size: 1.8rem; font-weight: 900; color: #4ade80; margin-top: 5px;">R$ ${totalGross.toFixed(2)}</p>
                     </div>
-                    <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #f87171;">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Comissões (Custo)</p>
-                        <p style="font-size: 1.6rem; font-weight: 800; color: #f87171;">R$ ${totalCommissions.toFixed(2)}</p>
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #f87171;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Comissões (Equipe)</p>
+                        <p style="font-size: 1.8rem; font-weight: 900; color: #f87171; margin-top: 5px;">R$ ${totalCommissions.toFixed(2)}</p>
                     </div>
-                </div>
-
-                <div class="glass" style="padding: 25px; margin-bottom: 20px; text-align: center; background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(124,58,237,0.05)); border: 1px solid var(--accent-color);">
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 8px;">Faturamento Líquido (Lucro Operacional)</p>
-                    <p style="font-size: 2.8rem; font-weight: 900; color: var(--accent-color); letter-spacing: -1px;">R$ ${netRevenue.toFixed(2)}</p>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">* Valor após o pagamento de comissões aos barbeiros</p>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div class="glass" style="padding: 15px;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Composição por Tipo</p>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>💈 Serviços</span>
-                                <span style="font-weight: 700;">R$ ${serviceGross.toFixed(2)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>📦 Produtos</span>
-                                <span style="font-weight: 700;">R$ ${productGross.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="glass" style="padding: 15px;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Formas de Pagamento</p>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>💵 Dinheiro</span>
-                                <span style="font-weight: 700;">R$ ${payMethods.dinheiro.toFixed(2)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>📱 PIX</span>
-                                <span style="font-weight: 700;">R$ ${payMethods.pix.toFixed(2)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                                <span>💳 Cartão</span>
-                                <span style="font-weight: 700;">R$ ${payMethods.cartao.toFixed(2)}</span>
-                            </div>
-                        </div>
+                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Líquido Empresa</p>
+                        <p style="font-size: 1.8rem; font-weight: 900; color: var(--accent-color); margin-top: 5px;">R$ ${netRevenue.toFixed(2)}</p>
                     </div>
                 </div>
 
-                <div class="glass" style="padding: 15px; margin-bottom: 20px;">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">Métricas do Período</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                            <span>Total Atendimentos</span>
-                            <span style="font-weight: 700;">${appointments.length}</span>
+                <!-- Detalhamento de Pagamentos por Profissional -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        👥 Pagamentos por Profissional
+                        <span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">(Resumo do Período)</span>
+                    </h3>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--glass-border);">
+                                    <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Colaborador</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Gerado (Bruto)</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Comissão</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Gorjetas</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Vales</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--accent-color); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">A Pagar (Líq.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${staffReport.map(r => `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 15px 12px; font-weight: 600;">${r.name}</td>
+                                        <td style="padding: 15px 12px; text-align: right; color: var(--text-secondary);">R$ ${r.gross.toFixed(2)}</td>
+                                        <td style="padding: 15px 12px; text-align: right; color: #4ade80;">R$ ${r.commission.toFixed(2)}</td>
+                                        <td style="padding: 15px 12px; text-align: right; color: #fbbf24;">R$ ${r.tips.toFixed(2)}</td>
+                                        <td style="padding: 15px 12px; text-align: right; color: #ef4444;">- R$ ${r.vouchers.toFixed(2)}</td>
+                                        <td style="padding: 15px 12px; text-align: right; font-weight: 800; color: var(--accent-color); font-size: 1rem;">R$ ${r.net.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div class="glass" style="padding: 20px;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Composição do Faturamento</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--text-secondary);">💈 Serviços</span>
+                                <span style="font-weight: 700; font-size: 1.1rem;">R$ ${serviceGross.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--text-secondary);">📦 Venda de Produtos</span>
+                                <span style="font-weight: 700; font-size: 1.1rem;">R$ ${productGross.toFixed(2)}</span>
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                            <span>Ticket Médio</span>
-                            <span style="font-weight: 700;">R$ ${appointments.length > 0 ? (totalGross / appointments.length).toFixed(2) : '0.00'}</span>
+                    </div>
+                    <div class="glass" style="padding: 20px;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Meios de Recebimento</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <p style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">DINHEIRO</p>
+                                <p style="font-weight: 700;">R$ ${payMethods.dinheiro.toFixed(2)}</p>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <p style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">PIX</p>
+                                <p style="font-weight: 700;">R$ ${payMethods.pix.toFixed(2)}</p>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <p style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">CARTÃO</p>
+                                <p style="font-weight: 700;">R$ ${payMethods.cartao.toFixed(2)}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
