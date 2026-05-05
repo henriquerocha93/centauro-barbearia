@@ -20,6 +20,25 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e252b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-primary);
@@ -204,6 +223,9 @@ section {
     background: #2B343B; /* Sidebar Escura Original */
     color: #D1D5DB;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #4B5563 #1e252b;
     transition: transform var(--transition-speed);
     z-index: 200;
 }
