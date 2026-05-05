@@ -1128,9 +1128,8 @@ const app = {
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
 
             <aside class="sidebar" id="sidebar">
-                <div class="sidebar-logo">
-                    <img src="${s.logoUrl || 'logo_agendamento.png'}" alt="Logo">
-                    <span>${shopName.split(' ')[0]}</span>
+                <div class="sidebar-logo" style="justify-content: center; padding: 20px;">
+                    <img src="${s.logoUrl || 'logo_agendamento.png'}" alt="Logo" style="width: 180px; height: auto;">
                 </div>
                 
                 <nav class="sidebar-menu">
@@ -1273,7 +1272,7 @@ const app = {
             <!-- HEADER -->
             <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: sticky; top: 0; z-index: 50;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                    <img src="logo_agendamento.png" style="width: 36px; filter: invert(1) brightness(2);">
+                    <img src="logo_agendamento.png" style="width: 220px;">
                     <div>
                         <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO ${this.getTerm('shopTerm').toUpperCase()}</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
