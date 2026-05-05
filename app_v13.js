@@ -1953,6 +1953,55 @@ const app = {
         }
     },
 
+    repairToday() {
+        const today = new Date().toLocaleDateString('en-CA');
+        const transactions = (this.state.transactions || []).filter(t => t.date === today && t.category === 'servico');
+        const appointments = (this.state.appointments || []);
+        
+        console.log('Iniciando reparo da agenda...');
+        let recovered = 0;
+        
+        transactions.forEach(t => {
+            const hasApt = appointments.some(a => a.transactionId === t.id);
+            if (!hasApt) {
+                let service = 'Serviço Recuperado';
+                let customer = 'Cliente Recuperado';
+                
+                try {
+                    if (t.description.includes('(') && t.description.includes(')')) {
+                        const parts = t.description.split('(');
+                        service = parts[0].replace('Serviço:', '').trim();
+                        customer = parts[1].replace(')', '').trim();
+                    }
+                } catch (e) { }
+
+                const newApt = {
+                    id: Date.now() + Math.floor(Math.random() * 10000),
+                    customer: customer,
+                    service: service,
+                    price: t.amount,
+                    status: 'finalizado',
+                    date: today,
+                    time: '08:00', 
+                    barber: this.state.staff.find(s => s.role === 'barber')?.name || 'Marcos Barbosa',
+                    transactionId: t.id,
+                    payment: t.method || 'dinheiro',
+                    origin: 'Recuperado do Caixa'
+                };
+                this.state.appointments.push(newApt);
+                recovered++;
+            }
+        });
+        
+        if (recovered > 0) {
+            this.saveState();
+            this.render(this.state.view);
+            alert(`✅ Sucesso! ${recovered} atendimentos foram recuperados do caixa e voltaram para a agenda hoje.\n\nEles foram colocados no horário das 08:00. Você pode arrastá-los se precisar.`);
+        } else {
+            alert('Nenhum agendamento órfão encontrado. A agenda já bate com o caixa.');
+        }
+    },
+
     updateStock(productId, quantityChange) {
         const product = this.state.products.find(p => p.id === productId);
         if (product) {
@@ -2228,7 +2277,14 @@ const app = {
             return;
         }
 
-        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `<div id="dash-agenda-wrapper"></div>`;
+        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
+            <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+                <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
+                    🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
+                </button>
+            </div>
+            <div id="dash-agenda-wrapper"></div>
+        `;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
     },
 
