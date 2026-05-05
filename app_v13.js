@@ -2723,11 +2723,11 @@ const app = {
                         <div class="agenda-header" style="background: var(--surface-light);">Hora</div>
                         ${barbersToShow.map(b => `
                             <div class="agenda-header">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                                     <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
                                          class="desktop-only" 
-                                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
-                                    <span style="font-weight: 700; font-size: 0.95rem;">${b.name}</span>
+                                         style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
+                                    <span>${b.name}</span>
                                 </div>
                                 ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === b.name) ? `
                                     <button style="margin-top: 5px; background: none; border: 1px solid rgba(255,68,68,0.3); color: #ff4444; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer;" 
@@ -5312,12 +5312,12 @@ const app = {
         const barbers = this.state.staff.filter(s => s.role === 'barber' && s.showInAgenda !== false);
         container.innerHTML = `
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha seu profissional</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
                 ${barbers.map(b => `
                     <div class="glass" style="padding: 15px; text-align: center; cursor: pointer; border: 2px solid ${this.state.bookingState.barber?.id === b.id ? 'var(--accent-color)' : 'var(--glass-border)'}; border-radius: 12px; transition: all 0.3s; background: var(--surface-light);" 
                          onclick="app.selectBookingBarber(${b.id})">
                         <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
-                             style="width: 110px; height: 110px; border-radius: 12px; object-fit: cover; margin-bottom: 12px; border: 2px solid var(--accent-color); image-rendering: auto; transform: translateZ(0);">
+                             style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
                         <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
                         <p style="color: var(--accent-color); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
                     </div>
