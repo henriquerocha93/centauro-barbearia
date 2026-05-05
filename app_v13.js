@@ -1086,13 +1086,9 @@ const app = {
 
     renderLayout(view) {
         const appContainer = document.getElementById('app');
-        appContainer.className = 'app-layout'; 
-        const type = this.state.settings.businessType || 'barbershop';
-        const theme = this.state.themes[type] || this.state.themes.barbershop;
         const s = this.state.settings || {};
         const shopName = s.shopName || 'Agendamento Fácil BR';
 
-        // Mapeamento de títulos para as páginas
         const viewTitles = {
             'admin-dash': 'Agenda Geral',
             'barber-dash': 'Minha Agenda',
@@ -1100,9 +1096,9 @@ const app = {
             'admin-customers': 'Gestão de Clientes',
             'admin-stock': 'Estoque de Produtos',
             'admin-cashflow': 'Fluxo de Caixa',
-            'admin-vouchers': theme.voucherTerm,
+            'admin-vouchers': this.getTerm('voucherTerm'),
             'admin-consumption': 'Relatório de Consumo',
-            'admin-staff': theme.workersTerm,
+            'admin-staff': this.getTerm('workersTerm'),
             'admin-services': 'Serviços',
             'admin-payments': 'Auditoria de Pagamentos',
             'admin-faturamento': 'Faturamento Global',
@@ -1114,9 +1110,27 @@ const app = {
             'pdv': 'Ponto de Venda (PDV)'
         };
 
+        // Se o layout base já existe, apenas atualize o conteúdo e os links ativos
+        if (appContainer.classList.contains('app-layout') && document.getElementById('sidebar')) {
+            // Atualizar classes 'active' no menu
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            const activeLink = document.querySelector(`.menu-item[onclick*="'${view}'"]`);
+            if (activeLink) activeLink.classList.add('active');
+
+            // Atualizar Título da Top Bar
+            const topBarTitle = document.querySelector('.top-bar h2');
+            if (topBarTitle) topBarTitle.innerText = viewTitles[view] || 'Painel';
+
+            // Renderizar View específica
+            const main = document.getElementById('main-content');
+            if (main) this.injectView(view, main);
+            
+            return;
+        }
+
+        appContainer.className = 'app-layout'; 
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML()}
-            
             <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">
                     <i data-lucide="menu"></i>
@@ -1228,41 +1242,37 @@ const app = {
                     </div>
                 </header>
                 
-                <div id="main-content" class="view-content">
-                    <!-- Conteúdo da página será injetado aqui -->
-                </div>
+                <div id="main-content" class="view-content"></div>
             </main>
         `;
 
         const main = document.getElementById('main-content');
-        if (!main) return;
+        if (main) this.injectView(view, main);
 
-        // Injetar view
+        if (window.lucide) lucide.createIcons();
+    },
+
+    injectView(view, container) {
         switch (view) {
-            case 'admin-dash': this.renderAdminDash(main); break;
-            case 'barber-dash': this.renderBarberDash(main); break;
-            case 'barber-financial': this.renderBarberFinancial(main); break;
-            case 'admin-customers': this.renderAdminCustomers(main); break;
-            case 'admin-stock': this.renderAdminStock(main); break;
-            case 'admin-cashflow': this.renderAdminCashFlow(main); break;
-            case 'admin-vouchers': this.renderAdminVouchers(main); break;
-            case 'admin-consumption': this.renderAdminConsumption(main); break;
-            case 'admin-staff': this.renderAdminStaff(main); break;
-            case 'admin-services': this.renderAdminServices(main); break;
-            case 'admin-payments': this.renderAdminPayments(main); break;
-            case 'admin-faturamento': this.renderAdminFaturamento(main); break;
-            case 'admin-team-performance': this.renderAdminTeamPerformance(main); break;
-            case 'admin-tips': this.renderAdminTips(main); break;
-            case 'admin-settings': this.renderAdminSettings(main); break;
-            case 'admin-billing': this.renderAdminBilling(main); break;
-            case 'admin-os': this.renderAdminOS(main); break;
-            case 'pdv': this.renderPDV(main); break;
-            default: this.renderAdminDash(main);
-        }
-
-        // Ativar ícones do Lucide
-        if (window.lucide) {
-            lucide.createIcons();
+            case 'admin-dash': this.renderAdminDash(container); break;
+            case 'barber-dash': this.renderBarberDash(container); break;
+            case 'barber-financial': this.renderBarberFinancial(container); break;
+            case 'admin-customers': this.renderAdminCustomers(container); break;
+            case 'admin-stock': this.renderAdminStock(container); break;
+            case 'admin-cashflow': this.renderAdminCashFlow(container); break;
+            case 'admin-vouchers': this.renderAdminVouchers(container); break;
+            case 'admin-consumption': this.renderAdminConsumption(container); break;
+            case 'admin-staff': this.renderAdminStaff(container); break;
+            case 'admin-services': this.renderAdminServices(container); break;
+            case 'admin-payments': this.renderAdminPayments(container); break;
+            case 'admin-faturamento': this.renderAdminFaturamento(container); break;
+            case 'admin-team-performance': this.renderAdminTeamPerformance(container); break;
+            case 'admin-tips': this.renderAdminTips(container); break;
+            case 'admin-settings': this.renderAdminSettings(container); break;
+            case 'admin-billing': this.renderAdminBilling(container); break;
+            case 'admin-os': this.renderAdminOS(container); break;
+            case 'pdv': this.renderPDV(container); break;
+            default: this.renderAdminDash(container);
         }
     },
 
