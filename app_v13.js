@@ -2961,7 +2961,10 @@ const app = {
         };
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
-        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nStatus: ${apt.status.toUpperCase()}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
+        const origin = apt.origin || 'Web / Cliente';
+        const payment = apt.status === 'finalizado' ? (apt.paymentMethod || 'Informado na Venda') : 'Pendente';
+        
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
