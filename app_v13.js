@@ -1751,9 +1751,25 @@ const app = {
 
     saveOpeningBalance(date, amount) {
         if (!this.state.openingBalances) this.state.openingBalances = {};
-        this.state.openingBalances[date] = parseFloat(amount) || 0;
+        
+        // Parsing robusto para valores monetários (troca vírgula por ponto)
+        let cleanAmount = String(amount).replace(',', '.');
+        this.state.openingBalances[date] = parseFloat(cleanAmount) || 0;
+        
         this.saveState();
-        this.render('admin-cashflow');
+        
+        // Feedback visual se estivermos na tela de cashflow
+        const btn = document.querySelector('[onclick*="saveOpeningBalance"]');
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '✅ Salvo';
+            btn.style.background = '#15803d';
+            setTimeout(() => {
+                if (this.state.view === 'admin-cashflow') this.render('admin-cashflow');
+            }, 800);
+        } else {
+            this.render('admin-cashflow');
+        }
     },
 
     reconcileTransactions() {
@@ -4724,7 +4740,7 @@ const app = {
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             ${prevDayFinalBalance > 0 ? `
                                 <div style="text-align: right; cursor: pointer; padding: 5px 10px; background: rgba(212, 175, 55, 0.1); border-radius: 8px;" 
-                                     onclick="document.getElementById('opening-bal-input').value = ${prevDayFinalBalance.toFixed(2)};">
+                                     onclick="if(confirm('Deseja aplicar o saldo de ontem (R$ ${prevDayFinalBalance.toFixed(2)}) como saldo inicial de hoje?')){ app.saveOpeningBalance('${selectedDate}', ${prevDayFinalBalance.toFixed(2)}); }">
                                     <p style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase;">Sugerido (ontem):</p>
                                     <p style="font-size: 0.85rem; color: var(--accent-color); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
                                 </div>
