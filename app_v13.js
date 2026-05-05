@@ -89,10 +89,10 @@ const app = {
                 hero: 'hero_vintage.png',
                 primary: '#10b981',
                 accent: '#D4AF37',
-                bg: '#1A120B',
-                surface: '#2D241E',
-                text: '#EAD7BB',
-                textSecondary: '#A69076',
+                bg: '#0B0E14',
+                surface: '#151A21',
+                text: '#F3F4F6',
+                textSecondary: '#9CA3AF',
                 shopTerm: 'Barbearia',
                 workerTerm: 'Barbeiro',
                 workersTerm: 'Colaboradores',
@@ -189,12 +189,12 @@ const app = {
         const root = document.documentElement;
 
         if (type === 'barbershop') {
-            root.style.setProperty('--bg-color', s.bgColor || '#1A120B');
-            root.style.setProperty('--surface-color', s.surfaceColor || '#2D241E');
+            root.style.setProperty('--bg-color', s.bgColor || '#0B0E14');
+            root.style.setProperty('--surface-color', s.surfaceColor || '#151A21');
             root.style.setProperty('--accent-color', s.accentColor || '#D4AF37');
-            root.style.setProperty('--text-primary', s.textPrimary || '#EAD7BB');
-            root.style.setProperty('--text-secondary', s.textSecondary || '#A69076');
-            root.style.setProperty('--glass-bg', s.glassBg || 'rgba(45, 36, 30, 0.8)');
+            root.style.setProperty('--text-primary', s.textPrimary || '#F3F4F6');
+            root.style.setProperty('--text-secondary', s.textSecondary || '#9CA3AF');
+            root.style.setProperty('--glass-bg', s.glassBg || 'rgba(21, 26, 33, 0.8)');
         } else {
             root.style.setProperty('--bg-color', theme.bg);
             root.style.setProperty('--surface-color', theme.surface);
