@@ -243,12 +243,6 @@ h1, h2, h3 {
     background: transparent;
 }
 
-@media (min-width: 1024px) {
-    .time-col, .agenda-cell {
-        height: 100px;
-    }
-}
-
 .appointment-block {
     position: absolute;
     inset: 3px;

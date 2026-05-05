@@ -2961,15 +2961,10 @@ const app = {
         };
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
-        const origin = apt.origin || 'Encaixe (Manual)';
-        const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
-        const price = parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        
-        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nValor: ${price}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
-                <div class="appointment-block" title="${apt.origin || 'Bloqueio Manual'}" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
+                <div class="appointment-block" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
                     <span class="customer-name" style="font-size: 0.65rem;">BLOQUEADO</span>
                     <span class="service-name">${apt.origin || 'Manual'}</span>
                 </div>
@@ -2977,10 +2972,10 @@ const app = {
         }
 
         return `
-            <div class="appointment-block" title="${hoverInfo}" style="border-left-color: ${statusColor};">
+            <div class="appointment-block" style="border-left-color: ${statusColor};">
                 <span class="customer-name">${apt.customer}</span>
                 <span class="service-name">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700;">✓ Finalizado</div>` : ''}
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px;">✓ Finalizado</div>` : ''}
             </div>
         `;
     },
@@ -3161,7 +3156,7 @@ const app = {
             service: 'Indisponível',
             price: 0,
             status: 'bloqueado',
-            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
 
         if (!this.state.appointments) this.state.appointments = [];
@@ -3195,7 +3190,7 @@ const app = {
                     service: 'Indisponível',
                     price: 0,
                     status: 'bloqueado',
-                    origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
+                    origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
                 });
                 addedBlocks++;
             }
@@ -3262,10 +3257,10 @@ const app = {
             service,
             price,
             status: 'agendado',
-            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
         this.state.appointments.push(apt);
-        this.saveState(); // PERSISTÊNCIA ADICIONADA
+        this.saveState();
 
         this.closeModal();
         this.render(this.state.view);
