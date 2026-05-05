@@ -2770,7 +2770,10 @@ const app = {
 
         const originStr = apt.origin || 'Não informado';
         const serviceStr = apt.service || '—';
-        const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n📍 Origem: ${originStr}`;
+        const priceStr = apt.price ? `R$ ${parseFloat(apt.price).toFixed(2)}` : 'R$ 0,00';
+        const statusStr = apt.status === 'finalizado' ? `✅ Finalizado (${apt.payment || 'Pago'})` : '⏳ Pendente';
+        
+        const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n💰 Valor: ${priceStr}\n📊 Status: ${statusStr}\n📍 Origem: ${originStr}`;
 
         return `
             <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};" title="${tooltip}">
