@@ -2954,17 +2954,18 @@ const app = {
 
     getAppointmentBlock(apt) {
         const colors = {
-            'agendado': '#38bdf8', /* Azul */
-            'confirmado': '#4ade80', /* Verde */
-            'finalizado': '#94a3b8', /* Cinza */
-            'bloqueado': '#f87171'  /* Vermelho */
+            'agendado': '#38bdf8',
+            'confirmado': '#4ade80',
+            'finalizado': '#94a3b8',
+            'bloqueado': '#f87171'
         };
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nStatus: ${apt.status.toUpperCase()}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
-                <div class="appointment-block" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
+                <div class="appointment-block" title="${apt.origin || 'Bloqueio Manual'}" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
                     <span class="customer-name" style="font-size: 0.65rem;">BLOQUEADO</span>
                     <span class="service-name">${apt.origin || 'Manual'}</span>
                 </div>
@@ -2972,10 +2973,10 @@ const app = {
         }
 
         return `
-            <div class="appointment-block" style="border-left-color: ${statusColor};">
+            <div class="appointment-block" title="${hoverInfo}" style="border-left-color: ${statusColor};">
                 <span class="customer-name">${apt.customer}</span>
                 <span class="service-name">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px;">✓ Finalizado</div>` : ''}
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700;">✓ Finalizado</div>` : ''}
             </div>
         `;
     },
