@@ -4721,19 +4721,25 @@ const app = {
                             <h3 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">💰 Saldo Inicial do Dia</h3>
                             <p style="font-size: 0.75rem; color: var(--text-secondary);">Dinheiro que ficou no caixa do dia anterior.</p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             ${prevDayFinalBalance > 0 ? `
-                                <div style="text-align: right; cursor: pointer;" onclick="document.getElementById('opening-bal-input').value = ${prevDayFinalBalance.toFixed(2)}; app.saveOpeningBalance('${selectedDate}', ${prevDayFinalBalance.toFixed(2)})">
-                                    <p style="font-size: 0.65rem; color: var(--text-secondary);">Sugerido (ontem):</p>
+                                <div style="text-align: right; cursor: pointer; padding: 5px 10px; background: rgba(212, 175, 55, 0.1); border-radius: 8px;" 
+                                     onclick="document.getElementById('opening-bal-input').value = ${prevDayFinalBalance.toFixed(2)};">
+                                    <p style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase;">Sugerido (ontem):</p>
                                     <p style="font-size: 0.85rem; color: var(--accent-color); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
                                 </div>
                             ` : ''}
-                            <div style="position: relative;">
-                                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--text-secondary);">R$</span>
-                                <input type="number" id="opening-bal-input" class="glass" 
-                                       style="padding: 10px 10px 10px 35px; width: 130px; color: var(--accent-color); font-weight: 800; font-size: 1.1rem; border: 1.5px solid var(--glass-border);" 
-                                       value="${openingBalance.toFixed(2)}" step="0.01"
-                                       onblur="app.saveOpeningBalance('${selectedDate}', this.value)">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--text-secondary);">R$</span>
+                                    <input type="number" id="opening-bal-input" class="glass" 
+                                           style="padding: 10px 10px 10px 35px; width: 120px; color: var(--accent-color); font-weight: 800; font-size: 1.1rem; border: 1.5px solid var(--glass-border);" 
+                                           value="${openingBalance.toFixed(2)}" step="0.01">
+                                </div>
+                                <button class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem; background: #2E8B57;" 
+                                        onclick="app.saveOpeningBalance('${selectedDate}', document.getElementById('opening-bal-input').value)">
+                                    💾 Salvar
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -4802,42 +4808,77 @@ const app = {
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-                    <button class="btn-primary" style="background: #2E8B57; box-shadow: none;" id="btn-add-in" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Entrada</button>
-                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out" ${selectedDate !== today ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>+ Saída (Sangria)</button>
+                    <button class="btn-primary" style="background: #2E8B57; box-shadow: none;" id="btn-add-in">+ Entrada</button>
+                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out">+ Saída (Sangria)</button>
                 </div>
-                ${selectedDate !== today ? '<p style="font-size: 0.7rem; color: #ff4444; text-align: center; margin-top: 8px;">⚠️ Lançamentos permitidos apenas para o dia de hoje.</p>' : ''}
+                ${selectedDate !== today ? `<p style="font-size: 0.7rem; color: #fbbf24; text-align: center; margin-top: 8px;">ℹ️ Você está visualizando/editando o caixa de <b>${selectedDate.split('-').reverse().join('/')}</b>.</p>` : ''}
                 <button class="btn-secondary" style="width: 100%; margin-top: 15px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
             </section>
         `;
 
-        if (selectedDate === today) {
-            document.getElementById('btn-add-in').onclick = () => {
-                const desc = prompt('Descrição da entrada:');
-                const val = parseFloat(prompt('Valor (ex: 30.50):'));
-                if (desc && val) {
-                    const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
-                    const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
-                    
-                    const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
-                    const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
-                    
-                    const validCats = ['servico', 'produto', 'outros'];
-                    const selectedCat = validCats.includes(category) ? category : 'outros';
-                    
-                    this.addTransaction('in', desc, val, selectedCat, selectedMethod);
-                    this.render('admin-cashflow');
-                }
-            };
+        document.getElementById('btn-add-in').onclick = () => {
+            if (selectedDate !== today) {
+                if (!confirm(`⚠️ Você está adicionando uma ENTRADA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
+            }
+            const desc = prompt('Descrição da entrada:');
+            const val = parseFloat(prompt('Valor (ex: 30.50):'));
+            if (desc && val) {
+                const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
+                const category = prompt('Categoria (servico, produto, outros):', 'servico').toLowerCase();
+                
+                const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
+                const selectedMethod = validMethods.includes(method) ? method : 'dinheiro';
+                
+                const validCats = ['servico', 'produto', 'outros'];
+                const selectedCat = validCats.includes(category) ? category : 'outros';
+                
+                // Forçar a data selecionada na transação
+                const now = new Date();
+                const transactionDate = selectedDate + 'T' + now.toTimeString().split(' ')[0];
+                
+                this.state.transactions.push({
+                    id: Date.now(),
+                    type: 'in',
+                    description: desc,
+                    amount: val,
+                    category: selectedCat,
+                    method: selectedMethod,
+                    date: transactionDate,
+                    origin: 'Admin (Manual)',
+                    loggedUser: this.state.user.name
+                });
+                
+                this.saveState();
+                this.render('admin-cashflow');
+            }
+        };
 
-            document.getElementById('btn-add-out').onclick = () => {
-                const desc = prompt('Descrição da saída (Ex: Sangria, Pagamento luz...):');
-                const val = parseFloat(prompt('Valor:'));
-                if (desc && val) {
-                    this.addTransaction('out', desc, val, 'despesa', 'dinheiro');
-                    this.render('admin-cashflow');
-                }
-            };
-        }
+        document.getElementById('btn-add-out').onclick = () => {
+            if (selectedDate !== today) {
+                if (!confirm(`⚠️ Você está adicionando uma SAÍDA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
+            }
+            const desc = prompt('Descrição da saída (Ex: Sangria, Pagamento luz...):');
+            const val = parseFloat(prompt('Valor:'));
+            if (desc && val) {
+                const now = new Date();
+                const transactionDate = selectedDate + 'T' + now.toTimeString().split(' ')[0];
+
+                this.state.transactions.push({
+                    id: Date.now(),
+                    type: 'out',
+                    description: desc,
+                    amount: val,
+                    category: 'despesa',
+                    method: 'dinheiro',
+                    date: transactionDate,
+                    origin: 'Admin (Manual)',
+                    loggedUser: this.state.user.name
+                });
+
+                this.saveState();
+                this.render('admin-cashflow');
+            }
+        };
     },
 
     renderAdminVouchers(container) {
