@@ -6073,10 +6073,14 @@ const app = {
 
     renderAdminPayments(container) {
         const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
         const todayStr = today.toISOString().split('T')[0];
         
-        let startDate = this.state.paymentFilterStart || firstDay;
+        // Ciclo de 7 dias por padrão (7 dias atrás até hoje)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(today.getDate() - 7);
+        const defaultStart = sevenDaysAgo.toISOString().split('T')[0];
+        
+        let startDate = this.state.paymentFilterStart || defaultStart;
         let endDate = this.state.paymentFilterEnd || todayStr;
         let selectedStaffId = this.state.paymentFilterStaff || '';
 
@@ -6085,9 +6089,10 @@ const app = {
                 <h2 class="section-title" style="margin-bottom: 20px;">% Pagamentos</h2>
                 
                 <div class="glass" style="padding: 20px; background: #FFFFFF; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+                    <h3 style="font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
                         <span style="color: var(--text-secondary);">▼</span> Filtros
                     </h3>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 15px;">Padrão: Ciclo de 7 dias para pagamento. Use o calendário para auditorias anteriores.</p>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 20px; margin-bottom: 20px;">
                         <div>
