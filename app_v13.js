@@ -2762,14 +2762,18 @@ const app = {
 
         if (apt.status === 'bloqueado') {
             return `
-                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;">
+                <div class="appointment-block" style="background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; opacity: 0.8; justify-content: center;" title="Horário bloqueado manualmente">
                     <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">BLOQUEADO</div>
                 </div>
             `;
         }
 
+        const originStr = apt.origin || 'Não informado';
+        const serviceStr = apt.service || '—';
+        const tooltip = `👤 Cliente: ${apt.customer}\n⏰ Horário: ${apt.time}\n✂️ Serviço: ${serviceStr}\n📍 Origem: ${originStr}`;
+
         return `
-            <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};">
+            <div class="appointment-block" style="background: ${bgColors[apt.status] || 'var(--accent-color)'};" title="${tooltip}">
                 <div style="font-size: 0.65rem; font-weight: 800; margin-bottom: 2px;">${apt.time}</div>
                 <div style="font-size: 0.8rem; font-weight: 500; line-height: 1.1;">${apt.customer}</div>
             </div>
@@ -2931,7 +2935,8 @@ const app = {
             customer: customer.name, 
             service: serviceNames, 
             price: totalPrice, 
-            status: 'agendado' 
+            status: 'agendado',
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
         this.state.appointments.push(apt);
         this.saveState(); // PERSISTÊNCIA ADICIONADA
@@ -2950,7 +2955,8 @@ const app = {
             customer: 'BLOQUEADO', 
             service: 'Indisponível', 
             price: 0, 
-            status: 'bloqueado' 
+            status: 'bloqueado',
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
         
         if (!this.state.appointments) this.state.appointments = [];
@@ -2976,14 +2982,15 @@ const app = {
             
             if (!exists) {
                 this.state.appointments.push({ 
-                    id: Date.now() + Math.floor(Math.random() * 10000), // Random para evitar conflito de IDs gerados no mesmo milissegundo
+                    id: Date.now() + Math.floor(Math.random() * 10000), 
                     barber, 
                     time, 
                     date, 
                     customer: 'BLOQUEADO', 
                     service: 'Indisponível', 
                     price: 0, 
-                    status: 'bloqueado' 
+                    status: 'bloqueado',
+                    origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
                 });
                 addedBlocks++;
             }
@@ -5551,7 +5558,8 @@ const app = {
             service: serviceNames,
             price: totalPrice,
             status: 'agendado',
-            date: bs.date
+            date: bs.date,
+            origin: 'App / Web'
         };
 
         this.state.appointments.push(appointment);
