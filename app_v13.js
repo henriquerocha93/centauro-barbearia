@@ -4709,6 +4709,52 @@ const app = {
         }
     },
 
+    editTransactionMethod(id) {
+        const t = this.state.transactions.find(x => x.id === id);
+        if (!t) return;
+
+        const currentMethod = t.method || 'dinheiro';
+        const newMethod = prompt('Alterar Forma de Pagamento\nDigite: dinheiro, pix, debito ou credito', currentMethod);
+        
+        if (newMethod && newMethod.toLowerCase().trim() !== currentMethod.toLowerCase().trim()) {
+            const validMethods = ['dinheiro', 'pix', 'debito', 'credito'];
+            const method = newMethod.toLowerCase().trim();
+            
+            if (!validMethods.includes(method)) {
+                alert('⚠️ Forma de pagamento inválida.\nUse apenas: dinheiro, pix, debito ou credito.');
+                return;
+            }
+
+            t.method = method;
+
+            // Sincronizar com Agendamento vinculado
+            const apt = this.state.appointments.find(a => a.transactionId === id);
+            const labels = { 
+                dinheiro: 'Dinheiro', 
+                pix: 'PIX', 
+                debito: 'Cartão de Débito', 
+                credito: 'Cartão de Crédito' 
+            };
+
+            if (apt) {
+                apt.payment = labels[method] || method;
+            }
+
+            // Sincronizar com Vendas de Produtos vinculadas
+            if (this.state.productSales) {
+                this.state.productSales.forEach(s => {
+                    if (s.transactionId === id) {
+                        s.payment = labels[method] || (method === 'barbeiro' ? 'Faturamento' : labels[method] || method);
+                    }
+                });
+            }
+
+            this.saveState();
+            this.render('admin-cashflow');
+            alert('✅ Forma de pagamento atualizada com sucesso!');
+        }
+    },
+
     renderAdminCashFlow(container) {
         this.reconcileTransactions();
         const today = new Date().toLocaleDateString('en-CA');
@@ -4865,11 +4911,14 @@ const app = {
                                     <span style="font-weight: 600;">${t.description}</span>
                                     <span style="font-size: 0.7rem; color: var(--text-secondary);">${t.category.toUpperCase()} | ${t.method ? t.method.toUpperCase() : 'DINHEIRO'}</span>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="font-weight: 700; color: ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                                         ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
                                     </span>
-                                    <button onclick="app.deleteTransaction(${t.id})" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
+                                    <div style="display: flex; gap: 5px;">
+                                        <button onclick="app.editTransactionMethod(${t.id})" title="Editar Pagamento" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">✏️</button>
+                                        <button onclick="app.deleteTransaction(${t.id})" title="Excluir" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
