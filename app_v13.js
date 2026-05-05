@@ -2051,25 +2051,47 @@ const app = {
     },
 
     renderLogin(container) {
+        const s = this.state.settings || {};
+        const logo = s.logoUrl || 'logo_agendamento.png';
+
         container.innerHTML = `
-            <section id="login-view" class="fade-in">
-                <h2 class="section-title">Acesso Restrito</h2>
-                <div class="glass" style="padding: 30px; margin-top: 20px;">
-                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 15px;">Dica: Use 'admin' ou 'barbeiro' para testar</p>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Usuário</label>
-                        <input type="text" id="username" class="glass" style="width: 100%; padding: 12px; border-radius: 8px; color: var(--text-primary);">
+            <section id="login-view" class="fade-in" style="min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(circle at center, #151A21 0%, #0B0E14 100%);">
+                <div class="glass fade-in-up" style="width: 100%; max-width: 420px; padding: 45px 35px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                    <div style="margin-bottom: 30px;">
+                        <img src="${logo}" style="width: 140px; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));">
+                        <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px;">Acesso Restrito</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Área administrativa Centauro</p>
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Senha</label>
-                        <input type="password" id="password" class="glass" style="width: 100%; padding: 12px; border-radius: 8px; color: var(--text-primary);">
+
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Usuário</label>
+                            <input type="text" id="username" class="glass" 
+                                   style="width: 100%; padding: 14px; border-radius: 12px; color: var(--text-primary); border: 1.5px solid var(--glass-border); transition: all 0.3s;"
+                                   placeholder="Seu usuário..."
+                                   onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 15px rgba(212, 175, 55, 0.1)';"
+                                   onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
+                        </div>
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Senha</label>
+                            <input type="password" id="password" class="glass" 
+                                   style="width: 100%; padding: 14px; border-radius: 12px; color: var(--text-primary); border: 1.5px solid var(--glass-border); transition: all 0.3s;"
+                                   placeholder="••••••••"
+                                   onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 15px rgba(212, 175, 55, 0.1)';"
+                                   onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
+                        </div>
+                        <div style="margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="keep-logged-in" style="width: 20px; height: 20px; accent-color: var(--accent-color); cursor: pointer;">
+                            <label for="keep-logged-in" style="font-size: 0.9rem; color: var(--text-primary); cursor: pointer; user-select: none;">Mantenha-me logado</label>
+                        </div>
+                        
+                        <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.1rem; margin-bottom: 15px;" id="btn-do-login">Entrar no Sistema</button>
+                        <button class="btn-secondary" style="width: 100%; padding: 14px; opacity: 0.8;" id="btn-back">Voltar ao Início</button>
                     </div>
-                    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="keep-logged-in" style="width: 18px; height: 18px; accent-color: var(--accent-color);">
-                        <label for="keep-logged-in" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">Mantenha-me logado</label>
-                    </div>
-                    <button class="btn-primary" style="width: 100%;" id="btn-do-login">Entrar</button>
-                    <button class="btn-secondary" style="width: 100%; margin-top: 10px;" id="btn-back">Voltar</button>
+
+                    <p style="margin-top: 30px; color: var(--text-secondary); font-size: 0.75rem; opacity: 0.6;">
+                        Dica: Use 'admin' ou 'barbeiro' para demonstração.
+                    </p>
                 </div>
             </section>
         `;
