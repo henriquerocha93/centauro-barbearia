@@ -1141,9 +1141,16 @@ const app = {
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
 
             <aside class="sidebar" id="sidebar">
-                <div class="sidebar-logo" style="justify-content: center; padding: 20px;">
-                    <img src="${s.logoUrl || 'logo_agendamento.png'}" alt="Logo" style="width: 180px; height: auto;">
+                <div class="sidebar-logo" style="justify-content: center; padding: 25px 20px;">
+                    <img src="${s.logoUrl || 'logo_agendamento.png'}" alt="Logo" style="width: 160px; height: auto; filter: drop-shadow(0 0 12px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                 </div>
+                <style>
+                    @keyframes logo-pulse {
+                        0% { filter: drop-shadow(0 0 8px var(--accent-color)); transform: scale(1); }
+                        50% { filter: drop-shadow(0 0 20px var(--accent-color)); transform: scale(1.02); }
+                        100% { filter: drop-shadow(0 0 8px var(--accent-color)); transform: scale(1); }
+                    }
+                </style>
                 
                 <nav class="sidebar-menu">
                     <div class="menu-category">Acompanhamento</div>
