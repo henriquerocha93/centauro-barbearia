@@ -5287,7 +5287,7 @@ const app = {
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observação (opcional)</label>
                         <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário">
                     </div>
-                    <button class="btn-primary" style="width: 100%;" id="btn-save-voucher">Confirmar Retirada</button>
+                    <button class="btn-primary" style="width: 100%;" onclick="app.saveVoucher()">Confirmar Retirada</button>
                 </div>
 
                 <h3 class="section-title" style="font-size: 1.1rem;">Últimos Lançados</h3>
@@ -5316,35 +5316,39 @@ const app = {
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
             </section>
         `;
+    },
 
-        document.getElementById('btn-save-voucher').onclick = () => {
-            const barber = document.getElementById('barber-select').value;
-            const amount = parseFloat(document.getElementById('voucher-amount').value);
-            const discountDate = document.getElementById('voucher-discount-date').value;
-            const note = document.getElementById('voucher-note').value.trim();
-            if (barber && amount) {
-                const voucherId = Date.now() + Math.floor(Math.random() * 100);
-                const desc = `Vale: ${barber}${note ? ' - ' + note : ''}`;
+    saveVoucher() {
+        const barber = document.getElementById('barber-select').value;
+        const amountElement = document.getElementById('voucher-amount');
+        const amount = parseFloat(amountElement.value);
+        const discountDate = document.getElementById('voucher-discount-date').value;
+        const note = document.getElementById('voucher-note').value.trim();
+        
+        if (barber && amount) {
+            const voucherId = Date.now() + Math.floor(Math.random() * 100);
+            const desc = `Vale: ${barber}${note ? ' - ' + note : ''}`;
 
-                // Salva ID da transação no voucher
-                const transactionId = this.addTransaction('out', desc, amount, 'vale', 'dinheiro');
+            // Salva ID da transação no voucher
+            const transactionId = this.addTransaction('out', desc, amount, 'vale', 'dinheiro');
 
-                const voucher = {
-                    id: voucherId,
-                    barber,
-                    amount,
-                    date: new Date().toISOString(),
-                    discountDate: discountDate || null,
-                    note: note || '',
-                    transactionId
-                };
-                this.state.vouchers.push(voucher);
-                this.saveState();
-                this.render('admin-vouchers');
-            } else {
-                alert('Preencha o barbeiro e o valor do vale.');
-            }
-        };
+            const voucher = {
+                id: voucherId,
+                barber,
+                amount,
+                date: new Date().toISOString(),
+                discountDate: discountDate || null,
+                note: note || '',
+                transactionId
+            };
+            if (!this.state.vouchers) this.state.vouchers = [];
+            this.state.vouchers.push(voucher);
+            this.saveState();
+            this.render('admin-vouchers');
+            alert('✅ Vale registrado com sucesso!');
+        } else {
+            alert('Preencha o barbeiro e o valor do vale.');
+        }
     },
 
     deleteVoucher(voucherId) {
