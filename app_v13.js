@@ -1399,15 +1399,29 @@ const app = {
 
                 <div style="display:grid; grid-template-columns:1fr 400px; gap:20px; align-items:start;">
                     <!-- Catálogo -->
-                    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 18px; border: 1px solid var(--glass-border);">
-                        <div style="position: relative; margin-bottom: 15px;">
-                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
-                            <input type="text" id="totem-pdv-search" class="glass"
-                                   style="width:100%; padding:10px 10px 10px 38px; color:var(--text-primary); font-size: 0.9rem; border-radius: 10px;"
-                                   placeholder="Buscar produto..." oninput="app._totemPDVSearch(this.value)">
+                    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                            <div style="position: relative; flex: 1;">
+                                <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
+                                <input type="text" id="totem-pdv-search" class="glass"
+                                       style="width:100%; padding:12px 12px 12px 42px; color:var(--text-primary); font-size: 0.95rem; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);"
+                                       placeholder="O que você procura?" oninput="app.renderTotemPDVGrid(this.value)">
+                            </div>
                         </div>
-                        <div id="totem-pdv-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); gap:10px;">
-                            ${this.getPDVProductCards(products, '')}
+
+                        <!-- Filtros de Categoria -->
+                        <div id="totem-pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;" class="custom-scrollbar">
+                            ${['Todos', 'Cabelo', 'Barba', 'Bebidas', 'Outros'].map(cat => `
+                                <button class="category-tab ${this.state.totemCategory === cat || (!this.state.totemCategory && cat === 'Todos') ? 'active' : ''}"
+                                        style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
+                                        onclick="app.state.totemCategory='${cat}'; app.renderTotemPDVGrid()">
+                                    ${cat === 'Todos' ? '📂 ' : cat === 'Cabelo' ? '🧴 ' : cat === 'Barba' ? '🧔 ' : cat === 'Bebidas' ? '🥤 ' : '✨ '}${cat}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div id="totem-pdv-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:15px; overflow-y: auto; flex: 1; padding-right: 5px;" class="custom-scrollbar">
+                            ${this.getPDVProductCards(products, '', this.state.totemCategory || 'Todos')}
                         </div>
                     </div>
 
@@ -1523,9 +1537,23 @@ const app = {
         `;
     },
 
-    _totemPDVSearch(query) {
+    renderTotemPDVGrid(query) {
+        const q = query || document.getElementById('totem-pdv-search')?.value || '';
+        const cat = this.state.totemCategory || 'Todos';
         const grid = document.getElementById('totem-pdv-grid');
-        if (grid) grid.innerHTML = this.getPDVProductCards(this.state.products, query);
+        if (grid) {
+            grid.innerHTML = this.getPDVProductCards(this.state.products, q, cat);
+            lucide.createIcons();
+        }
+
+        // Atualizar tabs
+        const tabs = document.querySelectorAll('.category-tab');
+        tabs.forEach(t => {
+            const isMatch = t.innerText.includes(cat);
+            t.style.background = isMatch ? 'var(--accent-color)' : 'rgba(255,255,255,0.03)';
+            t.style.color = isMatch ? '#000' : 'var(--text-secondary)';
+            t.style.borderColor = isMatch ? 'var(--accent-color)' : 'var(--glass-border)';
+        });
     },
 
     _totemFinalizeSale() {
@@ -4509,9 +4537,21 @@ const app = {
         this.openModal(isNew ? 'Novo Produto' : 'Editar Produto', `
             <section class="fade-in">
                 <div style="display: flex; flex-direction: column; gap: 14px;">
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Produto *</label>
-                        <input type="text" id="prod-name" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.name}" placeholder="Ex: Pomada Modeladora">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Produto *</label>
+                            <input type="text" id="prod-name" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.name}" placeholder="Ex: Pomada Modeladora">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Categoria</label>
+                            <select id="prod-category" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);">
+                                <option value="Geral" ${product.category === 'Geral' ? 'selected' : ''}>📦 Geral</option>
+                                <option value="Cabelo" ${product.category === 'Cabelo' ? 'selected' : ''}>🧴 Cabelo</option>
+                                <option value="Barba" ${product.category === 'Barba' ? 'selected' : ''}>🧔 Barba</option>
+                                <option value="Bebidas" ${product.category === 'Bebidas' ? 'selected' : ''}>🥤 Bebidas</option>
+                                <option value="Outros" ${product.category === 'Outros' ? 'selected' : ''}>✨ Outros</option>
+                            </select>
+                        </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
@@ -4559,13 +4599,22 @@ const app = {
         const barcode = document.getElementById('prod-barcode').value.trim();
         const commissionPct = parseFloat(document.getElementById('prod-commission').value) || 0;
 
+        const category = document.getElementById('prod-category').value || 'Geral';
+
         if (!name) { alert('Informe o nome do produto.'); return; }
 
         if (productId === null) {
-            this.state.products.push({ id: Date.now(), name, price, stock, barcode, commissionPct });
+            this.state.products.push({ id: Date.now(), name, price, stock, barcode, commissionPct, category });
         } else {
             const product = this.state.products.find(p => p.id === productId);
-            if (product) { product.name = name; product.price = price; product.stock = stock; product.barcode = barcode; product.commissionPct = commissionPct; }
+            if (product) { 
+                product.name = name; 
+                product.price = price; 
+                product.stock = stock; 
+                product.barcode = barcode; 
+                product.commissionPct = commissionPct;
+                product.category = category;
+            }
         }
         this.saveState();
         this.closeModal();
@@ -4623,18 +4672,29 @@ const app = {
                 <div style="display: grid; grid-template-columns: 1fr 400px; gap: 25px; align-items: start;">
 
                     <!-- COLUNA ESQUERDA: catálogo -->
-                    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                    <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;">
                         <!-- Busca por nome -->
-                        <div style="margin-bottom: 20px; position: relative;">
+                        <div style="position: relative;">
                             <i data-lucide="search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
                             <input type="text" id="pdv-search" class="glass"
-                                   style="width: 100%; padding: 12px 12px 12px 45px; color: var(--text-primary); font-size: 0.95rem; border-radius: 12px;"
-                                   placeholder="Buscar produto por nome ou categoria..." oninput="app.renderPDVGrid(this.value)">
+                                   style="width: 100%; padding: 12px 12px 12px 45px; color: var(--text-primary); font-size: 0.95rem; border-radius: 14px;"
+                                   placeholder="O que você procura?" oninput="app.renderPDVGrid(this.value)">
+                        </div>
+
+                        <!-- Filtros de Categoria -->
+                        <div id="pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;" class="custom-scrollbar">
+                            ${['Todos', 'Cabelo', 'Barba', 'Bebidas', 'Outros'].map(cat => `
+                                <button class="pdv-category-tab ${this.state.pdvCategory === cat || (!this.state.pdvCategory && cat === 'Todos') ? 'active' : ''}"
+                                        style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
+                                        onclick="app.state.pdvCategory='${cat}'; app.renderPDVGrid()">
+                                    ${cat === 'Todos' ? '📂 ' : cat === 'Cabelo' ? '🧴 ' : cat === 'Barba' ? '🧔 ' : cat === 'Bebidas' ? '🥤 ' : '✨ '}${cat}
+                                </button>
+                            `).join('')}
                         </div>
 
                         <!-- Grid de produtos -->
-                        <div id="pdv-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px;">
-                            ${this.getPDVProductCards(products, '')}
+                        <div id="pdv-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px;">
+                            ${this.getPDVProductCards(products, '', this.state.pdvCategory || 'Todos')}
                         </div>
                     </div>
 
@@ -4852,32 +4912,85 @@ const app = {
         }).join('');
     },
 
-    getPDVProductCards(products, query) {
+    getPDVProductCards(products, query, categoryFilter = 'Todos') {
         const q = (query || '').toLowerCase();
-        const filtered = q
-            ? products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)))
-            : products;
+        let filtered = products;
+
+        if (q) {
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)));
+        }
+
+        if (categoryFilter !== 'Todos') {
+            filtered = filtered.filter(p => p.category === categoryFilter);
+        }
 
         if (filtered.length === 0) {
-            return '<p style="grid-column:1/-1; text-align:center; color:var(--text-secondary); padding: 20px;">Nenhum produto encontrado.</p>';
+            return `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; opacity: 0.5;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🔍</div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum produto encontrado nesta busca.</p>
+                </div>
+            `;
         }
 
         return filtered.map(p => {
             const outOfStock = p.stock <= 0;
-            const stockColor = outOfStock ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : 'var(--accent-color)';
+            const stockColor = outOfStock ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : '#4ade80';
+            
             return `
-                <div class="glass" style="padding: 14px; cursor: ${outOfStock ? 'not-allowed' : 'pointer'}; opacity: ${outOfStock ? '0.5' : '1'}; border: 1px solid var(--glass-border); border-radius: 12px; transition: all 0.2s; text-align: center;"
-                     onclick="${outOfStock ? "alert('Produto esgotado!')" : `app.pdvAddToCart(${p.id})`}"
-                     onmouseover="this.style.borderColor='var(--accent-color)'"
-                     onmouseout="this.style.borderColor='var(--glass-border)'">
-                    <div style="font-size: 2rem; margin-bottom: 8px;">📦</div>
-                    <p style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); line-height: 1.2; margin-bottom: 6px;">${p.name}</p>
-                    <p style="font-size: 1rem; font-weight: 800; color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</p>
-                    <p style="font-size: 0.7rem; color: ${stockColor}; margin-top: 4px;">${outOfStock ? 'Esgotado' : `${p.stock} em estoque`}</p>
-                    ${(p.commissionPct || 0) > 0 ? `<p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;">💹 ${p.commissionPct}% comissão</p>` : ''}
+                <div class="glass" 
+                     style="padding: 0; cursor: ${outOfStock ? 'not-allowed' : 'pointer'}; 
+                            opacity: ${outOfStock ? '0.6' : '1'}; 
+                            border: 1px solid var(--glass-border); 
+                            border-radius: 16px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+                            overflow: hidden; display: flex; flex-direction: column; position: relative;
+                            background: rgba(255,255,255,0.02);"
+                     onclick="${outOfStock ? "app.showToast('Produto esgotado!', 'error')" : `app.pdvAddToCart(${p.id})`}"
+                     onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.3)';"
+                     onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
+                    
+                    <!-- Preço Badge -->
+                    <div style="position: absolute; top: 12px; right: 12px; background: var(--accent-color); color: #000; 
+                                padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; z-index: 2;
+                                box-shadow: 0 4px 10px rgba(212,175,55,0.3);">
+                        R$ ${parseFloat(p.price).toFixed(2)}
+                    </div>
+
+                    <div style="padding: 20px; text-align: center; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); transition: transform 0.3s;"
+                             onmouseover="this.style.transform='scale(1.1) rotate(5deg)'" onmouseout="this.style.transform='scale(1) rotate(0)'">
+                            ${this.getProductIcon(p)}
+                        </div>
+                        <p style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.6em;">
+                            ${p.name}
+                        </p>
+                    </div>
+
+                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <div style="width: 6px; height: 6px; border-radius: 50%; background: ${stockColor};"></div>
+                            <span style="font-size: 0.68rem; color: var(--text-secondary); font-weight: 600;">${outOfStock ? 'Esgotado' : `${p.stock} un.`}</span>
+                        </div>
+                        ${(p.commissionPct || 0) > 0 ? `
+                            <div style="font-size: 0.65rem; color: #4ade80; font-weight: 700; background: rgba(74,222,128,0.1); padding: 2px 6px; border-radius: 4px;">
+                                ${p.commissionPct}%
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }).join('');
+    },
+
+    getProductIcon(p) {
+        const name = p.name.toLowerCase();
+        if (name.includes('pomada') || name.includes('cera')) return '🧴';
+        if (name.includes('shampoo') || name.includes('condicionador')) return '🧼';
+        if (name.includes('oleo') || name.includes('óleo') || name.includes('serum')) return '💧';
+        if (name.includes('barba')) return '🧔';
+        if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('agua') || name.includes('água') || name.includes('suco')) return '🥤';
+        if (name.includes('perfume')) return '✨';
+        return '📦';
     },
 
     getPDVTotalsHTML(subtotal, discount, total, commission, seller) {
@@ -4904,8 +5017,22 @@ const app = {
     },
 
     renderPDVGrid(query) {
+        const q = query || document.getElementById('pdv-search')?.value || '';
+        const cat = this.state.pdvCategory || 'Todos';
         const grid = document.getElementById('pdv-grid');
-        if (grid) grid.innerHTML = this.getPDVProductCards(this.state.products, query);
+        if (grid) {
+            grid.innerHTML = this.getPDVProductCards(this.state.products, q, cat);
+            lucide.createIcons();
+        }
+
+        // Atualizar tabs
+        const tabs = document.querySelectorAll('.pdv-category-tab');
+        tabs.forEach(t => {
+            const isMatch = t.innerText.includes(cat);
+            t.style.background = isMatch ? 'var(--accent-color)' : 'rgba(255,255,255,0.03)';
+            t.style.color = isMatch ? '#000' : 'var(--text-secondary)';
+            t.style.borderColor = isMatch ? 'var(--accent-color)' : 'var(--glass-border)';
+        });
     },
 
     renderPDVTotals() {
@@ -4935,6 +5062,7 @@ const app = {
                 qty: 1
             });
         }
+        this.showToast(`${product.name} adicionado!`);
         this._refreshPDVView();
     },
 
@@ -6936,9 +7064,49 @@ const app = {
                         </a>
                     </div>
                     <p style="font-size: 0.75rem; color: var(--text-muted);">ID do Cliente: ${new URLSearchParams(window.location.search).get('loja')}</p>
-                </div>
             </div>
         `;
+    },
+
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#fbbf24');
+        const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️');
+        
+        toast.className = 'toast-notification fade-in';
+        toast.style = `
+            position: fixed; bottom: 30px; right: 30px; z-index: 10000;
+            background: ${bgColor}; color: white; padding: 12px 24px;
+            border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: slideUp 0.3s ease-out forwards;
+        `;
+        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        
+        // Add animation styles if not present
+        if (!document.getElementById('toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'toast-styles';
+            style.innerHTML = `
+                @keyframes slideUp {
+                    from { transform: translateY(100px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                @keyframes slideDown {
+                    from { transform: translateY(0); opacity: 1; }
+                    to { transform: translateY(100px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideDown 0.3s ease-in forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 };
 
