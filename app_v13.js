@@ -3716,7 +3716,9 @@ const app = {
     },
 
     openFinalizeOS(aptId) {
-        const apt = this.state.appointments.find(a => a.id === aptId);
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return;
         if (!apt.products) apt.products = [];
         
         const renderProductsList = () => {
@@ -3801,8 +3803,8 @@ const app = {
                 </div>
 
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS('${apt.id}')">Concluir e Receber</button>
-                    <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement('${apt.id}')">Voltar</button>
+                    <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS(${apt.id})">Concluir e Receber</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement(${apt.id})">Voltar</button>
                 </div>
             </section>
         `);
