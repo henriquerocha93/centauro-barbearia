@@ -17,8 +17,16 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     -webkit-tap-highlight-color: transparent;
+    max-width: 100%;
+}
+
+html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative;
+    max-width: 100vw !important;
 }
 
 /* Scrollbar Customization */
@@ -841,14 +849,24 @@ h1, h2, h3 {
     }
 
     /* Fix Horizontal Scroll */
-    .view-content, .container, #app {
+    .view-content, .container, #app, .pdv-layout, .pdv-mobile-tabs {
         overflow-x: hidden !important;
         width: 100% !important;
         max-width: 100vw !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
     
     .section-title {
         font-size: 1.1rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pdv-mobile-tab {
+        font-size: 0.8rem !important;
+        padding: 10px 5px !important;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
