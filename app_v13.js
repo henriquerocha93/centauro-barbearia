@@ -4998,35 +4998,24 @@ const app = {
             const stockColor = outOfStock ? '#ff4444' : p.stock <= 3 ? '#fbbf24' : '#4ade80';
             
             return `
-                <div class="glass" 
-                     style="padding: 0; cursor: ${outOfStock ? 'not-allowed' : 'pointer'}; 
-                            opacity: ${outOfStock ? '0.6' : '1'}; 
-                            border: 1px solid var(--glass-border); 
-                            border-radius: 16px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-                            overflow: hidden; display: flex; flex-direction: column; position: relative;
-                            background: rgba(255,255,255,0.02);"
-                     onclick="${outOfStock ? "app.showToast('Produto esgotado!', 'error')" : `app.pdvAddToCart(${p.id})`}"
-                     onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.3)';"
-                     onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
+                <div class="product-card-container ${outOfStock ? 'out-of-stock' : ''}" 
+                     onclick="${outOfStock ? "app.showToast('Produto esgotado!', 'error')" : `app.pdvAddToCart(${p.id})`}">
                     
                     <!-- Preço Badge -->
-                    <div style="position: absolute; top: 12px; right: 12px; background: var(--accent-color); color: #000; 
-                                padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; z-index: 2;
-                                box-shadow: 0 4px 10px rgba(212,175,55,0.3);">
+                    <div class="product-card-price">
                         R$ ${parseFloat(p.price).toFixed(2)}
                     </div>
 
-                    <div style="padding: 20px; text-align: center; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); transition: transform 0.3s;"
-                             onmouseover="this.style.transform='scale(1.1) rotate(5deg)'" onmouseout="this.style.transform='scale(1) rotate(0)'">
+                    <div class="product-card-body">
+                        <div class="product-card-icon">
                             ${this.getProductIcon(p)}
                         </div>
-                        <p style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.6em;">
+                        <p class="product-card-title">
                             ${p.name}
                         </p>
                     </div>
 
-                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center;">
+                    <div class="product-card-footer">
                         <div style="display: flex; align-items: center; gap: 4px;">
                             <div style="width: 6px; height: 6px; border-radius: 50%; background: ${stockColor};"></div>
                             <span style="font-size: 0.68rem; color: var(--text-secondary); font-weight: 600;">${outOfStock ? 'Esgotado' : `${p.stock} un.`}</span>
