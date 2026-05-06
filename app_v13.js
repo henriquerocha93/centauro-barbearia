@@ -2357,7 +2357,7 @@ const app = {
             return;
         }
 
-        container.innerHTML = this.getBirthdaysHTML() + (this.state.user.role === 'admin' ? this.getBarberRankingHTML() : '') + billingBanner + `
+        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
             <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
                 <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
                     🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
