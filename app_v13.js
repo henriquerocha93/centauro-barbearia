@@ -3722,10 +3722,28 @@ const app = {
                     <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
-                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
+                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'">
                         <option value="">Selecione...</option>
                         <option value="Dinheiro">Dinheiro</option>
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Misto">Pagamento Misto (Dinheiro + Outro)</option>
+                    </select>
+                </div>
+                <div id="split-payment-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Valor em Dinheiro</label>
+                            <input type="number" id="split-amount-cash" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Valor Restante</label>
+                            <input type="number" id="split-amount-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Complemento via:</label>
+                    <select id="split-method-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
                         <option value="PIX">PIX</option>
                         <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -3787,7 +3805,25 @@ const app = {
             // Integrar com Fluxo de Caixa e salvar ID no agendamento
             const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
             const price = parseFloat(apt.price || 0);
-            apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
+
+            if (payment === 'Misto') {
+                const cashVal = parseFloat(document.getElementById('split-amount-cash').value) || 0;
+                const otherVal = parseFloat(document.getElementById('split-amount-other').value) || 0;
+                const otherMethod = document.getElementById('split-method-other').value;
+
+                if (Math.abs((cashVal + otherVal) - price) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(cashVal + otherVal).toFixed(2)}) é diferente do valor do serviço (R$ ${price.toFixed(2)}). Deseja continuar assim mesmo?`)) return;
+                }
+
+                const t1 = this.addTransaction('in', `${desc} [Parte Dinheiro]`, cashVal, 'servico', 'dinheiro');
+                let mOther = 'pix';
+                if (otherMethod === 'Cartão de Débito') mOther = 'debito';
+                if (otherMethod === 'Cartão de Crédito') mOther = 'credito';
+                const t2 = this.addTransaction('in', `${desc} [Parte ${otherMethod}]`, otherVal, 'servico', mOther);
+                apt.transactionId = t1; // Salva o primeiro como referência
+            } else {
+                apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
+            }
 
             // Registrar Gorjeta se houver
             const tipInput = document.getElementById('final-tip');
@@ -4810,13 +4846,34 @@ const app = {
                                 </div>
                                 <div>
                                     <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Pagamento</label>
-                                    <select id="pdv-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
+                                    <select id="pdv-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
+                                            onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'">
                                         <option value="Dinheiro">Dinheiro 💵</option>
                                         <option value="PIX">PIX ⚡</option>
                                         <option value="Cartão de Débito">Débito 💳</option>
                                         <option value="Cartão de Crédito">Crédito 💳</option>
+                                        <option value="Misto">Pagamento Misto 🔀</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div id="pdv-split-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--glass-border);">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Dinheiro (R$)</label>
+                                        <input type="number" id="pdv-amount-cash" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Outro Meio (R$)</label>
+                                        <input type="number" id="pdv-amount-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                                    </div>
+                                </div>
+                                <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Outro Meio via:</label>
+                                <select id="pdv-method-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                    <option value="PIX">PIX</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                </select>
                             </div>
 
                             <div>
@@ -5263,14 +5320,32 @@ const app = {
         } else if (target === 'adm') {
             // Apenas baixa de estoque
         } else {
-            let method = 'dinheiro';
-            if (payment === 'PIX') method = 'pix';
-            if (payment === 'Cartão de Débito') method = 'debito';
-            if (payment === 'Cartão de Crédito') method = 'credito';
-            const desc = cart.length === 1
-                ? `PDV: ${cart[0].name} (x${cart[0].qty})`
-                : `PDV: ${cart.length} produtos (${cart.map(i => i.qty + 'x ' + i.name.split(' ')[0]).join(', ')})`;
-            transactionId = this.addTransaction('in', desc, total, 'produto', method);
+            if (payment === 'Misto') {
+                const cashVal = parseFloat(document.getElementById('pdv-amount-cash').value) || 0;
+                const otherVal = parseFloat(document.getElementById('pdv-amount-other').value) || 0;
+                const otherMethod = document.getElementById('pdv-method-other').value;
+
+                if (Math.abs((cashVal + otherVal) - total) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(cashVal + otherVal).toFixed(2)}) é diferente do total da venda (R$ ${total.toFixed(2)}). Deseja continuar?`)) return;
+                }
+
+                const desc = cart.length === 1 ? `PDV: ${cart[0].name} (x${cart[0].qty})` : `PDV: ${cart.length} produtos`;
+                const t1 = this.addTransaction('in', `${desc} [Parte Dinheiro]`, cashVal, 'produto', 'dinheiro');
+                let mOther = 'pix';
+                if (otherMethod === 'Cartão de Débito') mOther = 'debito';
+                if (otherMethod === 'Cartão de Crédito') mOther = 'credito';
+                const t2 = this.addTransaction('in', `${desc} [Parte ${otherMethod}]`, otherVal, 'produto', mOther);
+                transactionId = t1;
+            } else {
+                let method = 'dinheiro';
+                if (payment === 'PIX') method = 'pix';
+                if (payment === 'Cartão de Débito') method = 'debito';
+                if (payment === 'Cartão de Crédito') method = 'credito';
+                const desc = cart.length === 1
+                    ? `PDV: ${cart[0].name} (x${cart[0].qty})`
+                    : `PDV: ${cart.length} produtos (${cart.map(i => i.qty + 'x ' + i.name.split(' ')[0]).join(', ')})`;
+                transactionId = this.addTransaction('in', desc, total, 'produto', method);
+            }
         }
 
         // Registrar histórico individual (para estoque e relatório de consumo)
