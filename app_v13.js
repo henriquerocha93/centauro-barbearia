@@ -222,6 +222,7 @@ const app = {
             <section>${contentHTML}</section>
         `;
         modal.showModal();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
     closeModal() {
