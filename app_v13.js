@@ -6711,14 +6711,37 @@ const app = {
                     `).join('')}
                 </div>
                 <div class="glass" style="padding: 20px; max-height: 500px; overflow-y: auto;">
-                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Vales Registrados</h4>
-                    ${vouchers.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem vales neste período.</p>' : ''}
-                    ${vouchers.map(v => `
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem;">
-                            <span style="color: var(--text-secondary);">${new Date(v.date).toLocaleDateString()}</span>
-                            <strong style="color: #ff4444;">- R$ ${v.amount.toFixed(2)}</strong>
-                        </div>
-                    `).join('')}
+                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Vales e Consumo</h4>
+                    ${vouchers.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem registros neste período.</p>' : ''}
+                    
+                    ${(() => {
+                        const vConsumo = vouchers.filter(v => v.note && v.note.toLowerCase().includes('consumo'));
+                        const vVales = vouchers.filter(v => !v.note || !v.note.toLowerCase().includes('consumo'));
+                        
+                        let html = '';
+                        
+                        if (vVales.length > 0) {
+                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #ff4444; text-transform: uppercase; margin-bottom: 10px; margin-top: 5px;">💸 Vales / Adiantamentos</p>`;
+                            html += vVales.map(v => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.82rem;">
+                                    <span style="color: var(--text-secondary);">${new Date(v.date).toLocaleDateString()}</span>
+                                    <strong style="color: #ff4444;">- R$ ${v.amount.toFixed(2)}</strong>
+                                </div>
+                            `).join('');
+                        }
+                        
+                        if (vConsumo.length > 0) {
+                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; margin-bottom: 10px; margin-top: 15px;">📦 Consumo de Produtos</p>`;
+                            html += vConsumo.map(v => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.82rem;">
+                                    <span style="color: var(--text-secondary);">${new Date(v.date).toLocaleDateString()}</span>
+                                    <strong style="color: #ff4444;">- R$ ${v.amount.toFixed(2)}</strong>
+                                </div>
+                            `).join('');
+                        }
+                        
+                        return html;
+                    })()}
                 </div>
             </div>
         `;
