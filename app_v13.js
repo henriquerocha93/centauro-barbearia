@@ -1283,7 +1283,7 @@ const app = {
     },
 
     renderBarberDash(container) {
-        container.innerHTML = this.getBirthdaysHTML() + `<div id="dash-agenda-wrapper"></div>`;
+        container.innerHTML = this.getBirthdaysHTML() + this.getBarberRankingHTML() + `<div id="dash-agenda-wrapper"></div>`;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'), this.state.user.name);
     },
 
