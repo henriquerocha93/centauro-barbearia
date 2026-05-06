@@ -2249,6 +2249,7 @@ const app = {
     },
 
     getBarberRankingHTML() {
+        const isAdmin = this.state.user.role === 'admin';
         const today = new Date();
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
@@ -2257,19 +2258,21 @@ const app = {
         const stats = {};
         
         barbers.forEach(b => {
-            stats[b.name] = { name: b.name, photo: b.photo, total: 0 };
+            stats[b.name] = { name: b.name, photo: b.photo, total: 0, appointments: 0 };
         });
         
-        // Somar desempenho (usamos valor mas não mostramos)
         (this.state.appointments || []).forEach(a => {
             const aptDate = new Date(a.date + 'T12:00:00');
             if (a.status === 'finalizado' && aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear) {
-                if (stats[a.barber]) stats[a.barber].total += (a.price || 0);
+                if (stats[a.barber]) {
+                    stats[a.barber].total += (a.price || 0);
+                    stats[a.barber].appointments++;
+                }
             }
         });
         
         (this.state.productSales || []).forEach(s => {
-            const saleDate = new Date(s.date + 'T12:00:00');
+            const saleDate = new Date((s.timestamp || s.date) + (s.timestamp ? '' : 'T12:00:00'));
             if (s.seller && stats[s.seller] && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
                 stats[s.seller].total += (s.total || 0);
             }
@@ -2280,26 +2283,33 @@ const app = {
 
         return `
             <div class="glass" style="padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
-                <h3 style="font-size: 0.95rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    🏆 Ranking de Desempenho (Mês Atual)
-                </h3>
-                <div style="display: flex; gap: 20px; overflow-x: auto; padding: 10px 5px; scrollbar-width: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 0.95rem; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        🏆 Ranking do Mês
+                    </h3>
+                    <button class="glass" style="padding: 4px 10px; font-size: 0.65rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" onclick="app.navigateTo('admin-team-performance')">Ver Tudo</button>
+                </div>
+                <div style="display: flex; gap: 15px; overflow-x: auto; padding: 15px 5px; scrollbar-width: none; -ms-overflow-style: none;">
                     ${sorted.map((b, idx) => {
-                        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + 'º';
+                        const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + 'º';
                         const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#d97706' : 'var(--text-secondary)';
                         const name = b.name.split(' ')[0];
                         return `
-                            <div style="flex: 0 0 100px; text-align: center; position: relative;">
-                                ${idx === 0 ? '<div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 1.8rem; z-index: 3; filter: drop-shadow(0 0 8px #fbbf24);">👑</div>' : ''}
-                                <div style="position: absolute; top: -12px; right: 0; font-size: 1.4rem; z-index: 2; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">${medal}</div>
-                                <div style="width: 75px; height: 75px; border-radius: 50%; margin: 0 auto 12px; border: 3px solid ${color}; padding: 3px; position: relative; box-shadow: 0 0 15px ${color}44;">
+                            <div style="flex: 0 0 110px; text-align: center; position: relative; background: rgba(255,255,255,0.02); padding: 15px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="position: absolute; top: -10px; right: -5px; font-size: 1.2rem; z-index: 2;">${medal}</div>
+                                <div style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid ${color}; padding: 2px; position: relative;">
                                     <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" 
                                          style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                                 </div>
-                                <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;">${name}</p>
-                                <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 80%; margin: 0 auto;">
-                                    <div style="width: ${Math.max(15, 100 - (idx * 20))}% ; height: 100%; background: ${color}; box-shadow: 0 0 8px ${color};"></div>
-                                </div>
+                                <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</p>
+                                ${isAdmin ? `
+                                    <p style="font-size: 0.7rem; font-weight: 800; color: var(--accent-color);">R$ ${b.total.toFixed(0)}</p>
+                                    <p style="font-size: 0.6rem; color: var(--text-secondary); opacity: 0.7;">${b.appointments} atend.</p>
+                                ` : `
+                                    <div style="height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 80%; margin: 5px auto;">
+                                        <div style="width: ${Math.max(20, 100 - (idx * 25))}% ; height: 100%; background: ${color};"></div>
+                                    </div>
+                                `}
                             </div>
                         `;
                     }).join('')}
@@ -2347,7 +2357,7 @@ const app = {
             return;
         }
 
-        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
+        container.innerHTML = this.getBirthdaysHTML() + (this.state.user.role === 'admin' ? this.getBarberRankingHTML() : '') + billingBanner + `
             <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
                 <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
                     🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
@@ -5675,7 +5685,7 @@ const app = {
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
                     ${rank.map((b, idx) => {
                         const medal = idx === 0 ? '👑' : idx === 1 ? '🥇' : idx === 2 ? '🥈' : idx === 3 ? '🥉' : (idx + 1) + 'º';
                         const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#fbbf24' : idx === 2 ? '#94a3b8' : idx === 3 ? '#d97706' : 'var(--text-secondary)';
