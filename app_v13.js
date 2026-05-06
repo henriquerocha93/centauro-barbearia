@@ -4898,11 +4898,16 @@ const app = {
                             <div>
                                 <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Destino da Venda</label>
                                 <select id="pdv-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
-                                        onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper-extra').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
-                                    <option value="cliente">👤 Cliente Externo</option>
+                                        onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-client-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper-extra').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
+                                    <option value="cliente" ${this.state.pdvClientName ? 'selected' : ''}>👤 Cliente Externo</option>
                                     <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
                                     <option value="adm">⚙️ Uso Interno (Administrativo)</option>
                                 </select>
+                            </div>
+
+                            <div id="pdv-client-wrapper" style="display: ${this.state.pdvClientName ? 'block' : 'none'};">
+                                <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Nome do Cliente</label>
+                                <input type="text" id="pdv-client-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" placeholder="Nome do cliente (opcional)" value="${this.state.pdvClientName || ''}">
                             </div>
 
                             <div id="pdv-barber-wrapper" style="display: none;">
@@ -5298,6 +5303,7 @@ const app = {
         const payment = document.getElementById('pdv-payment')?.value || 'Dinheiro';
         const seller = document.getElementById('pdv-seller')?.value || null;
         const consumer = document.getElementById('pdv-consumer')?.value || null;
+        const clientName = document.getElementById('pdv-client-name')?.value || '';
         const discount = parseFloat(this.state.pdvDiscount || 0);
 
         if (cart.length === 0) return;
@@ -5356,7 +5362,8 @@ const app = {
                     return 'dinheiro';
                 };
 
-                const desc = cart.length === 1 ? `PDV: ${cart[0].name} (x${cart[0].qty})` : `PDV: ${cart.length} produtos`;
+                const descBase = cart.length === 1 ? `PDV: ${cart[0].name} (x${cart[0].qty})` : `PDV: ${cart.length} produtos`;
+                const desc = clientName ? `${descBase} - ${clientName}` : descBase;
                 const t1 = this.addTransaction('in', `${desc} [Parte 1/${method1}]`, val1, 'produto', getM(method1));
                 const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'produto', getM(method2));
                 transactionId = t1;
@@ -5365,9 +5372,10 @@ const app = {
                 if (payment === 'PIX') method = 'pix';
                 if (payment === 'Cartão de Débito') method = 'debito';
                 if (payment === 'Cartão de Crédito') method = 'credito';
-                const desc = cart.length === 1
+                const descBase = cart.length === 1
                     ? `PDV: ${cart[0].name} (x${cart[0].qty})`
                     : `PDV: ${cart.length} produtos (${cart.map(i => i.qty + 'x ' + i.name.split(' ')[0]).join(', ')})`;
+                const desc = clientName ? `${descBase} - ${clientName}` : descBase;
                 transactionId = this.addTransaction('in', desc, total, 'produto', method);
             }
         }
@@ -5404,6 +5412,7 @@ const app = {
         this.state.cart = [];
         this.state.pdvDiscount = 0;
         this.state.pdvSeller = seller || null;
+        this.state.pdvClientName = null;
         this.saveState();
         this.render('pdv');
 
@@ -6575,12 +6584,24 @@ const app = {
                     `).reverse().join('')}
                 </div>
 
-                <div style="display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--glass-border); pt: 15px;">
-                    <button class="btn-secondary" style="border: 1px solid #ff4444; color: #ff4444;" onclick="app.deleteCustomer(${customer.id})">Deletar Cliente</button>
-                    <button class="btn-secondary" onclick="app.closeModal()">Fechar</button>
+                <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                    <button class="btn-primary" style="background: #7c3aed; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="app.pdvForCustomer('${customer.name}')">
+                        <i data-lucide="shopping-cart" style="width: 18px;"></i>
+                        Lançar Consumo (PDV)
+                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secondary" style="flex: 1; border: 1px solid #ff4444; color: #ff4444;" onclick="app.deleteCustomer(${customer.id})">Deletar Cliente</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Fechar</button>
+                    </div>
                 </div>
             </section>
         `);
+    },
+
+    pdvForCustomer(clientName) {
+        this.state.pdvClientName = clientName;
+        this.closeModal();
+        this.navigateTo('pdv');
     },
 
     deleteCustomer(customerId) {
