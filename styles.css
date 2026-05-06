@@ -795,6 +795,17 @@ h1, h2, h3 {
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
 }
 
+@media (max-width: 600px) {
+    #pdv-grid, #totem-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .glass-panel {
+        padding: 15px !important;
+    }
+}
+
 .cart-item:hover {
     background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
     transform: translateY(-2px);
