@@ -737,6 +737,8 @@ h1, h2, h3 {
     grid-template-columns: 1fr 400px;
     gap: 25px;
     align-items: start;
+    width: 100%;
+    max-width: 100%;
 }
 
 .pdv-cart-column {
@@ -850,12 +852,16 @@ h1, h2, h3 {
     }
 
     /* Fix Horizontal Scroll - AGGRESSIVE */
-    .view-content, .container, #app, .pdv-layout, .pdv-mobile-tabs, .app-layout {
+    .view-content, .container, #app, .pdv-layout, .pdv-mobile-tabs, .app-layout, .main-content {
         overflow-x: hidden !important;
         width: 100vw !important;
         max-width: 100vw !important;
         margin: 0 !important;
-        padding: 8px !important; /* Minimal padding for content */
+        padding: 5px !important; /* Extremely minimal padding */
+    }
+    
+    .pdv-mobile-tabs {
+        width: calc(100vw - 10px) !important;
     }
     
     body {
