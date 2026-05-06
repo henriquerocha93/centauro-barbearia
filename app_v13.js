@@ -670,6 +670,17 @@ const app = {
             }
         });
 
+        // [NOVO] Priorizar HASH da URL para navegação persistente (F5) em todo o site
+        const hash = window.location.hash.replace('#', '');
+        let initialView = 'home';
+        let initialSubView = null;
+
+        if (hash) {
+            const parts = hash.split(':');
+            initialView = parts[0];
+            initialSubView = parts[1] || null;
+        }
+
         // Carregamento inicial com verificação de sessão (Manter Logado)
         const savedUserStr = localStorage.getItem('centauros_user');
         if (savedUserStr) {
@@ -677,37 +688,24 @@ const app = {
                 const savedUser = JSON.parse(savedUserStr);
                 this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
 
-                // [NOVO] Priorizar HASH da URL para navegação persistente (F5)
-                const hash = window.location.hash.replace('#', '');
-                let viewToRender = 'home';
-                let subView = null;
-
-                if (hash) {
-                    const parts = hash.split(':');
-                    viewToRender = parts[0];
-                    subView = parts[1] || null;
-                } else {
-                    // Fallback para o papel do usuário se não houver hash
-                    if (this.state.user.role === 'admin') viewToRender = 'admin-dash';
-                    else if (this.state.user.role === 'totem') viewToRender = 'totem-dash';
-                    else viewToRender = 'barber-dash';
+                // Se não houver hash, define a view padrão por cargo
+                if (!hash) {
+                    if (this.state.user.role === 'admin') initialView = 'admin-dash';
+                    else if (this.state.user.role === 'totem') initialView = 'totem-dash';
+                    else initialView = 'barber-dash';
                 }
-
-                this.state.view = viewToRender;
-                if (subView && viewToRender === 'totem-dash') {
-                    this.state.totemTab = subView;
-                }
-                
-                this.render(viewToRender);
-                return;
             } catch (e) {
                 console.error("Erro ao ler sessão salva:", e);
                 localStorage.removeItem('centauros_user');
             }
         }
 
-        this.state.view = 'home';
-        this.render('home');
+        this.state.view = initialView;
+        if (initialSubView && initialView === 'totem-dash') {
+            this.state.totemTab = initialSubView;
+        }
+        
+        this.render(initialView);
     },
 
     generateTimeSlots() {
