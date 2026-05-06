@@ -884,12 +884,13 @@ h1, h2, h3 {
     background: rgba(255,255,255,0.02);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
-    overflow: hidden;
+    overflow: hidden !important;
     display: flex;
     flex-direction: column;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    width: 100%;
 }
 
 .product-card-container:hover {

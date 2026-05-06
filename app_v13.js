@@ -1458,7 +1458,7 @@ const app = {
                 <!-- Barra Scanner USB -->
                 <div class="glass" style="padding:12px 16px; margin-bottom:16px; border-left:4px solid #7c3aed; display:flex; align-items:center; gap:10px;">
                     <span style="font-size:1.4rem; flex-shrink:0;">📶</span>
-                    <div style="flex:1; position:relative;">
+                    <div style="flex:1; position:relative; min-width:0;">
                         <input type="text" id="totem-scanner-input" class="glass"
                                style="width:100%; padding:9px 40px 9px 12px; color:var(--text-primary); font-size:0.95rem; font-family:monospace;
                                        border:1.5px solid #7c3aed; border-radius:8px; letter-spacing:1px;"
@@ -4723,7 +4723,7 @@ const app = {
                 <!-- Barra de Scanner USB — sempre visível no PDV -->
                 <div class="glass" style="padding: 14px 18px; margin-bottom: 18px; border-left: 4px solid #7c3aed; display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 1.6rem; flex-shrink: 0;">📶</span>
-                    <div style="flex: 1; position: relative;">
+                    <div style="flex: 1; position: relative; min-width: 0;">
                         <input type="text" id="pdv-scanner-input" class="glass"
                                style="width: 100%; padding: 10px 44px 10px 14px; color: var(--text-primary); font-size: 1rem; font-family: monospace;
                                       border: 1.5px solid #7c3aed; border-radius: 10px; outline: none; letter-spacing: 1px;"
