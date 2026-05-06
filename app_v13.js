@@ -2908,7 +2908,7 @@ const app = {
                                 <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                                <span>${a.service}</span>
+                                <span>${a.time ? `[${a.time}] ` : ''}${a.service}</span>
                                 <span>${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
                         </div>
