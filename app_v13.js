@@ -5454,6 +5454,7 @@ const app = {
     renderAdminConsumption(container) {
         const isAdmin = this.state.user.role === 'admin';
         const userName = this.state.user.name;
+        const filterDate = this.state.consumptionFilterDate || '';
 
         // Marcar como visto para parar de piscar no menu
         if (isAdmin) {
@@ -5461,18 +5462,29 @@ const app = {
             this.saveState();
         }
 
-        // Se for admin vê tudo, se for barbeiro vê só o dele
-        const consumptionSales = (this.state.productSales || []).filter(s => {
+        const allConsumption = (this.state.productSales || []).filter(s => {
             if (isAdmin) return (s.target === 'adm' || s.target === 'barbeiro');
             return (s.target === 'barbeiro' && s.barberName === userName);
         });
 
-        // Agrupar por semana
+        // Filtrar por data se selecionada
+        const consumptionSales = filterDate 
+            ? allConsumption.filter(s => (s.timestamp || s.date).split('T')[0] === filterDate)
+            : allConsumption;
+
+        // Cálculo dos últimos 7 dias
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const last7DaysTotal = allConsumption
+            .filter(s => new Date(s.timestamp || s.date) >= sevenDaysAgo && s.target === 'barbeiro')
+            .reduce((acc, s) => acc + (s.total || 0), 0);
+
+        // Agrupar por semana (para a exibição padrão)
         const groups = {};
         consumptionSales.forEach(s => {
             const date = new Date(s.timestamp || s.date);
             const startOfWeek = new Date(date);
-            startOfWeek.setDate(date.getDate() - date.getDay()); // Domingo
+            startOfWeek.setDate(date.getDate() - date.getDay());
             const weekStr = startOfWeek.toLocaleDateString('pt-BR');
             if (!groups[weekStr]) groups[weekStr] = [];
             groups[weekStr].push(s);
@@ -5485,47 +5497,74 @@ const app = {
         });
 
         container.innerHTML = `
-            <section id="consumption-report" class="fade-in">
+            <section id="consumption-report" class="fade-in" style="padding-bottom: 60px;">
                 <h2 class="section-title">${isAdmin ? 'Relatório de Consumo (Antifraude)' : 'Meu Consumo de Produtos'}</h2>
+                
+                <!-- Cards de Resumo e Filtro -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <!-- Card 7 Dias -->
+                    <div class="glass" style="padding: 18px; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05);">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Consumo Últimos 7 Dias</p>
+                        <p style="font-size: 1.5rem; font-weight: 800; color: #a78bfa;">R$ ${last7DaysTotal.toFixed(2)}</p>
+                    </div>
+
+                    <!-- Card Filtro Calendário -->
+                    <div class="glass" style="padding: 18px; border-left: 4px solid var(--accent-color);">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Filtrar por Data</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="date" id="consumption-date-filter" class="glass" 
+                                   value="${filterDate}"
+                                   style="flex: 1; padding: 6px 10px; color: var(--text-primary); border: none; font-size: 0.85rem;"
+                                   onchange="app.state.consumptionFilterDate = this.value; app.render('admin-consumption')">
+                            ${filterDate ? `<button class="glass" style="padding: 6px 12px; color: #ff4444;" onclick="app.state.consumptionFilterDate=''; app.render('admin-consumption')">✕</button>` : ''}
+                        </div>
+                    </div>
+                </div>
+
                 <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
                         ${isAdmin
-                ? 'Este relatório lista todas as saídas de estoque que não foram vendas para clientes. Use para auditar o consumo do <strong>ADM</strong> e <strong>Barbeiros</strong>.'
-                : 'Aqui você pode acompanhar todos os produtos retirados para seu uso próprio, que são descontados automaticamente do seu faturamento.'}
+                ? 'Auditoria de saídas de estoque ADM e consumo de barbeiros.'
+                : 'Produtos retirados para uso próprio e descontados do seu faturamento.'}
                     </p>
                 </div>
 
-                ${sortedWeeks.length === 0 ? '<p style="text-align:center; padding:40px; color:var(--text-secondary);">Nenhum consumo registrado.</p>' : ''}
+                ${sortedWeeks.length === 0 ? `
+                    <div class="glass" style="text-align:center; padding:50px; color:var(--text-secondary);">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">📅</div>
+                        <p>${filterDate ? 'Nenhum consumo nesta data.' : 'Nenhum consumo registrado.'}</p>
+                    </div>
+                ` : ''}
 
                 ${sortedWeeks.map(week => {
-                    const items = groups[week].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)).reverse();
+                    const items = groups[week].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
                     return `
                         <div class="glass" style="padding: 15px; margin-bottom: 20px;">
-                            <h3 style="font-size: 0.9rem; color: var(--accent-color); margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; display: flex; justify-content: space-between;">
-                                <span>Semana de ${week}</span>
-                                <span style="font-size: 0.7rem; color: var(--text-secondary);">${items.length} itens</span>
+                            <h3 style="font-size: 0.85rem; color: var(--accent-color); margin-bottom: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>${filterDate ? 'Resultados da Pesquisa' : `Semana de ${week}`}</span>
+                                <span style="font-size: 0.65rem; color: var(--text-secondary); padding: 2px 8px; background: rgba(255,255,255,0.05); border-radius: 10px;">${items.length} registro(s)</span>
                             </h3>
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
                                 ${items.map(item => `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                                        <div style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85rem; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                        <div style="flex: 1; display: flex; gap: 12px;">
                                             ${isAdmin ? `
-                                                <button class="glass" style="padding: 5px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; font-size: 0.7rem;" 
+                                                <button class="glass" style="padding: 6px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; height: fit-content;" 
                                                         onclick="app.deleteConsumptionRecord(${item.id})" title="Apagar Registro">🗑️</button>
                                             ` : ''}
                                             <div>
-                                                <span style="font-weight: 700; color: var(--text-primary); display: block;">${item.qty}x ${item.productName}</span>
-                                                <span style="font-size: 0.72rem; color: var(--text-secondary);">
-                                                    ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
+                                                <span style="font-weight: 700; color: var(--text-primary); display: block; font-size: 0.9rem;">${item.qty}x ${item.productName}</span>
+                                                <span style="font-size: 0.7rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                                                    🕒 ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div style="text-align: right; min-width: 100px;">
-                                            <span style="padding: 3px 8px; border-radius: 4px; background: ${item.target === 'adm' ? 'rgba(148,163,184,0.2)' : 'rgba(124,58,237,0.2)'}; color: ${item.target === 'adm' ? '#94a3b8' : '#a78bfa'}; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">
-                                                ${item.target === 'adm' ? '⚙️ ADM' : `✂️ ${item.barberName || 'Barbeiro'}`}
+                                        <div style="text-align: right; min-width: 90px;">
+                                            <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; background: ${item.target === 'adm' ? 'rgba(148,163,184,0.15)' : 'rgba(124,58,237,0.15)'}; color: ${item.target === 'adm' ? '#94a3b8' : '#a78bfa'}; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                ${item.target === 'adm' ? '⚙️ ADM' : `✂️ ${item.barberName?.split(' ')[0] || 'Barbeiro'}`}
                                             </span>
-                                            <p style="font-size: 0.78rem; color: ${item.target === 'adm' ? 'var(--text-secondary)' : '#4ade80'}; font-weight: 700; margin-top: 4px;">
-                                                ${item.target === 'adm' ? 'Saída ADM' : `R$ ${item.total.toFixed(2)}`}
+                                            <p style="font-size: 0.85rem; color: ${item.target === 'adm' ? 'var(--text-secondary)' : '#4ade80'}; font-weight: 800; margin-top: 5px;">
+                                                ${item.target === 'adm' ? '---' : `R$ ${item.total.toFixed(2)}`}
                                             </p>
                                         </div>
                                     </div>
@@ -5535,7 +5574,7 @@ const app = {
                     `;
                 }).join('')}
 
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('${isAdmin ? 'admin-dash' : 'barber-dash'}')">Voltar ao Painel</button>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px; padding: 12px;" onclick="app.navigateTo('${isAdmin ? 'admin-dash' : 'barber-dash'}')">Voltar ao Painel</button>
             </section>
         `;
     },
