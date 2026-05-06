@@ -774,9 +774,25 @@ h1, h2, h3 {
         display: grid;
     }
 
-    /* Lógica de Abas via CSS Classes controladas por JS */
-    .pdv-layout.show-cart .pdv-catalog-column { display: none; }
-    .pdv-layout.show-catalog .pdv-cart-column { display: none; }
+/* Lógica de Abas via CSS Classes controladas por JS */
+    .pdv-layout.show-cart .pdv-catalog-column { display: none !important; }
+    .pdv-layout.show-catalog .pdv-cart-column { display: none !important; }
+}
+
+.glass-panel {
+    background: rgba(255,255,255,0.02);
+    padding: 25px;
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.premium-cart {
+    background: rgba(15,15,20,0.8) !important;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
 }
 
 .cart-item:hover {

@@ -1482,7 +1482,7 @@ const app = {
 
                 <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
                     <!-- Catálogo -->
-                    <div class="pdv-catalog-column" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                    <div class="pdv-catalog-column glass-panel">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
                             <div style="position: relative; flex: 1;">
                                 <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
@@ -1509,7 +1509,7 @@ const app = {
                     </div>
 
                     <!-- Carrinho -->
-                    <div class="pdv-cart-column glass" style="padding: 22px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
+                    <div class="pdv-cart-column glass-panel premium-cart">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
                             <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
                                 <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
@@ -4747,9 +4747,8 @@ const app = {
                 </div>
 
                 <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
-
                     <!-- COLUNA ESQUERDA: catálogo -->
-                    <div class="pdv-catalog-column" style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;">
+                    <div class="pdv-catalog-column glass-panel">
                         <!-- Busca por nome -->
                         <div style="position: relative;">
                             <i data-lucide="search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
@@ -4776,7 +4775,7 @@ const app = {
                     </div>
 
                     <!-- COLUNA DIREITA: carrinho -->
-                    <div class="pdv-cart-column glass" style="padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
+                    <div class="pdv-cart-column glass-panel premium-cart">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 12px; color: var(--text-primary);">
                                 <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
