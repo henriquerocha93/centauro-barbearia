@@ -2245,6 +2245,65 @@ const app = {
         alert('✅ Perfil configurado com sucesso! Bem-vindo ao Agendamento Fácil BR.');
     },
 
+    getBarberRankingHTML() {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        const barbers = this.state.staff.filter(s => s.role === 'barber');
+        const stats = {};
+        
+        barbers.forEach(b => {
+            stats[b.name] = { name: b.name, photo: b.photo, total: 0 };
+        });
+        
+        // Somar desempenho (usamos valor mas não mostramos)
+        (this.state.appointments || []).forEach(a => {
+            const aptDate = new Date(a.date + 'T12:00:00');
+            if (a.status === 'finalizado' && aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear) {
+                if (stats[a.barber]) stats[a.barber].total += (a.price || 0);
+            }
+        });
+        
+        (this.state.productSales || []).forEach(s => {
+            const saleDate = new Date(s.date + 'T12:00:00');
+            if (s.seller && stats[s.seller] && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+                stats[s.seller].total += (s.total || 0);
+            }
+        });
+        
+        const sorted = Object.values(stats).sort((a, b) => b.total - a.total);
+        if (sorted.length === 0) return '';
+
+        return `
+            <div class="glass" style="padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
+                <h3 style="font-size: 0.95rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    🏆 Ranking de Desempenho (Mês Atual)
+                </h3>
+                <div style="display: flex; gap: 20px; overflow-x: auto; padding: 10px 5px; scrollbar-width: none;">
+                    ${sorted.map((b, idx) => {
+                        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + 'º';
+                        const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#d97706' : 'var(--text-secondary)';
+                        const name = b.name.split(' ')[0];
+                        return `
+                            <div style="flex: 0 0 100px; text-align: center; position: relative;">
+                                <div style="position: absolute; top: -12px; right: 0; font-size: 1.4rem; z-index: 2; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">${medal}</div>
+                                <div style="width: 75px; height: 75px; border-radius: 50%; margin: 0 auto 12px; border: 3px solid ${color}; padding: 3px; position: relative; box-shadow: 0 0 15px ${color}44;">
+                                    <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" 
+                                         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;">${name}</p>
+                                <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 80%; margin: 0 auto;">
+                                    <div style="width: ${Math.max(15, 100 - (idx * 20))}% ; height: 100%; background: ${color}; box-shadow: 0 0 8px ${color};"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    },
+
     renderAdminDash(container) {
         const urlParams = new URLSearchParams(window.location.search);
         const tenantId = urlParams.get('loja');
@@ -2284,7 +2343,7 @@ const app = {
             return;
         }
 
-        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
+        container.innerHTML = this.getBirthdaysHTML() + billingBanner + this.getBarberRankingHTML() + `
             <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
                 <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
                     🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
