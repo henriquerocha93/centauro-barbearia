@@ -465,35 +465,44 @@ const app = {
         
         let changed = false;
         this.state.products.forEach(p => {
-            if (!p.category || p.category === 'Geral' || p.category === 'undefined') {
+            // Migrar apenas se não tiver categoria ou se for a categoria padrão 'Geral' vinda do sistema antigo
+            if (!p.category || p.category === 'Geral' || p.category === 'undefined' || p.category === '') {
                 const name = (p.name || '').toLowerCase();
                 
-                if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
-                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
-                    name.includes('serum') || name.includes('cabelo')) {
-                    p.category = 'Cabelo';
-                    changed = true;
-                } else if (name.includes('barba') || name.includes('bigode') || name.includes('shave')) {
-                    p.category = 'Barba';
-                    changed = true;
-                } else if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
-                           name.includes('água') || name.includes('suco') || name.includes('soda') || 
-                           name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
-                           name.includes('garrafa')) {
+                // BEBIDAS (Prioridade alta pois nomes de bebidas são muito específicos)
+                if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
+                    name.includes('água') || name.includes('suco') || name.includes('soda') || 
+                    name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
+                    name.includes('garrafa') || name.includes('budweiser') || name.includes('stella') ||
+                    name.includes('red bull') || name.includes('monster') || name.includes('café') || name.includes('cafe')) {
                     p.category = 'Bebidas';
                     changed = true;
-                } else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia')) {
+                } 
+                // BARBA
+                else if (name.includes('barba') || name.includes('bigode') || name.includes('shave') || name.includes('balm') || name.includes('pós-barba') || name.includes('pos-barba')) {
+                    p.category = 'Barba';
+                    changed = true;
+                } 
+                // CABELO
+                else if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
+                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
+                    name.includes('serum') || name.includes('cabelo') || name.includes('fixador') || name.includes('laque')) {
+                    p.category = 'Cabelo';
+                    changed = true;
+                }
+                // OUTROS
+                else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia') || name.includes('minoxidil')) {
                     p.category = 'Outros';
                     changed = true;
-                } else {
+                } 
+                else {
                     p.category = 'Geral';
-                    // No need to set changed=true if it was already Geral
                 }
             }
         });
 
         if (changed) {
-            console.log('📦 Produtos migrados para novas categorias automaticamente.');
+            console.log('📦 Sincronizando categorias automáticas...');
             this.saveState();
         }
     },
@@ -617,6 +626,9 @@ const app = {
                             this.state.serviceOrders = data.serviceOrders || [];
                             this.state.tips = data.tips || [];
                             this.state.lastUpdate = data.lastUpdate;
+
+                            // Migrar produtos se necessário (SaaS/Cloud Sync)
+                            this.migrateProducts();
 
                             // SaaS: Atualiza textos da interface com base no Tenant
                             if (this.state.settings) {
