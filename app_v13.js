@@ -5629,7 +5629,7 @@ const app = {
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
                 <h2 class="section-title">Lançar Vales</h2>
-                <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <form onsubmit="event.preventDefault(); app.saveVoucher()" class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">${this.getTerm('workerTerm')}</label>
                         <select id="barber-select" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
@@ -5641,7 +5641,7 @@ const app = {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Valor do Vale (R$)</label>
-                            <input type="number" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00" onkeydown="if(event.key==='Enter') app.saveVoucher()">
+                            <input type="number" step="0.01" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00" required>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Data de Desconto 📅</label>
@@ -5650,10 +5650,10 @@ const app = {
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observação (opcional)</label>
-                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário" onkeydown="if(event.key==='Enter') app.saveVoucher()">
+                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário">
                     </div>
-                    <button class="btn-primary" style="width: 100%;" onclick="app.saveVoucher()">Confirmar Retirada</button>
-                </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Confirmar Retirada</button>
+                </form>
 
                 <h3 class="section-title" style="font-size: 1.1rem;">Últimos Lançados</h3>
                 <div class="voucher-list">
@@ -5709,8 +5709,13 @@ const app = {
             if (!this.state.vouchers) this.state.vouchers = [];
             this.state.vouchers.push(voucher);
             this.saveState();
-            this.render('admin-vouchers');
+            
             alert('✅ Vale registrado com sucesso!');
+            
+            // Limpa apenas os campos necessários e re-renderiza a lista (não a página toda)
+            amountElement.value = '';
+            document.getElementById('voucher-note').value = '';
+            this.render('admin-vouchers');
         } else {
             alert('Preencha o barbeiro e o valor do vale.');
         }
