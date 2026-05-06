@@ -3962,9 +3962,18 @@ const app = {
     },
 
     saveTip() {
-        const barber = document.getElementById('tip-barber').value;
-        const amount = parseFloat(document.getElementById('tip-amount').value);
-        const payment = document.getElementById('tip-payment').value;
+        const barberEl = document.getElementById('tip-barber');
+        const amountEl = document.getElementById('tip-amount');
+        const paymentEl = document.getElementById('tip-payment');
+
+        if (!barberEl || !amountEl || !paymentEl) {
+            console.error('Elementos do modal de gorjeta não encontrados.');
+            return;
+        }
+
+        const barber = barberEl.value;
+        const amount = parseFloat(amountEl.value);
+        const payment = paymentEl.value;
 
         if (!barber || isNaN(amount) || amount <= 0) {
             alert('Por favor, preencha o barbeiro e um valor válido.');
@@ -3975,24 +3984,29 @@ const app = {
         const tipId = Date.now();
         const now = new Date();
 
-        // Registrar no fluxo de caixa e pegar ID
-        const transId = this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', payment);
+        try {
+            // Registrar no fluxo de caixa e pegar ID
+            const transId = this.addTransaction('in', `Gorjeta: ${barber}`, amount, 'outros', payment);
 
-        this.state.tips.push({
-            id: tipId,
-            barber,
-            amount,
-            date: now.toISOString().split('T')[0],
-            timestamp: now.toISOString(),
-            status: 'approved',
-            paymentMethod: payment,
-            transactionId: transId
-        });
+            this.state.tips.push({
+                id: tipId,
+                barber,
+                amount,
+                date: now.toISOString().split('T')[0],
+                timestamp: now.toISOString(),
+                status: 'approved',
+                paymentMethod: payment,
+                transactionId: transId
+            });
 
-        this.saveState();
-        this.closeModal();
-        this.render('admin-tips');
-        alert('✅ Gorjeta lançada com sucesso!');
+            this.saveState();
+            this.closeModal();
+            this.render('admin-tips');
+            alert('✅ Gorjeta lançada com sucesso!');
+        } catch (e) {
+            console.error('Erro ao salvar gorjeta:', e);
+            alert('Ocorreu um erro ao salvar a gorjeta. Tente novamente.');
+        }
     },
 
     approveTip(id) {
