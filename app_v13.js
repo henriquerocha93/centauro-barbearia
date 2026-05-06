@@ -3717,14 +3717,46 @@ const app = {
 
     openFinalizeOS(aptId) {
         const apt = this.state.appointments.find(a => a.id === aptId);
+        if (!apt.products) apt.products = [];
+        
+        const renderProductsList = () => {
+            if (!apt.products || apt.products.length === 0) return '';
+            return apt.products.map((p, idx) => `
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 5px;">
+                    <span>${p.name} (x${p.qty})</span>
+                    <span>R$ ${(p.price * p.qty).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
+                </div>
+            `).join('');
+        };
+
+        const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
+        const finalTotal = apt.price + totalProducts;
+
         this.openModal('Finalizar OS', `
             <section class="fade-in">
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px;">Confirme o Nome do Cliente *</label>
                     <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
                 </div>
+
+                <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
+                    <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
+                    
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <select id="os-product-select" class="glass" style="flex: 1; padding: 8px; font-size: 0.85rem; color: var(--text-primary);">
+                            <option value="">Adicionar Produto...</option>
+                            ${this.state.products.filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
+                        </select>
+                        <button class="btn-primary" style="padding: 8px 12px; font-size: 0.8rem; background: #2E8B57;" onclick="app.addProductToOS('${apt.id}')">+</button>
+                    </div>
+
+                    <div id="os-products-list">
+                        ${renderProductsList()}
+                    </div>
+                </div>
                 <div style="margin-bottom: 20px;">
-                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${apt.price})">
+                    <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
+                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${finalTotal})">
                         <option value="">Selecione...</option>
                         <option value="Dinheiro">Dinheiro</option>
                         <option value="PIX">PIX</option>
@@ -3743,7 +3775,7 @@ const app = {
                                 <option value="Cartão de Débito">Débito</option>
                                 <option value="Cartão de Crédito">Crédito</option>
                             </select>
-                            <input type="number" id="split-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01" oninput="app.updateSplitRemainder(${apt.price})">
+                            <input type="number" id="split-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01" oninput="app.updateSplitRemainder(${finalTotal})">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Parte 2 via:</label>
@@ -3756,18 +3788,11 @@ const app = {
                             <input type="number" id="split-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01">
                         </div>
                     </div>
-                    <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">Total OS: <strong>R$ ${apt.price.toFixed(2)}</strong></p>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">Total OS + Consumo: <strong>R$ ${finalTotal.toFixed(2)}</strong></p>
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Gorjeta (Opcional)</label>
                     <input type="number" id="final-tip" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" placeholder="R$ 0,00" step="0.50">
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <button class="btn-primary" style="background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px dashed #a78bfa; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; padding: 12px; box-shadow: none;" 
-                            onclick="app.pdvForCustomer(document.getElementById('final-cust-name').value)">
-                        <i data-lucide="shopping-cart" style="width: 16px;"></i>
-                        Lançar Consumo (Produtos)
-                    </button>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
@@ -3778,59 +3803,74 @@ const app = {
         `);
     },
 
+    addProductToOS(aptId) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const productId = Number(document.getElementById('os-product-select').value);
+        if (!productId) return;
+
+        const product = this.state.products.find(p => p.id === productId);
+        if (!product || product.stock <= 0) {
+            alert('Produto sem estoque!');
+            return;
+        }
+
+        if (!apt.products) apt.products = [];
+        const existing = apt.products.find(p => p.id === productId);
+        if (existing) {
+            if (existing.qty + 1 > product.stock) {
+                alert('Limite de estoque atingido!');
+                return;
+            }
+            existing.qty++;
+        } else {
+            apt.products.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                qty: 1,
+                commissionPct: product.commissionPct || 0
+            });
+        }
+        this.openFinalizeOS(aptId);
+    },
+
+    removeProductFromOS(aptId, index) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        apt.products.splice(index, 1);
+        this.openFinalizeOS(aptId);
+    },
+
     doFinalizeOS(aptId) {
-        console.log('Finalizando OS:', aptId);
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const payment = document.getElementById('final-payment').value;
+        const tip = parseFloat(document.getElementById('final-tip').value) || 0;
+        const customerName = document.getElementById('final-cust-name').value;
+
+        if (!payment) {
+            alert('Por favor, selecione uma forma de pagamento.');
+            return;
+        }
+
+        const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
+        const totalBase = apt.price + totalProducts;
+        const finalTotal = totalBase + tip;
+
+        const mappedMethod = payment === 'PIX' ? 'pix' : (payment === 'Cartão de Débito' ? 'debito' : (payment === 'Cartão de Crédito' ? 'credito' : 'dinheiro'));
+        const desc = `Finalização OS: ${apt.customer} (${apt.service})${apt.products?.length > 0 ? ' + Consumo' : ''}`;
+
         try {
-            const name = document.getElementById('final-cust-name').value;
-            const payment = document.getElementById('final-payment').value;
-
-            if (!name || !payment) {
-                alert('Nome do cliente e forma de pagamento são obrigatórios.');
-                return;
-            }
-
-            // Busca flexível por ID (string ou número)
-            const apt = this.state.appointments.find(a => a.id == aptId);
-            if (!apt) {
-                console.error('Agendamento não encontrado:', aptId);
-                alert('Erro: Agendamento não encontrado.');
-                return;
-            }
-
-            console.log('Agendamento encontrado:', apt);
-            apt.customer = name;
-            apt.payment = payment;
-            apt.status = 'finalizado';
-
-            // Integrar com CRM (Histórico do Cliente)
-            const customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
-            if (customer) {
-                if (!customer.history) customer.history = [];
-                customer.history.push({
-                    date: apt.date || new Date().toLocaleDateString('en-CA'),
-                    service: apt.service || 'Serviço',
-                    barber: apt.barber || 'Barbeiro'
-                });
-            }
-
-            // Mapear modalidades para os IDs que usamos no balanço
-            let mappedMethod = 'dinheiro';
-            if (payment === 'PIX') mappedMethod = 'pix';
-            if (payment === 'Cartão de Débito') mappedMethod = 'debito';
-            if (payment === 'Cartão de Crédito') mappedMethod = 'credito';
-
-            // Integrar com Fluxo de Caixa e salvar ID no agendamento
-            const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer})`;
-            const price = parseFloat(apt.price || 0);
-
+            // Registrar transações
             if (payment === 'Misto') {
                 const val1 = parseFloat(document.getElementById('split-amount-1').value) || 0;
                 const val2 = parseFloat(document.getElementById('split-amount-2').value) || 0;
                 const method1 = document.getElementById('split-method-1').value;
                 const method2 = document.getElementById('split-method-2').value;
 
-                if (Math.abs((val1 + val2) - price) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor do serviço (R$ ${price.toFixed(2)}). Deseja continuar?`)) return;
+                if (Math.abs((val1 + val2) - totalBase) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor (R$ ${totalBase.toFixed(2)}). Deseja continuar?`)) return;
                 }
 
                 const getM = (m) => {
@@ -3844,7 +3884,7 @@ const app = {
                 const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'servico', getM(method2));
                 apt.transactionId = t1; 
             } else {
-                apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
+                apt.transactionId = this.addTransaction('in', desc, totalBase, 'servico', mappedMethod);
             }
 
             // Registrar Gorjeta se houver
