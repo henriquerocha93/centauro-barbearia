@@ -1493,7 +1493,7 @@ const app = {
                         </div>
 
                         <!-- Filtros de Categoria -->
-                        <div id="totem-pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;" class="custom-scrollbar">
+                        <div id="totem-pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%;" class="custom-scrollbar">
                             ${['Todos', 'Cabelo', 'Barba', 'Bebidas', 'Outros'].map(cat => `
                                 <button class="category-tab ${this.state.totemCategory === cat || (!this.state.totemCategory && cat === 'Todos') ? 'active' : ''}"
                                         style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
@@ -4758,7 +4758,7 @@ const app = {
                         </div>
 
                         <!-- Filtros de Categoria -->
-                        <div id="pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;" class="custom-scrollbar">
+                        <div id="pdv-categories" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%;" class="custom-scrollbar">
                             ${['Todos', 'Cabelo', 'Barba', 'Bebidas', 'Outros'].map(cat => `
                                 <button class="pdv-category-tab ${this.state.pdvCategory === cat || (!this.state.pdvCategory && cat === 'Todos') ? 'active' : ''}"
                                         style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
