@@ -3519,7 +3519,8 @@ const app = {
     },
 
     openAppointmentManagement(aptId) {
-        const apt = this.state.appointments.find(a => a.id === aptId);
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
         if (!apt) return;
 
         const isReadOnly = apt.status === 'finalizado' && this.state.user.role !== 'admin';
