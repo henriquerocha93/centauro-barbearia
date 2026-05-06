@@ -1388,7 +1388,7 @@ const app = {
                     <div style="flex:1; position:relative;">
                         <input type="text" id="totem-scanner-input" class="glass"
                                style="width:100%; padding:9px 40px 9px 12px; color:var(--text-primary); font-size:0.95rem; font-family:monospace;
-                                      border:1.5px solid #7c3aed; border-radius:8px; letter-spacing:1px;"
+                                       border:1.5px solid #7c3aed; border-radius:8px; letter-spacing:1px;"
                                placeholder="Aponte o leitor para o produto..."
                                autocomplete="off"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ app.pdvAddToCartByCode(c); this.value=''; app.setTotemTab('pdv'); } }">
@@ -1397,111 +1397,125 @@ const app = {
                     <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">Leitor USB</span>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 360px; gap:18px; align-items:start;">
+                <div style="display:grid; grid-template-columns:1fr 400px; gap:20px; align-items:start;">
                     <!-- Catálogo -->
-                    <div>
-                        <input type="text" id="totem-pdv-search" class="glass"
-                               style="width:100%; padding:9px 12px; color:var(--text-primary); margin-bottom:12px;"
-                               placeholder="🔍 Buscar produto..." oninput="app._totemPDVSearch(this.value)">
-                        <div id="totem-pdv-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+                    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 18px; border: 1px solid var(--glass-border);">
+                        <div style="position: relative; margin-bottom: 15px;">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
+                            <input type="text" id="totem-pdv-search" class="glass"
+                                   style="width:100%; padding:10px 10px 10px 38px; color:var(--text-primary); font-size: 0.9rem; border-radius: 10px;"
+                                   placeholder="Buscar produto..." oninput="app._totemPDVSearch(this.value)">
+                        </div>
+                        <div id="totem-pdv-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); gap:10px;">
                             ${this.getPDVProductCards(products, '')}
                         </div>
                     </div>
 
                     <!-- Carrinho -->
-                    <div class="glass" style="padding:18px; position:sticky; top:90px;">
-                        <h3 style="font-size:0.95rem; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                            🛒 Carrinho
-                            ${cart.length > 0 ? `<button style="font-size:0.7rem;color:#ff4444;background:none;border:1px solid rgba(255,68,68,0.3);border-radius:5px;padding:2px 8px;cursor:pointer;" onclick="app.clearCart()">Limpar</button>` : ''}
-                        </h3>
+                    <div class="glass" style="padding: 22px; position: sticky; top: 90px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                            <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
+                                <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
+                                Carrinho
+                            </h3>
+                            ${cart.length > 0 ? `<button style="font-size: 0.65rem; color: #ff4444; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2); border-radius: 6px; padding: 4px 10px; cursor: pointer;" onclick="app.clearCart()">Limpar</button>` : ''}
+                        </div>
 
-                        <div style="max-height:240px; overflow-y:auto; margin-bottom:12px;">
+                        <div style="max-height: 280px; overflow-y: auto; margin-bottom: 18px; padding-right: 5px;" class="custom-scrollbar">
                             ${cart.length === 0
-                ? '<p style="text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;">Nenhum item no carrinho</p>'
+                ? `
+                                <div style="text-align:center; padding: 30px 15px; border: 2px dashed rgba(255,255,255,0.05); border-radius: 12px;">
+                                    <div style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;">🛍️</div>
+                                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Carrinho vazio</p>
+                                </div>
+                                `
                 : cart.map((item, idx) => `
-                                    <div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--glass-border);">
-                                        <div style="flex:1;min-width:0;">
-                                            <p style="font-size:0.8rem;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</p>
-                                            <p style="font-size:0.7rem;color:var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)} un.</p>
+                                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.02);">
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</p>
+                                            <p style="font-size: 0.7rem; color: var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)}</p>
                                         </div>
-                                        <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
-                                            <button class="glass" style="padding:3px 7px;font-size:0.8rem;" onclick="app.pdvChangeQty(${idx},-1)">−</button>
-                                            <span style="font-size:0.9rem;font-weight:700;min-width:18px;text-align:center;">${item.qty}</span>
-                                            <button class="glass" style="padding:3px 7px;font-size:0.8rem;" onclick="app.pdvChangeQty(${idx},1)">+</button>
+                                        <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 3px;">
+                                            <button style="width: 22px; height: 22px; border-radius: 4px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="app.pdvChangeQty(${idx},-1)">−</button>
+                                            <span style="font-size: 0.8rem; font-weight: 800; min-width: 18px; text-align: center;">${item.qty}</span>
+                                            <button style="width: 22px; height: 22px; border-radius: 4px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="app.pdvChangeQty(${idx},1)">+</button>
                                         </div>
-                                        <div style="text-align:right;flex-shrink:0;min-width:55px;">
-                                            <p style="font-size:0.82rem;font-weight:700;color:var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
-                                            <button style="font-size:0.62rem;color:#ff4444;background:none;border:none;cursor:pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
+                                        <div style="text-align: right; min-width: 65px;">
+                                            <p style="font-size: 0.85rem; font-weight: 800; color: var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
+                                            <button style="font-size: 0.6rem; color: #f87171; background: none; border: none; cursor: pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
                                         </div>
                                     </div>
                                 `).join('')}
                         </div>
 
-                        <div style="margin-bottom:10px;">
-                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Desconto (R$)</label>
-                            <input type="number" id="totem-pdv-discount" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
-                                   value="${discount}" min="0" step="0.01"
-                                   oninput="app.state.pdvDiscount=parseFloat(this.value)||0; app.setTotemTab('pdv');">
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Vendedor</label>
-                            <select id="totem-pdv-seller" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
-                                    onchange="app.state.pdvSeller=this.value||null;">
-                                <option value="">-- Sem comissão --</option>
-                                ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Destino da Venda</label>
-                            <select id="totem-pdv-target" class="glass" style="width:100%;padding:7px;color:var(--text-primary);"
-                                    onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-payment-wrapper').style.display = (this.value === 'cliente') ? 'block' : 'none';">
-                                <option value="cliente">👤 Cliente</option>
-                                <option value="barbeiro">✂️ Uso Próprio (${this.getTerm('workerTerm')})</option>
-                                <option value="adm">⚙️ Uso Interno (ADM)</option>
-                            </select>
-                        </div>
-
-                        <div id="totem-pdv-barber-wrapper" style="margin-bottom:10px; display:none;">
-                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Quem está consumindo?</label>
-                            <select id="totem-pdv-consumer" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
-                                ${barbers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}
-                            </select>
-                        </div>
-
-                        <div id="totem-pdv-payment-wrapper" style="margin-bottom:14px;">
-                            <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Pagamento</label>
-                            <select id="totem-pdv-payment" class="glass" style="width:100%;padding:7px;color:var(--text-primary);">
-                                <option value="Dinheiro">Dinheiro</option>
-                                <option value="PIX">PIX</option>
-                                <option value="Cartão de Débito">Cartão de Débito</option>
-                                <option value="Cartão de Crédito">Cartão de Crédito</option>
-                            </select>
-                        </div>
-
-                        <!-- Totais -->
-                        <div style="padding:12px;background:var(--surface-dark);border-radius:8px;margin-bottom:14px;">
-                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;">
-                                <span style="color:var(--text-secondary);">Subtotal</span><span>R$ ${subtotal.toFixed(2)}</span>
+                        <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; margin-bottom: 18px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Desconto (R$)</label>
+                                    <input type="number" id="totem-pdv-discount" class="glass" style="width:100%; padding:8px; color:var(--text-primary); font-weight: 700; border-radius: 6px;"
+                                           value="${discount}" min="0" step="0.01"
+                                           oninput="app.state.pdvDiscount=parseFloat(this.value)||0; app.setTotemTab('pdv');">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Pagamento</label>
+                                    <select id="totem-pdv-payment" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;">
+                                        <option value="Dinheiro">Dinheiro 💵</option>
+                                        <option value="PIX">PIX ⚡</option>
+                                        <option value="Cartão de Débito">Débito 💳</option>
+                                        <option value="Cartão de Crédito">Crédito 💳</option>
+                                    </select>
+                                </div>
                             </div>
-                            ${discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;">
-                                <span style="color:#fbbf24;">Desconto</span><span style="color:#fbbf24;">- R$ ${discount.toFixed(2)}</span>
-                            </div>` : ''}
-                            <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:800;border-top:1px solid var(--glass-border);padding-top:7px;">
-                                <span style="color:var(--accent-color);">Total</span>
-                                <span style="color:var(--accent-color);">R$ ${total.toFixed(2)}</span>
+
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Destino</label>
+                                <select id="totem-pdv-target" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;"
+                                        onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
+                                    <option value="cliente">👤 Cliente</option>
+                                    <option value="barbeiro">✂️ Uso Próprio</option>
+                                    <option value="adm">⚙️ Uso Interno</option>
+                                </select>
                             </div>
-                            ${seller && commission > 0 ? `<div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-top:7px;padding-top:7px;border-top:1px solid var(--glass-border);">
-                                <span style="color:var(--text-secondary);">Comissão (${seller.split(' ')[0]})</span>
-                                <span style="color:#4ade80;font-weight:700;">R$ ${commission.toFixed(2)}</span>
-                            </div>` : ''}
+
+                            <div id="totem-pdv-barber-wrapper" style="display:none;">
+                                <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Consumidor</label>
+                                <select id="totem-pdv-consumer" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;">
+                                    ${barbers.map(b => `<option value="${b.name}" ${this.state.user.name === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                </select>
+                            </div>
+
+                            <div id="totem-pdv-seller-wrapper">
+                                <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Vendedor</label>
+                                <select id="totem-pdv-seller" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;"
+                                        onchange="app.state.pdvSeller=this.value||null;">
+                                    <option value="">-- Sem comissão --</option>
+                                    ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Resumo Financeiro -->
+                        <div style="margin-bottom: 18px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 15px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                                <span style="color: var(--text-secondary);">Subtotal</span>
+                                <span style="color: var(--text-primary); font-weight: 600;">R$ ${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; color: #fbbf24;"><span style="opacity: 0.8;">Desconto</span><span style="font-weight: 700;">- R$ ${discount.toFixed(2)}</span></div>` : ''}
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: 900; border-top: 1.5px solid rgba(255,255,255,0.05); padding-top: 10px; margin-top: 6px;">
+                                <span style="color: var(--text-primary);">Total</span>
+                                <span style="color: var(--accent-color);">R$ ${total.toFixed(2)}</span>
+                            </div>
                         </div>
 
                         <button class="btn-primary"
-                                style="width:100%;font-size:1rem;padding:13px;background:${cart.length > 0 ? '#2E8B57' : '#555'};cursor:${cart.length > 0 ? 'pointer' : 'not-allowed'};"
+                                style="width:100%; font-size:1rem; padding:16px; font-weight:800; border-radius:12px;
+                                       background: ${cart.length > 0 ? 'linear-gradient(90deg, #10b981, #059669)' : '#333'};
+                                       box-shadow: ${cart.length > 0 ? '0 10px 20px rgba(16,185,129,0.2)' : 'none'};
+                                       border:none; cursor: ${cart.length > 0 ? 'pointer' : 'not-allowed'};
+                                       display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s ease;"
                                 ${cart.length === 0 ? 'disabled' : ''} onclick="app._totemFinalizeSale()">
-                            ✅ Finalizar Venda
+                            <i data-lucide="check-circle-2"></i>
+                            FINALIZAR VENDA
                         </button>
                     </div>
                 </div>
