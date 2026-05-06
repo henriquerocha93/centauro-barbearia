@@ -68,6 +68,7 @@ const app = {
         serviceOrders: [],   // Ordens de Serviço
         productSales: [],    // Histórico de Vendas/Consumo
         tips: [],            // Registro de Gorjetas
+        pdvTab: 'catalog',   // [NOVO] catalog | cart
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -1469,9 +1470,19 @@ const app = {
                     <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">Leitor USB</span>
                 </div>
 
-                <div class="pdv-layout">
+                <!-- Abas Mobile [NOVO] -->
+                <div class="pdv-mobile-tabs">
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="app.state.pdvTab='catalog'; app.setTotemTab('pdv')">
+                        📦 Catálogo
+                    </div>
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="app.state.pdvTab='cart'; app.setTotemTab('pdv')">
+                        🛒 Carrinho (${cart.length})
+                    </div>
+                </div>
+
+                <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
                     <!-- Catálogo -->
-                    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                    <div class="pdv-catalog-column" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); flex: 1; display: flex; flex-direction: column; gap: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
                             <div style="position: relative; flex: 1;">
                                 <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
@@ -4725,10 +4736,20 @@ const app = {
                     <span style="font-size:0.72rem; color:var(--text-secondary); white-space:nowrap; flex-shrink:0;">Leitor USB</span>
                 </div>
 
-                <div class="pdv-layout">
+                <!-- Abas Mobile [NOVO] -->
+                <div class="pdv-mobile-tabs">
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="app.state.pdvTab='catalog'; app.render('pdv')">
+                        📦 Catálogo
+                    </div>
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="app.state.pdvTab='cart'; app.render('pdv')">
+                        🛒 Carrinho (${cart.length})
+                    </div>
+                </div>
+
+                <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
 
                     <!-- COLUNA ESQUERDA: catálogo -->
-                    <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;">
+                    <div class="pdv-catalog-column" style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;">
                         <!-- Busca por nome -->
                         <div style="position: relative;">
                             <i data-lucide="search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>

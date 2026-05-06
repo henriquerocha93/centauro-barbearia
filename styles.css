@@ -736,6 +736,31 @@ h1, h2, h3 {
     top: 20px;
 }
 
+.pdv-mobile-tabs {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.pdv-mobile-tab {
+    padding: 12px;
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.pdv-mobile-tab.active {
+    background: var(--accent-color);
+    color: #000;
+    border-color: var(--accent-color);
+}
+
 @media (max-width: 1100px) {
     .pdv-layout {
         grid-template-columns: 1fr;
@@ -744,6 +769,14 @@ h1, h2, h3 {
         position: static !important;
         top: 0;
     }
+    
+    .pdv-mobile-tabs {
+        display: grid;
+    }
+
+    /* Lógica de Abas via CSS Classes controladas por JS */
+    .pdv-layout.show-cart .pdv-catalog-column { display: none; }
+    .pdv-layout.show-catalog .pdv-cart-column { display: none; }
 }
 
 .cart-item:hover {
