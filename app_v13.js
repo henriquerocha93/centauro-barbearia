@@ -3742,13 +3742,17 @@ const app = {
                 <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
                     <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
                     
-                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                        <select id="os-product-select" class="glass" style="flex: 2; padding: 8px; font-size: 0.85rem; color: var(--text-primary);">
-                            <option value="">Adicionar Produto...</option>
+                    <div style="margin-bottom: 10px;">
+                        <select id="os-product-select" class="glass" style="width: 100%; padding: 10px; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 8px;">
+                            <option value="">Selecione o Produto...</option>
                             ${this.state.products.filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
                         </select>
-                        <input type="number" id="os-product-qty" class="glass" style="flex: 0.5; padding: 8px; text-align: center; color: var(--text-primary);" value="1" min="1">
-                        <button class="btn-primary" style="padding: 8px 12px; font-size: 0.8rem; background: #2E8B57;" onclick="app.addProductToOS('${apt.id}')">+</button>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="os-product-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; color: var(--text-primary);" value="1" min="1" placeholder="Qtd">
+                            <button class="btn-primary" style="flex: 2; padding: 10px; font-size: 0.85rem; background: #2E8B57; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="app.addProductToOS('${apt.id}')">
+                                <span>Adicionar</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="os-products-list">
