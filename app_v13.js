@@ -2287,6 +2287,7 @@ const app = {
                         const name = b.name.split(' ')[0];
                         return `
                             <div style="flex: 0 0 100px; text-align: center; position: relative;">
+                                ${idx === 0 ? '<div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 1.8rem; z-index: 3; filter: drop-shadow(0 0 8px #fbbf24);">👑</div>' : ''}
                                 <div style="position: absolute; top: -12px; right: 0; font-size: 1.4rem; z-index: 2; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">${medal}</div>
                                 <div style="width: 75px; height: 75px; border-radius: 50%; margin: 0 auto 12px; border: 3px solid ${color}; padding: 3px; position: relative; box-shadow: 0 0 15px ${color}44;">
                                     <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" 
