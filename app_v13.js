@@ -289,9 +289,10 @@ const app = {
             console.log('⚡ Sincronizado com Firebase (Tempo Real)');
 
             // Salva o timestamp no localStorage também para consistência no reload
-            const localState = JSON.parse(localStorage.getItem('centauro_state') || '{}');
+            const storageKey = this.getStorageKey();
+            const localState = JSON.parse(localStorage.getItem(storageKey) || '{}');
             localState.lastUpdate = now;
-            localStorage.setItem('centauro_state', JSON.stringify(localState));
+            localStorage.setItem(storageKey, JSON.stringify(localState));
 
         } catch (error) {
             console.error('❌ Erro no Firebase Sync:', error);
@@ -5640,7 +5641,7 @@ const app = {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Valor do Vale (R$)</label>
-                            <input type="number" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00">
+                            <input type="number" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00" onkeydown="if(event.key==='Enter') app.saveVoucher()">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Data de Desconto 📅</label>
@@ -5649,7 +5650,7 @@ const app = {
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observação (opcional)</label>
-                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário">
+                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário" onkeydown="if(event.key==='Enter') app.saveVoucher()">
                     </div>
                     <button class="btn-primary" style="width: 100%;" onclick="app.saveVoucher()">Confirmar Retirada</button>
                 </div>
