@@ -338,9 +338,10 @@ h1, h2, h3 {
 
 /* Modal Enhancements */
 #app-modal {
-    background: #FFFFFF;
-    box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+    background: var(--surface-color);
+    box-shadow: 0 10px 50px rgba(0,0,0,0.5);
     color: var(--text-primary);
+    border: 1px solid var(--glass-border) !important;
 }
 
 .modal-header {
