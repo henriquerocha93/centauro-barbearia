@@ -1,4 +1,5 @@
 // Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
+console.log("🚀 CENTAURO APP V70.30 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
