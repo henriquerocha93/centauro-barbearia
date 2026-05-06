@@ -1184,6 +1184,9 @@ const app = {
                     
                     <div class="menu-category">Financeiro</div>
                     ${this.state.user.role === 'barber' ? `
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')">
+                            <i data-lucide="award"></i> Ranking
+                        </a>
                         <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')">
                             <i data-lucide="dollar-sign"></i> Meu Faturamento
                         </a>
@@ -1191,11 +1194,11 @@ const app = {
                             <i data-lucide="coffee"></i> Meu Consumo
                         </a>
                     ` : `
-                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')">
-                            <i data-lucide="trending-up"></i> Faturamento
-                        </a>
                         <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')">
                             <i data-lucide="award"></i> Ranking
+                        </a>
+                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')">
+                            <i data-lucide="trending-up"></i> Faturamento
                         </a>
                         <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')">
                             <i data-lucide="banknote"></i> Fluxo de Caixa
@@ -5573,137 +5576,98 @@ const app = {
         const now = new Date();
         const currentMonth = (this.state.perfMonth !== undefined) ? this.state.perfMonth : (now.getMonth() + 1);
         const currentYear = (this.state.perfYear !== undefined) ? this.state.perfYear : now.getFullYear();
-
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-        // Cálculo de Performance
         const stats = {};
-
-        // 1. Inicializar stats para cada barbeiro
         this.state.staff.filter(s => s.role === 'barber').forEach(b => {
-            stats[b.name] = {
-                name: b.name,
-                photo: b.photo,
-                appointments: 0,
-                serviceRevenue: 0,
-                productRevenue: 0,
-                totalRevenue: 0
-            };
+            stats[b.name] = { name: b.name, photo: b.photo, total: 0, appointments: 0 };
         });
 
-        // 2. Processar Atendimentos do Mês
-        this.state.appointments.forEach(a => {
+        (this.state.appointments || []).forEach(a => {
             if (a.status !== 'finalizado') return;
             const aDate = new Date(a.date + 'T12:00:00');
             if ((aDate.getMonth() + 1) === currentMonth && aDate.getFullYear() === currentYear) {
                 if (stats[a.barber]) {
                     stats[a.barber].appointments++;
-                    stats[a.barber].serviceRevenue += (a.price || 0);
+                    stats[a.barber].total += (a.price || 0);
                 }
             }
         });
 
-        // 3. Processar Vendas de Produtos do Mês
         (this.state.productSales || []).forEach(s => {
             const sDate = new Date((s.timestamp || s.date) + (s.timestamp ? '' : 'T12:00:00'));
             if ((sDate.getMonth() + 1) === currentMonth && sDate.getFullYear() === currentYear) {
                 if (s.seller && stats[s.seller]) {
-                    stats[s.seller].productRevenue += (s.total || 0);
+                    stats[s.seller].total += (s.total || 0);
                 }
             }
         });
 
-        // 4. Calcular Totais e transformar em Array para Rank
-        const rank = Object.values(stats).map(s => {
-            s.totalRevenue = s.serviceRevenue + s.productRevenue;
-            return s;
-        }).sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-        const totalMonthRevenue = rank.reduce((acc, r) => acc + r.totalRevenue, 0);
+        const rank = Object.values(stats).sort((a, b) => b.total - a.total);
         const totalMonthApts = rank.reduce((acc, r) => acc + r.appointments, 0);
 
         container.innerHTML = `
             <section class="fade-in" style="padding-bottom: 50px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom: 5px;">🏆 Desempenho da Equipe</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Ranking de produtividade e faturamento por colaborador</p>
+                        <h2 class="section-title" style="margin-bottom: 5px;">🏆 Ranking da Equipe</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Compromisso e desempenho no mês de ${monthNames[currentMonth-1]}</p>
                     </div>
                     
                     <div class="glass" style="padding: 10px; display: flex; gap: 10px; align-items: center;">
-                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;" 
+                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none; background: transparent; font-size: 0.85rem;" 
                                 onchange="app.state.perfMonth = parseInt(this.value); app.render('admin-team-performance')">
-                            ${monthNames.map((m, i) => `<option value="${i + 1}" ${currentMonth === (i + 1) ? 'selected' : ''}>${m}</option>`).join('')}
+                            ${monthNames.map((m, i) => `<option value="${i + 1}" ${currentMonth === (i + 1) ? 'selected' : ''} style="background: var(--surface-color);">${m}</option>`).join('')}
                         </select>
-                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
+                        <select class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none; background: transparent; font-size: 0.85rem;"
                                 onchange="app.state.perfYear = parseInt(this.value); app.render('admin-team-performance')">
-                            ${[2024, 2025, 2026].map(y => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`).join('')}
+                            ${[2024, 2025, 2026].map(y => `<option value="${y}" ${currentYear === y ? 'selected' : ''} style="background: var(--surface-color);">${y}</option>`).join('')}
                         </select>
                     </div>
                 </div>
 
-                <!-- Resumo Rápido -->
-                ${this.state.user.role === 'admin' ? `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Receita Total Equipe</p>
-                        <p style="font-size: 1.8rem; font-weight: 800; color: var(--accent-color); margin-top: 5px;">R$ ${totalMonthRevenue.toFixed(2)}</p>
-                    </div>
-                    <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #4ade80;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Total Atendimentos</p>
-                        <p style="font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-top: 5px;">${totalMonthApts}</p>
-                    </div>
-                </div>
-                ` : `
                 <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px;">
                     <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #4ade80;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Total Atendimentos da Equipe</p>
                         <p style="font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-top: 5px;">${totalMonthApts}</p>
                     </div>
                 </div>
-                `}
 
-                <div class="glass" style="padding: 0; overflow: hidden;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
-                                <th style="padding: 15px; text-align: left; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Colaborador</th>
-                                <th style="padding: 15px; text-align: center; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Atendimentos</th>
-                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Serviços</th>
-                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Produtos</th>
-                                <th style="padding: 15px; text-align: right; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Total Gerado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rank.length === 0 ? `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-secondary);">Nenhum dado encontrado para este período.</td></tr>` :
-                rank.map((r, i) => `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                                    <td style="padding: 15px;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <div style="position: relative;">
-                                                <img src="${r.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid ${i === 0 ? 'var(--accent-color)' : 'var(--glass-border)'};">
-                                                ${i === 0 ? `<span style="position: absolute; top: -8px; right: -8px; font-size: 1.2rem;">👑</span>` : ''}
-                                            </div>
-                                            <div>
-                                                <p style="font-weight: 700; color: var(--text-primary); margin: 0;">${r.name}</p>
-                                                <p style="font-size: 0.65rem; color: ${i === 0 ? 'var(--accent-color)' : 'var(--text-secondary)'}; text-transform: uppercase; font-weight: 800;">${i === 0 ? 'Destaque do Mês' : 'Colaborador'}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td style="padding: 15px; text-align: center; font-weight: 700; color: #4ade80;">${r.appointments}</td>
-                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">${this.state.user.role === 'admin' ? 'R$ ' + r.serviceRevenue.toFixed(2) : '---'}</td>
-                                    <td style="padding: 15px; text-align: right; color: var(--text-primary);">${this.state.user.role === 'admin' ? 'R$ ' + r.productRevenue.toFixed(2) : '---'}</td>
-                                    <td style="padding: 15px; text-align: right;">
-                                        <span style="font-weight: 800; color: var(--accent-color); font-size: 1.1rem;">${this.state.user.role === 'admin' ? 'R$ ' + r.totalRevenue.toFixed(2) : '---'}</span>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                    ${rank.map((b, idx) => {
+                        const medal = idx === 0 ? '👑' : idx === 1 ? '🥇' : idx === 2 ? '🥈' : idx === 3 ? '🥉' : (idx + 1) + 'º';
+                        const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#fbbf24' : idx === 2 ? '#94a3b8' : idx === 3 ? '#d97706' : 'var(--text-secondary)';
+                        const glow = idx === 0 ? `box-shadow: 0 0 30px ${color}44; border-top: 4px solid ${color};` : `border-top: 4px solid ${color};`;
+                        
+                        return `
+                            <div class="glass" style="padding: 30px 20px; text-align: center; position: relative; ${glow} transition: transform 0.3s ease;">
+                                ${idx === 0 ? `<div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 2.5rem; z-index: 5; filter: drop-shadow(0 0 10px #fbbf24);">👑</div>` : ''}
+                                <div style="position: absolute; top: 15px; right: 15px; font-size: 1.2rem; font-weight: 900; color: ${color}; opacity: 0.8;">${medal}</div>
+                                
+                                <div style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px; border: 4px solid ${color}; padding: 4px; position: relative; box-shadow: 0 0 15px ${color}22;">
+                                    <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" 
+                                         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                
+                                <h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 5px;">${b.name}</h3>
+                                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 700;">
+                                    ${idx === 0 ? 'O Rei do Mês' : (idx + 1) + 'º Colocado'}
+                                </p>
+                                
+                                <div style="height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 100%; margin-bottom: 15px; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);">
+                                    <div style="width: ${Math.max(15, 100 - (idx * 20))}% ; height: 100%; background: linear-gradient(90deg, ${color}, ${color}aa); box-shadow: 0 0 15px ${color}88;"></div>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: center; gap: 5px; color: #fbbf24; font-size: 0.9rem;">
+                                    ${Array(Math.max(1, 5 - idx)).fill('★').join('')}${Array(Math.min(4, idx)).fill('☆').join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
-                
-                <div style="margin-top: 25px; text-align: center;">
-                    <button class="btn-secondary" style="padding: 10px 30px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
+
+                <div style="margin-top: 40px; text-align: center;">
+                    <button class="btn-secondary" style="padding: 12px 40px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
                 </div>
             </section>
         `;
