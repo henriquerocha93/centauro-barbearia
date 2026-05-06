@@ -453,9 +453,48 @@ const app = {
                 const loaded = JSON.parse(saved);
                 Object.assign(this.state, loaded);
                 console.log(`✅ Estado carregado para loja: ${key}`);
+                this.migrateProducts();
             } catch (e) {
                 console.error('Erro ao carregar estado local:', e);
             }
+        }
+    },
+
+    migrateProducts() {
+        if (!this.state.products || this.state.products.length === 0) return;
+        
+        let changed = false;
+        this.state.products.forEach(p => {
+            if (!p.category || p.category === 'Geral' || p.category === 'undefined') {
+                const name = (p.name || '').toLowerCase();
+                
+                if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
+                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
+                    name.includes('serum') || name.includes('cabelo')) {
+                    p.category = 'Cabelo';
+                    changed = true;
+                } else if (name.includes('barba') || name.includes('bigode') || name.includes('shave')) {
+                    p.category = 'Barba';
+                    changed = true;
+                } else if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
+                           name.includes('água') || name.includes('suco') || name.includes('soda') || 
+                           name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
+                           name.includes('garrafa')) {
+                    p.category = 'Bebidas';
+                    changed = true;
+                } else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia')) {
+                    p.category = 'Outros';
+                    changed = true;
+                } else {
+                    p.category = 'Geral';
+                    // No need to set changed=true if it was already Geral
+                }
+            }
+        });
+
+        if (changed) {
+            console.log('📦 Produtos migrados para novas categorias automaticamente.');
+            this.saveState();
         }
     },
 
