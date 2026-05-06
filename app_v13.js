@@ -1514,23 +1514,7 @@ const app = {
                                     <p style="color: var(--text-secondary); font-size: 0.85rem;">Carrinho vazio</p>
                                 </div>
                                 `
-                : cart.map((item, idx) => `
-                                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.02);">
-                                        <div style="flex: 1; min-width: 0;">
-                                            <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</p>
-                                            <p style="font-size: 0.7rem; color: var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)}</p>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 3px;">
-                                            <button style="width: 22px; height: 22px; border-radius: 4px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="app.pdvChangeQty(${idx},-1)">−</button>
-                                            <span style="font-size: 0.8rem; font-weight: 800; min-width: 18px; text-align: center;">${item.qty}</span>
-                                            <button style="width: 22px; height: 22px; border-radius: 4px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="app.pdvChangeQty(${idx},1)">+</button>
-                                        </div>
-                                        <div style="text-align: right; min-width: 65px;">
-                                            <p style="font-size: 0.85rem; font-weight: 800; color: var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
-                                            <button style="font-size: 0.6rem; color: #f87171; background: none; border: none; cursor: pointer;" onclick="app.pdvRemoveItem(${idx})">remover</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                : cart.map((item, idx) => this.getCartItemHTML(item, idx, true)).join('')}
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; margin-bottom: 18px;">
@@ -4789,23 +4773,7 @@ const app = {
                                     <p style="color: var(--text-muted); font-size: 0.75rem; mt: 5px;">Selecione produtos ao lado.</p>
                                 </div>
                                 `
-                : cart.map((item, idx) => `
-                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.02);">
-                                        <div style="flex: 1; min-width: 0;">
-                                            <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</p>
-                                            <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${item.unitPrice.toFixed(2)} / un</p>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 4px;">
-                                            <button style="width: 24px; height: 24px; border-radius: 6px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem;" onclick="app.pdvChangeQty(${idx}, -1)">−</button>
-                                            <span style="font-size: 0.85rem; font-weight: 800; min-width: 22px; text-align: center;">${item.qty}</span>
-                                            <button style="width: 24px; height: 24px; border-radius: 6px; border: none; background: rgba(255,255,255,0.05); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem;" onclick="app.pdvChangeQty(${idx}, 1)">+</button>
-                                        </div>
-                                        <div style="text-align: right; min-width: 75px;">
-                                            <p style="font-size: 0.9rem; font-weight: 800; color: var(--accent-color);">R$ ${(item.unitPrice * item.qty).toFixed(2)}</p>
-                                            <button style="font-size: 0.65rem; color: #f87171; background: none; border: none; cursor: pointer; padding: 2px 0;" onclick="app.pdvRemoveItem(${idx})">remover</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                : cart.map((item, idx) => this.getCartItemHTML(item, idx, false)).join('')}
                         </div>
 
                         <!-- Configurações da Venda -->
@@ -5054,7 +5022,7 @@ const app = {
     },
 
     getProductIcon(p) {
-        const name = p.name.toLowerCase();
+        const name = (p.name || '').toLowerCase();
         if (name.includes('pomada') || name.includes('cera')) return '🧴';
         if (name.includes('shampoo') || name.includes('condicionador')) return '🧼';
         if (name.includes('oleo') || name.includes('óleo') || name.includes('serum')) return '💧';
@@ -5062,6 +5030,67 @@ const app = {
         if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('agua') || name.includes('água') || name.includes('suco')) return '🥤';
         if (name.includes('perfume')) return '✨';
         return '📦';
+    },
+
+    getCartItemHTML(item, idx, isTotem = false) {
+        const subtotal = item.unitPrice * item.qty;
+        const prod = this.state.products.find(p => p.id === item.productId) || {};
+        const icon = this.getProductIcon(prod);
+
+        return `
+            <div class="cart-item fade-in" 
+                 style="display: flex; align-items: center; gap: 14px; padding: 14px; 
+                        background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%); 
+                        border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.2s;">
+                
+                <!-- Ícone e Info -->
+                <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.05); border-radius: 12px; 
+                            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                    ${icon}
+                </div>
+
+                <div style="flex: 1; min-width: 0;">
+                    <p style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; 
+                              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px;">
+                        ${item.name}
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">
+                        R$ ${item.unitPrice.toFixed(2)} un.
+                    </p>
+                </div>
+
+                <!-- Controles -->
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                        <button style="width: 26px; height: 26px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08); 
+                                        color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; transition: all 0.2s;" 
+                                onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'"
+                                onclick="app.pdvChangeQty(${idx},-1)">−</button>
+                        
+                        <span style="font-size: 0.95rem; font-weight: 900; min-width: 24px; text-align: center; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
+                            ${item.qty}
+                        </span>
+                        
+                        <button style="width: 26px; height: 26px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08); 
+                                        color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; transition: all 0.2s;" 
+                                onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'"
+                                onclick="app.pdvChangeQty(${idx},1)">+</button>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1rem; font-weight: 900; color: var(--accent-color); text-shadow: 0 0 10px rgba(212,175,55,0.2);">
+                            R$ ${subtotal.toFixed(2)}
+                        </span>
+                        <button style="background: none; border: none; padding: 4px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s;" 
+                                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'"
+                                onclick="app.pdvRemoveItem(${idx})">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px; color: #ff4444;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
     },
 
     getPDVTotalsHTML(subtotal, discount, total, commission, seller) {
