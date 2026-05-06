@@ -3743,10 +3743,11 @@ const app = {
                     <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
                     
                     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                        <select id="os-product-select" class="glass" style="flex: 1; padding: 8px; font-size: 0.85rem; color: var(--text-primary);">
+                        <select id="os-product-select" class="glass" style="flex: 2; padding: 8px; font-size: 0.85rem; color: var(--text-primary);">
                             <option value="">Adicionar Produto...</option>
                             ${this.state.products.filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
                         </select>
+                        <input type="number" id="os-product-qty" class="glass" style="flex: 0.5; padding: 8px; text-align: center; color: var(--text-primary);" value="1" min="1">
                         <button class="btn-primary" style="padding: 8px 12px; font-size: 0.8rem; background: #2E8B57;" onclick="app.addProductToOS('${apt.id}')">+</button>
                     </div>
 
@@ -3807,28 +3808,29 @@ const app = {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
         const productId = Number(document.getElementById('os-product-select').value);
-        if (!productId) return;
+        const qtyToAdd = Number(document.getElementById('os-product-qty').value) || 1;
+        if (!productId || qtyToAdd < 1) return;
 
         const product = this.state.products.find(p => p.id === productId);
-        if (!product || product.stock <= 0) {
-            alert('Produto sem estoque!');
+        if (!product || product.stock < qtyToAdd) {
+            alert('Estoque insuficiente!');
             return;
         }
 
         if (!apt.products) apt.products = [];
         const existing = apt.products.find(p => p.id === productId);
         if (existing) {
-            if (existing.qty + 1 > product.stock) {
+            if (existing.qty + qtyToAdd > product.stock) {
                 alert('Limite de estoque atingido!');
                 return;
             }
-            existing.qty++;
+            existing.qty += qtyToAdd;
         } else {
             apt.products.push({
                 id: product.id,
                 name: product.name,
                 price: product.price,
-                qty: 1,
+                qty: qtyToAdd,
                 commissionPct: product.commissionPct || 0
             });
         }
