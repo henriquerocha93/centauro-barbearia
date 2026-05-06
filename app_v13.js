@@ -3545,7 +3545,7 @@ const app = {
 
         this.openModal('Gerenciar Atendimento', `
             <section class="fade-in" style="padding-top: 10px;">
-                <div class="glass" style="padding: 30px; margin-bottom: 20px; border-radius: 8px; border: 1px solid var(--glass-border); text-align: center; background: #FFFFFF; box-shadow: none;">
+                <div class="glass" style="padding: 30px; margin-bottom: 20px; border-radius: 8px; border: 1px solid var(--glass-border); text-align: center; box-shadow: none;">
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 5px;">${apt.customer}</div>
                     <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 15px;">${apt.service} - R$ ${apt.price.toFixed(2)}</div>
                     <div style="font-weight: 600; font-size: 1.1rem; color: #48C17E; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">
@@ -6949,7 +6949,7 @@ const app = {
             <section id="admin-payments" class="fade-in">
                 <h2 class="section-title" style="margin-bottom: 20px;">% Pagamentos</h2>
                 
-                <div class="glass" style="padding: 20px; background: #FFFFFF; border-radius: 8px; margin-bottom: 20px;">
+                <div class="glass" style="padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                     <h3 style="font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
                         <span style="color: var(--text-secondary);">▼</span> Filtros
                     </h3>
