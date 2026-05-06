@@ -5612,6 +5612,7 @@ const app = {
     },
 
     renderAdminTeamPerformance(container) {
+        const isAdmin = this.state.user.role === 'admin';
         const now = new Date();
         const currentMonth = (this.state.perfMonth !== undefined) ? this.state.perfMonth : (now.getMonth() + 1);
         const currentYear = (this.state.perfYear !== undefined) ? this.state.perfYear : now.getFullYear();
@@ -5619,7 +5620,7 @@ const app = {
 
         const stats = {};
         this.state.staff.filter(s => s.role === 'barber').forEach(b => {
-            stats[b.name] = { name: b.name, photo: b.photo, total: 0, appointments: 0 };
+            stats[b.name] = { name: b.name, photo: b.photo, total: 0, appointments: 0, serviceTotal: 0, productTotal: 0 };
         });
 
         (this.state.appointments || []).forEach(a => {
@@ -5628,6 +5629,7 @@ const app = {
             if ((aDate.getMonth() + 1) === currentMonth && aDate.getFullYear() === currentYear) {
                 if (stats[a.barber]) {
                     stats[a.barber].appointments++;
+                    stats[a.barber].serviceTotal += (a.price || 0);
                     stats[a.barber].total += (a.price || 0);
                 }
             }
@@ -5637,6 +5639,7 @@ const app = {
             const sDate = new Date((s.timestamp || s.date) + (s.timestamp ? '' : 'T12:00:00'));
             if ((sDate.getMonth() + 1) === currentMonth && sDate.getFullYear() === currentYear) {
                 if (s.seller && stats[s.seller]) {
+                    stats[s.seller].productTotal += (s.total || 0);
                     stats[s.seller].total += (s.total || 0);
                 }
             }
@@ -5689,9 +5692,30 @@ const app = {
                                 </div>
                                 
                                 <h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 5px;">${b.name}</h3>
-                                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 700;">
+                                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 700;">
                                     ${idx === 0 ? 'O Rei do Mês' : (idx + 1) + 'º Colocado'}
                                 </p>
+
+                                ${isAdmin ? `
+                                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 12px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px;">
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Atendimentos:</span>
+                                            <span style="color: #4ade80; font-weight: 700;">${b.appointments}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Serviços:</span>
+                                            <span style="color: var(--text-primary);">R$ ${b.serviceTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Produtos:</span>
+                                            <span style="color: var(--text-primary);">R$ ${b.productTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                            <span style="color: var(--accent-color); font-weight: 700;">Total:</span>
+                                            <span style="color: var(--accent-color); font-weight: 800;">R$ ${b.total.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
                                 
                                 <div style="height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 100%; margin-bottom: 15px; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);">
                                     <div style="width: ${Math.max(15, 100 - (idx * 20))}% ; height: 100%; background: linear-gradient(90deg, ${color}, ${color}aa); box-shadow: 0 0 15px ${color}88;"></div>
@@ -5706,7 +5730,7 @@ const app = {
                 </div>
 
                 <div style="margin-top: 40px; text-align: center;">
-                    <button class="btn-secondary" style="padding: 12px 40px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
+                    <button class="btn-secondary" style="padding: 12px 40px;" onclick="app.navigateTo('${isAdmin ? 'admin-dash' : 'barber-dash'}')">Voltar ao Painel</button>
                 </div>
             </section>
         `;
