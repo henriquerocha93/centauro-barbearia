@@ -3762,6 +3762,14 @@ const app = {
                     <label style="display: block; margin-bottom: 5px;">Gorjeta (Opcional)</label>
                     <input type="number" id="final-tip" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" placeholder="R$ 0,00" step="0.50">
                 </div>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn-primary" style="background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px dashed #a78bfa; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; padding: 12px; box-shadow: none;" 
+                            onclick="app.pdvForCustomer(document.getElementById('final-cust-name').value)">
+                        <i data-lucide="shopping-cart" style="width: 16px;"></i>
+                        Lançar Consumo (Produtos)
+                    </button>
+                </div>
+
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-primary" style="flex: 1;" onclick="app.doFinalizeOS('${apt.id}')">Concluir e Receber</button>
                     <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement('${apt.id}')">Voltar</button>
