@@ -1294,7 +1294,7 @@ const app = {
             <!-- HEADER -->
             <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: sticky; top: 0; z-index: 50;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                    <img src="logo_agendamento.png" style="width: 220px;">
+                    <img src="logo_agendamento.png" style="width: 180px; height: auto; filter: drop-shadow(0 0 10px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                     <div>
                         <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO ${this.getTerm('shopTerm').toUpperCase()}</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
