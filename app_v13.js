@@ -1469,7 +1469,7 @@ const app = {
                     <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">Leitor USB</span>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 400px; gap:20px; align-items:start;">
+                <div class="pdv-layout">
                     <!-- Catálogo -->
                     <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); flex: 1; display: flex; flex-direction: column; gap: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
@@ -1498,7 +1498,7 @@ const app = {
                     </div>
 
                     <!-- Carrinho -->
-                    <div class="glass" style="padding: 22px; position: sticky; top: 90px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
+                    <div class="pdv-cart-column glass" style="padding: 22px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
                             <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
                                 <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
@@ -4725,7 +4725,7 @@ const app = {
                     <span style="font-size:0.72rem; color:var(--text-secondary); white-space:nowrap; flex-shrink:0;">Leitor USB</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 400px; gap: 25px; align-items: start;">
+                <div class="pdv-layout">
 
                     <!-- COLUNA ESQUERDA: catálogo -->
                     <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;">
@@ -4755,7 +4755,7 @@ const app = {
                     </div>
 
                     <!-- COLUNA DIREITA: carrinho -->
-                    <div class="glass" style="padding: 25px; position: sticky; top: 20px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
+                    <div class="pdv-cart-column glass" style="padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); background: rgba(15,15,20,0.8); backdrop-filter: blur(20px);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 12px; color: var(--text-primary);">
                                 <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
@@ -5028,7 +5028,7 @@ const app = {
         if (name.includes('shampoo') || name.includes('condicionador')) return '🧼';
         if (name.includes('oleo') || name.includes('óleo') || name.includes('serum')) return '💧';
         if (name.includes('barba')) return '🧔';
-        if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('agua') || name.includes('água') || name.includes('suco')) return '🥤';
+        if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('fanta') || name.includes('refri') || name.includes('agua') || name.includes('água') || name.includes('suco')) return '🥤';
         if (name.includes('perfume')) return '✨';
         return '📦';
     },
