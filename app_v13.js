@@ -658,7 +658,13 @@ const app = {
         console.log('Centauro App Initialized');
         // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.view) {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                const [view, sub] = hash.split(':');
+                this.state.view = view;
+                if (sub && view === 'totem-dash') this.state.totemTab = sub;
+                this.render(view);
+            } else if (e.state && e.state.view) {
                 this.state.view = e.state.view;
                 this.render(e.state.view);
             }
@@ -671,13 +677,27 @@ const app = {
                 const savedUser = JSON.parse(savedUserStr);
                 this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
 
-                // Redireciona automaticamente para sua devida tela na inicialização
+                // [NOVO] Priorizar HASH da URL para navegação persistente (F5)
+                const hash = window.location.hash.replace('#', '');
                 let viewToRender = 'home';
-                if (this.state.user.role === 'admin') viewToRender = 'admin-dash';
-                else if (this.state.user.role === 'totem') viewToRender = 'totem-dash';
-                else viewToRender = 'barber-dash';
+                let subView = null;
+
+                if (hash) {
+                    const parts = hash.split(':');
+                    viewToRender = parts[0];
+                    subView = parts[1] || null;
+                } else {
+                    // Fallback para o papel do usuário se não houver hash
+                    if (this.state.user.role === 'admin') viewToRender = 'admin-dash';
+                    else if (this.state.user.role === 'totem') viewToRender = 'totem-dash';
+                    else viewToRender = 'barber-dash';
+                }
 
                 this.state.view = viewToRender;
+                if (subView && viewToRender === 'totem-dash') {
+                    this.state.totemTab = subView;
+                }
+                
                 this.render(viewToRender);
                 return;
             } catch (e) {
@@ -1397,6 +1417,8 @@ const app = {
 
     setTotemTab(tab) {
         this.state.totemTab = tab;
+        // Atualiza o hash para persistir a aba no F5
+        history.replaceState({ view: 'totem-dash', tab }, '', `#totem-dash:${tab}`);
         this.renderTotemDash(document.getElementById('app'));
     },
 
