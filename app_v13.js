@@ -3722,32 +3722,39 @@ const app = {
                     <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'">
+                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${apt.price})">
                         <option value="">Selecione...</option>
                         <option value="Dinheiro">Dinheiro</option>
                         <option value="PIX">PIX</option>
                         <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Misto">Pagamento Misto (Dinheiro + Outro)</option>
+                        <option value="Misto">Pagamento Misto (Dividir)</option>
                     </select>
                 </div>
                 <div id="split-payment-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                         <div>
-                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Valor em Dinheiro</label>
-                            <input type="number" id="split-amount-cash" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Parte 1 via:</label>
+                            <select id="split-method-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="split-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01" oninput="app.updateSplitRemainder(${apt.price})">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Valor Restante</label>
-                            <input type="number" id="split-amount-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Parte 2 via:</label>
+                            <select id="split-method-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                <option value="PIX">PIX</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="split-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01">
                         </div>
                     </div>
-                    <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Complemento via:</label>
-                    <select id="split-method-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    </select>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">Total OS: <strong>R$ ${apt.price.toFixed(2)}</strong></p>
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Gorjeta (Opcional)</label>
@@ -3807,20 +3814,25 @@ const app = {
             const price = parseFloat(apt.price || 0);
 
             if (payment === 'Misto') {
-                const cashVal = parseFloat(document.getElementById('split-amount-cash').value) || 0;
-                const otherVal = parseFloat(document.getElementById('split-amount-other').value) || 0;
-                const otherMethod = document.getElementById('split-method-other').value;
+                const val1 = parseFloat(document.getElementById('split-amount-1').value) || 0;
+                const val2 = parseFloat(document.getElementById('split-amount-2').value) || 0;
+                const method1 = document.getElementById('split-method-1').value;
+                const method2 = document.getElementById('split-method-2').value;
 
-                if (Math.abs((cashVal + otherVal) - price) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(cashVal + otherVal).toFixed(2)}) é diferente do valor do serviço (R$ ${price.toFixed(2)}). Deseja continuar assim mesmo?`)) return;
+                if (Math.abs((val1 + val2) - price) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor do serviço (R$ ${price.toFixed(2)}). Deseja continuar?`)) return;
                 }
 
-                const t1 = this.addTransaction('in', `${desc} [Parte Dinheiro]`, cashVal, 'servico', 'dinheiro');
-                let mOther = 'pix';
-                if (otherMethod === 'Cartão de Débito') mOther = 'debito';
-                if (otherMethod === 'Cartão de Crédito') mOther = 'credito';
-                const t2 = this.addTransaction('in', `${desc} [Parte ${otherMethod}]`, otherVal, 'servico', mOther);
-                apt.transactionId = t1; // Salva o primeiro como referência
+                const getM = (m) => {
+                    if (m === 'PIX') return 'pix';
+                    if (m === 'Cartão de Débito') return 'debito';
+                    if (m === 'Cartão de Crédito') return 'credito';
+                    return 'dinheiro';
+                };
+
+                const t1 = this.addTransaction('in', `${desc} [Parte 1/${method1}]`, val1, 'servico', getM(method1));
+                const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'servico', getM(method2));
+                apt.transactionId = t1; 
             } else {
                 apt.transactionId = this.addTransaction('in', desc, price, 'servico', mappedMethod);
             }
@@ -4847,7 +4859,7 @@ const app = {
                                 <div>
                                     <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Pagamento</label>
                                     <select id="pdv-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
-                                            onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'">
+                                            onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(null, 'pdv')">
                                         <option value="Dinheiro">Dinheiro 💵</option>
                                         <option value="PIX">PIX ⚡</option>
                                         <option value="Cartão de Débito">Débito 💳</option>
@@ -4860,20 +4872,26 @@ const app = {
                             <div id="pdv-split-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--glass-border);">
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                                     <div>
-                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Dinheiro (R$)</label>
-                                        <input type="number" id="pdv-amount-cash" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Meio 1</label>
+                                        <select id="pdv-method-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-bottom: 5px;">
+                                            <option value="Dinheiro">Dinheiro</option>
+                                            <option value="PIX">PIX</option>
+                                            <option value="Cartão de Débito">Débito</option>
+                                            <option value="Cartão de Crédito">Crédito</option>
+                                        </select>
+                                        <input type="number" id="pdv-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 1" step="0.01" oninput="app.updateSplitRemainder(null, 'pdv')">
                                     </div>
                                     <div>
-                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Outro Meio (R$)</label>
-                                        <input type="number" id="pdv-amount-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                                        <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Meio 2</label>
+                                        <select id="pdv-method-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-bottom: 5px;">
+                                            <option value="PIX">PIX</option>
+                                            <option value="Dinheiro">Dinheiro</option>
+                                            <option value="Cartão de Débito">Débito</option>
+                                            <option value="Cartão de Crédito">Crédito</option>
+                                        </select>
+                                        <input type="number" id="pdv-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 2" step="0.01">
                                     </div>
                                 </div>
-                                <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Outro Meio via:</label>
-                                <select id="pdv-method-other" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
-                                    <option value="PIX">PIX</option>
-                                    <option value="Cartão de Débito">Cartão de Débito</option>
-                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
-                                </select>
                             </div>
 
                             <div>
@@ -5321,20 +5339,25 @@ const app = {
             // Apenas baixa de estoque
         } else {
             if (payment === 'Misto') {
-                const cashVal = parseFloat(document.getElementById('pdv-amount-cash').value) || 0;
-                const otherVal = parseFloat(document.getElementById('pdv-amount-other').value) || 0;
-                const otherMethod = document.getElementById('pdv-method-other').value;
+                const val1 = parseFloat(document.getElementById('pdv-amount-1').value) || 0;
+                const val2 = parseFloat(document.getElementById('pdv-amount-2').value) || 0;
+                const method1 = document.getElementById('pdv-method-1').value;
+                const method2 = document.getElementById('pdv-method-2').value;
 
-                if (Math.abs((cashVal + otherVal) - total) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(cashVal + otherVal).toFixed(2)}) é diferente do total da venda (R$ ${total.toFixed(2)}). Deseja continuar?`)) return;
+                if (Math.abs((val1 + val2) - total) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do total da venda (R$ ${total.toFixed(2)}). Deseja continuar?`)) return;
                 }
 
+                const getM = (m) => {
+                    if (m === 'PIX') return 'pix';
+                    if (m === 'Cartão de Débito') return 'debito';
+                    if (m === 'Cartão de Crédito') return 'credito';
+                    return 'dinheiro';
+                };
+
                 const desc = cart.length === 1 ? `PDV: ${cart[0].name} (x${cart[0].qty})` : `PDV: ${cart.length} produtos`;
-                const t1 = this.addTransaction('in', `${desc} [Parte Dinheiro]`, cashVal, 'produto', 'dinheiro');
-                let mOther = 'pix';
-                if (otherMethod === 'Cartão de Débito') mOther = 'debito';
-                if (otherMethod === 'Cartão de Crédito') mOther = 'credito';
-                const t2 = this.addTransaction('in', `${desc} [Parte ${otherMethod}]`, otherVal, 'produto', mOther);
+                const t1 = this.addTransaction('in', `${desc} [Parte 1/${method1}]`, val1, 'produto', getM(method1));
+                const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'produto', getM(method2));
                 transactionId = t1;
             } else {
                 let method = 'dinheiro';
@@ -7257,6 +7280,26 @@ const app = {
                     <p style="font-size: 0.75rem; color: var(--text-muted);">ID do Cliente: ${new URLSearchParams(window.location.search).get('loja')}</p>
             </div>
         `;
+    },
+
+    updateSplitRemainder(totalPrice, origin = 'os') {
+        const prefix = origin === 'os' ? 'split' : 'pdv';
+        const amt1El = document.getElementById(`${prefix}-amount-1`);
+        const amt2El = document.getElementById(`${prefix}-amount-2`);
+        
+        if (!amt1El || !amt2El) return;
+
+        let total = totalPrice;
+        if (origin === 'pdv') {
+            const cart = this.state.cart || [];
+            const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+            const discount = parseFloat(this.state.pdvDiscount || 0);
+            total = Math.max(0, subtotal - discount);
+        }
+
+        const val1 = parseFloat(amt1El.value) || 0;
+        const remainder = Math.max(0, total - val1);
+        amt2El.value = remainder.toFixed(2);
     },
 
     showToast(message, type = 'success') {
