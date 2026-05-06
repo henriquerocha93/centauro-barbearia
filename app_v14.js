@@ -3926,10 +3926,44 @@ const app = {
                 }
             }
 
+            // Processar Consumo de Produtos (Baixa no estoque e Registro de Vendas)
+            if (apt.products && apt.products.length > 0) {
+                if (!this.state.productSales) this.state.productSales = [];
+                
+                apt.products.forEach(p => {
+                    // 1. Baixa no Estoque
+                    const prod = this.state.products.find(item => item.id === p.id);
+                    if (prod) {
+                        prod.stock -= p.qty;
+                    }
+
+                    // 2. Registro Individual da Venda para Relatórios
+                    this.state.productSales.push({
+                        id: Date.now() + Math.random(),
+                        productId: p.id,
+                        productName: p.name,
+                        price: p.price,
+                        qty: p.qty,
+                        total: p.price * p.qty,
+                        seller: apt.barber,
+                        sellerCommission: (p.price * p.qty) * (p.commissionPct / 100),
+                        date: apt.date || new Date().toISOString().split('T')[0],
+                        payment: payment === 'Misto' ? 'Misto' : payment,
+                        transactionId: apt.transactionId,
+                        aptId: apt.id,
+                        target: 'cliente'
+                    });
+                });
+            }
+
+            apt.status = 'finalizado';
+            apt.payment = payment;
+            apt.finalPrice = totalBase; // Guardar o preço total (Serviço + Produtos)
+
             this.closeModal();
             this.saveState();
             this.render(this.state.view);
-            alert('Venda registrada e enviada para o faturamento!');
+            alert('Venda registrada e estoque atualizado!');
         } catch (error) {
             console.error('Erro fatal ao finalizar OS:', error);
             alert('Ocorreu um erro inesperado: ' + error.message);
@@ -3993,11 +4027,12 @@ const app = {
         let serviceCommissions = 0;
 
         appointments.forEach(apt => {
-            const price = parseFloat(apt.price) || 0;
-            serviceGross += price;
+            const price = parseFloat(apt.finalPrice || apt.price) || 0;
+            const servicePart = parseFloat(apt.price) || 0;
+            serviceGross += servicePart;
             const barber = this.state.staff.find(s => s.name === apt.barber);
             const pct = barber ? (barber.commissionPct || 50) : 50;
-            serviceCommissions += price * (pct / 100);
+            serviceCommissions += servicePart * (pct / 100);
         });
 
         // 2. Calcular de Vendas de Produtos (exceto ADM)
@@ -5492,10 +5527,56 @@ const app = {
     },
 
     deleteTransaction(id) {
-        if (confirm('Deseja realmente excluir esta movimentação? Isso afetará o saldo total permanentemente.')) {
-            this.state.transactions = (this.state.transactions || []).filter(t => t.id !== id);
+        const transId = Number(id);
+        console.log('🗑️ Tentando excluir transação:', transId);
+
+        if (confirm('Deseja realmente excluir esta movimentação? Isso afetará o faturamento e o estoque permanentemente.')) {
+            // 1. Verificar se há agendamento vinculado
+            const apt = this.state.appointments.find(a => Number(a.transactionId) === transId);
+            if (apt) {
+                console.log('🔗 Agendamento vinculado encontrado:', apt.customer);
+                if (confirm(`Esta transação está vinculada ao atendimento de ${apt.customer}. Deseja reabrir este agendamento (voltar para 'Confirmado')?`)) {
+                    apt.status = 'confirmado';
+                    apt.transactionId = null;
+                    console.log('✅ Agendamento reaberto.');
+                }
+            }
+
+            // 2. Verificar se há vendas de produtos vinculadas
+            if (this.state.productSales) {
+                const initialCount = this.state.productSales.length;
+                const salesToDelete = this.state.productSales.filter(s => Number(s.transactionId) === transId);
+                
+                if (salesToDelete.length > 0) {
+                    console.log(`📦 Encontradas ${salesToDelete.length} vendas de produtos vinculadas.`);
+                    salesToDelete.forEach(sale => {
+                        // Restaurar Estoque
+                        const prod = this.state.products.find(p => Number(p.id) === Number(sale.productId));
+                        if (prod) {
+                            prod.stock += Number(sale.qty);
+                            console.log(`♻️ Estoque restaurado: ${prod.name} (+${sale.qty})`);
+                        }
+                    });
+                    // Remover registros de venda
+                    this.state.productSales = this.state.productSales.filter(s => Number(s.transactionId) !== transId);
+                    console.log(`✨ Vendas removidas. De ${initialCount} para ${this.state.productSales.length}.`);
+                }
+            }
+
+            // 3. Remover a transação em si
+            const transBefore = this.state.transactions.length;
+            this.state.transactions = (this.state.transactions || []).filter(t => Number(t.id) !== transId);
+            const transAfter = this.state.transactions.length;
+            console.log(`📉 Transações filtradas. De ${transBefore} para ${transAfter}.`);
+            
             this.saveState();
             this.render('admin-cashflow');
+            
+            if (transBefore === transAfter) {
+                alert(`⚠️ Atenção: Nenhuma transação foi removida (ID: ${transId}). O ID pode estar incorreto.`);
+            } else {
+                alert(`✅ Sucesso! Movimentação removida.\n(Antes: ${transBefore} | Depois: ${transAfter})`);
+            }
         }
     },
 
