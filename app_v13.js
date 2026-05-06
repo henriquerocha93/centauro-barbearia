@@ -1295,7 +1295,7 @@ const app = {
 
         container.innerHTML = `
             <!-- HEADER -->
-            <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: sticky; top: 0; z-index: 50;">
+            <header style="padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); position: relative;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <img src="logo_agendamento.png" style="width: 180px; height: auto; filter: drop-shadow(0 0 10px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                     <div>
