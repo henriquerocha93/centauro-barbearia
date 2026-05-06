@@ -1286,7 +1286,7 @@ const app = {
     },
 
     renderBarberDash(container) {
-        container.innerHTML = this.getBirthdaysHTML() + this.getBarberRankingHTML() + `<div id="dash-agenda-wrapper"></div>`;
+        container.innerHTML = this.getBirthdaysHTML() + `<div id="dash-agenda-wrapper"></div>`;
         this.renderAgenda(document.getElementById('dash-agenda-wrapper'), this.state.user.name);
     },
 
@@ -2347,7 +2347,7 @@ const app = {
             return;
         }
 
-        container.innerHTML = this.getBirthdaysHTML() + billingBanner + this.getBarberRankingHTML() + `
+        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
             <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
                 <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
                     🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
