@@ -6687,11 +6687,11 @@ const app = {
                                    placeholder="Buscar por nome ou telefone..." value="${this.state.customerSearchQuery || ''}" 
                                    oninput="window.app.searchAdminCustomers(this.value)">
                         </div>
-                        <button class="btn-primary" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px;" onclick="window.app.openAddCustomerModal()">
-                            <i data-lucide="plus-circle" style="width: 18px;"></i> Novo Cliente
+                        <button class="btn-primary" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px; cursor: pointer !important; pointer-events: auto !important;" onclick="window.app.openAddCustomerModal()">
+                            <i data-lucide="plus-circle" style="width: 18px; pointer-events: none;"></i> Novo Cliente
                         </button>
-                        <button class="glass" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--text-secondary);" onclick="window.app.openImportDatabase()" title="Importar Base">
-                            <i data-lucide="upload-cloud" style="width: 20px;"></i>
+                        <button class="glass" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--text-secondary); cursor: pointer !important; pointer-events: auto !important;" onclick="window.app.openImportDatabase()" title="Importar Base">
+                            <i data-lucide="upload-cloud" style="width: 20px; pointer-events: none;"></i>
                         </button>
                     </div>
                 </div>
@@ -6736,9 +6736,9 @@ const app = {
                                         </td>
                                         <td style="padding: 15px 20px; color: var(--text-secondary); font-size: 0.8rem;">${lastVisit}</td>
                                         <td style="padding: 15px 20px; text-align: right;">
-                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-color); border-radius: 8px;" 
-                                                    onclick="window.app.viewCustomerDetails(${c.id})">
-                                                <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px;"></i> Detalhes
+                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-color); border-radius: 8px; cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
+                                                    onclick="event.stopPropagation(); window.app.viewCustomerDetails(${c.id})">
+                                                <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px; pointer-events: none;"></i> Detalhes
                                             </button>
                                         </td>
                                     </tr>
