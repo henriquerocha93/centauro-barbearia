@@ -1231,78 +1231,78 @@ const app = {
                 <nav class="sidebar-menu">
                     <div class="menu-category">Acompanhamento</div>
                     <a class="menu-item ${view === 'admin-dash' || view === 'barber-dash' ? 'active' : ''}" 
-                       onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">
+                       onclick="window.app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">
                        <i data-lucide="calendar"></i> Agenda
                     </a>
-                    <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="app.navigateTo('pdv')">
+                    <a class="menu-item ${view === 'pdv' ? 'active' : ''}" onclick="window.app.navigateTo('pdv')">
                        <i data-lucide="shopping-cart"></i> Vendas (PDV)
                     </a>
                     <a class="menu-item ${view === 'admin-os' ? 'active' : ''} ${(this.state.serviceOrders || []).some(os => os.status === 'open' || os.status === 'progress' || !os.status) ? 'pulse-os' : ''}" 
-                       onclick="app.navigateTo('admin-os')">
+                       onclick="window.app.navigateTo('admin-os')">
                        <i data-lucide="file-text"></i> O.S.
                     </a>
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `
-                        <a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="app.navigateTo('admin-customers')">
+                        <a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="window.app.navigateTo('admin-customers')">
                             <i data-lucide="users"></i> Clientes
                         </a>
-                        <a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="app.navigateTo('admin-services')">
+                        <a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="window.app.navigateTo('admin-services')">
                             <i data-lucide="scissors"></i> Serviços
                         </a>
-                        <a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="app.navigateTo('admin-staff')">
+                        <a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="window.app.navigateTo('admin-staff')">
                             <i data-lucide="user-cog"></i> Profissionais
                         </a>
                     ` : ''}
-                    <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="app.navigateTo('admin-stock')">
+                    <a class="menu-item ${view === 'admin-stock' ? 'active' : ''}" onclick="window.app.navigateTo('admin-stock')">
                         <i data-lucide="package"></i> Estoque
                     </a>
                     
                     <div class="menu-category">Financeiro</div>
                     ${this.state.user.role === 'barber' ? `
-                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')">
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="window.app.navigateTo('admin-team-performance')">
                             <i data-lucide="award"></i> Ranking
                         </a>
-                        <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="app.navigateTo('barber-financial')">
+                        <a class="menu-item ${view === 'barber-financial' ? 'active' : ''}" onclick="window.app.navigateTo('barber-financial')">
                             <i data-lucide="dollar-sign"></i> Meu Faturamento
                         </a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')">
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="window.app.navigateTo('admin-consumption')">
                             <i data-lucide="coffee"></i> Meu Consumo
                         </a>
                     ` : `
-                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="app.navigateTo('admin-team-performance')">
+                        <a class="menu-item ${view === 'admin-team-performance' ? 'active' : ''}" onclick="window.app.navigateTo('admin-team-performance')">
                             <i data-lucide="award"></i> Ranking
                         </a>
-                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="app.navigateTo('admin-faturamento')">
+                        <a class="menu-item ${view === 'admin-faturamento' ? 'active' : ''}" onclick="window.app.navigateTo('admin-faturamento')">
                             <i data-lucide="trending-up"></i> Faturamento
                         </a>
-                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="app.navigateTo('admin-cashflow')">
+                        <a class="menu-item ${view === 'admin-cashflow' ? 'active' : ''}" onclick="window.app.navigateTo('admin-cashflow')">
                             <i data-lucide="banknote"></i> Fluxo de Caixa
                         </a>
-                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="app.navigateTo('admin-consumption')">
+                        <a class="menu-item ${view === 'admin-consumption' ? 'active' : ''}" onclick="window.app.navigateTo('admin-consumption')">
                             <i data-lucide="shopping-bag"></i> Consumo
                         </a>
-                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="app.navigateTo('admin-tips')">
+                        <a class="menu-item ${view === 'admin-tips' ? 'active' : ''}" onclick="window.app.navigateTo('admin-tips')">
                             <i data-lucide="coins"></i> Gorjetas
                         </a>
-                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="app.navigateTo('admin-vouchers')">
+                        <a class="menu-item ${view === 'admin-vouchers' ? 'active' : ''}" onclick="window.app.navigateTo('admin-vouchers')">
                             <i data-lucide="ticket"></i> Vales
                         </a>
-                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="app.navigateTo('admin-payments')">
+                        <a class="menu-item ${view === 'admin-payments' ? 'active' : ''}" onclick="window.app.navigateTo('admin-payments')">
                             <i data-lucide="check-circle"></i> Auditoria
                         </a>
                     `}
 
                     <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
-                        <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="app.navigateTo('admin-settings')">
+                        <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="window.app.navigateTo('admin-settings')">
                             <i data-lucide="settings"></i> Configurações
                         </a>
-                        <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="app.navigateTo('admin-billing')">
+                        <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="window.app.navigateTo('admin-billing')">
                             <i data-lucide="credit-card"></i> Pagamento App
                         </a>
                     ` : ''}
-                    <a class="menu-item" onclick="app.logout()" style="color: #f87171; margin-top: 20px;">
+                    <a class="menu-item" onclick="window.app.logout()" style="color: #f87171; margin-top: 20px;">
                         <i data-lucide="log-out"></i> Sair
                     </a>
                 </nav>
@@ -6662,9 +6662,13 @@ const app = {
     },
 
     renderAdminCustomers(container) {
+        console.log('Rendering Admin Customers View. Container:', container);
+        if (!container) return;
+        
+        const customersBase = Array.isArray(this.state.customers) ? this.state.customers : [];
         const query = (this.state.customerSearchQuery || '').toLowerCase();
-        const filtered = this.state.customers.filter(c => 
-            c.name.toLowerCase().includes(query) || 
+        const filtered = customersBase.filter(c => 
+            (c.name && c.name.toLowerCase().includes(query)) || 
             (c.phone && c.phone.includes(query))
         );
 
