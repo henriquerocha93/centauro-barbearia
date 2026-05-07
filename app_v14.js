@@ -69,6 +69,8 @@ const app = {
         productSales: [],    // Histórico de Vendas/Consumo
         tips: [],            // Registro de Gorjetas
         pdvTab: 'catalog',   // [NOVO] catalog | cart
+        isDragging: false,    // [NOVO] Controle para evitar conflito com clique
+        draggingAptId: null,  // [NOVO] Fallback para o dataTransfer
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -3185,9 +3187,13 @@ const app = {
                                     (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
                                 );
                                 return `
-                                    <div class="agenda-cell" onclick="app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})">
-                                        ${apt ? this.getAppointmentBlock(apt) : ''}
-                                    </div>
+                                    <div class="agenda-cell" 
+                                         onclick="window.app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})"
+                                         ondragover="window.app.handleDragOver(event)"
+                                         ondragleave="window.app.handleDragLeave(event)"
+                                         ondrop="window.app.handleDrop(event, '${b.name}', '${time}')">
+                                         ${apt ? this.getAppointmentBlock(apt) : ''}
+                                     </div>
                                 `;
                             }).join('')}
                         `).join('')}
@@ -3223,16 +3229,25 @@ const app = {
             `;
         }
 
+        const isDraggable = apt.status !== 'bloqueado';
+
         return `
-            <div class="appointment-block" title="${hoverInfo}" style="border-left-color: ${statusColor};">
-                <span class="customer-name">${apt.customer}</span>
-                <span class="service-name">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700;">✓ Finalizado</div>` : ''}
+            <div class="appointment-block" 
+                 title="${hoverInfo}" 
+                 style="border-left-color: ${statusColor};"
+                 ${isDraggable ? `draggable="true" ondragstart="window.app.handleDragStart(event, ${apt.id})" ondragend="window.app.handleDragEnd(event)"` : ''}>
+                <span class="customer-name" style="pointer-events: none;">${apt.customer}</span>
+                <span class="service-name" style="pointer-events: none;">${apt.service || 'Serviço'}</span>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none;">✓ Finalizado</div>` : ''}
             </div>
         `;
     },
 
     handleCellClick(barber, time, aptId) {
+        if (this.state.isDragging) {
+            console.log('Clique bloqueado por estar arrastando');
+            return;
+        }
         console.log('Clique na célula:', barber, time, aptId);
         const todayStr = new Date().toISOString().split('T')[0];
         const isPastDate = this.state.currentDate < todayStr;
@@ -3247,6 +3262,76 @@ const app = {
         } else {
             this.openNewWalkIn(barber, time);
         }
+    },
+
+    handleDragStart(e, aptId) {
+        console.log('Drag Start:', aptId);
+        this.state.isDragging = true;
+        this.state.draggingAptId = aptId; // Fallback
+        e.stopPropagation();
+        e.dataTransfer.setData('text/plain', aptId);
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        document.body.style.cursor = 'grabbing';
+    },
+
+    handleDragEnd(e) {
+        console.log('Drag End');
+        this.state.isDragging = false;
+        e.currentTarget.classList.remove('dragging');
+        document.body.style.cursor = 'default';
+    },
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const cell = e.currentTarget;
+        if (cell.classList.contains('agenda-cell')) {
+            cell.classList.add('drag-over');
+        }
+    },
+
+    handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    },
+
+    handleDrop(e, newBarber, newTime) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+
+        const aptId = Number(e.dataTransfer.getData('text/plain')) || this.state.draggingAptId;
+        this.state.draggingAptId = null; // Limpa o fallback
+        
+        if (!aptId) return;
+
+        const apt = this.state.appointments.find(a => a.id === aptId);
+        if (!apt) return;
+
+        // Se soltar no mesmo lugar, não faz nada
+        if (apt.barber === newBarber && apt.time === newTime) return;
+
+        // Verificar se o destino já está ocupado
+        const targetApt = this.state.appointments.find(a => 
+            a.barber === newBarber && 
+            a.time === newTime && 
+            a.date === this.state.currentDate
+        );
+
+        if (targetApt) {
+            alert(`O horário ${newTime} com ${newBarber} já está ocupado por ${targetApt.customer}.`);
+            return;
+        }
+
+        // Confirmação para movimentação se for admin ou dono do horário
+        if (!confirm(`Deseja mover o agendamento de ${apt.customer} para ${newBarber} às ${newTime}?`)) return;
+
+        // Atualizar
+        apt.barber = newBarber;
+        apt.time = newTime;
+
+        this.saveState();
+        this.render(this.state.view);
+        this.showToast(`Agendamento de ${apt.customer} movido com sucesso!`);
     },
 
     openNewWalkIn(barber, time) {
