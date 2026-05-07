@@ -1072,6 +1072,7 @@ const app = {
     },
 
     navigateTo(view) {
+        if (view === 'admin-customers') this.state.customerSearchQuery = '';
 
         // Fechar sidebar se estiver aberta (mobile)
         const sidebar = document.getElementById('sidebar');
@@ -6661,53 +6662,153 @@ const app = {
     },
 
     renderAdminCustomers(container) {
-        const query = this.state.customerSearchQuery || '';
-        const filtered = this.state.customers.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+        const query = (this.state.customerSearchQuery || '').toLowerCase();
+        const filtered = this.state.customers.filter(c => 
+            c.name.toLowerCase().includes(query) || 
+            (c.phone && c.phone.includes(query))
+        );
 
         container.innerHTML = `
             <section id="admin-customers" class="fade-in">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
-                    <h2 class="section-title">Base de Clientes</h2>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-primary" style="padding: 10px 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: none; background: #2E8B57;" onclick="app.loadConsolidatedBase()">🚀 Carregar Base Cliente 1</button>
-                        <button class="btn-secondary" style="padding: 10px 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: none;" onclick="app.openImportDatabase()">📂 Outra Base</button>
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px;">
+                    <div>
+                        <h2 class="section-title">Base de Clientes</h2>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">${this.state.customers.length} clientes cadastrados</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                         <div style="position: relative;">
-                            <input type="text" id="admin-cust-search" class="glass" style="padding: 10px; color: var(--text-primary); width: 250px;" 
-                                   placeholder="Pesquisar..." value="${query}" oninput="app.searchAdminCustomers(this.value)">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
+                            <input type="text" id="admin-cust-search" class="glass" style="padding: 12px 12px 12px 40px; color: var(--text-primary); width: 300px; border-radius: 10px;" 
+                                   placeholder="Buscar por nome ou telefone..." value="${this.state.customerSearchQuery || ''}" 
+                                   oninput="app.searchAdminCustomers(this.value)">
                         </div>
+                        <button class="btn-primary" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px;" onclick="app.openAddCustomerModal()">
+                            <i data-lucide="plus-circle" style="width: 18px;"></i> Novo Cliente
+                        </button>
+                        <button class="glass" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--text-secondary);" onclick="app.openImportDatabase()" title="Importar Base">
+                            <i data-lucide="upload-cloud" style="width: 20px;"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="glass" style="padding: 10px; overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; min-width: 500px;">
+                <div class="glass" style="padding: 5px; overflow-x: auto; border-radius: 15px; background: rgba(255,255,255,0.02);">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; min-width: 700px;">
                         <thead>
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">
-                                <th style="padding: 15px;">Nome</th>
-                                <th style="padding: 15px;">Visitas</th>
-                                <th style="padding: 15px;">Ações</th>
+                            <tr style="color: var(--text-secondary); border-bottom: 1px solid var(--glass-border);">
+                                <th style="padding: 18px 20px;">Cliente</th>
+                                <th style="padding: 18px 20px;">Contato</th>
+                                <th style="padding: 18px 20px; text-align: center;">Visitas</th>
+                                <th style="padding: 18px 20px;">Última Visita</th>
+                                <th style="padding: 18px 20px; text-align: right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${filtered.map(c => `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <td style="padding: 15px;">${c.name}</td>
-                                    <td style="padding: 15px;">${c.history.length}</td>
-                                    <td style="padding: 15px;">
-                                        <button class="glass" style="padding: 5px 15px; font-size: 0.7rem; color: var(--accent-color);" 
-                                                onclick="app.viewCustomerDetails(${c.id})">Ver Ficha</button>
+                            ${filtered.length === 0 ? `
+                                <tr>
+                                    <td colspan="5" style="padding: 60px; text-align: center;">
+                                        <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+                                        <p style="color: var(--text-secondary);">Nenhum cliente encontrado para "${this.state.customerSearchQuery || ''}"</p>
                                     </td>
                                 </tr>
-                            `).join('')}
+                            ` : filtered.sort((a,b) => a.name.localeCompare(b.name)).map(c => {
+                                const history = c.history || [];
+                                const lastVisit = history.length > 0 ? new Date(history[history.length - 1].date + 'T00:00:00').toLocaleDateString() : 'Nunca';
+                                return `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 15px 20px;">
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--surface-light); color: var(--accent-color); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--glass-border);">
+                                                    ${c.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span style="font-weight: 600; color: var(--text-primary);">${c.name}</span>
+                                            </div>
+                                        </td>
+                                        <td style="padding: 15px 20px; color: var(--text-secondary);">${c.phone || '-'}</td>
+                                        <td style="padding: 15px 20px; text-align: center;">
+                                            <span style="background: rgba(212, 175, 55, 0.1); color: var(--accent-color); padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.75rem;">
+                                                ${history.length}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 15px 20px; color: var(--text-secondary); font-size: 0.8rem;">${lastVisit}</td>
+                                        <td style="padding: 15px 20px; text-align: right;">
+                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-color); border-radius: 8px;" 
+                                                    onclick="app.viewCustomerDetails(${c.id})">
+                                                <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px;"></i> Detalhes
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
             </section>
         `;
+        if (window.lucide) lucide.createIcons();
     },
 
     searchAdminCustomers(query) {
         this.state.customerSearchQuery = query;
         this.renderAdminCustomers(document.getElementById('main-content'));
+    },
+
+    openAddCustomerModal() {
+        this.openModal('Cadastrar Novo Cliente', `
+            <section class="fade-in">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">Nome Completo *</label>
+                    <input type="text" id="add-cust-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: João Silva">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">WhatsApp / Telefone</label>
+                    <input type="tel" id="add-cust-phone" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="(00) 00000-0000">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">Sexo</label>
+                        <select id="add-cust-gender" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);">
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                            <option value="O">Outro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">Nascimento</label>
+                        <input type="date" id="add-cust-birth" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" style="flex: 2;" onclick="app.saveNewCustomer()">Salvar Cliente</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
+                </div>
+            </section>
+        `);
+    },
+
+    saveNewCustomer() {
+        const name = document.getElementById('add-cust-name').value.trim();
+        const phone = document.getElementById('add-cust-phone').value.trim();
+        const gender = document.getElementById('add-cust-gender').value;
+        const birthDate = document.getElementById('add-cust-birth').value;
+
+        if (!name) { alert('Por favor, informe pelo menos o nome do cliente.'); return; }
+
+        const newCustomer = {
+            id: Date.now(),
+            name,
+            phone,
+            gender,
+            birthDate,
+            history: [],
+            createdAt: new Date().toISOString()
+        };
+
+        this.state.customers.push(newCustomer);
+        this.saveState();
+        this.closeModal();
+        this.render('admin-customers');
+        this.showToast('Cliente cadastrado com sucesso!');
     },
 
     openImportDatabase() {
