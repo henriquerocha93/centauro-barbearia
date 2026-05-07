@@ -3189,6 +3189,8 @@ const app = {
                                 );
                                 return `
                                     <div class="agenda-cell" 
+                                         data-barber="${b.name}"
+                                         data-time="${time}"
                                          onclick="window.app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})"
                                          ondragover="window.app.handleDragOver(event)"
                                          ondragleave="window.app.handleDragLeave(event)"
@@ -3236,7 +3238,14 @@ const app = {
             <div class="appointment-block" 
                  title="${hoverInfo}" 
                  style="border-left-color: ${statusColor};"
-                 ${isDraggable ? `draggable="true" ondragstart="window.app.handleDragStart(event, ${apt.id})" ondragend="window.app.handleDragEnd(event)"` : ''}>
+                 ${isDraggable ? `
+                    draggable="true" 
+                    ondragstart="window.app.handleDragStart(event, ${apt.id})" 
+                    ondragend="window.app.handleDragEnd(event)"
+                    ontouchstart="window.app.handleTouchStart(event, ${apt.id})"
+                    ontouchmove="window.app.handleTouchMove(event)"
+                    ontouchend="window.app.handleTouchEnd(event)"
+                 ` : ''}>
                 <span class="customer-name" style="pointer-events: none;">${apt.customer}</span>
                 <span class="service-name" style="pointer-events: none;">${apt.service || 'Serviço'}</span>
                 ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none;">✓ Finalizado</div>` : ''}
@@ -3279,8 +3288,66 @@ const app = {
     handleDragEnd(e) {
         console.log('Drag End');
         this.state.isDragging = false;
-        e.currentTarget.classList.remove('dragging');
+        if (e.currentTarget) e.currentTarget.classList.remove('dragging');
         document.body.style.cursor = 'default';
+        document.body.classList.remove('dragging-active');
+    },
+
+    // Touch Support for Mobile
+    handleTouchStart(e, aptId) {
+        // Inicia após um pequeno delay para não interferir no scroll
+        this.touchTimer = setTimeout(() => {
+            this.state.isDragging = true;
+            this.state.draggingAptId = aptId;
+            e.target.classList.add('dragging');
+            document.body.classList.add('dragging-active');
+            
+            // Criar um feedback visual (clone) se possível, ou apenas destacar
+            this.touchTarget = e.target;
+        }, 300);
+    },
+
+    handleTouchMove(e) {
+        if (!this.state.isDragging) {
+            clearTimeout(this.touchTimer);
+            return;
+        }
+        e.preventDefault(); // Previne scroll enquanto arrasta
+        
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Highlight potential drops
+        document.querySelectorAll('.agenda-cell').forEach(c => c.classList.remove('drag-over'));
+        const cell = target ? target.closest('.agenda-cell') : null;
+        if (cell) cell.classList.add('drag-over');
+    },
+
+    handleTouchEnd(e) {
+        clearTimeout(this.touchTimer);
+        if (!this.state.isDragging) return;
+
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const cell = target ? target.closest('.agenda-cell') : null;
+
+        if (cell) {
+            // Extrair dados da célula (barbeiro e horário)
+            // Isso requer que a célula tenha atributos data ou que usemos o que foi passado no ondrop
+            // Como não temos acesso fácil aos argumentos do ondrop aqui, vamos disparar o drop manualmente
+            // ou buscar os dados nos atributos da célula (que precisamos adicionar)
+            const barber = cell.getAttribute('data-barber');
+            const time = cell.getAttribute('data-time');
+            if (barber && time) {
+                this.handleDrop({ preventDefault: () => {} }, barber, time);
+            }
+        }
+
+        this.state.isDragging = false;
+        this.state.draggingAptId = null;
+        if (this.touchTarget) this.touchTarget.classList.remove('dragging');
+        document.body.classList.remove('dragging-active');
+        document.querySelectorAll('.agenda-cell').forEach(c => c.classList.remove('drag-over'));
     },
 
     handleDragOver(e) {
