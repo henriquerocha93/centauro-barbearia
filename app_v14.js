@@ -6685,12 +6685,12 @@ const app = {
                             <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
                             <input type="text" id="admin-cust-search" class="glass" style="padding: 12px 12px 12px 40px; color: var(--text-primary); width: 300px; border-radius: 10px;" 
                                    placeholder="Buscar por nome ou telefone..." value="${this.state.customerSearchQuery || ''}" 
-                                   oninput="app.searchAdminCustomers(this.value)">
+                                   oninput="window.app.searchAdminCustomers(this.value)">
                         </div>
-                        <button class="btn-primary" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px;" onclick="app.openAddCustomerModal()">
+                        <button class="btn-primary" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px;" onclick="window.app.openAddCustomerModal()">
                             <i data-lucide="plus-circle" style="width: 18px;"></i> Novo Cliente
                         </button>
-                        <button class="glass" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--text-secondary);" onclick="app.openImportDatabase()" title="Importar Base">
+                        <button class="glass" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--text-secondary);" onclick="window.app.openImportDatabase()" title="Importar Base">
                             <i data-lucide="upload-cloud" style="width: 20px;"></i>
                         </button>
                     </div>
@@ -6737,7 +6737,7 @@ const app = {
                                         <td style="padding: 15px 20px; color: var(--text-secondary); font-size: 0.8rem;">${lastVisit}</td>
                                         <td style="padding: 15px 20px; text-align: right;">
                                             <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-color); border-radius: 8px;" 
-                                                    onclick="app.viewCustomerDetails(${c.id})">
+                                                    onclick="window.app.viewCustomerDetails(${c.id})">
                                                 <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px;"></i> Detalhes
                                             </button>
                                         </td>
@@ -6783,8 +6783,8 @@ const app = {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 2;" onclick="app.saveNewCustomer()">Salvar Cliente</button>
-                    <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
+                    <button class="btn-primary" style="flex: 2;" onclick="window.app.saveNewCustomer()">Salvar Cliente</button>
+                    <button class="btn-secondary" style="flex: 1;" onclick="window.app.closeModal()">Cancelar</button>
                 </div>
             </section>
         `);
@@ -6913,13 +6913,13 @@ const app = {
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
-                    <button class="btn-primary" style="background: #7c3aed; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="app.pdvForCustomer('${customer.name}')">
+                    <button class="btn-primary" style="background: #7c3aed; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="window.app.pdvForCustomer('${customer.name}')">
                         <i data-lucide="shopping-cart" style="width: 18px;"></i>
                         Lançar Consumo (PDV)
                     </button>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn-secondary" style="flex: 1; border: 1px solid #ff4444; color: #ff4444;" onclick="app.deleteCustomer(${customer.id})">Deletar Cliente</button>
-                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Fechar</button>
+                        <button class="btn-secondary" style="flex: 1; border: 1px solid #ff4444; color: #ff4444;" onclick="window.app.deleteCustomer(${customer.id})">Deletar Cliente</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="window.app.closeModal()">Fechar</button>
                     </div>
                 </div>
             </section>
