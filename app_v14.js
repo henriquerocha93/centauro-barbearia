@@ -5625,9 +5625,14 @@ const app = {
             }
         }
 
-        // Registrar histórico individual (para estoque e relatório de consumo)
+        // Registrar histórico individual e baixar estoque
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
+            if (product) {
+                // 1. Baixa no Estoque
+                product.stock -= item.qty;
+            }
+
             const itemTotal = item.unitPrice * item.qty;
             const itemComm = itemTotal * (item.commissionPct || 0) / 100;
 
