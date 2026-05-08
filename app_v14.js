@@ -1597,9 +1597,10 @@ const app = {
                                 style="width:100%; font-size:1rem; padding:16px; font-weight:800; border-radius:12px;
                                        background: ${cart.length > 0 ? 'linear-gradient(90deg, #10b981, #059669)' : '#333'};
                                        box-shadow: ${cart.length > 0 ? '0 10px 20px rgba(16,185,129,0.2)' : 'none'};
-                                       border:none; cursor: ${cart.length > 0 ? 'pointer' : 'not-allowed'};
+                                       border:none; cursor: ${cart.length > 0 ? 'pointer !important' : 'not-allowed'};
+                                       pointer-events: auto !important;
                                        display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s ease;"
-                                ${cart.length === 0 ? 'disabled' : ''} onclick="app._totemFinalizeSale()">
+                                ${cart.length === 0 ? 'disabled' : ''} onclick="window.app._totemFinalizeSale()">
                             <i data-lucide="check-circle-2"></i>
                             FINALIZAR VENDA
                         </button>
@@ -1681,9 +1682,13 @@ const app = {
             transactionId = this.addTransaction('in', desc, total, 'produto', method);
         }
 
-        // Registrar histórico individual
+        // Registrar histórico individual e baixar estoque
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
+            if (product) {
+                // 1. Baixa no Estoque
+                product.stock -= item.qty;
+            }
             const itemTotal = item.unitPrice * item.qty;
             const itemComm = itemTotal * (item.commissionPct || 0) / 100;
 
@@ -5024,7 +5029,7 @@ const app = {
                                       border: 1.5px solid #7c3aed; border-radius: 10px; outline: none; letter-spacing: 1px;"
                                placeholder="Aponte o leitor para o produto..."
                                autocomplete="off"
-                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ app.pdvAddToCartByCode(c); this.value=''; } }"
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ window.app.pdvAddToCartByCode(c); this.value=''; } }"
                                oninput="if(this.value.length===0) return;">
                         <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1rem; opacity:0.4;">↵</span>
                     </div>
@@ -5033,10 +5038,10 @@ const app = {
 
                 <!-- Abas Mobile [NOVO] -->
                 <div class="pdv-mobile-tabs">
-                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="app.state.pdvTab='catalog'; app.render('pdv')">
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="window.app.state.pdvTab='catalog'; window.app.render('pdv')">
                         📦 Catálogo
                     </div>
-                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="app.state.pdvTab='cart'; app.render('pdv')">
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="window.app.state.pdvTab='cart'; window.app.render('pdv')">
                         🛒 Carrinho (${cart.length})
                     </div>
                 </div>
@@ -5049,7 +5054,7 @@ const app = {
                             <i data-lucide="search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
                             <input type="text" id="pdv-search" class="glass"
                                    style="width: 100%; padding: 12px 12px 12px 45px; color: var(--text-primary); font-size: 0.95rem; border-radius: 14px;"
-                                   placeholder="O que você procura?" oninput="app.renderPDVGrid(this.value)">
+                                   placeholder="O que você procura?" oninput="window.app.renderPDVGrid(this.value)">
                         </div>
 
                         <!-- Filtros de Categoria -->
@@ -5057,7 +5062,7 @@ const app = {
                             ${['Todos', 'Cabelo', 'Barba', 'Bebidas', 'Outros'].map(cat => `
                                 <button class="pdv-category-tab ${this.state.pdvCategory === cat || (!this.state.pdvCategory && cat === 'Todos') ? 'active' : ''}"
                                         style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
-                                        onclick="app.state.pdvCategory='${cat}'; app.renderPDVGrid()">
+                                        onclick="window.app.state.pdvCategory='${cat}'; window.app.renderPDVGrid()">
                                     ${cat === 'Todos' ? '📂 ' : cat === 'Cabelo' ? '🧴 ' : cat === 'Barba' ? '🧔 ' : cat === 'Bebidas' ? '🥤 ' : '✨ '}${cat}
                                 </button>
                             `).join('')}
@@ -5076,7 +5081,7 @@ const app = {
                                 <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
                                 Carrinho
                             </h3>
-                            ${cart.length > 0 ? `<button style="font-size: 0.7rem; color: #ff4444; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2); border-radius: 8px; padding: 5px 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,68,68,0.2)'" onmouseout="this.style.background='rgba(255,68,68,0.1)'" onclick="app.clearCart()">Limpar Tudo</button>` : ''}
+                            ${cart.length > 0 ? `<button style="font-size: 0.7rem; color: #ff4444; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2); border-radius: 8px; padding: 5px 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,68,68,0.2)'" onmouseout="this.style.background='rgba(255,68,68,0.1)'" onclick="window.app.clearCart()">Limpar Tudo</button>` : ''}
                         </div>
 
                         <!-- Itens do carrinho -->
@@ -5100,12 +5105,12 @@ const app = {
                                     <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Desconto (R$)</label>
                                     <input type="number" id="pdv-discount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); font-weight: 700; border-radius: 8px;" 
                                            value="${discount}" min="0" step="0.01"
-                                           oninput="app.state.pdvDiscount = parseFloat(this.value)||0; app.renderPDVTotals();">
+                                           oninput="window.app.state.pdvDiscount = parseFloat(this.value)||0; window.app.renderPDVTotals();">
                                 </div>
                                 <div>
                                     <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Pagamento</label>
                                     <select id="pdv-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
-                                            onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(null, 'pdv')">
+                                            onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; window.app.updateSplitRemainder(null, 'pdv')">
                                         <option value="Dinheiro">Dinheiro 💵</option>
                                         <option value="PIX">PIX ⚡</option>
                                         <option value="Cartão de Débito">Débito 💳</option>
@@ -5125,7 +5130,7 @@ const app = {
                                             <option value="Cartão de Débito">Débito</option>
                                             <option value="Cartão de Crédito">Crédito</option>
                                         </select>
-                                        <input type="number" id="pdv-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 1" step="0.01" oninput="app.updateSplitRemainder(null, 'pdv')">
+                                        <input type="number" id="pdv-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 1" step="0.01" oninput="window.app.updateSplitRemainder(null, 'pdv')">
                                     </div>
                                     <div>
                                         <label style="display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Meio 2</label>
@@ -5164,7 +5169,7 @@ const app = {
 
                             <div id="pdv-seller-wrapper">
                                 <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Vendedor (Comissão)</label>
-                                <select id="pdv-seller" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" onchange="app.state.pdvSeller = this.value || null;">
+                                <select id="pdv-seller" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" onchange="window.app.state.pdvSeller = this.value || null;">
                                     <option value="">-- Sem comissão --</option>
                                     ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
                                 </select>
@@ -5182,9 +5187,10 @@ const app = {
                                 style="width: 100%; font-size: 1.1rem; padding: 18px; font-weight: 800; letter-spacing: 1px; border-radius: 15px; 
                                        background: ${cart.length > 0 ? 'linear-gradient(90deg, #10b981, #059669)' : '#333'}; 
                                        box-shadow: ${cart.length > 0 ? '0 10px 25px rgba(16,185,129,0.3)' : 'none'};
-                                       border: none; cursor: ${cart.length > 0 ? 'pointer' : 'not-allowed'};
+                                       border: none; cursor: ${cart.length > 0 ? 'pointer !important' : 'not-allowed'};
+                                       pointer-events: auto !important;
                                        display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s ease;"
-                                ${cart.length === 0 ? 'disabled' : ''} onclick="app.finalizePDVSale()">
+                                ${cart.length === 0 ? 'disabled' : ''} onclick="window.app.finalizePDVSale()">
                             <i data-lucide="check-circle-2"></i>
                             FINALIZAR VENDA
                         </button>
