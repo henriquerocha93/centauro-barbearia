@@ -716,6 +716,17 @@ const app = {
         }
         
         this.render(initialView);
+        
+        // Melhoria UX para inputs de data: abrir picker nativo ao clicar (Resolve o erro do ano 0001)
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'date') {
+                try {
+                    e.target.showPicker();
+                } catch (err) {
+                    // Ignora erro se o navegador não suportar ou se já estiver aberto
+                }
+            }
+        });
     },
 
     generateTimeSlots() {
