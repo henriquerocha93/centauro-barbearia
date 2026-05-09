@@ -6039,7 +6039,7 @@ const app = {
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
                 <h2 class="section-title">Lançar Vales</h2>
-                <form onsubmit="event.preventDefault(); app.saveVoucher()" class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <form onsubmit="event.preventDefault(); window.app.saveVoucher()" class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">${this.getTerm('workerTerm')}</label>
                         <select id="barber-select" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
@@ -6083,12 +6083,12 @@ const app = {
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
                                 <span style="font-weight: 700; color: #ff4444; white-space: nowrap;">- R$ ${v.amount.toFixed(2)}</span>
-                                <button class="glass" style="padding: 3px 10px; font-size: 0.7rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3); cursor: pointer;" onclick="app.deleteVoucher(${v.id})">Excluir</button>
+                                <button class="glass" style="padding: 3px 10px; font-size: 0.7rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3); cursor: pointer;" onclick="window.app.deleteVoucher(${v.id})">Excluir</button>
                             </div>
                         </div>
                     `}).reverse().join('')}
                 </div>
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('admin-dash')">Voltar</button>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="window.app.navigateTo('admin-dash')">Voltar</button>
             </section>
         `;
     },
@@ -6122,10 +6122,11 @@ const app = {
             
             alert('✅ Vale registrado com sucesso!');
             
-            // Limpa apenas os campos necessários e re-renderiza a lista (não a página toda)
-            amountElement.value = '';
-            document.getElementById('voucher-note').value = '';
-            this.render('admin-vouchers');
+            // Atualiza a view de forma assíncrona para não travar o teclado no mobile
+            setTimeout(() => {
+                const main = document.getElementById('main-content');
+                if (main) window.app.renderAdminVouchers(main);
+            }, 50);
         } else {
             alert('Preencha o barbeiro e o valor do vale.');
         }
@@ -6143,7 +6144,8 @@ const app = {
             }
             this.state.vouchers = this.state.vouchers.filter(v => v.id !== voucherId);
             this.saveState();
-            this.render('admin-vouchers');
+            const main = document.getElementById('main-content');
+            if (main) window.app.renderAdminVouchers(main);
         }
     },
 
