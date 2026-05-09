@@ -1,4 +1,4 @@
-const CACHE_NAME = 'centauro-v71.02';
+const CACHE_NAME = 'centauro-v71.03';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -58,8 +58,10 @@ self.addEventListener('fetch', event => {
                         cache.put(event.request, networkResponse.clone());
                     }
                     return networkResponse;
-                }).catch(() => {
-                    console.log('🌐 [Service Worker] Modo Offline. Retornando do cache para:', event.request.url);
+                }).catch((err) => {
+                    console.log('🌐 [Service Worker] Erro de rede ou offline:', event.request.url);
+                    // É crucial repassar o erro para o navegador, senão ele mostra ERR_FAILED
+                    throw err;
                 });
                 
                 // Retorna do cache instantaneamente (Stale), e em background baixa o novo (Revalidate)
