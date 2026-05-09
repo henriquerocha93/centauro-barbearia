@@ -5957,8 +5957,11 @@ const app = {
                     ${transactionsDate.slice().reverse().map(t => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; flex-direction: column;">
-                                    <span style="font-weight: 600;">${t.description}</span>
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        ${t.timestamp ? `<span style="font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">${new Date(t.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</span>` : ''}
+                                        <span style="font-weight: 600;">${t.description}</span>
+                                    </div>
                                     <span style="font-size: 0.7rem; color: var(--text-secondary);">${t.category.toUpperCase()} | ${t.method ? t.method.toUpperCase() : 'DINHEIRO'}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
