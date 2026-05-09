@@ -1,4 +1,4 @@
-const CACHE_NAME = 'centauro-v71.01';
+const CACHE_NAME = 'centauro-v71.02';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

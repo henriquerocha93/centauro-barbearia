@@ -649,7 +649,11 @@ const app = {
 
                             // Atualiza a tela se não estiver no meio de um agendamento
                             if (this.state.view !== 'booking') {
-                                this.render(this.state.view);
+                                if (this.state.user && this.state.user.role === 'totem') {
+                                    this.renderTotem();
+                                } else {
+                                    this.render(this.state.view);
+                                }
                             }
                         }
                     }
