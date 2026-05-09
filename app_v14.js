@@ -1744,15 +1744,17 @@ const app = {
         this.state.pdvSeller = seller || null;
         this.saveState();
 
-        if (target === 'barbeiro') {
-            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
-        } else if (target === 'adm') {
-            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
-        } else {
-            const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
-            alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
-        }
-        this.setTotemTab('pdv');
+        setTimeout(() => {
+            if (target === 'barbeiro') {
+                alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+            } else if (target === 'adm') {
+                alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
+            } else {
+                const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
+                alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
+            }
+            this.setTotemTab('pdv');
+        }, 50);
     },
 
     // ─── TOTEM: ESTOQUE ───────────────────────────────────────────────────────
@@ -5707,22 +5709,25 @@ const app = {
             });
         }
 
-        // Limpar carrinho
+        // Limpar carrinho e salvar estado
         this.state.cart = [];
         this.state.pdvDiscount = 0;
         this.state.pdvSeller = seller || null;
         this.state.pdvClientName = null;
         this.saveState();
-        this.render('pdv');
 
-        if (target === 'barbeiro') {
-            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
-        } else if (target === 'adm') {
-            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
-        } else {
-            const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
-            alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
-        }
+        // Evitar travamento no mobile isolando render e alert do ciclo atual
+        setTimeout(() => {
+            if (target === 'barbeiro') {
+                alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
+            } else if (target === 'adm') {
+                alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
+            } else {
+                const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
+                alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
+            }
+            this.render('pdv');
+        }, 50);
     },
 
     deleteProduct(productId) {
