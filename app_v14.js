@@ -3,6 +3,12 @@ console.log("🚀 CENTAURO APP V70.30 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+window.deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+});
+
 const app = {
     state: {
         view: 'home',
@@ -1317,7 +1323,10 @@ const app = {
                             <i data-lucide="credit-card"></i> Pagamento App
                         </a>
                     ` : ''}
-                    <a class="menu-item" onclick="window.app.logout()" style="color: #f87171; margin-top: 20px;">
+                    <a class="menu-item" onclick="window.app.installPWA()" style="color: #10b981; margin-top: 20px;">
+                        <i data-lucide="download"></i> Criar App
+                    </a>
+                    <a class="menu-item" onclick="window.app.logout()" style="color: #f87171;">
                         <i data-lucide="log-out"></i> Sair
                     </a>
                 </nav>
@@ -1394,7 +1403,10 @@ const app = {
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
-                <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" style="font-size: 0.78rem; padding: 7px 14px; background: #10b981;" onclick="app.installPWA()">Criar App</button>
+                    <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
+                </div>
             </header>
 
             <!-- ABAS -->
@@ -1822,6 +1834,22 @@ const app = {
     },
 
 
+
+    installPWA() {
+        if (window.deferredPrompt) {
+            window.deferredPrompt.prompt();
+            window.deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('Usuário aceitou a instalação do PWA');
+                } else {
+                    console.log('Usuário recusou a instalação do PWA');
+                }
+                window.deferredPrompt = null;
+            });
+        } else {
+            alert('Para criar o aplicativo no seu celular:\n\n📱 Android: Clique nos 3 pontinhos do navegador e escolha "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Clique no ícone de compartilhar (quadrado com seta para cima) e escolha "Adicionar à Tela de Início".');
+        }
+    },
 
     logout() {
         if (confirm('Deseja realmente sair?')) {
