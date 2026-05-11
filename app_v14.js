@@ -268,14 +268,24 @@ const app = {
 
         try {
             const now = new Date().getTime();
-            this.state.lastUpdate = now;
-
+            
             // Suporte a Multi-Tenant
             const urlParams = new URLSearchParams(window.location.search);
             const tenantId = urlParams.get('loja');
             const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
+            // Verificação de segurança: não sobrescrever se o servidor tiver dados mais recentes
             const dbRef = ref(this.db, dbPath);
+            const serverSnap = await get(ref(this.db, dbPath + 'lastUpdate'));
+            const serverLastUpdate = serverSnap.val() || 0;
+            const localLastUpdate = this.state.lastUpdate || 0;
+
+            if (serverLastUpdate > localLastUpdate) {
+                console.warn('⚠️ O servidor possui dados mais recentes. Sincronização abortada para evitar perda de dados.');
+                return;
+            }
+
+
             const stateToSave = {
                 services: this.state.services,
                 staff: this.state.staff,
@@ -295,6 +305,8 @@ const app = {
             };
 
             await set(dbRef, stateToSave);
+            this.state.lastUpdate = now; // Atualiza localmente após sucesso
+
             console.log('⚡ Sincronizado com Firebase (Tempo Real)');
 
             // Salva o timestamp no localStorage também para consistência no reload
@@ -622,7 +634,7 @@ const app = {
                     if (data) {
                         // Atualiza sempre que o ID/timestamp for diferente do local, resolvendo atrasos de relógio entre aparelhos
                         const localLastUpdate = this.state.lastUpdate || 0;
-                        if (data.lastUpdate !== localLastUpdate) {
+                        if (data.lastUpdate > localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
 
                             this.state.services = data.services || [];
@@ -630,14 +642,26 @@ const app = {
                             this.state.customers = data.customers || [];
                             this.state.settings = data.settings || this.state.settings;
                             this.state.vouchers = data.vouchers || [];
-                            this.state.transactions = data.transactions || [];
                             this.state.products = data.products || [];
                             this.state.productSales = data.productSales || [];
                             this.state.openingBalances = data.openingBalances || {};
-                            this.state.appointments = data.appointments || [];
-                            this.state.serviceOrders = data.serviceOrders || [];
-                            this.state.tips = data.tips || [];
+                            
+                            // Lógica de Mesclagem (Merge) para evitar perda de dados locais offline
+                            const merge = (local, remote) => {
+                                if (!remote) return local || [];
+                                if (!local) return remote || [];
+                                const remoteIds = new Set(remote.map(i => i.id).filter(Boolean));
+                                const localOnly = local.filter(i => i.id && !remoteIds.has(i.id));
+                                return [...remote, ...localOnly];
+                            };
+
+                            this.state.transactions = merge(this.state.transactions, data.transactions);
+                            this.state.appointments = merge(this.state.appointments, data.appointments);
+                            this.state.serviceOrders = merge(this.state.serviceOrders, data.serviceOrders);
+                            this.state.tips = merge(this.state.tips, data.tips);
+                            
                             this.state.lastUpdate = data.lastUpdate;
+
 
                             // Migrar produtos se necessário (SaaS/Cloud Sync)
                             this.migrateProducts();
