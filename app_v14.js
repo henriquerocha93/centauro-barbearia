@@ -1,4 +1,4 @@
-// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
+﻿// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
 console.log("🚀 CENTAURO APP V70.30 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -1010,7 +1010,7 @@ const app = {
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Estabelecimento</label>
-                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || 'Centauro ' + this.getTerm('shopTerm')}" placeholder="Ex: Centauro ${this.getTerm('shopTerm')}">
+                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || ''}" placeholder="Ex: Nossa ${this.getTerm('shopTerm')}">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Telefone / WhatsApp</label>
@@ -1018,11 +1018,11 @@ const app = {
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Instagram</label>
-                            <input type="text" id="shop-instagram" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.instagram || ''}" placeholder="@centaurobarbearia">
+                            <input type="text" id="shop-instagram" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.instagram || ''}" placeholder="@suabarbearia">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endereço</label>
-                            <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Rua Tenente Alpoim, 516">
+                            <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Ex: Rua Principal, 123">
                         </div>
                     </div>
                 </div>
@@ -1247,7 +1247,7 @@ const app = {
         }
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_agendamento.png';
-        const name = (s.shopName || 'AGENDAMENTO FÁCIL BR').toUpperCase();
+        const name = (s.shopName || 'NOSSO SISTEMA').toUpperCase();
 
 
         // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
@@ -1490,7 +1490,7 @@ const app = {
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <img src="logo_agendamento.png" style="width: 180px; height: auto; filter: drop-shadow(0 0 10px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                     <div>
-                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">CENTAURO ${this.getTerm('shopTerm').toUpperCase()}</h1>
+                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">MENU DO SISTEMA</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
@@ -2017,7 +2017,7 @@ const app = {
             const fullName = c.name || 'Cliente';
             const age = getAge(c.birthDate);
             const ageText = age ? ` · ${age} anos` : '';
-            const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20Toda%20equipe%20da%20Centauro%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
+            const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20nossa%20equipe%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
             const hasPhone = phone.length >= 10;
 
             return `
@@ -2280,7 +2280,7 @@ const app = {
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
         const subtitle = s.welcomeMessage || s.subtitle || theme.subtitle;
-        const name = s.shopName || 'Centauro Barbearia';
+        const name = s.shopName || 'Nossa ' + this.getTerm('shopTerm');
         const buttonText = s.buttonText || 'AGENDAR HORÁRIO';
         const heroImg = theme.hero;
 
@@ -2321,11 +2321,11 @@ const app = {
                         <p style="color: var(--text-secondary);">Venha nos visitar e conhecer nosso espaço</p>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; align-items: stretch;">
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Rua Tenente Alpoim, 516, Porto Alegre')}" target="_blank" class="glass fade-in-up" style="overflow: hidden; text-decoration: none; display: flex; flex-direction: column;">
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Brasil')}" target="_blank" class="glass fade-in-up" style="overflow: hidden; text-decoration: none; display: flex; flex-direction: column;">
                             <img src="map_real.png" style="width: 100%; height: 300px; object-fit: cover;">
                             <div style="padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-color); margin-bottom: 10px;">${s.address || 'Rua Tenente Alpoim, 516'}</p>
-                                 <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Vila João Pessoa, Porto Alegre, RS'}</p>
+                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-color); margin-bottom: 10px;">${s.address || 'Endereço não cadastrado'}</p>
+                                 <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Por favor, atualize o endereço no painel administrativo.'}</p>
                                  ${s.phone ? `<p style="font-weight: bold; color: var(--accent-color); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
                                  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-color); font-size: 0.85rem; font-weight: 600;">
                                      📍 VER NO GOOGLE MAPS
@@ -2374,7 +2374,7 @@ const app = {
                     <div style="margin-bottom: 30px;">
                         <img src="${logo}" style="width: 140px; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));">
                         <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px;">Acesso Restrito</h2>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Área administrativa Centauro</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Área administrativa</p>
                     </div>
 
                     <div style="text-align: left;">
