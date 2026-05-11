@@ -281,8 +281,43 @@ const app = {
             const localLastUpdate = this.state.lastUpdate || 0;
 
             if (serverLastUpdate > localLastUpdate) {
-                console.warn('⚠️ O servidor possui dados mais recentes. Sincronização abortada para evitar perda de dados.');
-                return;
+                console.warn('⚠️ Conflito detectado. Mesclando com dados do servidor antes de enviar...');
+                const fullSnap = await get(dbRef);
+                const serverData = fullSnap.val() || {};
+                
+                const merge = (local, remote) => {
+                    if (!remote) return local || [];
+                    if (!local) return remote || [];
+                    const remoteIds = new Set(remote.map(i => i.id).filter(Boolean));
+                    const localOnly = local.filter(i => i.id && !remoteIds.has(i.id));
+                    return [...remote, ...localOnly];
+                };
+
+                const mergeProducts = (local, remote) => {
+                    if (!remote) return local || [];
+                    if (!local) return remote || [];
+                    const localMap = new Map(local.map(p => [p.id, p]));
+                    const merged = remote.map(rp => {
+                        const lp = localMap.get(rp.id);
+                        if (lp) {
+                            // Mantém o menor estoque entre local e remoto para não perder baixas
+                            return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
+                        }
+                        return rp;
+                    });
+                    local.forEach(lp => {
+                        if (!merged.find(p => p.id === lp.id)) merged.push(lp);
+                    });
+                    return merged;
+                };
+
+                this.state.transactions = merge(this.state.transactions, serverData.transactions);
+                this.state.appointments = merge(this.state.appointments, serverData.appointments);
+                this.state.serviceOrders = merge(this.state.serviceOrders, serverData.serviceOrders);
+                this.state.tips = merge(this.state.tips, serverData.tips);
+                this.state.products = mergeProducts(this.state.products, serverData.products);
+                this.state.customers = merge(this.state.customers, serverData.customers);
+                this.state.productSales = merge(this.state.productSales, serverData.productSales);
             }
 
 
@@ -657,7 +692,6 @@ const app = {
                             this.state.customers = data.customers || [];
                             this.state.settings = data.settings || this.state.settings;
                             this.state.vouchers = data.vouchers || [];
-                            this.state.products = data.products || [];
                             this.state.productSales = data.productSales || [];
                             this.state.openingBalances = data.openingBalances || {};
                             
@@ -670,10 +704,28 @@ const app = {
                                 return [...remote, ...localOnly];
                             };
 
+                            const mergeProducts = (local, remote) => {
+                                if (!remote) return local || [];
+                                if (!local) return remote || [];
+                                const localMap = new Map(local.map(p => [p.id, p]));
+                                const merged = remote.map(rp => {
+                                    const lp = localMap.get(rp.id);
+                                    if (lp) {
+                                        return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
+                                    }
+                                    return rp;
+                                });
+                                local.forEach(lp => {
+                                    if (!merged.find(p => p.id === lp.id)) merged.push(lp);
+                                });
+                                return merged;
+                            };
+
                             this.state.transactions = merge(this.state.transactions, data.transactions);
                             this.state.appointments = merge(this.state.appointments, data.appointments);
                             this.state.serviceOrders = merge(this.state.serviceOrders, data.serviceOrders);
                             this.state.tips = merge(this.state.tips, data.tips);
+                            this.state.products = mergeProducts(this.state.products, data.products);
                             
                             this.state.lastUpdate = data.lastUpdate;
 
