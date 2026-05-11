@@ -232,7 +232,7 @@
 
         if(!slug) window.location.href = 'index.html';
 
-        document.getElementById('finalUrl').innerText = `centauro-barbearia.vercel.app/?loja=${slug}`;
+        document.getElementById('finalUrl').innerText = `www.agendamentofacilbr.com.br/${slug}`;
 
         window.selectColor = (el, hex) => {
             document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
@@ -297,7 +297,7 @@
                     { id: Date.now()+1, name: "Barba", price: 25, duration: 30, category: "Geral" }
                 ]);
 
-                window.location.href = `../index.html?loja=${slug}`;
+                window.location.href = `/${slug}`;
             } catch (e) {
                 console.error(e);
                 alert('Erro ao salvar configurações.');
