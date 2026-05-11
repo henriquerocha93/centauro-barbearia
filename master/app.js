@@ -700,6 +700,12 @@ const app = {
                 phone: document.getElementById('e-phone').value
             });
 
+            // Force client sync
+            await update(ref(this.db, 'tenants/' + slug), {
+                lastUpdate: new Date().getTime(),
+                updatedBy: 'MasterPanel'
+            });
+
             // Atualiza Valor no Master
             await update(ref(this.db, 'master/tenants/' + slug), {
                 subscriptionPrice: parseFloat(document.getElementById('e-price').value) || 0
@@ -741,10 +747,10 @@ const app = {
                 btn.disabled = true;
                 
                 try {
-                    const newName = document.getElementById('er-name').value;
-                    const newPhone = document.getElementById('er-phone').value;
-                    const newUser = document.getElementById('er-admin-user').value;
-                    const newPass = document.getElementById('er-admin-pass').value;
+                    const newName = document.getElementById('er-name').value.trim();
+                    const newPhone = document.getElementById('er-phone').value.trim();
+                    const newUser = document.getElementById('er-admin-user').value.trim();
+                    const newPass = document.getElementById('er-admin-pass').value.trim();
                     
                     // Atualizar master
                     await update(ref(this.db, 'master/tenants/' + slug), {
@@ -762,6 +768,12 @@ const app = {
                         const adminUpdates = { login: newUser };
                         if (newPass) adminUpdates.password = newPass;
                         await update(ref(this.db, 'tenants/' + slug + '/staff/' + adminIndex), adminUpdates);
+                        
+                        // Force client sync
+                        await update(ref(this.db, 'tenants/' + slug), {
+                            lastUpdate: new Date().getTime(),
+                            updatedBy: 'MasterPanel'
+                        });
                     }
                     
                     document.getElementById('edit-registration-modal').close();
@@ -796,9 +808,9 @@ const app = {
         const name = document.getElementById('t-name').value;
         const businessType = document.getElementById('t-type').value;
         const slug = document.getElementById('t-slug').value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const adminUser = document.getElementById('t-admin-user').value;
-        const adminPass = document.getElementById('t-admin-pass').value;
-        const phone = document.getElementById('t-phone').value;
+        const adminUser = document.getElementById('t-admin-user').value.trim();
+        const adminPass = document.getElementById('t-admin-pass').value.trim();
+        const phone = document.getElementById('t-phone').value.trim();
         const price = parseFloat(document.getElementById('t-price').value) || 0;
 
         if (this.tenants[slug]) {

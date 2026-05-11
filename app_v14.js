@@ -1,4 +1,4 @@
-﻿// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
+// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
 console.log("🚀 CENTAURO APP V70.30 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -2416,8 +2416,8 @@ const app = {
 
             // Procura o usuário que cruza os dados (Aceita Login ou Email)
             const matchedUser = this.state.staff.find(s =>
-                ((s.login && s.login.toLowerCase() === user) || (s.email && s.email.toLowerCase() === user)) &&
-                s.password === pass
+                ((s.login && s.login.trim().toLowerCase() === user) || (s.email && s.email.trim().toLowerCase() === user)) &&
+                (s.password && s.password.trim() === pass)
             );
 
             if (matchedUser) {
