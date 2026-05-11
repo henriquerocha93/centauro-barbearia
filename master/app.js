@@ -265,7 +265,7 @@ const app = {
                     </div>
                     <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <a href="../index.html?loja=${key}" target="_blank" class="btn" style="width: 100%; text-align: center; margin-bottom: 5px; background: #4c1d95; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold;">↗ Acessar Sistema</a>
-                        <button onclick="app.openEditRegistrationModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem; color: #fff; border-color: rgba(255,255,255,0.3);">📝 Cadastro</button>
+                        <button onclick="app.openEditRegistrationModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem; color: #fff; border-color: rgba(255,255,255,0.3);">⚙️ Cadastro</button>
                         <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
                         <button onclick="app.openPlanModal('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: #2563eb; color: white; border: none;">📋 Plano</button>
                         <button onclick="app.renewSubscription('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: ${statusColor}; color: white; border: none;">💰 Renovar</button>

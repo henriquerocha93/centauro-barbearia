@@ -297,6 +297,83 @@
             </div>
         </form>
     </dialog>
+
+    <dialog id="edit-tenant-modal" class="modal" style="background: #1e293b; color: white; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; width: 90%; max-width: 500px;">
+        <h3 style="margin-top: 0;">Ajuste Visual da Barbearia</h3>
+        <form id="edit-tenant-form">
+            <input type="hidden" id="e-slug">
+            <input type="hidden" id="e-price">
+            
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Nome da Loja</label>
+                <input type="text" id="e-name" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Subtítulo</label>
+                <input type="text" id="e-subtitle" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Mensagem de Boas-Vindas</label>
+                <input type="text" id="e-welcome-title" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Logo URL (Link direto) ou faça Upload</label>
+                <input type="text" id="e-logo-url" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 5px;" placeholder="https://...">
+                <input type="file" id="e-logo-file" accept="image/*" style="width: 100%; color: #94a3b8; font-size: 0.8rem;">
+                <small id="upload-status" style="display:block; color: #10b981; margin-top: 5px;"></small>
+                <div id="upload-progress-container" style="display:none; width:100%; background:#334155; height:5px; border-radius:5px; margin-top:5px;">
+                    <div id="upload-progress-bar" style="width:0%; background:#10b981; height:100%; border-radius:5px;"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8rem; color: #94a3b8;">Cor Primária</label>
+                    <input type="color" id="e-color-primary" style="width: 100%; height: 40px; border: none; background: transparent; cursor: pointer;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8rem; color: #94a3b8;">Cor Destaque</label>
+                    <input type="color" id="e-color-accent" style="width: 100%; height: 40px; border: none; background: transparent; cursor: pointer;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Endereço Físico</label>
+                <input type="text" id="e-address" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">Telefone (Contato Loja)</label>
+                <input type="text" id="e-phone" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; margin-right: 15px;">Cancelar</button>
+                <button type="submit" class="btn-action btn-main" id="btn-save-tenant">Salvar Alterações</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="plan-modal" class="modal" style="background: #1e293b; color: white; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; width: 90%; max-width: 400px;">
+        <h3 style="margin-top: 0;">Plano & Mensalidade</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">Barbearia: <strong id="plan-tenant-name" style="color: white;"></strong></p>
+        <form onsubmit="app.savePlanConfig(event)">
+            <input type="hidden" id="plan-slug">
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Valor Mensalidade (R$)</label>
+                <input type="number" id="plan-price" step="0.01" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 1.1rem; font-weight: bold;">
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center;">Salvar Valor do Plano</button>
+                <button type="button" onclick="app.activateTrial(document.getElementById('plan-slug').value)" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #10b981; background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: bold; cursor: pointer;">Ativar Teste 7 Dias Grátis</button>
+                <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px;">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
     <script>
         function logout() {
             localStorage.removeItem('master_auth');
