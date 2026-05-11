@@ -1,7 +1,7 @@
 // Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
 console.log("🚀 CENTAURO APP V70.30 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -602,6 +602,21 @@ const app = {
                 const fbApp = initializeApp(this.state.firebaseConfig);
                 this.db = getDatabase(fbApp);
                 console.log('🔥 Firebase Initialized');
+
+                // Monitorar visibilidade (Mobile Sleep/Wake)
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        console.log('📱 App em destaque, reativando sincronização...');
+                        goOnline(this.db);
+                        // Pequeno delay para garantir reconexão antes de renderizar
+                        setTimeout(() => {
+                            if (this.state.view !== 'booking') {
+                                this.render(this.state.view);
+                            }
+                        }, 500);
+                    }
+                });
+
 
                 const urlParams = new URLSearchParams(window.location.search);
                 let tenantId = urlParams.get('loja');
