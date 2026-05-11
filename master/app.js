@@ -223,7 +223,7 @@ const app = {
                         <p class="t-info"><strong>Dono:</strong> Henri</p>
                         <p class="t-info"><strong>Slug:</strong> (Acesso Direto)</p>
                         <div class="t-actions">
-                            <a href="../index.html" target="_blank" class="t-link">↗ Acessar Sistema</a>
+                            <a href="../index.html" target="_blank" class="btn" style="width: 100%; text-align: center; background: #4c1d95; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold; display: block;">↗ Acessar Sistema</a>
                         </div>
                     </div>
                 `;
@@ -264,7 +264,8 @@ const app = {
                         ${t.sellerId ? `<p style="color: #10b981; font-weight: 700; margin-top: 5px;">🤝 Vendedor: ${t.sellerId}</p>` : ''}
                     </div>
                     <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        <a href="../index.html?loja=${key}" target="_blank" class="t-link" style="width: 100%; text-align: center; margin-bottom: 5px;">↗ Acessar Sistema</a>
+                        <a href="../index.html?loja=${key}" target="_blank" class="btn" style="width: 100%; text-align: center; margin-bottom: 5px; background: #4c1d95; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold;">↗ Acessar Sistema</a>
+                        <button onclick="app.openEditRegistrationModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem; color: #fff; border-color: rgba(255,255,255,0.3);">📝 Cadastro</button>
                         <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
                         <button onclick="app.openPlanModal('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: #2563eb; color: white; border: none;">📋 Plano</button>
                         <button onclick="app.renewSubscription('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: ${statusColor}; color: white; border: none;">💰 Renovar</button>
@@ -716,6 +717,68 @@ const app = {
             alert('❌ ' + error.message);
             btn.textContent = 'Salvar Alterações';
             btn.disabled = false;
+        }
+    },
+
+    async openEditRegistrationModal(slug) {
+        document.getElementById('edit-registration-modal').showModal();
+        const form = document.getElementById('edit-registration-form');
+        
+        try {
+            const snapMaster = await get(ref(this.db, 'master/tenants/' + slug));
+            const masterData = snapMaster.val() || {};
+            
+            document.getElementById('er-slug').value = slug;
+            document.getElementById('er-name').value = masterData.name || '';
+            document.getElementById('er-phone').value = masterData.phone || '';
+            document.getElementById('er-admin-user').value = masterData.adminUser || '';
+            document.getElementById('er-admin-pass').value = '';
+            
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-save-registration');
+                btn.textContent = 'Salvando...';
+                btn.disabled = true;
+                
+                try {
+                    const newName = document.getElementById('er-name').value;
+                    const newPhone = document.getElementById('er-phone').value;
+                    const newUser = document.getElementById('er-admin-user').value;
+                    const newPass = document.getElementById('er-admin-pass').value;
+                    
+                    // Atualizar master
+                    await update(ref(this.db, 'master/tenants/' + slug), {
+                        name: newName,
+                        phone: newPhone,
+                        adminUser: newUser
+                    });
+                    
+                    // Atualizar inquilino (staff admin)
+                    const staffSnap = await get(ref(this.db, 'tenants/' + slug + '/staff'));
+                    const staffList = staffSnap.val() || [];
+                    const adminIndex = staffList.findIndex(s => s && s.role === 'admin');
+                    
+                    if (adminIndex !== -1) {
+                        const adminUpdates = { login: newUser };
+                        if (newPass) adminUpdates.password = newPass;
+                        await update(ref(this.db, 'tenants/' + slug + '/staff/' + adminIndex), adminUpdates);
+                    }
+                    
+                    document.getElementById('edit-registration-modal').close();
+                    alert('✅ Cadastro atualizado com sucesso!');
+                    this.renderTenants();
+                } catch (err) {
+                    console.error(err);
+                    alert('❌ Erro ao salvar: ' + err.message);
+                } finally {
+                    btn.textContent = 'Salvar Alterações';
+                    btn.disabled = false;
+                }
+            };
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao carregar dados de cadastro.');
+            document.getElementById('edit-registration-modal').close();
         }
     },
 

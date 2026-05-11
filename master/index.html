@@ -271,6 +271,32 @@
         </form>
     </dialog>
 
+    <dialog id="edit-registration-modal" class="modal" style="background: #1e293b; color: white; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; width: 90%; max-width: 500px;">
+        <h3 style="margin-top: 0;">Editar Cadastro da Barbearia</h3>
+        <form id="edit-registration-form">
+            <input type="hidden" id="er-slug">
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Nome do Estabelecimento</label>
+                <input type="text" id="er-name" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Telefone / WhatsApp</label>
+                <input type="text" id="er-phone" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Usuário (Admin Login)</label>
+                <input type="text" id="er-admin-user" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Nova Senha (deixe em branco para manter a atual)</label>
+                <input type="password" id="er-admin-pass" placeholder="••••••••" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;">
+            </div>
+            <div style="text-align: right;">
+                <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; margin-right: 15px;">Cancelar</button>
+                <button type="submit" class="btn-action btn-main" id="btn-save-registration">Salvar Alterações</button>
+            </div>
+        </form>
+    </dialog>
     <script>
         function logout() {
             localStorage.removeItem('master_auth');
