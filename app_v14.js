@@ -7939,9 +7939,11 @@ const app = {
                         Regularize sua situação para continuar utilizando o Agendamento Fácil BR.
                     </p>
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Para regularizar, entre em contato com o suporte:</p>
-                        <a href="https://wa.me/5551981429980?text=Quero%20fazer%20o%20pagamento%20-%20Loja" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">
-                            Quero fazer o pagamento (WhatsApp)
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Chave PIX (CNPJ):</p>
+                        <p style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 15px;">63.039.029/0001-05</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Após o pagamento, envie o comprovante:</p>
+                        <a href="${waLink}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">
+                            Enviar Comprovante (WhatsApp)
                         </a>
                     </div>
                     <p style="font-size: 0.75rem; color: var(--text-muted);">Unidade: ${new URLSearchParams(window.location.search).get('loja') || 'Matriz'}</p>
