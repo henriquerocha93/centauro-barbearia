@@ -1239,8 +1239,9 @@ const app = {
         }
 
         if (sub?.isBlocked || isExpired) {
-            // O usuário solicitou que o bloqueio apareça APENAS no painel adm
-            if (view.startsWith('admin-')) {
+            // O usuário solicitou: "O bloqueio é geral"
+            // Impedimos qualquer navegação para telas restritas ou operacionais se estiver vencido.
+            if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
                 this.renderBlockedScreen(appContainer);
                 return;
             }
@@ -1355,7 +1356,7 @@ const app = {
 
         appContainer.className = 'container'; // Reseta para o padrão
         appContainer.innerHTML = `
-            ${this.getSubscriptionWarningHTML()}
+            ${this.getSubscriptionWarningHTML(view)}
             <div class="app-layout">
                 <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">
@@ -7860,7 +7861,7 @@ const app = {
         }
     },
 
-    getSubscriptionWarningHTML() {
+    getSubscriptionWarningHTML(currentView = '') {
         if (!this.state.subscription || !this.state.subscription.nextPayment) return '';
 
         const sub = this.state.subscription;
@@ -7886,8 +7887,8 @@ const app = {
             `;
         }
 
-        // 2. AVISO DE 2 DIAS (Regra específica solicitada)
-        if (diffDays === 2) {
+        // 2. AVISO DE 2 DIAS (Apenas no Painel Adm conforme solicitado)
+        if (diffDays === 2 && currentView.startsWith('admin-')) {
             return `
                 <div style="background: #f59e0b; color: #000; padding: 15px; text-align: center; font-weight: 700; width: 100%; flex-shrink: 0; border-bottom: 2px solid rgba(0,0,0,0.1);">
                     <span>⚠️ AVISO: Faltam apenas 2 dias para o vencimento do seu plano!</span>
