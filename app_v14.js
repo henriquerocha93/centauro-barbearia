@@ -2416,8 +2416,8 @@ const app = {
 
             // Procura o usuário que cruza os dados (Aceita Login ou Email)
             const matchedUser = this.state.staff.find(s =>
-                ((s.login && s.login.trim().toLowerCase() === user) || (s.email && s.email.trim().toLowerCase() === user)) &&
-                (s.password && s.password.trim() === pass)
+                ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
+                (s.password && String(s.password).trim() === pass)
             );
 
             if (matchedUser) {
