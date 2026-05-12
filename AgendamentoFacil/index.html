@@ -684,7 +684,8 @@
 
                 alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVamos configurar seu layout agora!`);
                 
-                // 3. Redireciona para o Setup Wizard
+                // Limpar sessão e redirecionar para o Setup Wizard
+                localStorage.removeItem('centauros_user');
                 window.location.href = `setup.html?loja=${slug}`;
 
             } catch (e) {
