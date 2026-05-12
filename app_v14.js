@@ -6489,7 +6489,7 @@ const app = {
         }
 
         try {
-            const sales = (this.state.productSales || []).slice(-200).reverse(); // Apenas os 200 mais recentes
+            const sales = (this.state.productSales || []).slice(-200).reverse();
             let last7DaysTotal = 0;
             const now = Date.now();
             const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
@@ -6509,30 +6509,36 @@ const app = {
             });
 
             container.innerHTML = `
-                <section id="consumption-report" class="fade-in">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 class="section-title" style="margin:0;">${isAdmin ? 'Consumo de Produtos' : 'Meu Consumo'}</h2>
-                        <input type="date" value="${filterDate}" class="glass" style="padding:8px; color:var(--text-primary); font-size:0.8rem;"
+                <section id="consumption-report" class="fade-in" style="padding: 20px 0;">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                        <input type="date" value="${filterDate}" class="glass" style="padding:10px; color:var(--text-primary); font-size:0.85rem; border: 1px solid var(--glass-border);"
                                onchange="app.state.consumptionFilterDate = this.value; app.render('admin-consumption')">
                     </div>
 
-                    <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Total Consumido (7 dias): <strong style="color:var(--accent-readable);">R$ ${last7DaysTotal.toFixed(2)}</strong></p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div class="glass" style="padding: 20px; border-left: 4px solid var(--accent-color); background: rgba(255,255,255,0.02);">
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Consumo Total (7 dias)</p>
+                            <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-readable);">R$ ${last7DaysTotal.toFixed(2)}</p>
+                        </div>
                     </div>
 
-                    <div class="consumption-list">
-                        ${filteredSales.length === 0 ? '<p style="text-align:center; padding:20px; opacity:0.5;">Nenhum registro encontrado.</p>' : ''}
+                    <div class="consumption-list" style="display: flex; flex-direction: column; gap: 12px;">
+                        ${filteredSales.length === 0 ? '<div class="glass" style="text-align:center; padding:50px; opacity:0.5;">Nenhum registro encontrado.</div>' : ''}
                         ${filteredSales.map(item => `
-                            <div class="glass" style="padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
-                                <div>
-                                    <div style="font-weight: 700;">${item.qty}x ${item.productName}</div>
-                                    <div style="font-size: 0.7rem; color: var(--text-secondary);">${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}</div>
+                            <div class="glass" style="padding: 18px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">${item.qty}x ${item.productName}</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8;">🕒 ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}</span>
                                 </div>
-                                <div style="text-align: right;">
-                                    <span style="font-size: 0.6rem; font-weight: 800; color: var(--accent-color); text-transform: uppercase;">${item.target === 'adm' ? 'ADM' : item.barberName?.split(' ')[0]}</span>
-                                    <div style="font-weight: 800; color: #4ade80;">${item.target === 'adm' ? '---' : `R$ ${(parseFloat(item.total) || 0).toFixed(2)}`}</div>
+                                <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                                        <span style="font-size: 0.6rem; font-weight: 900; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">
+                                            ${item.target === 'adm' ? '⚙️ ADM' : item.barberName?.split(' ')[0]}
+                                        </span>
+                                        <span style="font-weight: 800; color: #4ade80; font-size: 1.1rem;">${item.target === 'adm' ? '---' : `R$ ${(parseFloat(item.total) || 0).toFixed(2)}`}</span>
+                                    </div>
+                                    ${isAdmin ? `<button class="glass" onclick="app.deleteConsumptionRecord(${item.id})" style="padding: 8px; color:#ff4444; border: 1px solid rgba(255,68,68,0.2); cursor:pointer; border-radius: 8px; transition: 0.2s;">🗑️</button>` : ''}
                                 </div>
-                                ${isAdmin ? `<button onclick="app.deleteConsumptionRecord(${item.id})" style="margin-left:10px; background:none; border:none; color:#ff4444; cursor:pointer;">🗑️</button>` : ''}
                             </div>
                         `).join('')}
                     </div>
