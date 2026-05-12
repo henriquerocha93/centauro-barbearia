@@ -598,7 +598,7 @@ const app = {
                                                 </span>
                                             </td>
                                             <td style="padding: 12px; display: flex; gap: 5px;">
-                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px;" onclick="alert('Mensagem: ${l.message.replace(/'/g, "\\'")}')">👁️ Ver Msg</button>
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px;" onclick="alert('Mensagem: ${(l.message || 'N/A').replace(/'/g, "\\'")}')">👁️ Ver Msg</button>
                                                 <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px 10px; color: #ef4444; border-color: #fecaca;" onclick="app.deleteLead('${key}')">🗑️</button>
                                             </td>
                                         </tr>
