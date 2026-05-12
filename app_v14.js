@@ -194,15 +194,20 @@ const app = {
 
     normalizeDate(dateStr) {
         if (!dateStr) return '';
-        const s = String(dateStr).trim();
-        if (s.includes('T')) return s.split('T')[0];
-        if (s.includes('-')) return s; // YYYY-MM-DD
+        let s = String(dateStr).trim().split(' ')[0].split('T')[0];
+        s = s.replace(/,/g, '');
+        
+        if (s.includes('-')) {
+            const parts = s.split('-');
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return s;
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
         if (s.includes('/')) {
             const parts = s.split('/');
             if (parts.length === 3) {
-                // Se o primeiro campo tiver 4 dígitos, assume YYYY/MM/DD
                 if (parts[0].length === 4) return s.replace(/\//g, '-');
-                // Se não, assume DD/MM/YYYY
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
         }
@@ -6237,9 +6242,10 @@ const app = {
     renderAdminVouchers(container) {
         const today = new Date().toLocaleDateString('en-CA');
         const vouchers = this.state.vouchers || [];
-        const filterDate = this.state.voucherFilterDate || today;
+        const filterDate = this.state.voucherFilterDate === 'all' ? 'all' : this.normalizeDate(this.state.voucherFilterDate || today);
         
         const filteredVouchers = vouchers.filter(v => {
+            if (filterDate === 'all') return true;
             const vDate = this.normalizeDate(v.discountDate || v.date);
             return vDate === filterDate;
         });
@@ -6273,9 +6279,15 @@ const app = {
                 </form>
 
                 <div class="glass" style="padding: 15px; margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.8rem;">Filtrar Vales por Data (Desconto)</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600;">Filtrar Vales por Data (Desconto)</label>
+                        <button class="glass" style="padding: 4px 12px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" onclick="
+                            window.app.state.voucherFilterDate = 'all';
+                            window.app.renderAdminVouchers(document.getElementById('main-content'));
+                        ">Mostrar Todos</button>
+                    </div>
                     <div style="display: flex; gap: 10px;">
-                        <input type="date" id="voucher-filter-date" class="glass" style="flex: 1; padding: 10px; color: var(--text-primary);" value="${filterDate}">
+                        <input type="date" id="voucher-filter-date" class="glass" style="flex: 1; padding: 10px; color: var(--text-primary);" value="${filterDate === 'all' ? '' : filterDate}">
                         <button class="btn-primary" style="padding: 0 20px;" onclick="
                             window.app.state.voucherFilterDate = document.getElementById('voucher-filter-date').value;
                             window.app.renderAdminVouchers(document.getElementById('main-content'));
