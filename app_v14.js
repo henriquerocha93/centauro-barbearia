@@ -214,31 +214,48 @@ const app = {
         return s;
     },
 
+    // [NOVO] Auxiliares para Contraste de Cores
+    hexToRgb(hex) {
+        if (!hex) return null;
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    },
+
+    getLuminance(hex) {
+        const rgb = this.hexToRgb(hex);
+        if (!rgb) return 0;
+        const a = [rgb.r, rgb.g, rgb.b].map(v => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    },
+
+    getContrastColor(hex) {
+        return this.getLuminance(hex) > 0.5 ? '#000000' : '#FFFFFF';
+    },
+
     applyTheme() {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
         const s = this.state.settings || {};
         const root = document.documentElement;
 
-        if (type === 'barbershop') {
-            root.style.setProperty('--bg-color', s.bgColor || '#0B0E14');
-            root.style.setProperty('--surface-color', s.surfaceColor || '#151A21');
-            root.style.setProperty('--accent-color', s.accentColor || '#D4AF37');
-            root.style.setProperty('--text-primary', s.textPrimary || '#F3F4F6');
-            root.style.setProperty('--text-secondary', s.textSecondary || '#9CA3AF');
-            root.style.setProperty('--glass-bg', s.glassBg || 'rgba(21, 26, 33, 0.8)');
-        } else {
-            root.style.setProperty('--bg-color', theme.bg);
-            root.style.setProperty('--surface-color', theme.surface);
-            root.style.setProperty('--accent-color', theme.primary);
-            root.style.setProperty('--text-primary', theme.text);
-            root.style.setProperty('--text-secondary', theme.textSecondary);
-            root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
-        }
-
-        // Cores Dinâmicas extras se existirem nas settings (Sobrescreve tudo)
-        if (s.primaryColor) root.style.setProperty('--primary-color', s.primaryColor);
-        if (s.accentColor) root.style.setProperty('--accent-color', s.accentColor);
+        let bgColor = (type === 'barbershop') ? (s.bgColor || '#0B0E14') : theme.bg;
+        let accentColor = (type === 'barbershop') ? (s.accentColor || '#D4AF37') : theme.primary;
+        
+        root.style.setProperty('--bg-color', bgColor);
+        root.style.setProperty('--surface-color', s.surfaceColor || theme.surface || '#151A21');
+        root.style.setProperty('--accent-color', accentColor);
+        root.style.setProperty('--accent-readable', accentColor); // Simplificado
+        root.style.setProperty('--text-primary', s.textPrimary || theme.text || '#F3F4F6');
+        root.style.setProperty('--text-secondary', s.textSecondary || theme.textSecondary || '#9CA3AF');
+        root.style.setProperty('--glass-bg', s.glassBg || theme.glassBg || 'rgba(21, 26, 33, 0.8)');
+        root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.08)');
     },
 
     openModal(title, contentHTML) {
@@ -277,23 +294,33 @@ const app = {
     },
 
     saveState() {
-        localStorage.setItem(this.getStorageKey(), JSON.stringify({
-            services: this.state.services,
-            staff: this.state.staff,
-            customers: this.state.customers,
-            settings: this.state.settings,
-            vouchers: this.state.vouchers,
-            transactions: this.state.transactions,
-            products: this.state.products,
-            productSales: this.state.productSales || [],
-            openingBalances: this.state.openingBalances || {},
-            appointments: this.state.appointments || [],
-            serviceOrders: this.state.serviceOrders || [],
-            tips: this.state.tips || [],
-            lastConsumptionView: this.state.lastConsumptionView || 0,
-            lastUpdate: this.state.lastUpdate || 0
-        }));
-        this.syncToFirebase();
+        if (this._saveTimeout) clearTimeout(this._saveTimeout);
+        this._saveTimeout = setTimeout(() => {
+            // [OTIMIZAÇÃO] Se o estado for muito grande, o stringify pode travar a UI.
+            // Poderíamos usar um Web Worker aqui, mas por agora vamos apenas garantir que não aconteça toda hora.
+            try {
+                const stateToSave = {
+                    services: this.state.services,
+                    staff: this.state.staff,
+                    customers: this.state.customers,
+                    settings: this.state.settings,
+                    vouchers: this.state.vouchers,
+                    transactions: this.state.transactions,
+                    products: this.state.products,
+                    productSales: this.state.productSales || [],
+                    openingBalances: this.state.openingBalances || {},
+                    appointments: this.state.appointments || [],
+                    serviceOrders: this.state.serviceOrders || [],
+                    tips: this.state.tips || [],
+                    lastConsumptionView: this.state.lastConsumptionView || 0,
+                    lastUpdate: this.state.lastUpdate || 0
+                };
+                localStorage.setItem(this.getStorageKey(), JSON.stringify(stateToSave));
+                this.syncToFirebase();
+            } catch (e) {
+                console.error("Erro ao salvar estado (possivelmente estouro de memória):", e);
+            }
+        }, 500); // Aumentado debounce para 500ms
     },
 
     async syncToFirebase() {
@@ -925,7 +952,7 @@ const app = {
                 <div class="glass" style="padding: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <div style="width: 40px; font-weight: 600; font-size: 0.8rem; color: var(--text-primary);">${d}</div>
                     <label style="display:flex; align-items:center; gap: 5px; cursor: pointer; font-size: 0.8rem; min-width: 60px;">
-                        <input type="checkbox" id="cfg-act-${i}" ${sc.active ? 'checked' : ''} style="accent-color: var(--accent-color);"> Ativo
+                        <input type="checkbox" id="cfg-act-${i}" ${sc.active ? 'checked' : ''} style="accent-color: var(--accent-readable);"> Ativo
                     </label>
                     <input type="time" id="cfg-open-${i}" class="glass" style="padding: 5px; width: 100px; color: var(--text-primary);" value="${sc.open}">
                     <span style="font-size: 0.8rem; color: var(--text-secondary);">às</span>
@@ -984,7 +1011,7 @@ const app = {
                     <td style="padding: 14px 12px; text-align: center;">
                         <label style="display: flex; align-items: center; justify-content: center; cursor: pointer; gap: 8px;">
                             <input type="checkbox" id="cfg-act-${i}" ${sc.active ? 'checked' : ''} 
-                                   style="width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer;"
+                                   style="width: 18px; height: 18px; accent-color: var(--accent-readable); cursor: pointer;"
                                    onchange="document.getElementById('hours-row-${i}').style.opacity = this.checked ? '1' : '0.35'">
                             <span style="font-size: 0.8rem; color: ${sc.active ? 'var(--accent-color)' : 'var(--text-secondary)'};">${sc.active ? 'Aberto' : 'Fechado'}</span>
                         </label>
@@ -1265,6 +1292,7 @@ const app = {
     },
 
     render(view) {
+        this.applyTheme();
         const appContainer = document.getElementById('app');
 
         // [SaaS] Bloqueio Manual ou Automático por Vencimento
@@ -1398,7 +1426,7 @@ const app = {
                 <button class="hamburger" onclick="app.toggleSidebar()">
                     <i data-lucide="menu"></i>
                 </button>
-                <span style="font-weight: 800; color: var(--accent-color); font-size: 0.9rem;">${shopName}</span>
+                <span style="font-weight: 800; color: var(--accent-readable); font-size: 0.9rem;">${shopName}</span>
                 <div id="sync-status-indicator" style="font-size: 0.5rem; opacity: 0.6;">⚡</div>
             </div>
             
@@ -1530,26 +1558,37 @@ const app = {
     },
 
     injectView(view, container) {
-        switch (view) {
-            case 'admin-dash': this.renderAdminDash(container); break;
-            case 'barber-dash': this.renderBarberDash(container); break;
-            case 'barber-financial': this.renderBarberFinancial(container); break;
-            case 'admin-customers': this.renderAdminCustomers(container); break;
-            case 'admin-stock': this.renderAdminStock(container); break;
-            case 'admin-cashflow': this.renderAdminCashFlow(container); break;
-            case 'admin-vouchers': this.renderAdminVouchers(container); break;
-            case 'admin-consumption': this.renderAdminConsumption(container); break;
-            case 'admin-staff': this.renderAdminStaff(container); break;
-            case 'admin-services': this.renderAdminServices(container); break;
-            case 'admin-payments': this.renderAdminPayments(container); break;
-            case 'admin-faturamento': this.renderAdminFaturamento(container); break;
-            case 'admin-team-performance': this.renderAdminTeamPerformance(container); break;
-            case 'admin-tips': this.renderAdminTips(container); break;
-            case 'admin-settings': this.renderAdminSettings(container); break;
-            case 'admin-billing': this.renderAdminBilling(container); break;
-            case 'admin-os': this.renderAdminOS(container); break;
-            case 'pdv': this.renderPDV(container); break;
-            default: this.renderAdminDash(container);
+        try {
+            switch (view) {
+                case 'admin-dash': this.renderAdminDash(container); break;
+                case 'barber-dash': this.renderBarberDash(container); break;
+                case 'barber-financial': this.renderBarberFinancial(container); break;
+                case 'admin-customers': this.renderAdminCustomers(container); break;
+                case 'admin-stock': this.renderAdminStock(container); break;
+                case 'admin-cashflow': this.renderAdminCashFlow(container); break;
+                case 'admin-vouchers': this.renderAdminVouchers(container); break;
+                case 'admin-consumption': this.renderAdminConsumption(container); break;
+                case 'admin-staff': this.renderAdminStaff(container); break;
+                case 'admin-services': this.renderAdminServices(container); break;
+                case 'admin-payments': this.renderAdminPayments(container); break;
+                case 'admin-faturamento': this.renderAdminFaturamento(container); break;
+                case 'admin-team-performance': this.renderAdminTeamPerformance(container); break;
+                case 'admin-tips': this.renderAdminTips(container); break;
+                case 'admin-settings': this.renderAdminSettings(container); break;
+                case 'admin-billing': this.renderAdminBilling(container); break;
+                case 'admin-os': this.renderAdminOS(container); break;
+                case 'pdv': this.renderPDV(container); break;
+                default: this.renderAdminDash(container);
+            }
+        } catch (e) {
+            console.error(`Erro ao injetar a view ${view}:`, e);
+            container.innerHTML = `
+                <div class="glass" style="padding: 40px; text-align: center; color: #ff4444;">
+                    <h3>❌ Erro Crítico de Renderização</h3>
+                    <p style="font-size: 0.9rem; margin: 15px 0;">Ocorreu uma falha ao tentar carregar esta tela.</p>
+                    <button class="btn-primary" onclick="app.navigateTo('admin-dash')">Voltar ao Início</button>
+                </div>
+            `;
         }
     },
 
@@ -1567,7 +1606,7 @@ const app = {
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <img src="logo_agendamento.png" style="width: 180px; height: auto; filter: drop-shadow(0 0 10px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                     <div>
-                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-color); margin: 0;">MENU DO SISTEMA</h1>
+                        <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-readable); margin: 0;">MENU DO SISTEMA</h1>
                         <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
@@ -1712,7 +1751,7 @@ const app = {
                     <div class="pdv-cart-column glass-panel premium-cart">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
                             <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
-                                <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
+                                <i data-lucide="shopping-basket" style="color: var(--accent-readable);"></i>
                                 Carrinho
                             </h3>
                             ${cart.length > 0 ? `<button style="font-size: 0.65rem; color: #ff4444; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2); border-radius: 6px; padding: 4px 10px; cursor: pointer;" onclick="app.clearCart()">Limpar</button>` : ''}
@@ -1784,7 +1823,7 @@ const app = {
                             ${discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; color: #fbbf24;"><span style="opacity: 0.8;">Desconto</span><span style="font-weight: 700;">- R$ ${discount.toFixed(2)}</span></div>` : ''}
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: 900; border-top: 1.5px solid rgba(255,255,255,0.05); padding-top: 10px; margin-top: 6px;">
                                 <span style="color: var(--text-primary);">Total</span>
-                                <span style="color: var(--accent-color);">R$ ${total.toFixed(2)}</span>
+                                <span style="color: var(--accent-readable);">R$ ${total.toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -2364,7 +2403,7 @@ const app = {
         container.innerHTML = `
             <section id="home-hero" class="hero" style="background-image: url('${heroImg}');">
                 <div class="hero-content fade-in-up">
-                    <p style="text-transform: uppercase; letter-spacing: 4px; font-size: 0.85rem; color: var(--accent-color); font-weight: 600; margin-bottom: 15px;">${subtitle}</p>
+                    <p style="text-transform: uppercase; letter-spacing: 4px; font-size: 0.85rem; color: var(--accent-readable); font-weight: 600; margin-bottom: 15px;">${subtitle}</p>
                     <h1 style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px;">${name}</h1>
                     <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 35px; line-height: 1.6;">
                         A melhor experiência em ${this.getTerm('shopTerm').toLowerCase()} da região. Estilo, tradição e atendimento de excelência em um só lugar.
@@ -2383,7 +2422,7 @@ const app = {
                         ${theme.features.map(f => `
                             <div class="glass fade-in-up" style="padding: 50px 30px; text-align: center; transition: transform 0.3s ease;">
                                 <div style="font-size: 3rem; margin-bottom: 25px; filter: drop-shadow(0 0 10px var(--accent-glow));">${f.icon}</div>
-                                <h3 style="color: var(--accent-color); margin-bottom: 18px; font-size: 1.3rem;">${f.title}</h3>
+                                <h3 style="color: var(--accent-readable); margin-bottom: 18px; font-size: 1.3rem;">${f.title}</h3>
                                 <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7;">${f.desc}</p>
                             </div>
                         `).join('')}
@@ -2401,16 +2440,16 @@ const app = {
                         <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Brasil')}" target="_blank" class="glass fade-in-up" style="overflow: hidden; text-decoration: none; display: flex; flex-direction: column;">
                             <img src="map_real.png" style="width: 100%; height: 300px; object-fit: cover;">
                             <div style="padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-color); margin-bottom: 10px;">${s.address || 'Endereço não cadastrado'}</p>
+                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-readable); margin-bottom: 10px;">${s.address || 'Endereço não cadastrado'}</p>
                                  <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Por favor, atualize o endereço no painel administrativo.'}</p>
-                                 ${s.phone ? `<p style="font-weight: bold; color: var(--accent-color); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
-                                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-color); font-size: 0.85rem; font-weight: 600;">
+                                 ${s.phone ? `<p style="font-weight: bold; color: var(--accent-readable); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
+                                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-readable); font-size: 0.85rem; font-weight: 600;">
                                      📍 VER NO GOOGLE MAPS
                                  </div>
                             </div>
                         </a>
                         <div class="glass fade-in-up" style="padding: 40px; display: flex; flex-direction: column; justify-content: center;">
-                            <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-color); text-align: center;">Horários de Funcionamento</h3>
+                            <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-readable); text-align: center;">Horários de Funcionamento</h3>
                             <div style="display: flex; flex-direction: column; gap: 20px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
                                     <span style="font-weight: 600;">Segunda a Quarta</span>
@@ -2472,7 +2511,7 @@ const app = {
                                    onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
                         </div>
                         <div style="margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="keep-logged-in" style="width: 20px; height: 20px; accent-color: var(--accent-color); cursor: pointer;">
+                            <input type="checkbox" id="keep-logged-in" style="width: 20px; height: 20px; accent-color: var(--accent-readable); cursor: pointer;">
                             <label for="keep-logged-in" style="font-size: 0.9rem; color: var(--text-primary); cursor: pointer; user-select: none;">Mantenha-me logado</label>
                         </div>
                         
@@ -2619,7 +2658,7 @@ const app = {
                     <h3 style="font-size: 0.95rem; display: flex; align-items: center; gap: 10px; margin: 0;">
                         🏆 Ranking do Mês
                     </h3>
-                    <button class="glass" style="padding: 4px 10px; font-size: 0.65rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" onclick="app.navigateTo('admin-team-performance')">Ver Tudo</button>
+                    <button class="glass" style="padding: 4px 10px; font-size: 0.65rem; color: var(--accent-readable); border: 1px solid var(--glass-border); cursor: pointer;" onclick="app.navigateTo('admin-team-performance')">Ver Tudo</button>
                 </div>
                 <div style="display: flex; gap: 15px; overflow-x: auto; padding: 15px 5px; scrollbar-width: none; -ms-overflow-style: none;">
                     ${sorted.map((b, idx) => {
@@ -2635,7 +2674,7 @@ const app = {
                                 </div>
                                 <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</p>
                                 ${isAdmin ? `
-                                    <p style="font-size: 0.7rem; font-weight: 800; color: var(--accent-color);">R$ ${b.total.toFixed(0)}</p>
+                                    <p style="font-size: 0.7rem; font-weight: 800; color: var(--accent-readable);">R$ ${b.total.toFixed(0)}</p>
                                     <p style="font-size: 0.6rem; color: var(--text-secondary); opacity: 0.7;">${b.appointments} atend.</p>
                                 ` : `
                                     <div style="height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; width: 80%; margin: 5px auto;">
@@ -3219,7 +3258,7 @@ const app = {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color);">
                         <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Serviços</p>
-                        <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-color);">R$ ${myCommission.toFixed(2)}</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-readable);">R$ ${myCommission.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
                         <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Produtos</p>
@@ -3247,7 +3286,7 @@ const app = {
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${a.customer}</span>
-                                <span style="font-weight: 700; color: var(--accent-color);">+ R$ ${(a.price * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
+                                <span style="font-weight: 700; color: var(--accent-readable);">+ R$ ${(a.price * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>${a.time ? `[${a.time}] ` : ''}${a.service}</span>
@@ -3333,6 +3372,16 @@ const app = {
         const todayStr = new Date().toISOString().split('T')[0];
         const isPastDate = this.state.currentDate < todayStr;
 
+        // [OTIMIZAÇÃO] Indexar agendamentos do dia para busca O(1)
+        const currentDate = this.state.currentDate;
+        const aptMap = new Map();
+        (this.state.appointments || []).forEach(a => {
+            const aDate = a.date || todayStr;
+            if (aDate === currentDate) {
+                aptMap.set(`${a.barber}-${a.time}`, a);
+            }
+        });
+
         container.innerHTML = `
             <div id="agenda-view" class="fade-in">
                 <!-- Agenda Controls -->
@@ -3343,7 +3392,7 @@ const app = {
                         </button>
                         <div style="text-align: center; min-width: 140px;">
                             <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Data Selecionada</div>
-                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--accent-color);">
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--accent-readable);">
                                 ${new Date(this.state.currentDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
                             </div>
                         </div>
@@ -3400,11 +3449,7 @@ const app = {
                         ${timeSlots.map(time => `
                             <div class="time-col">${time}</div>
                             ${barbersToShow.map(b => {
-                                const apt = (this.state.appointments || []).find(a =>
-                                    a.barber === b.name &&
-                                    a.time === time &&
-                                    (a.date === this.state.currentDate || (!a.date && this.state.currentDate === todayStr))
-                                );
+                                const apt = aptMap.get(`${b.name}-${time}`);
                                 return `
                                     <div class="agenda-cell" 
                                          data-barber="${b.name}"
@@ -3638,13 +3683,13 @@ const app = {
                     <!-- Histórico aqui -->
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-color);">Selecione os Serviços *</label>
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços *</label>
                     <div id="walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Nada selecionado</div>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => `
                             <label class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; border-radius: 8px;">
                                 <input type="checkbox" name="walkin-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" 
-                                       style="width: 20px; height: 20px; accent-color: var(--accent-color);"
+                                       style="width: 20px; height: 20px; accent-color: var(--accent-readable);"
                                        onchange="app.updateWalkinCounter()">
                                 <div style="flex: 1;">
                                     <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">${s.name}</p>
@@ -3701,7 +3746,7 @@ const app = {
         const indicator = document.getElementById('walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-color); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
                 : 'Nada selecionado';
         }
 
@@ -3966,7 +4011,7 @@ const app = {
                     Editando agendamento de <strong>${apt.customer}</strong>
                 </p>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-color);">Selecione os Serviços</label>
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços</label>
                     <div id="edit-walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Recalculando...</div>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 250px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => {
@@ -3976,7 +4021,7 @@ const app = {
                                        border: 2px solid ${isSelected ? 'var(--accent-color)' : 'var(--glass-border)'};
                                        background: ${isSelected ? 'rgba(212, 175, 55, 0.15)' : 'var(--glass-bg)'};">
                                     <input type="checkbox" name="edit-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" 
-                                           style="width: 20px; height: 20px; accent-color: var(--accent-color);"
+                                           style="width: 20px; height: 20px; accent-color: var(--accent-readable);"
                                            ${isSelected ? 'checked' : ''}
                                            onchange="app.updateEditCounter()">
                                     <div style="flex: 1;">
@@ -4004,7 +4049,7 @@ const app = {
         const indicator = document.getElementById('edit-walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-color); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
                 : 'Pelo menos um serviço deve ser selecionado';
         }
 
@@ -4431,12 +4476,39 @@ const app = {
             else payMethods.dinheiro += val;
         });
 
-        // 4. Detalhamento por Barbeiro (Relatório de Pagamentos)
+        // 4. [OTIMIZAÇÃO] Agrupar dados por barbeiro antes do loop para evitar filtros repetitivos O(N^2)
+        const aptsByBarber = {};
+        const productsByBarber = {};
+        const vouchersByBarber = {};
+        const tipsByBarber = {};
+
+        appointments.forEach(a => {
+            if (!aptsByBarber[a.barber]) aptsByBarber[a.barber] = [];
+            aptsByBarber[a.barber].push(a);
+        });
+        productSales.forEach(s => {
+            if (!productsByBarber[s.seller]) productsByBarber[s.seller] = [];
+            productsByBarber[s.seller].push(s);
+        });
+        (this.state.vouchers || []).forEach(v => {
+            const vDate = v.discountDate || (v.date ? v.date.split('T')[0] : '');
+            if (vDate && dateFilter(vDate)) {
+                if (!vouchersByBarber[v.barber]) vouchersByBarber[v.barber] = [];
+                vouchersByBarber[v.barber].push(v);
+            }
+        });
+        (this.state.tips || []).forEach(t => {
+            if (t.status === 'approved' && t.date && dateFilter(t.date)) {
+                if (!tipsByBarber[t.barber]) tipsByBarber[t.barber] = [];
+                tipsByBarber[t.barber].push(t);
+            }
+        });
+
         const staffReport = this.state.staff.filter(s => s.role === 'barber').map(barber => {
-            const bApts = appointments.filter(a => a.barber === barber.name);
-            const bProducts = productSales.filter(s => s.seller === barber.name);
-            const bVouchers = (this.state.vouchers || []).filter(v => v.barber === barber.name && dateFilter(v.discountDate || v.date.split('T')[0]));
-            const bTips = (this.state.tips || []).filter(t => t.barber === barber.name && t.status === 'approved' && dateFilter(t.date));
+            const bApts = aptsByBarber[barber.name] || [];
+            const bProducts = productsByBarber[barber.name] || [];
+            const bVouchers = vouchersByBarber[barber.name] || [];
+            const bTips = tipsByBarber[barber.name] || [];
 
             const sGross = bApts.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
             const pGross = bProducts.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
@@ -4494,7 +4566,7 @@ const app = {
                     </div>
                     <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Líquido Empresa</p>
-                        <p style="font-size: 1.8rem; font-weight: 900; color: var(--accent-color); margin-top: 5px;">R$ ${netRevenue.toFixed(2)}</p>
+                        <p style="font-size: 1.8rem; font-weight: 900; color: var(--accent-readable); margin-top: 5px;">R$ ${netRevenue.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -4514,7 +4586,7 @@ const app = {
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Comissão</th>
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Gorjetas</th>
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Vales</th>
-                                    <th style="padding: 12px; text-align: right; color: var(--accent-color); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">A Pagar (Líq.)</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--accent-readable); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">A Pagar (Líq.)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -4525,7 +4597,7 @@ const app = {
                                         <td style="padding: 15px 12px; text-align: right; color: #4ade80;">R$ ${r.commission.toFixed(2)}</td>
                                         <td style="padding: 15px 12px; text-align: right; color: #fbbf24;">R$ ${r.tips.toFixed(2)}</td>
                                         <td style="padding: 15px 12px; text-align: right; color: #ef4444;">- R$ ${r.vouchers.toFixed(2)}</td>
-                                        <td style="padding: 15px 12px; text-align: right; font-weight: 800; color: var(--accent-color); font-size: 1rem;">R$ ${r.net.toFixed(2)}</td>
+                                        <td style="padding: 15px 12px; text-align: right; font-weight: 800; color: var(--accent-readable); font-size: 1rem;">R$ ${r.net.toFixed(2)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -4572,8 +4644,20 @@ const app = {
     renderAdminTips(container) {
         const today = new Date().toLocaleDateString('en-CA');
         const allTips = this.state.tips || [];
-        const tipsToday = allTips.filter(t => t.date === today);
-        const pendingTips = allTips.filter(t => t.status === 'pending');
+        
+        let pendingTotalToday = 0;
+        let approvedTotalToday = 0;
+        const pendingTips = [];
+
+        allTips.forEach(t => {
+            if (t.status === 'pending') {
+                pendingTips.push(t);
+                if (t.date === today) pendingTotalToday += (t.amount || 0);
+            } else if (t.status === 'approved' && t.date === today) {
+                approvedTotalToday += (t.amount || 0);
+            }
+        });
+
         const recentApprovedTips = allTips.filter(t => t.status !== 'pending').slice(-20).reverse();
 
         container.innerHTML = `
@@ -4586,11 +4670,11 @@ const app = {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
                         <p style="color: var(--text-secondary); font-size: 0.75rem;">PENDENTES HOJE</p>
-                        <p style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;">R$ ${tipsToday.filter(t => t.status === 'pending').reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;">R$ ${pendingTotalToday.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
                         <p style="color: var(--text-secondary); font-size: 0.75rem;">APROVADAS HOJE</p>
-                        <p style="font-size: 1.5rem; font-weight: 700; color: #4ade80;">R$ ${tipsToday.filter(t => t.status === 'approved').reduce((acc, t) => acc + t.amount, 0).toFixed(2)}</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: #4ade80;">R$ ${approvedTotalToday.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -4821,7 +4905,7 @@ const app = {
                 <div class="glass" style="padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent-color);">
                     <div>
                         <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Vendas Hoje</p>
-                        <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">R$ ${todayRevenue.toFixed(2)}</p>
+                        <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-readable);">R$ ${todayRevenue.toFixed(2)}</p>
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">Transações</p>
@@ -4856,7 +4940,7 @@ const app = {
                 <div style="flex: 1; min-width: 0;">
                     <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${p.name}</p>
                     ${p.barcode ? `<p style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px;">🔖 ${p.barcode}</p>` : ''}
-                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Venda: <strong style="color: var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Venda: <strong style="color: var(--accent-readable);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
                     <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; flex-shrink: 0;">
@@ -4870,7 +4954,7 @@ const app = {
                     <div style="display: flex; gap: 5px;">
                         <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #4ade80; border: 1px solid rgba(74,222,128,0.3);" onclick="app.openProductFoundModal(app.state.products.find(x=>x.id===${p.id}))">💰 Vender</button>
                         ${this.state.user.role === 'admin' ? `
-                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-readable); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
                             <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">🗑️</button>
                         ` : ''}
                     </div>
@@ -4975,7 +5059,7 @@ const app = {
                 <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
                     <p style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">${product.name}</p>
                     ${product.barcode ? `<p style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">🔖 ${product.barcode}</p>` : ''}
-                    <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-color); margin: 10px 0;">R$ ${parseFloat(product.price).toFixed(2)}</p>
+                    <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-readable); margin: 10px 0;">R$ ${parseFloat(product.price).toFixed(2)}</p>
                     <p style="font-size: 0.85rem;">Estoque: <strong style="color: ${stockColor};">${product.stock} un.</strong></p>
                 </div>
 
@@ -5291,7 +5375,7 @@ const app = {
                     <div class="pdv-cart-column glass-panel premium-cart">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 12px; color: var(--text-primary);">
-                                <i data-lucide="shopping-basket" style="color: var(--accent-color);"></i>
+                                <i data-lucide="shopping-basket" style="color: var(--accent-readable);"></i>
                                 Carrinho
                             </h3>
                             ${cart.length > 0 ? `<button style="font-size: 0.7rem; color: #ff4444; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2); border-radius: 8px; padding: 5px 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,68,68,0.2)'" onmouseout="this.style.background='rgba(255,68,68,0.1)'" onclick="window.app.clearCart()">Limpar Tudo</button>` : ''}
@@ -5512,7 +5596,7 @@ const app = {
                     <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${sellerDisplay}</td>
                     <td style="padding: 12px 15px; font-size: 0.75rem; color: var(--text-secondary);">${(s.payment || 'Dinheiro').toUpperCase()}</td>
                     <td style="padding: 12px 15px; text-align: right; color: #4ade80; font-weight: 600;">${comm > 0 ? `R$ ${comm.toFixed(2)}` : '--'}</td>
-                    <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: var(--accent-color);">R$ ${parseFloat(s.total || 0).toFixed(2)}</td>
+                    <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: var(--accent-readable);">R$ ${parseFloat(s.total || 0).toFixed(2)}</td>
                 </tr>
             `;
         }).join('');
@@ -5635,7 +5719,7 @@ const app = {
                     </div>
                     
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1rem; font-weight: 900; color: var(--accent-color); text-shadow: 0 0 10px rgba(212,175,55,0.2);">
+                        <span style="font-size: 1rem; font-weight: 900; color: var(--accent-readable); text-shadow: 0 0 10px rgba(212,175,55,0.2);">
                             R$ ${subtotal.toFixed(2)}
                         </span>
                         <button style="background: none; border: none; padding: 4px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s;" 
@@ -5662,7 +5746,7 @@ const app = {
             </div>` : ''}
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.3rem; font-weight: 900; border-top: 2px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 8px;">
                 <span style="color: var(--text-primary); letter-spacing: -0.5px;">Valor Total</span>
-                <span style="color: var(--accent-color); text-shadow: 0 0 15px var(--accent-color)44;">R$ ${total.toFixed(2)}</span>
+                <span style="color: var(--accent-readable); text-shadow: 0 0 15px var(--accent-color)44;">R$ ${total.toFixed(2)}</span>
             </div>
             ${seller && commission > 0 ? `
             <div style="display: flex; justify-content: space-between; font-size: 0.72rem; margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
@@ -6092,14 +6176,14 @@ const app = {
                                 <div style="text-align: right; cursor: pointer; padding: 5px 10px; background: rgba(212, 175, 55, 0.1); border-radius: 8px;" 
                                      onclick="if(confirm('Deseja aplicar o saldo de ontem (R$ ${prevDayFinalBalance.toFixed(2)}) como saldo inicial de hoje?')){ app.saveOpeningBalance('${selectedDate}', ${prevDayFinalBalance.toFixed(2)}); }">
                                     <p style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase;">Sugerido (ontem):</p>
-                                    <p style="font-size: 0.85rem; color: var(--accent-color); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
+                                    <p style="font-size: 0.85rem; color: var(--accent-readable); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
                                 </div>
                             ` : ''}
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <div style="position: relative;">
                                     <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--text-secondary);">R$</span>
                                     <input type="number" id="opening-bal-input" class="glass" 
-                                           style="padding: 10px 10px 10px 35px; width: 120px; color: var(--accent-color); font-weight: 800; font-size: 1.1rem; border: 1.5px solid var(--glass-border);" 
+                                           style="padding: 10px 10px 10px 35px; width: 120px; color: var(--accent-readable); font-weight: 800; font-size: 1.1rem; border: 1.5px solid var(--glass-border);" 
                                            value="${openingBalance.toFixed(2)}" step="0.01">
                                 </div>
                                 <button class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem; background: #2E8B57;" 
@@ -6134,7 +6218,7 @@ const app = {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.05);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Serviços</p>
-                        <p style="font-weight: 700; color: var(--accent-color);">R$ ${totals.servicos.toFixed(2)}</p>
+                        <p style="font-weight: 700; color: var(--accent-readable);">R$ ${totals.servicos.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Produtos</p>
@@ -6144,7 +6228,7 @@ const app = {
 
                 <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(255,255,255,0.02); border: 1.5px solid var(--accent-color);">
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Saldo Final Esperado no Caixa (Dinheiro)</p>
-                    <p style="font-size: 2.2rem; font-weight: 800; color: var(--accent-color);">R$ ${(openingBalance + totals.dinheiro).toFixed(2)}</p>
+                    <p style="font-size: 2.2rem; font-weight: 800; color: var(--accent-readable);">R$ ${(openingBalance + totals.dinheiro).toFixed(2)}</p>
                     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; font-size: 0.75rem; opacity: 0.8;">
                         <span>Inicial: R$ ${openingBalance.toFixed(2)}</span>
                         <span>+</span>
@@ -6295,7 +6379,7 @@ const app = {
                 <div class="glass" style="padding: 15px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <label style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600;">Filtrar Vales por Data (Desconto)</label>
-                        <button class="glass" style="padding: 4px 12px; font-size: 0.75rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" onclick="
+                        <button class="glass" style="padding: 4px 12px; font-size: 0.75rem; color: var(--accent-readable); border: 1px solid var(--glass-border); cursor: pointer;" onclick="
                             window.app.state.voucherFilterDate = 'all';
                             window.app.renderAdminVouchers(document.getElementById('main-content'));
                         ">Mostrar Todos</button>
@@ -6399,127 +6483,65 @@ const app = {
         const userName = this.state.user.name;
         const filterDate = this.state.consumptionFilterDate || '';
 
-        // Marcar como visto para parar de piscar no menu
+        // Marcar como visto sem forçar o saveState imediato (evita travar no carregamento)
         if (isAdmin) {
             this.state.lastConsumptionView = Date.now();
-            this.saveState();
         }
 
-        const allConsumption = (this.state.productSales || []).filter(s => {
-            if (isAdmin) return (s.target === 'adm' || s.target === 'barbeiro');
-            return (s.target === 'barbeiro' && s.barberName === userName);
-        });
+        try {
+            const sales = (this.state.productSales || []).slice(-200).reverse(); // Apenas os 200 mais recentes
+            let last7DaysTotal = 0;
+            const now = Date.now();
+            const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
 
-        // Filtrar por data se selecionada
-        const consumptionSales = filterDate 
-            ? allConsumption.filter(s => (s.timestamp || s.date).split('T')[0] === filterDate)
-            : allConsumption;
-
-        // Cálculo dos últimos 7 dias
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const last7DaysTotal = allConsumption
-            .filter(s => new Date(s.timestamp || s.date) >= sevenDaysAgo && s.target === 'barbeiro')
-            .reduce((acc, s) => acc + (s.total || 0), 0);
-
-        // Agrupar por semana (para a exibição padrão)
-        const groups = {};
-        consumptionSales.forEach(s => {
-            const date = new Date(s.timestamp || s.date);
-            const startOfWeek = new Date(date);
-            startOfWeek.setDate(date.getDate() - date.getDay());
-            const weekStr = startOfWeek.toLocaleDateString('pt-BR');
-            if (!groups[weekStr]) groups[weekStr] = [];
-            groups[weekStr].push(s);
-        });
-
-        const sortedWeeks = Object.keys(groups).sort((a, b) => {
-            const da = a.split('/').reverse().join('');
-            const db = b.split('/').reverse().join('');
-            return db.localeCompare(da);
-        });
-
-        container.innerHTML = `
-            <section id="consumption-report" class="fade-in" style="padding-bottom: 60px;">
-                <h2 class="section-title">${isAdmin ? 'Relatório de Consumo (Antifraude)' : 'Meu Consumo de Produtos'}</h2>
+            const filteredSales = sales.filter(s => {
+                if (!s) return false;
+                const isTarget = isAdmin ? (s.target === 'adm' || s.target === 'barbeiro') : (s.target === 'barbeiro' && s.barberName === userName);
+                if (!isTarget) return false;
                 
-                <!-- Cards de Resumo e Filtro -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <!-- Card 7 Dias -->
-                    <div class="glass" style="padding: 18px; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Consumo Últimos 7 Dias</p>
-                        <p style="font-size: 1.5rem; font-weight: 800; color: #a78bfa;">R$ ${last7DaysTotal.toFixed(2)}</p>
+                const sTime = s.timestamp || new Date(s.date).getTime();
+                if (sTime >= sevenDaysAgo && s.target === 'barbeiro') {
+                    last7DaysTotal += (parseFloat(s.total) || 0);
+                }
+
+                if (!filterDate) return true;
+                return (s.timestamp || s.date || "").split('T')[0] === filterDate;
+            });
+
+            container.innerHTML = `
+                <section id="consumption-report" class="fade-in">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="section-title" style="margin:0;">${isAdmin ? 'Consumo de Produtos' : 'Meu Consumo'}</h2>
+                        <input type="date" value="${filterDate}" class="glass" style="padding:8px; color:var(--text-primary); font-size:0.8rem;"
+                               onchange="app.state.consumptionFilterDate = this.value; app.render('admin-consumption')">
                     </div>
 
-                    <!-- Card Filtro Calendário -->
-                    <div class="glass" style="padding: 18px; border-left: 4px solid var(--accent-color);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Filtrar por Data</p>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="date" id="consumption-date-filter" class="glass" 
-                                   value="${filterDate}"
-                                   style="flex: 1; padding: 6px 10px; color: var(--text-primary); border: none; font-size: 0.85rem;"
-                                   onchange="app.state.consumptionFilterDate = this.value; app.render('admin-consumption')">
-                            ${filterDate ? `<button class="glass" style="padding: 6px 12px; color: #ff4444;" onclick="app.state.consumptionFilterDate=''; app.render('admin-consumption')">✕</button>` : ''}
-                        </div>
+                    <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Total Consumido (7 dias): <strong style="color:var(--accent-readable);">R$ ${last7DaysTotal.toFixed(2)}</strong></p>
                     </div>
-                </div>
 
-                <div class="glass" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
-                    <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
-                        ${isAdmin
-                ? 'Auditoria de saídas de estoque ADM e consumo de barbeiros.'
-                : 'Produtos retirados para uso próprio e descontados do seu faturamento.'}
-                    </p>
-                </div>
-
-                ${sortedWeeks.length === 0 ? `
-                    <div class="glass" style="text-align:center; padding:50px; color:var(--text-secondary);">
-                        <div style="font-size: 2rem; margin-bottom: 10px;">📅</div>
-                        <p>${filterDate ? 'Nenhum consumo nesta data.' : 'Nenhum consumo registrado.'}</p>
-                    </div>
-                ` : ''}
-
-                ${sortedWeeks.map(week => {
-                    const items = groups[week].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
-                    return `
-                        <div class="glass" style="padding: 15px; margin-bottom: 20px;">
-                            <h3 style="font-size: 0.85rem; color: var(--accent-color); margin-bottom: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                                <span>${filterDate ? 'Resultados da Pesquisa' : `Semana de ${week}`}</span>
-                                <span style="font-size: 0.65rem; color: var(--text-secondary); padding: 2px 8px; background: rgba(255,255,255,0.05); border-radius: 10px;">${items.length} registro(s)</span>
-                            </h3>
-                            <div style="display: flex; flex-direction: column; gap: 15px;">
-                                ${items.map(item => `
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85rem; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                                        <div style="flex: 1; display: flex; gap: 12px;">
-                                            ${isAdmin ? `
-                                                <button class="glass" style="padding: 6px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer; height: fit-content;" 
-                                                        onclick="app.deleteConsumptionRecord(${item.id})" title="Apagar Registro">🗑️</button>
-                                            ` : ''}
-                                            <div>
-                                                <span style="font-weight: 700; color: var(--text-primary); display: block; font-size: 0.9rem;">${item.qty}x ${item.productName}</span>
-                                                <span style="font-size: 0.7rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-                                                    🕒 ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div style="text-align: right; min-width: 90px;">
-                                            <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; background: ${item.target === 'adm' ? 'rgba(148,163,184,0.15)' : 'rgba(124,58,237,0.15)'}; color: ${item.target === 'adm' ? '#94a3b8' : '#a78bfa'}; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                ${item.target === 'adm' ? '⚙️ ADM' : `✂️ ${item.barberName?.split(' ')[0] || 'Barbeiro'}`}
-                                            </span>
-                                            <p style="font-size: 0.85rem; color: ${item.target === 'adm' ? 'var(--text-secondary)' : '#4ade80'}; font-weight: 800; margin-top: 5px;">
-                                                ${item.target === 'adm' ? '---' : `R$ ${item.total.toFixed(2)}`}
-                                            </p>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                    <div class="consumption-list">
+                        ${filteredSales.length === 0 ? '<p style="text-align:center; padding:20px; opacity:0.5;">Nenhum registro encontrado.</p>' : ''}
+                        ${filteredSales.map(item => `
+                            <div class="glass" style="padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                                <div>
+                                    <div style="font-weight: 700;">${item.qty}x ${item.productName}</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-secondary);">${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 0.6rem; font-weight: 800; color: var(--accent-color); text-transform: uppercase;">${item.target === 'adm' ? 'ADM' : item.barberName?.split(' ')[0]}</span>
+                                    <div style="font-weight: 800; color: #4ade80;">${item.target === 'adm' ? '---' : `R$ ${(parseFloat(item.total) || 0).toFixed(2)}`}</div>
+                                </div>
+                                ${isAdmin ? `<button onclick="app.deleteConsumptionRecord(${item.id})" style="margin-left:10px; background:none; border:none; color:#ff4444; cursor:pointer;">🗑️</button>` : ''}
                             </div>
-                        </div>
-                    `;
-                }).join('')}
-
-                <button class="btn-secondary" style="width: 100%; margin-top: 20px; padding: 12px;" onclick="app.navigateTo('${isAdmin ? 'admin-dash' : 'barber-dash'}')">Voltar ao Painel</button>
-            </section>
-        `;
+                        `).join('')}
+                    </div>
+                </section>
+            `;
+        } catch (e) {
+            console.error('Erro no consumo:', e);
+            container.innerHTML = `<p style="color:#ff4444; text-align:center; padding:20px;">Erro ao carregar dados. Tente atualizar.</p>`;
+        }
     },
 
     deleteConsumptionRecord(saleId) {
@@ -6654,8 +6676,8 @@ const app = {
                                             <span style="color: var(--text-primary);">R$ ${b.productTotal.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05);">
-                                            <span style="color: var(--accent-color); font-weight: 700;">Total:</span>
-                                            <span style="color: var(--accent-color); font-weight: 800;">R$ ${b.total.toFixed(2)}</span>
+                                            <span style="color: var(--accent-readable); font-weight: 700;">Total:</span>
+                                            <span style="color: var(--accent-readable); font-weight: 800;">R$ ${b.total.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 ` : ''}
@@ -6721,7 +6743,7 @@ const app = {
                         <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
                              style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
                         <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
-                        <p style="color: var(--accent-color); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
+                        <p style="color: var(--accent-readable); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
                     </div>
                 `).join('')}
             </div>
@@ -6737,7 +6759,7 @@ const app = {
             const isSelected = selectedIds.includes(s.id);
             return `
                         <label class="service-card glass" style="cursor: pointer; display: flex; align-items: center; gap: 15px; border: 2px solid ${isSelected ? 'var(--accent-color)' : 'transparent'}; margin-bottom: 0; padding: 15px; background: ${isSelected ? 'rgba(212, 175, 55, 0.1)' : 'var(--glass-bg)'};">
-                            <input type="checkbox" data-id="${s.id}" style="width: 22px; height: 22px; accent-color: var(--accent-color);" 
+                            <input type="checkbox" data-id="${s.id}" style="width: 22px; height: 22px; accent-color: var(--accent-readable);" 
                                    ${isSelected ? 'checked' : ''} 
                                    onchange="app.toggleBookingService(${s.id}, this.checked)">
                             <div class="service-info" style="flex: 1;">
@@ -6807,7 +6829,7 @@ const app = {
                     <ul style="margin: 5px 0 0 15px; padding: 0; list-style: disc;">
                         ${bs.services.map(s => `<li>${s.name} (R$ ${s.price})</li>`).join('')}
                     </ul>
-                    <p style="margin-top: 5px; font-weight: 700; color: var(--accent-color);">Total: R$ ${totalPrice.toFixed(2)}</p>
+                    <p style="margin-top: 5px; font-weight: 700; color: var(--accent-readable);">Total: R$ ${totalPrice.toFixed(2)}</p>
                 </div>
                 <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Data/Hora:</strong> ${new Date(bs.date + 'T00:00:00').toLocaleDateString()} às ${bs.time}</p>
             </div>
@@ -7040,14 +7062,14 @@ const app = {
                                         <p style="color: var(--text-secondary);">Nenhum cliente encontrado para "${this.state.customerSearchQuery || ''}"</p>
                                     </td>
                                 </tr>
-                            ` : filtered.sort((a,b) => a.name.localeCompare(b.name)).map(c => {
+                            ` : filtered.sort((a,b) => a.name.localeCompare(b.name)).slice(0, 100).map(c => {
                                 const history = c.history || [];
                                 const lastVisit = history.length > 0 ? new Date(history[history.length - 1].date + 'T00:00:00').toLocaleDateString() : 'Nunca';
                                 return `
                                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                         <td style="padding: 15px 20px;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--surface-light); color: var(--accent-color); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--glass-border);">
+                                                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--surface-light); color: var(--accent-readable); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--glass-border);">
                                                     ${c.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <span style="font-weight: 600; color: var(--text-primary);">${c.name}</span>
@@ -7055,13 +7077,13 @@ const app = {
                                         </td>
                                         <td style="padding: 15px 20px; color: var(--text-secondary);">${c.phone || '-'}</td>
                                         <td style="padding: 15px 20px; text-align: center;">
-                                            <span style="background: rgba(212, 175, 55, 0.1); color: var(--accent-color); padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.75rem;">
+                                            <span style="background: rgba(212, 175, 55, 0.1); color: var(--accent-readable); padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.75rem;">
                                                 ${history.length}
                                             </span>
                                         </td>
                                         <td style="padding: 15px 20px; color: var(--text-secondary); font-size: 0.8rem;">${lastVisit}</td>
                                         <td style="padding: 15px 20px; text-align: right;">
-                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-color); border-radius: 8px; cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
+                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-readable); border-radius: 8px; cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
                                                     onclick="event.stopPropagation(); window.app.viewCustomerDetails(${c.id})">
                                                 <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px; pointer-events: none;"></i> Detalhes
                                             </button>
@@ -7069,6 +7091,13 @@ const app = {
                                     </tr>
                                 `;
                             }).join('')}
+                            ${filtered.length > 100 ? `
+                                <tr>
+                                    <td colspan="5" style="padding: 15px; text-align: center; color: var(--text-secondary); font-size: 0.8rem; background: rgba(255,255,255,0.01);">
+                                        Exibindo os primeiros 100 resultados de ${filtered.length}. Use a busca para filtrar.
+                                    </td>
+                                </tr>
+                            ` : ''}
                         </tbody>
                     </table>
                 </div>
@@ -7232,7 +7261,7 @@ const app = {
                                 <span>${h.service}</span>
                                 <span style="opacity: 0.6;">${new Date(h.date + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
-                            <div style="font-size: 0.7rem; color: var(--accent-color);">Com: ${h.barber}</div>
+                            <div style="font-size: 0.7rem; color: var(--accent-readable);">Com: ${h.barber}</div>
                         </div>
                     `).reverse().join('')}
                 </div>
@@ -7400,7 +7429,7 @@ const app = {
                             <div style="flex: 1;">
                                 <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${s.name}</p>
                                 <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">Login: <strong>${s.login}</strong> | Acesso: <strong>${s.role === 'admin' ? 'Administrativo' : this.getTerm('workerTerm')}</strong></p>
-                                <div style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(72,193,126,0.1); color: var(--accent-color); font-size: 0.75rem; font-weight: 600;">
+                                <div style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(72,193,126,0.1); color: var(--accent-readable); font-size: 0.75rem; font-weight: 600;">
                                     Comissão p/ Serviço: ${s.commission}%
                                 </div>
                             </div>
@@ -7434,10 +7463,10 @@ const app = {
                             ${this.state.services.map(s => `
                                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <td style="padding: 15px; font-weight: 600; color: var(--text-primary); transition: color 0.3s;">${s.name}</td>
-                                    <td style="padding: 15px; color: var(--accent-color); font-weight: 700;">R$ ${s.price}</td>
+                                    <td style="padding: 15px; color: var(--accent-readable); font-weight: 700;">R$ ${s.price}</td>
                                     <td style="padding: 15px; opacity: 0.8;">${s.duration} min</td>
                                     <td style="padding: 15px; text-align: center; display: flex; gap: 8px; justify-content: center;">
-                                        <button class="glass" style="padding: 5px 12px; font-size: 0.7rem; color: var(--accent-color); border: 1px solid var(--glass-border); cursor: pointer;" 
+                                        <button class="glass" style="padding: 5px 12px; font-size: 0.7rem; color: var(--accent-readable); border: 1px solid var(--glass-border); cursor: pointer;" 
                                                 onclick="app.openServiceModal(${s.id})">Editar</button>
                                         <button class="glass" style="padding: 5px 12px; font-size: 0.7rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); cursor: pointer;" 
                                                 onclick="app.deleteService(${s.id})">Remover</button>
@@ -7722,7 +7751,7 @@ const app = {
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
                     <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Comissão (${staff.commission}%)</p>
-                    <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">R$ ${staffCommission.toFixed(2)}</p>
+                    <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-readable);">R$ ${staffCommission.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #fbbf24;">
                     <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Gorjetas (100%)</p>
@@ -7751,7 +7780,7 @@ const app = {
                             </div>
                             <div style="text-align: right;">
                                 <strong style="color: var(--text-primary);">R$ ${a.price.toFixed(2)}</strong><br>
-                                <span style="color: var(--accent-color);">+ R$ ${(a.price * (staff.commission / 100)).toFixed(2)} (comissão)</span>
+                                <span style="color: var(--accent-readable);">+ R$ ${(a.price * (staff.commission / 100)).toFixed(2)} (comissão)</span>
                             </div>
                         </div>
                     `).join('')}
@@ -7870,7 +7899,7 @@ const app = {
                     </div>
 
                     <div class="glass" style="padding: 30px; border-top: 1px solid var(--glass-border);">
-                        <h4 style="margin-bottom: 18px; color: var(--accent-color); font-size: 1.1rem;">Como realizar a renovação?</h4>
+                        <h4 style="margin-bottom: 18px; color: var(--accent-readable); font-size: 1.1rem;">Como realizar a renovação?</h4>
                         <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px;">
                             O sistema de faturamento é pré-pago. Para renovar seu acesso por mais 30 dias, realize o pagamento via <strong>PIX</strong> e nosso suporte fará a liberação imediata.
                         </p>
@@ -7878,7 +7907,7 @@ const app = {
                         <div style="background: var(--surface-dark); padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 30px;">
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ)</p>
                             <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-color); font-size: 1.3rem; letter-spacing: 1px;">63.039.029/0001-05</h3>
+                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-readable); font-size: 1.3rem; letter-spacing: 1px;">63.039.029/0001-05</h3>
                                 <button onclick="navigator.clipboard.writeText('63.039.029/0001-05'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
                             </div>
                             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Agendamento Fácil BR</strong></p>
@@ -8027,7 +8056,7 @@ const app = {
         toast.className = 'toast-notification fade-in';
         toast.style = `
             position: fixed; bottom: 30px; right: 30px; z-index: 10000;
-            background: ${bgColor}; color: white; padding: 12px 24px;
+            background: ${bgColor}; color: ${this.getContrastColor(bgColor)}; padding: 12px 24px;
             border-radius: 12px; font-weight: 700; font-size: 0.9rem;
             display: flex; align-items: center; gap: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);

@@ -110,7 +110,7 @@ h1, h2, h3 {
 .sidebar-logo span {
     font-weight: 800;
     font-size: 1.2rem;
-    color: var(--accent-color);
+    color: var(--accent-readable);
     letter-spacing: -0.5px;
 }
 
@@ -156,7 +156,7 @@ h1, h2, h3 {
 
 .menu-item.active {
     background: var(--accent-color);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 700;
 }
 
@@ -511,7 +511,7 @@ h1, h2, h3 {
 
 .step-indicator.active {
     background: var(--accent-color);
-    color: white;
+    color: var(--on-accent);
     box-shadow: 0 0 10px var(--accent-glow);
 }
 
@@ -523,7 +523,7 @@ h1, h2, h3 {
     width: 65px;
     height: 65px;
     background: var(--accent-color);
-    color: #000;
+    color: var(--on-accent);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -588,7 +588,7 @@ h1, h2, h3 {
 
 .hero h1 {
     font-size: clamp(2rem, 8vw, 3.5rem); /* Fonte fluida para mobile */
-    color: var(--accent-color);
+    color: var(--accent-readable);
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
     font-family: 'Playfair Display', serif;
@@ -695,8 +695,8 @@ h1, h2, h3 {
 
 /* Modern Buttons */
 .btn-primary {
-    background: linear-gradient(135deg, #D4AF37, #B8860B);
-    color: #000;
+    background: linear-gradient(135deg, var(--accent-color), #B8860B);
+    color: var(--on-accent);
     border: none;
     padding: 14px 28px;
     border-radius: 8px;
@@ -786,7 +786,7 @@ h1, h2, h3 {
 
 .pdv-mobile-tab.active {
     background: var(--accent-color);
-    color: #000;
+    color: var(--on-accent);
     border-color: var(--accent-color);
 }
 
