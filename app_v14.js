@@ -240,22 +240,28 @@ const app = {
     },
 
     applyTheme() {
-        const type = this.state.settings.businessType || 'barbershop';
-        const theme = this.state.themes[type] || this.state.themes.barbershop;
         const s = this.state.settings || {};
+        const type = s.businessType || 'barbershop';
+        const themes = this.state.themes || {};
+        const theme = themes[type] || themes.barbershop || { bg: '#0B0E14', primary: '#D4AF37', text: '#F3F4F6' };
         const root = document.documentElement;
 
-        let bgColor = (type === 'barbershop') ? (s.bgColor || '#0B0E14') : theme.bg;
-        let accentColor = (type === 'barbershop') ? (s.accentColor || '#D4AF37') : theme.primary;
+        let bgColor = (type === 'barbershop') ? (s.bgColor || '#0B0E14') : (theme.bg || '#0B0E14');
+        let accentColor = (type === 'barbershop') ? (s.accentColor || '#D4AF37') : (theme.primary || '#D4AF37');
         
         root.style.setProperty('--bg-color', bgColor);
         root.style.setProperty('--surface-color', s.surfaceColor || theme.surface || '#151A21');
         root.style.setProperty('--accent-color', accentColor);
-        root.style.setProperty('--accent-readable', accentColor); // Simplificado
+        root.style.setProperty('--accent-readable', accentColor); 
         root.style.setProperty('--text-primary', s.textPrimary || theme.text || '#F3F4F6');
         root.style.setProperty('--text-secondary', s.textSecondary || theme.textSecondary || '#9CA3AF');
         root.style.setProperty('--glass-bg', s.glassBg || theme.glassBg || 'rgba(21, 26, 33, 0.8)');
         root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.08)');
+
+        // Restaurar variáveis básicas exigidas pelo CSS
+        const isDark = (bgColor === '#0B0E14' || bgColor.includes('rgba(0,0,0') || bgColor.startsWith('#0') || bgColor.startsWith('#1'));
+        root.style.setProperty('--on-accent', isDark ? '#FFFFFF' : '#000000');
+        root.style.setProperty('--on-bg', isDark ? '#FFFFFF' : '#000000');
     },
 
     openModal(title, contentHTML) {
@@ -2722,8 +2728,9 @@ const app = {
         }
 
         // [NOVO] Setup Wizard Check
-        const si = this.state.settings.shopInfo || {};
-        if (this.state.user.role === 'admin' && (!si.phone || !si.address)) {
+        const s = this.state.settings || {};
+        const si = s.shopInfo || {};
+        if (this.state.user && this.state.user.role === 'admin' && (!si.phone || !si.address)) {
             this.renderSetupWizard(container);
             return;
         }
