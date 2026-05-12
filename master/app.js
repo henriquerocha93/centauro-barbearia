@@ -25,6 +25,18 @@ const app = {
         this.storage = getStorage(fbApp);
         
         this.state = { tab: 'tenants' };
+        
+        // Auto-login se houver sessão salva
+        const savedAuth = localStorage.getItem('master_auth');
+        if (savedAuth) {
+            try {
+                const { user, pass } = JSON.parse(savedAuth);
+                this.performLogin(user, pass, true);
+            } catch (e) {
+                localStorage.removeItem('master_auth');
+            }
+        }
+
         this.setupLogin();
     },
 
@@ -63,55 +75,65 @@ const app = {
 
     setupLogin() {
         const form = document.getElementById('master-login-form');
-        const btn = form.querySelector('button');
         
         form.onsubmit = async (e) => {
             e.preventDefault();
-            const originalText = btn.textContent;
-            btn.textContent = 'Verificando...';
-            btn.disabled = true;
-
             const login = document.getElementById('master-login').value.trim().toLowerCase();
             const pass = document.getElementById('master-password').value;
+            const keep = document.getElementById('keep-logged-in').checked;
             
-            console.log('Tentativa de login:', login);
-
-            try {
-                // 1. Busca credenciais no banco
-                const adminRef = ref(this.db, 'master/config/admin');
-                const adminSnap = await get(adminRef);
-                const adminData = adminSnap.val() || { user: 'henrique', pass: '123' };
-
-                // 2. Tenta login com dados do banco OU reserva
-                if ((login === adminData.user && pass === adminData.pass) || (login === 'henrique' && pass === '123')) {
-                    alert('Acesso Master Autorizado!');
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('dashboard-screen').classList.add('active');
-                    document.getElementById('dashboard-screen').style.display = 'block';
-                    this.loadTenants();
-                    return;
-                }
-
-                // 2. Verifica se é um Vendedor
-                const sellerRef = ref(this.db, 'master/sellers/' + login);
-                const snapshot = await get(sellerRef);
-                
-                if (snapshot.exists() && snapshot.val().password === pass) {
-                    console.log('Login Vendedor Sucesso');
-                    window.location.href = 'vendedor.html?u=' + login + '&p=' + btoa(pass);
-                    return;
-                }
-                
-                console.warn('Credenciais inválidas');
-                alert('Usuário ou senha incorretos!');
-            } catch(err) {
-                console.error('Erro crítico no login:', err);
-                alert('Erro de conexão: ' + err.message);
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }
+            this.performLogin(login, pass, keep);
         };
+    },
+
+    async performLogin(login, pass, keep) {
+        const form = document.getElementById('master-login-form');
+        const btn = form.querySelector('button');
+        const originalText = btn.textContent;
+        
+        btn.textContent = 'Verificando...';
+        btn.disabled = true;
+
+        try {
+            // 1. Busca credenciais no banco
+            const adminRef = ref(this.db, 'master/config/admin');
+            const adminSnap = await get(adminRef);
+            const adminData = adminSnap.val() || { user: 'henrique', pass: '123' };
+
+            // 2. Tenta login com dados do banco OU reserva
+            if ((login === adminData.user && pass === adminData.pass) || (login === 'henrique' && pass === '123')) {
+                if (keep) {
+                    localStorage.setItem('master_auth', JSON.stringify({ user: login, pass: pass }));
+                }
+
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').classList.add('active');
+                document.getElementById('dashboard-screen').style.display = 'block';
+                this.loadTenants();
+                return;
+            }
+
+            // 2. Verifica se é um Vendedor
+            const sellerRef = ref(this.db, 'master/sellers/' + login);
+            const snapshot = await get(sellerRef);
+            
+            if (snapshot.exists() && snapshot.val().password === pass) {
+                if (keep) {
+                    localStorage.setItem('master_auth', JSON.stringify({ user: login, pass: pass }));
+                }
+                window.location.href = 'vendedor.html?u=' + login + '&p=' + btoa(pass);
+                return;
+            }
+            
+            alert('Usuário ou senha incorretos!');
+            localStorage.removeItem('master_auth');
+        } catch(err) {
+            console.error('Erro crítico no login:', err);
+            alert('Erro de conexão: ' + err.message);
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     },
 
     async renderConfig() {
