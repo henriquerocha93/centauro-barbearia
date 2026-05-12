@@ -642,6 +642,7 @@ const app = {
                                             <td style="padding: 12px;">
                                                 <button class="btn" style="background: #10b981; color: white; border: none; font-size: 0.7rem; padding: 6px 12px;" onclick="app.renewSubscription('${key}')">Ativar Loja</button>
                                                 <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px;" onclick="window.open('../index.html?loja=${key}', '_blank')">👁️ Acessar</button>
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px; color: #ef4444; border-color: rgba(239, 68, 68, 0.5);" onclick="app.deleteTenant('${key}')">🗑️ Excluir</button>
                                             </td>
                                         </tr>
                                     `;
