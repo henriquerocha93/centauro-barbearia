@@ -277,6 +277,12 @@
 
             try {
                 // Atualiza as configurações da loja
+                const tenantRef = ref(db, `tenants/${slug}`);
+                await update(tenantRef, {
+                    lastUpdate: new Date().getTime(),
+                    updatedBy: 'SetupWizard'
+                });
+
                 const shopRef = ref(db, `tenants/${slug}/settings`);
                 await update(shopRef, {
                     primaryColor: selectedHex,
@@ -290,7 +296,7 @@
                     setupComplete: true
                 });
 
-                // Cria serviços iniciais padrão
+                // Cria serviços iniciais padrão (já feito no index.html, mas reforçamos aqui se necessário)
                 const servicesRef = ref(db, `tenants/${slug}/services`);
                 await set(servicesRef, [
                     { id: Date.now(), name: "Corte de Cabelo", price: 35, duration: 30, category: "Geral" },

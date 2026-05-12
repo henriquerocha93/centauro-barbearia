@@ -648,32 +648,38 @@
                     createdAt: data.date,
                     nextPayment: data.trialEndDate,
                     subscriptionPrice: 109.90,
-                    isBlocked: false
+                    isBlocked: false,
+                    plan: 'trial'
                 });
 
                 // 2. Inicializa a estrutura básica da nova loja
-                const shopRef = ref(db, `tenants/${slug}/settings`);
-                await set(shopRef, {
-                    shopName: shopName,
-                    owner: data.name,
-                    email: data.email,
-                    segment: data.segment,
-                    trialEndDate: data.trialEndDate,
-                    createdAt: data.date,
-                    status: 'active'
+                const tenantRootRef = ref(db, `tenants/${slug}`);
+                await set(tenantRootRef, {
+                    lastUpdate: new Date().getTime(),
+                    updatedBy: 'Registration',
+                    settings: {
+                        shopName: shopName,
+                        owner: data.name,
+                        email: data.email,
+                        segment: data.segment,
+                        trialEndDate: data.trialEndDate,
+                        createdAt: data.date,
+                        status: 'active'
+                    },
+                    staff: [{
+                        id: Date.now(),
+                        name: data.name,
+                        email: data.email,
+                        password: data.password,
+                        role: 'admin',
+                        phone: data.phone,
+                        active: true
+                    }],
+                    services: [
+                        { id: Date.now() + 10, name: "Corte Tradicional", price: 35, duration: 30 },
+                        { id: Date.now() + 20, name: "Barba", price: 25, duration: 30 }
+                    ]
                 });
-
-                // 2.1 Cria o primeiro usuário (ADMIN) para que ele possa logar
-                const staffRef = ref(db, `tenants/${slug}/staff`);
-                await set(staffRef, [{
-                    id: Date.now(),
-                    name: data.name,
-                    email: data.email,
-                    password: data.password,
-                    role: 'admin',
-                    phone: data.phone,
-                    active: true
-                }]);
 
                 alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVamos configurar seu layout agora!`);
                 

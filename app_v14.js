@@ -7852,13 +7852,24 @@ const app = {
     getSubscriptionWarningHTML() {
         if (!this.state.subscription || !this.state.subscription.nextPayment) return '';
 
-        const nextPaymentDate = new Date(this.state.subscription.nextPayment);
+        const sub = this.state.subscription;
+        const nextPaymentDate = new Date(sub.nextPayment);
         const today = new Date();
         const diffTime = nextPaymentDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         // Apenas para Admin
         if (this.state.user?.role !== 'admin') return '';
+
+        // Banner de TESTE GRÁTIS
+        if (sub.plan === 'trial' && diffDays >= 0) {
+            return `
+                <div style="background: linear-gradient(to right, #7c3aed, #4f46e5); color: white; padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span>🚀 Você está no Período de Teste Grátis! Aproveite todas as funções por mais ${diffDays} dias.</span>
+                    <button onclick="app.navigateTo('admin-billing')" style="background: white; color: #7c3aed; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Assinar Agora</button>
+                </div>
+            `;
+        }
 
         if (diffDays <= 4) {
             const isExpired = diffDays < 0;
