@@ -1239,10 +1239,8 @@ const app = {
         }
 
         if (sub?.isBlocked || isExpired) {
-            // Se for admin/staff tentando acessar área restrita, bloqueia.
-            // A Home e o Agendamento de clientes continuam acessíveis (opcional, mas comum em SaaS)
-            // No caso aqui, o usuário pediu bloqueio temporário.
-            if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
+            // O usuário solicitou que o bloqueio apareça APENAS no painel adm
+            if (view.startsWith('admin-')) {
                 this.renderBlockedScreen(appContainer);
                 return;
             }
