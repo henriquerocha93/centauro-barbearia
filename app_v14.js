@@ -1344,10 +1344,11 @@ const app = {
             return;
         }
 
-        appContainer.className = 'app-layout'; 
+        appContainer.className = 'container'; // Reseta para o padrão
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML()}
-            <div class="mobile-header">
+            <div class="app-layout">
+                <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">
                     <i data-lucide="menu"></i>
                 </button>
@@ -1473,6 +1474,7 @@ const app = {
                 
                 <div id="main-content" class="view-content"></div>
             </main>
+            </div>
         `;
 
         const main = document.getElementById('main-content');
@@ -7864,7 +7866,7 @@ const app = {
         // Banner de TESTE GRÁTIS
         if (sub.plan === 'trial' && diffDays >= 0) {
             return `
-                <div style="background: linear-gradient(to right, #7c3aed, #4f46e5); color: white; padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div style="background: linear-gradient(to right, #7c3aed, #4f46e5); color: white; padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; flex-shrink: 0;">
                     <span>🚀 Você está no Período de Teste Grátis! Aproveite todas as funções por mais ${diffDays} dias.</span>
                     <button onclick="app.navigateTo('admin-billing')" style="background: white; color: #7c3aed; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Assinar Agora</button>
                 </div>
