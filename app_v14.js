@@ -1231,10 +1231,21 @@ const app = {
     render(view) {
         const appContainer = document.getElementById('app');
 
-        // [SaaS] Bloqueio Manual pelo Master
-        if (this.state.subscription?.isBlocked) {
-            this.renderBlockedScreen(appContainer);
-            return;
+        // [SaaS] Bloqueio Manual ou Automático por Vencimento
+        const sub = this.state.subscription;
+        let isExpired = false;
+        if (sub?.nextPayment) {
+            isExpired = new Date(sub.nextPayment) < new Date();
+        }
+
+        if (sub?.isBlocked || isExpired) {
+            // Se for admin/staff tentando acessar área restrita, bloqueia.
+            // A Home e o Agendamento de clientes continuam acessíveis (opcional, mas comum em SaaS)
+            // No caso aqui, o usuário pediu bloqueio temporário.
+            if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
+                this.renderBlockedScreen(appContainer);
+                return;
+            }
         }
 
         // [Segurança] Bloqueio de acesso não autorizado ou deslogado
@@ -7859,11 +7870,35 @@ const app = {
         const today = new Date();
         const diffTime = nextPaymentDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const s = this.state.settings || {};
+        const shopName = s.shopName || 'Minha Loja';
+        const waLink = `https://wa.me/5551981429980?text=Quero%20fazer%20o%20pagamento%20-%20${encodeURIComponent(shopName)}`;
 
         // Apenas para Admin
         if (this.state.user?.role !== 'admin') return '';
 
-        // Banner de TESTE GRÁTIS
+        // 1. BLOQUEIO TEMPORÁRIO (Vencido)
+        if (diffDays < 0) {
+            return `
+                <div style="background: #ef4444; color: white; padding: 20px; text-align: center; font-weight: 800; width: 100%; flex-shrink: 0; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4); z-index: 9999; position: relative;">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">🚫 SISTEMA BLOQUEADO TEMPORARIAMENTE</div>
+                    <p style="font-size: 0.9rem; font-weight: 400; margin-bottom: 15px;">Seu período de uso expirou. Para reativar seu acesso e continuar usando todas as funções, realize o pagamento da mensalidade.</p>
+                    <a href="${waLink}" target="_blank" style="background: white; color: #ef4444; border: none; padding: 12px 30px; border-radius: 12px; font-size: 1rem; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block;">Clique aqui para Pagar via PIX</a>
+                </div>
+            `;
+        }
+
+        // 2. AVISO DE 2 DIAS (Regra específica solicitada)
+        if (diffDays === 2) {
+            return `
+                <div style="background: #f59e0b; color: #000; padding: 15px; text-align: center; font-weight: 700; width: 100%; flex-shrink: 0; border-bottom: 2px solid rgba(0,0,0,0.1);">
+                    <span>⚠️ AVISO: Faltam apenas 2 dias para o vencimento do seu plano!</span>
+                    <a href="${waLink}" target="_blank" style="background: #000; color: #fff; margin-left: 15px; padding: 6px 15px; border-radius: 6px; text-decoration: none; font-size: 0.8rem;">Evitar Bloqueio: Pague Agora</a>
+                </div>
+            `;
+        }
+
+        // 3. Banner de TESTE GRÁTIS (Original)
         if (sub.plan === 'trial' && diffDays >= 0) {
             return `
                 <div style="background: linear-gradient(to right, #7c3aed, #4f46e5); color: white; padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; flex-shrink: 0;">
@@ -7873,6 +7908,7 @@ const app = {
             `;
         }
 
+        // 4. Avisos críticos de renovação (Perto do vencimento)
         if (diffDays <= 4) {
             const isExpired = diffDays < 0;
             const msg = isExpired
@@ -7898,17 +7934,18 @@ const app = {
             <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
                 <div class="glass fade-in" style="max-width: 500px; padding: 40px; border-top: 5px solid #ef4444;">
                     <div style="font-size: 4rem; margin-bottom: 20px;">🚫</div>
-                    <h1 style="font-family: 'Playfair Display'; font-size: 2rem; margin-bottom: 15px;">SISTEMA BLOQUEADO</h1>
+                    <h1 style="font-family: 'Playfair Display'; font-size: 2rem; margin-bottom: 15px;">ACESSO SUSPENSO</h1>
                     <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 30px;">
-                        O acesso ao sistema desta barbearia foi temporariamente suspenso pela administração central por falta de pagamento ou pendências cadastrais.
+                        O período de uso desta unidade expirou ou o acesso foi suspenso pela administração. 
+                        Regularize sua situação para continuar utilizando o Agendamento Fácil BR.
                     </p>
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Para regularizar, entre em contato com o suporte:</p>
-                        <a href="https://wa.me/5551989069123?text=Olá!%20Meu%20sistema%20está%20bloqueado.%20Gostaria%20de%20regularizar." target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366;">
-                            Falar com Suporte (WhatsApp)
+                        <a href="https://wa.me/5551981429980?text=Quero%20fazer%20o%20pagamento%20-%20Loja" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">
+                            Quero fazer o pagamento (WhatsApp)
                         </a>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-muted);">ID do Cliente: ${new URLSearchParams(window.location.search).get('loja')}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Unidade: ${new URLSearchParams(window.location.search).get('loja') || 'Matriz'}</p>
             </div>
         `;
     },

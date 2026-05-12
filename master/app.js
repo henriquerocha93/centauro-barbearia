@@ -254,6 +254,9 @@ const app = {
 
             const t = this.tenants[key];
             
+            // FILTRO: Só mostra lojas ATIVAS (não trial) na aba Barbearias
+            if (t.plan === 'trial') return;
+
             // Lógica de Mensalidade
             const nextPaymentDate = t.nextPayment ? new Date(t.nextPayment) : new Date();
             const today = new Date();
@@ -458,10 +461,12 @@ const app = {
             baseDate.setDate(baseDate.getDate() + 30);
 
             await update(ref(this.db, 'master/tenants/' + slug), {
-                nextPayment: baseDate.toISOString()
+                nextPayment: baseDate.toISOString(),
+                plan: 'active',
+                isBlocked: false
             });
 
-            alert('✅ Mensalidade renovada com sucesso!');
+            alert('✅ Mensalidade renovada e loja ATIVADA com sucesso!');
         } catch (e) {
             console.error(e);
             alert('Erro ao renovar mensalidade.');
@@ -601,7 +606,48 @@ const app = {
                                 }).join('')}
                             </tbody>
                         </table>
-                        ${Object.keys(leads).length === 0 ? '<p style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum lead capturado ainda.</p>' : ''}
+                        ${Object.keys(leads).length === 0 ? '<p style="text-align: center; padding: 20px; color: var(--text-muted);">Nenhum lead capturado ainda.</p>' : ''}
+                    </div>
+
+                    <h2 style="margin: 40px 0 20px 0; color: #7c3aed;">🧪 Unidades em Período de Teste (7 Dias)</h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px;">Dono / Loja</th>
+                                    <th style="padding: 12px;">Expira em</th>
+                                    <th style="padding: 12px;">Slug</th>
+                                    <th style="padding: 12px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.keys(this.tenants).filter(k => this.tenants[k].plan === 'trial').map(key => {
+                                    const t = this.tenants[key];
+                                    const expiry = new Date(t.nextPayment);
+                                    const today = new Date();
+                                    const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                                    return `
+                                        <tr style="border-bottom: 1px solid #f3f4f6;">
+                                            <td style="padding: 12px;">
+                                                <strong>${t.name}</strong><br>
+                                                <span style="font-size: 0.8rem;">${t.owner} (${t.email})</span>
+                                            </td>
+                                            <td style="padding: 12px;">
+                                                <span style="color: ${diff < 0 ? '#ef4444' : '#f59e0b'}; font-weight: 700;">
+                                                    ${diff < 0 ? 'Expirado' : diff + ' dias'}
+                                                </span><br>
+                                                <small>${expiry.toLocaleDateString('pt-BR')}</small>
+                                            </td>
+                                            <td style="padding: 12px;"><code>${key}</code></td>
+                                            <td style="padding: 12px;">
+                                                <button class="btn" style="background: #10b981; color: white; border: none; font-size: 0.7rem; padding: 6px 12px;" onclick="app.renewSubscription('${key}')">Ativar Loja</button>
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px;" onclick="window.open('../index.html?loja=${key}', '_blank')">👁️ Acessar</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
