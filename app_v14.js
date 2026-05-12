@@ -328,31 +328,38 @@ const app = {
                 this.state.products = mergeProducts(this.state.products, serverData.products);
                 this.state.customers = merge(this.state.customers, serverData.customers);
                 this.state.productSales = merge(this.state.productSales, serverData.productSales);
+                
+                // Atualiza o local com o que veio do servidor
+                this.state.lastUpdate = serverLastUpdate;
+                this.saveState();
+            } else if (now > serverLastUpdate) {
+                // Só envia para o servidor se o local for estritamente mais novo
+                console.log('📤 Enviando atualizações para o servidor...');
+                
+                const stateToSave = {
+                    services: this.state.services,
+                    staff: this.state.staff,
+                    customers: this.state.customers,
+                    settings: this.state.settings,
+                    vouchers: this.state.vouchers,
+                    transactions: this.state.transactions,
+                    products: this.state.products,
+                    productSales: this.state.productSales || [],
+                    openingBalances: this.state.openingBalances || {},
+                    appointments: this.state.appointments || [],
+                    serviceOrders: this.state.serviceOrders || [],
+                    tips: this.state.tips || [],
+                    lastConsumptionView: this.state.lastConsumptionView || 0,
+                    lastUpdate: now,
+                    updatedBy: this.state.user ? this.state.user.name : 'Sistema'
+                };
+
+                await set(dbRef, stateToSave);
+                this.state.lastUpdate = now;
+                console.log('⚡ Sincronizado com Firebase (Tempo Real)');
+            } else {
+                console.log('✅ Servidor e local em sincronia.');
             }
-
-
-            const stateToSave = {
-                services: this.state.services,
-                staff: this.state.staff,
-                customers: this.state.customers,
-                settings: this.state.settings,
-                vouchers: this.state.vouchers,
-                transactions: this.state.transactions,
-                products: this.state.products,
-                productSales: this.state.productSales || [],
-                openingBalances: this.state.openingBalances || {},
-                appointments: this.state.appointments || [],
-                serviceOrders: this.state.serviceOrders || [],
-                tips: this.state.tips || [],
-                lastConsumptionView: this.state.lastConsumptionView || 0,
-                lastUpdate: now,
-                updatedBy: this.state.user ? this.state.user.name : 'Sistema'
-            };
-
-            await set(dbRef, stateToSave);
-            this.state.lastUpdate = now; // Atualiza localmente após sucesso
-
-            console.log('⚡ Sincronizado com Firebase (Tempo Real)');
 
             // Salva o timestamp no localStorage também para consistência no reload
             const storageKey = this.getStorageKey();
