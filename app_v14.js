@@ -7793,32 +7793,20 @@ const app = {
 
             let statusColor = '#10b981'; // Verde
             let statusLabel = 'ATIVA';
-            let statusBg = 'rgba(16, 185, 129, 0.1)';
-
-            if (diffDays < 0) {
-                statusColor = '#ef4444'; // Vermelho
-                statusLabel = 'EXPIRADA / BLOQUEADA';
-                statusBg = 'rgba(239, 68, 68, 0.1)';
-            } else if (diffDays <= 5) {
-                statusColor = '#f59e0b'; // Amarelo
-                statusLabel = 'VENCE EM BREVE';
-                statusBg = 'rgba(245, 158, 11, 0.1)';
-            }
-
-            container.innerHTML = `
-                <section class="fade-in" style="max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
-                    <h2 class="section-title" style="margin-bottom: 25px;">💳 Fatura e Assinatura</h2>
-                    
-                    <div class="glass" style="padding: 30px; margin-bottom: 25px; border-left: 5px solid ${statusColor};">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
-                            <div>
-                                <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Status do Sistema</p>
-                                <div style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: ${statusBg}; color: ${statusColor}; font-weight: 800; font-size: 0.9rem; margin-top: 8px;">
-                                    ${statusLabel}
-                                </div>
-                                <p style="font-size: 1rem; color: var(--text-primary); margin-top: 15px;">Próximo Vencimento: <strong style="color: ${statusColor};">${nextPaymentDate.toLocaleDateString('pt-BR')}</strong></p>
+            let statusBg = 'rgba(16, 1                        <div style="background: var(--surface-dark); padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 30px;">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ)</p>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-color); font-size: 1.3rem; letter-spacing: 1px;">63.039.029/0001-05</h3>
+                                <button onclick="navigator.clipboard.writeText('63.039.029/0001-05'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
                             </div>
-                            <div style="text-align: right;">
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Agendamento Fácil BR</strong></p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                            <a href="https://wa.me/5551981429980?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${encodeURIComponent(data.name)}).%20Segue%20o%20comprovante." target="_blank" class="btn-primary" style="text-align: center; background: #25D366; text-decoration: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">📲</span> ENVIAR COMPROVANTE NO WHATSAPP
+                            </a>
+                        </div>="text-align: right;">
                                 <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Valor do Plano</p>
                                 <h3 style="color: var(--text-primary); font-size: 2.2rem; font-weight: 800; margin-top: 5px;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}<span style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">/mês</span></h3>
                             </div>
@@ -7832,17 +7820,17 @@ const app = {
                         </p>
                         
                         <div style="background: var(--surface-dark); padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 30px;">
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ / E-MAIL)</p>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ)</p>
                             <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-color); font-size: 1.3rem; letter-spacing: 1px;">henriquerocha93@gmail.com</h3>
-                                <button onclick="navigator.clipboard.writeText('henriquerocha93@gmail.com'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
+                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-color); font-size: 1.3rem; letter-spacing: 1px;">63.039.029/0001-05</h3>
+                                <button onclick="navigator.clipboard.writeText('63.039.029/0001-05'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
                             </div>
-                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Henrique Rocha</strong></p>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Agendamento Fácil BR</strong></p>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                            <a href="https://wa.me/5551989069123?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${data.name}).%20Segue%20o%20comprovante." target="_blank" class="btn-primary" style="text-align: center; background: #25D366; text-decoration: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <span style="font-size: 1.4rem;">📱</span> Enviar Comprovante no WhatsApp
+                            <a href="https://wa.me/5551981429980?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${encodeURIComponent(data.name)}).%20Segue%20o%20comprovante." target="_blank" class="btn-primary" style="text-align: center; background: #25D366; text-decoration: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">📲</span> ENVIAR COMPROVANTE NO WHATSAPP
                             </a>
                         </div>
                     </div>
