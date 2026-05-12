@@ -1337,7 +1337,7 @@ const app = {
         };
 
         // Se o layout base já existe, apenas atualize o conteúdo e os links ativos
-        if (appContainer.classList.contains('app-layout') && document.getElementById('sidebar')) {
+        if (document.querySelector('.app-layout') && document.getElementById('sidebar')) {
             // Atualizar classes 'active' no menu
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             const activeLink = document.querySelector(`.menu-item[onclick*="'${view}'"]`);
@@ -7916,6 +7916,10 @@ const app = {
     },
 
     renderBlockedScreen(container) {
+        const s = this.state.settings || {};
+        const shopName = s.shopName || 'Minha Loja';
+        const waLink = `https://wa.me/5551981429980?text=Quero%20fazer%20o%20pagamento%20-%20${encodeURIComponent(shopName)}`;
+
         container.className = '';
         container.innerHTML = `
             <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
