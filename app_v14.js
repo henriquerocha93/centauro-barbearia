@@ -1,5 +1,5 @@
 // Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
-console.log("🚀 CENTAURO APP V70.30 LOADED");
+console.log("🚀 CENTAURO APP V71.50 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -607,23 +607,36 @@ const app = {
     },
 
     migrateVouchersFromTransactions() {
-        if ((!this.state.vouchers || this.state.vouchers.length === 0) && this.state.transactions) {
-            const vales = this.state.transactions.filter(t => t.category === 'vale');
-            if (vales.length > 0) {
-                this.state.vouchers = vales.map(v => {
-                    const barber = v.description.replace('Vale: ', '').split(' - ')[0];
-                    return {
-                        id: v.id,
-                        barber: barber,
-                        amount: v.amount,
-                        date: v.timestamp || new Date(v.date).toISOString(),
-                        discountDate: v.date,
-                        note: v.description.includes(' - ') ? v.description.split(' - ')[1] : '',
-                        transactionId: v.id
-                    };
+        if (!this.state.transactions) return;
+        
+        const vales = this.state.transactions.filter(t => t.category === 'vale');
+        if (vales.length === 0) return;
+
+        if (!this.state.vouchers) this.state.vouchers = [];
+        
+        const existingTransactionIds = new Set(this.state.vouchers.map(v => v.transactionId).filter(Boolean));
+        const existingVoucherIds = new Set(this.state.vouchers.map(v => v.id));
+        
+        let addedCount = 0;
+        vales.forEach(v => {
+            // Se a transação não está nos vales (pelo transactionId ou pelo próprio ID)
+            if (!existingTransactionIds.has(v.id) && !existingVoucherIds.has(v.id)) {
+                const barber = v.description.replace('Vale: ', '').split(' - ')[0];
+                this.state.vouchers.push({
+                    id: v.id, 
+                    barber: barber,
+                    amount: v.amount,
+                    date: v.timestamp || (v.date ? new Date(v.date).toISOString() : new Date().toISOString()),
+                    discountDate: v.date || null,
+                    note: v.description.includes(' - ') ? v.description.split(' - ')[1] : '',
+                    transactionId: v.id
                 });
-                console.log(`🔍 Reconstruídos ${this.state.vouchers.length} vales a partir das transações.`);
+                addedCount++;
             }
+        });
+
+        if (addedCount > 0) {
+            console.log(`🔍 Migrados ${addedCount} novos vales a partir das transações.`);
         }
     },
 
@@ -781,8 +794,9 @@ const app = {
                             this.state.lastUpdate = data.lastUpdate;
 
 
-                            // Migrar produtos se necessário (SaaS/Cloud Sync)
+                            // Migrar produtos e vales se necessário (SaaS/Cloud Sync)
                             this.migrateProducts();
+                            this.migrateVouchersFromTransactions();
 
                             // SaaS: Atualiza textos da interface com base no Tenant
                             if (this.state.settings) {
