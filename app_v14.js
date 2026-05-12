@@ -530,6 +530,7 @@ const app = {
                 Object.assign(this.state, loaded);
                 console.log(`✅ Estado carregado para loja: ${key}`);
                 this.migrateProducts();
+                this.migrateVouchersFromTransactions();
             } catch (e) {
                 console.error('Erro ao carregar estado local:', e);
             }
@@ -580,6 +581,27 @@ const app = {
         if (changed) {
             console.log('📦 Sincronizando categorias automáticas...');
             this.saveState();
+        }
+    },
+
+    migrateVouchersFromTransactions() {
+        if ((!this.state.vouchers || this.state.vouchers.length === 0) && this.state.transactions) {
+            const vales = this.state.transactions.filter(t => t.category === 'vale');
+            if (vales.length > 0) {
+                this.state.vouchers = vales.map(v => {
+                    const barber = v.description.replace('Vale: ', '').split(' - ')[0];
+                    return {
+                        id: v.id,
+                        barber: barber,
+                        amount: v.amount,
+                        date: v.timestamp || new Date(v.date).toISOString(),
+                        discountDate: v.date,
+                        note: v.description.includes(' - ') ? v.description.split(' - ')[1] : '',
+                        transactionId: v.id
+                    };
+                });
+                console.log(`🔍 Reconstruídos ${this.state.vouchers.length} vales a partir das transações.`);
+            }
         }
     },
 
@@ -6185,6 +6207,13 @@ const app = {
 
     renderAdminVouchers(container) {
         const today = new Date().toLocaleDateString('en-CA');
+        const vouchers = this.state.vouchers || [];
+        const filterDate = this.state.voucherFilterDate || today;
+        
+        const filteredVouchers = vouchers.filter(v => {
+            const vDate = v.discountDate || v.date.split('T')[0];
+            return vDate === filterDate;
+        });
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
                 <h2 class="section-title">Lançar Vales</h2>
@@ -6214,10 +6243,21 @@ const app = {
                     <button type="submit" class="btn-primary" style="width: 100%;">Confirmar Retirada</button>
                 </form>
 
-                <h3 class="section-title" style="font-size: 1.1rem;">Últimos Lançados</h3>
+                <div class="glass" style="padding: 15px; margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.8rem;">Filtrar Vales por Data (Desconto)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="date" id="voucher-filter-date" class="glass" style="flex: 1; padding: 10px; color: var(--text-primary);" value="${filterDate}">
+                        <button class="btn-primary" style="padding: 0 20px;" onclick="
+                            window.app.state.voucherFilterDate = document.getElementById('voucher-filter-date').value;
+                            window.app.renderAdminVouchers(document.getElementById('main-content'));
+                        ">Buscar</button>
+                    </div>
+                </div>
+
+                <h3 class="section-title" style="font-size: 1.1rem;">Lançamentos para esta data</h3>
                 <div class="voucher-list">
-                    ${this.state.vouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum vale lançado</p>' : ''}
-                    ${this.state.vouchers.map(v => {
+                    ${filteredVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum vale encontrado para esta data.</p>' : ''}
+                    ${filteredVouchers.map(v => {
             const discountLabel = v.discountDate
                 ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(v.discountDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
                 : '';
