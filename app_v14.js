@@ -237,10 +237,21 @@ const app = {
         document.getElementById('app-modal').close();
     },
 
-    getStorageKey() {
+    getTenantId() {
         const urlParams = new URLSearchParams(window.location.search);
-        const tenantId = urlParams.get('loja') || 'centauro';
-        return `centauro_state_${tenantId}`;
+        let tenantId = urlParams.get('loja');
+
+        if (!tenantId) {
+            const path = window.location.pathname.split('/').filter(p => p && p !== 'index.html')[0];
+            if (path && !['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt'].includes(path)) {
+                tenantId = path;
+            }
+        }
+        return tenantId || 'centauro';
+    },
+
+    getStorageKey() {
+        return `centauro_state_${this.getTenantId()}`;
     },
 
     saveState() {
@@ -270,9 +281,8 @@ const app = {
             const now = new Date().getTime();
             
             // Suporte a Multi-Tenant
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenantId = urlParams.get('loja');
-            const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            const tenantId = this.getTenantId();
+            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
             // Verificação de segurança: não sobrescrever se o servidor tiver dados mais recentes
             const dbRef = ref(this.db, dbPath);
@@ -653,18 +663,8 @@ const app = {
                 });
 
 
-                const urlParams = new URLSearchParams(window.location.search);
-                let tenantId = urlParams.get('loja');
-
-                // Suporte a URLs amigáveis: agendamentofacilbr.com.br/nome-da-loja
-                if (!tenantId) {
-                    const path = window.location.pathname.split('/').filter(p => p && p !== 'index.html')[0];
-                    if (path && path !== 'master' && path !== 'AgendamentoFacil' && path !== 'assets') {
-                        tenantId = path;
-                    }
-                }
-
-                const dbPath = (!tenantId || tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                const tenantId = this.getTenantId();
+                const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
                 // SaaS: Buscar dados da assinatura se for inquilino
                 if (tenantId && tenantId !== 'centauro') {
@@ -7703,10 +7703,9 @@ const app = {
         `;
     },
     async renderAdminBilling(container) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantId = urlParams.get('loja');
+        const tenantId = this.getTenantId();
 
-        if (!tenantId || tenantId === 'centauro') {
+        if (tenantId === 'centauro') {
             container.innerHTML = `
                 <div class="glass" style="padding: 40px; text-align: center; border-top: 4px solid var(--accent-color);">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🛡️</div>
