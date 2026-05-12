@@ -562,8 +562,8 @@ const app = {
             const leads = snapshot.val() || {};
 
             leadsView.innerHTML = `
-                <div class="glass-card" style="padding: 30px; border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <h2 style="margin-bottom: 20px; color: var(--primary-color);">🎯 Leads Capturados (Site AgendamentoFacil)</h2>
+                <div class="glass-card" style="padding: 30px; border-radius: 12px; background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); color: #fff;">
+                    <h2 style="margin-bottom: 20px; color: var(--p-light);">🎯 Leads Capturados (Site AgendamentoFacil)</h2>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                             <thead>
@@ -580,7 +580,7 @@ const app = {
                                 ${Object.keys(leads).sort((a,b) => new Date(leads[b].date) - new Date(leads[a].date)).map(key => {
                                     const l = leads[key];
                                     return `
-                                        <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                                        <tr style="border-bottom: 1px solid var(--glass-border); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                                             <td style="padding: 12px;">${new Date(l.date).toLocaleDateString('pt-BR')}</td>
                                             <td style="padding: 12px;">
                                                 <strong>${l.shopName}</strong><br>
@@ -591,7 +591,7 @@ const app = {
                                                 ${l.email}<br>
                                                 <a href="https://wa.me/55${l.phone.replace(/\D/g,'')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 600;">📱 WhatsApp</a>
                                             </td>
-                                            <td style="padding: 12px;"><span style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${l.segment}</span></td>
+                                            <td style="padding: 12px;"><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${l.segment}</span></td>
                                             <td style="padding: 12px;">
                                                 <span style="padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; background: ${l.contacted ? '#dcfce7; color: #15803d' : '#fef9c3; color: #854d0e'};" onclick="app.toggleLeadStatus('${key}', ${l.contacted || false})">
                                                     ${l.contacted ? '✅ Contatado' : '⏳ Pendente'}
@@ -609,7 +609,7 @@ const app = {
                         ${Object.keys(leads).length === 0 ? '<p style="text-align: center; padding: 20px; color: var(--text-muted);">Nenhum lead capturado ainda.</p>' : ''}
                     </div>
 
-                    <h2 style="margin: 40px 0 20px 0; color: #7c3aed;">🧪 Unidades em Período de Teste (7 Dias)</h2>
+                    <h2 style="margin: 40px 0 20px 0; color: var(--p-light);">🧪 Unidades em Período de Teste (7 Dias)</h2>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                             <thead>
@@ -627,7 +627,7 @@ const app = {
                                     const today = new Date();
                                     const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
                                     return `
-                                        <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <tr style="border-bottom: 1px solid var(--glass-border);">
                                             <td style="padding: 12px;">
                                                 <strong>${t.name}</strong><br>
                                                 <span style="font-size: 0.8rem;">${t.owner} (${t.email})</span>
