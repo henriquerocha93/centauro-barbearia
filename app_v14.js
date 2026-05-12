@@ -192,6 +192,23 @@ const app = {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     },
 
+    normalizeDate(dateStr) {
+        if (!dateStr) return '';
+        const s = String(dateStr).trim();
+        if (s.includes('T')) return s.split('T')[0];
+        if (s.includes('-')) return s; // YYYY-MM-DD
+        if (s.includes('/')) {
+            const parts = s.split('/');
+            if (parts.length === 3) {
+                // Se o primeiro campo tiver 4 dígitos, assume YYYY/MM/DD
+                if (parts[0].length === 4) return s.replace(/\//g, '-');
+                // Se não, assume DD/MM/YYYY
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        return s;
+    },
+
     applyTheme() {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
@@ -6223,7 +6240,7 @@ const app = {
         const filterDate = this.state.voucherFilterDate || today;
         
         const filteredVouchers = vouchers.filter(v => {
-            const vDate = v.discountDate || v.date.split('T')[0];
+            const vDate = this.normalizeDate(v.discountDate || v.date);
             return vDate === filterDate;
         });
         container.innerHTML = `
@@ -6270,8 +6287,9 @@ const app = {
                 <div class="voucher-list">
                     ${filteredVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum vale encontrado para esta data.</p>' : ''}
                     ${filteredVouchers.map(v => {
-            const discountLabel = v.discountDate
-                ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(v.discountDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+            const normalizedDiscount = v.discountDate ? this.normalizeDate(v.discountDate) : null;
+            const discountLabel = normalizedDiscount
+                ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(normalizedDiscount + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
                 : '';
             const noteLabel = v.note ? `<span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">${v.note}</span>` : '';
             return `
