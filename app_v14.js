@@ -896,7 +896,6 @@ const app = {
                                 }
                             }
                         }
-                    }
                 });
             } catch (e) {
                 console.error('Erro ao conectar Firebase:', e);

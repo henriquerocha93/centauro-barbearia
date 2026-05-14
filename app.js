@@ -458,12 +458,10 @@ const app = {
                                 if (internalTitle) internalTitle.textContent = this.state.settings.shopName.toUpperCase();
                             }
 
-                            // Atualiza a tela se não estiver no meio de um agendamento
                             if (this.state.view !== 'booking') {
                                 this.render(this.state.view);
                             }
                         }
-                    }
                 });
             } catch (e) {
                 console.error('Erro ao conectar Firebase:', e);
