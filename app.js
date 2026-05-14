@@ -316,26 +316,31 @@ const app = {
         if (saved) {
             try {
                 const data = JSON.parse(saved);
+                const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
 
-                this.state.services = data.services || this.state.services;
-                this.state.staff = data.staff || this.state.staff;
-                
-                // Força a inserção do usuário Totem se a sessão do localStorage for antiga
-                if (!this.state.staff.find(s => s.role === 'totem')) {
-                    this.state.staff.push({ id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false });
+                // Normalizar arrays
+                const arrayFields = ['services', 'staff', 'customers', 'appointments', 'transactions', 'products', 'serviceOrders', 'vouchers', 'productSales'];
+                arrayFields.forEach(f => {
+                    if (data[f]) data[f] = toArray(data[f]);
+                });
+
+                // Preservar agenda se necessário
+                if (data.settings) {
+                    const defaultSettings = this.state.settings;
+                    data.settings = { ...defaultSettings, ...data.settings };
+                    if (!data.settings.agenda && defaultSettings.agenda) {
+                        data.settings.agenda = defaultSettings.agenda;
+                    }
                 }
 
-                this.state.customers = data.customers || this.state.customers;
-                this.state.settings = data.settings || this.state.settings;
-                this.state.vouchers = data.vouchers || this.state.vouchers;
-                this.state.transactions = data.transactions || this.state.transactions;
-                this.state.products = data.products || this.state.products;
-                this.state.productSales = data.productSales || [];
-                this.state.appointments = data.appointments || this.state.appointments || [];
-                this.state.serviceOrders = data.serviceOrders || [];
-                this.state.githubConfig = data.githubConfig || this.state.githubConfig;
+                Object.assign(this.state, data);
+
+                // Garantir Totem
+                if (Array.isArray(this.state.staff) && !this.state.staff.find(s => s.role === 'totem')) {
+                    this.state.staff.push({ id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false });
+                }
             } catch (e) {
-                console.error("Erro ao carregar estado:", e);
+                console.error('Erro ao carregar estado local:', e);
             }
         }
     },
@@ -427,16 +432,24 @@ const app = {
                         if (data.lastUpdate !== localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
                             
-                            this.state.services = data.services || this.state.services;
-                            this.state.staff = data.staff || this.state.staff;
-                            this.state.customers = data.customers || this.state.customers;
-                            this.state.settings = data.settings || this.state.settings;
-                            this.state.vouchers = data.vouchers || this.state.vouchers;
-                            this.state.transactions = data.transactions || this.state.transactions;
-                            this.state.products = data.products || this.state.products;
-                            this.state.productSales = data.productSales || [];
-                            this.state.appointments = data.appointments || [];
-                            this.state.serviceOrders = data.serviceOrders || [];
+                            const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                            this.state.services = toArray(data.services);
+                            this.state.staff = toArray(data.staff);
+                            this.state.customers = toArray(data.customers);
+                            this.state.vouchers = toArray(data.vouchers);
+                            this.state.transactions = toArray(data.transactions);
+                            this.state.products = toArray(data.products);
+                            this.state.productSales = toArray(data.productSales);
+                            this.state.appointments = toArray(data.appointments);
+                            this.state.serviceOrders = toArray(data.serviceOrders);
+
+                            if (data.settings) {
+                                const oldAgenda = this.state.settings.agenda;
+                                this.state.settings = { ...this.state.settings, ...data.settings };
+                                if (!data.settings.agenda && oldAgenda) {
+                                    this.state.settings.agenda = oldAgenda;
+                                }
+                            }
                             this.state.lastUpdate = data.lastUpdate;
 
                             // SaaS: Atualiza textos da interface com base no Tenant
@@ -501,6 +514,7 @@ const app = {
         const dateObj = new Date(this.state.currentDate + 'T00:00:00');
         const dayOfWeek = dateObj.getDay(); // 0 a 6
         
+        if (!this.state.settings || !this.state.settings.agenda) return [];
         const { intervalMin, schedule } = this.state.settings.agenda;
         const dayConfig = schedule[dayOfWeek];
         if (!dayConfig || !dayConfig.active) return []; // Fechado neste dia
@@ -1365,8 +1379,10 @@ const app = {
         const todayStr = new Date().toISOString().split('T')[0];
         const md = todayStr.substring(5);
 
-        const birthdays = this.state.customers.filter(c =>
-            c.birthDate &&
+        const customers = Array.isArray(this.state.customers) ? this.state.customers : [];
+        const birthdays = customers.filter(c =>
+            c && c.birthDate &&
+            typeof c.birthDate === 'string' &&
             c.birthDate.substring(5) === md &&
             c.lastCongratsDate !== todayStr
         );
@@ -2202,6 +2218,10 @@ const app = {
     },
 
     renderAgenda(container, barberFilter = null) {
+        if (!this.state.settings || !this.state.settings.agenda) {
+            container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;">⚠️ Configurações de agenda não encontradas.</div>';
+            return;
+        }
         const barbersToShow = barberFilter 
             ? this.state.staff.filter(s => s.name === barberFilter)
             : this.state.staff.filter(s => s.showInAgenda !== false);

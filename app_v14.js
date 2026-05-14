@@ -582,8 +582,25 @@ const app = {
         if (saved) {
             try {
                 const loaded = JSON.parse(saved);
+                const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                
+                // Normalizar arrays para evitar erros de renderização iniciais
+                const arrayFields = ['services', 'staff', 'customers', 'appointments', 'transactions', 'products', 'serviceOrders', 'vouchers', 'productSales', 'tips'];
+                arrayFields.forEach(field => {
+                    if (loaded[field]) loaded[field] = toArray(loaded[field]);
+                });
+
+                // Preservar configurações padrão se não existirem no localStorage
+                if (loaded.settings) {
+                    const defaultSettings = this.state.settings;
+                    loaded.settings = { ...defaultSettings, ...loaded.settings };
+                    if (!loaded.settings.agenda && defaultSettings.agenda) {
+                        loaded.settings.agenda = defaultSettings.agenda;
+                    }
+                }
+
                 Object.assign(this.state, loaded);
-                console.log(`✅ Estado carregado para loja: ${key}`);
+                console.log(`✅ Estado carregado e normalizado para loja: ${key}`);
                 this.migrateProducts();
                 this.migrateVouchersFromTransactions();
             } catch (e) {
@@ -784,13 +801,22 @@ const app = {
                         if (data.lastUpdate > localLastUpdate) {
                             console.log('⚡ Atualização em tempo real recebida de:', data.updatedBy);
 
-                            this.state.services = data.services || [];
-                            this.state.staff = data.staff || [];
-                            this.state.customers = data.customers || [];
-                            this.state.settings = data.settings || this.state.settings;
-                            this.state.vouchers = data.vouchers || [];
-                            this.state.productSales = data.productSales || [];
+                            const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                            this.state.services = toArray(data.services);
+                            this.state.staff = toArray(data.staff);
+                            this.state.customers = toArray(data.customers);
+                            this.state.vouchers = toArray(data.vouchers);
+                            this.state.productSales = toArray(data.productSales);
                             this.state.openingBalances = data.openingBalances || {};
+
+                            if (data.settings) {
+                                const oldAgenda = this.state.settings.agenda;
+                                this.state.settings = { ...this.state.settings, ...data.settings };
+                                // Preserva agenda se ela sumiu no objeto vindo do Firebase
+                                if (!data.settings.agenda && oldAgenda) {
+                                    this.state.settings.agenda = oldAgenda;
+                                }
+                            }
                             
                             // Lógica de Mesclagem (Merge) para evitar perda de dados locais offline
                             const merge = (local, remote) => {
@@ -927,7 +953,8 @@ const app = {
     generateTimeSlots() {
         const dateObj = new Date(this.state.currentDate + 'T00:00:00');
         const dayOfWeek = dateObj.getDay(); // 0 a 6
-
+        
+        if (!this.state.settings || !this.state.settings.agenda) return [];
         const { intervalMin, schedule } = this.state.settings.agenda;
         const dayConfig = schedule[dayOfWeek];
         if (!dayConfig || !dayConfig.active) return []; // Fechado neste dia
@@ -1592,6 +1619,10 @@ const app = {
                 <div class="glass" style="padding: 40px; text-align: center; color: #ff4444;">
                     <h3>❌ Erro Crítico de Renderização</h3>
                     <p style="font-size: 0.9rem; margin: 15px 0;">Ocorreu uma falha ao tentar carregar esta tela.</p>
+                    <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow: auto; max-width: 100%;">
+                        <strong>Erro:</strong> ${e.message}<br>
+                        <small>${e.stack ? e.stack.split('\n')[0] : ''}</small>
+                    </div>
                     <button class="btn-primary" onclick="app.navigateTo('admin-dash')">Voltar ao Início</button>
                 </div>
             `;
@@ -2092,8 +2123,11 @@ const app = {
         const todayStr = new Date().toISOString().split('T')[0];
         const md = todayStr.substring(5);
 
-        const birthdays = this.state.customers.filter(c =>
-            c.birthDate &&
+        const customers = Array.isArray(this.state.customers) ? this.state.customers : [];
+        const birthdays = customers.filter(c =>
+            c && c.birthDate &&
+            typeof c.birthDate === 'string' &&
+            c.birthDate.length >= 10 &&
             c.birthDate.substring(5) === md &&
             c.lastCongratsDate !== todayStr
         );
@@ -2135,7 +2169,7 @@ const app = {
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     ${birthdays.map(c => {
             const phone = (c.phone || '').replace(/\D/g, '');
-            const firstName = c.name ? c.name.split(' ')[0] : 'Cliente';
+            const firstName = (c.name && typeof c.name === 'string') ? c.name.split(' ')[0] : 'Cliente';
             const fullName = c.name || 'Cliente';
             const age = getAge(c.birthDate);
             const ageText = age ? ` · ${age} anos` : '';
@@ -2696,54 +2730,61 @@ const app = {
     },
 
     renderAdminDash(container) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantId = urlParams.get('loja');
-        const sub = this.state.subscription;
-        let billingBanner = '';
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantId = urlParams.get('loja');
+            const sub = this.state.subscription;
+            const user = this.state.user || {};
+            let billingBanner = '';
 
-        // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz) e apenas para ADMs
-        if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment && this.state.user.role === 'admin') {
-            const nextDate = new Date(sub.nextPayment);
-            const today = new Date();
-            const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
-            const isCritical = diffDays <= 4;
+            // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz) e apenas para ADMs
+            if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment && user.role === 'admin') {
+                const nextDate = new Date(sub.nextPayment);
+                const today = new Date();
+                const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
+                const isCritical = diffDays <= 4;
 
-            billingBanner = `
-                <div class="glass fade-in" style="padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isCritical ? '#ef4444' : 'var(--accent-color)'}; background: ${isCritical ? 'rgba(239, 68, 68, 0.05)' : 'transparent'};">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="font-size: 1.5rem;">${isCritical ? '⚠️' : '💳'}</div>
-                        <div>
-                            <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Fatura do Sistema</h4>
-                            <p style="margin: 3px 0 0; font-size: 0.78rem; color: var(--text-secondary);">
-                                Seu plano expira em: <strong style="color: ${isCritical ? '#ef4444' : 'var(--accent-color)'};">${nextDate.toLocaleDateString('pt-BR')}</strong>
-                                ${isCritical ? ' - <span style="color: #ef4444; font-weight: 700;">Renovação Pendente</span>' : ''}
-                            </p>
+                billingBanner = `
+                    <div class="glass fade-in" style="padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isCritical ? '#ef4444' : 'var(--accent-color)'}; background: ${isCritical ? 'rgba(239, 68, 68, 0.05)' : 'transparent'};">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 1.5rem;">${isCritical ? '⚠️' : '💳'}</div>
+                            <div>
+                                <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Fatura do Sistema</h4>
+                                <p style="margin: 3px 0 0; font-size: 0.78rem; color: var(--text-secondary);">
+                                    Seu plano expira em: <strong style="color: ${isCritical ? '#ef4444' : 'var(--accent-color)'};">${nextDate.toLocaleDateString('pt-BR')}</strong>
+                                    ${isCritical ? ' - <span style="color: #ef4444; font-weight: 700;">Renovação Pendente</span>' : ''}
+                                </p>
+                            </div>
                         </div>
+                        <button class="btn-primary" style="padding: 8px 16px; font-size: 0.75rem; background: ${isCritical ? '#ef4444' : 'var(--accent-color)'};" onclick="app.navigateTo('admin-billing')">
+                            Pagar / Ver Fatura
+                        </button>
                     </div>
-                    <button class="btn-primary" style="padding: 8px 16px; font-size: 0.75rem; background: ${isCritical ? '#ef4444' : 'var(--accent-color)'};" onclick="app.navigateTo('admin-billing')">
-                        Pagar / Ver Fatura
+                `;
+            }
+
+            // [NOVO] Setup Wizard Check
+            const s = this.state.settings || {};
+            const si = s.shopInfo || {};
+            const currentUser = this.state.user || {};
+            if (currentUser.role === 'admin' && (!si.phone || !si.address)) {
+                this.renderSetupWizard(container);
+                return;
+            }
+
+            container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
+                <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+                    <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
+                        🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
                 </div>
+                <div id="dash-agenda-wrapper"></div>
             `;
+            this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
+        } catch (e) {
+            console.error('Erro no renderAdminDash:', e);
+            throw e; // Lança para o injectView capturar
         }
-
-        // [NOVO] Setup Wizard Check
-        const s = this.state.settings || {};
-        const si = s.shopInfo || {};
-        if (this.state.user && this.state.user.role === 'admin' && (!si.phone || !si.address)) {
-            this.renderSetupWizard(container);
-            return;
-        }
-
-        container.innerHTML = this.getBirthdaysHTML() + billingBanner + `
-            <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
-                <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
-                    🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
-                </button>
-            </div>
-            <div id="dash-agenda-wrapper"></div>
-        `;
-        this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
     },
 
     // ══════════════════════════════════════════════════════════════
@@ -3368,12 +3409,17 @@ const app = {
     },
 
     renderAgenda(container, barberFilter = null) {
+        if (!this.state.settings || !this.state.settings.agenda) {
+            container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;">⚠️ Configurações de agenda não encontradas. Por favor, acesse as configurações.</div>';
+            return;
+        }
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
+        const staff = Array.isArray(this.state.staff) ? this.state.staff : [];
         const barbersToShow = barberFilter
-            ? this.state.staff.filter(s => s.name === barberFilter)
-            : this.state.staff.filter(s => s.showInAgenda !== false);
+            ? staff.filter(s => s && s.name === barberFilter)
+            : staff.filter(s => s && s.showInAgenda !== false);
 
         const timeSlots = this.generateTimeSlots();
         const todayStr = new Date().toISOString().split('T')[0];
@@ -6928,6 +6974,8 @@ const app = {
 
         const dateObj = new Date(bs.date + 'T00:00:00');
         const dayOfWeek = dateObj.getDay();
+        
+        if (!this.state.settings || !this.state.settings.agenda) return [];
         const { intervalMin, schedule } = this.state.settings.agenda;
 
         // Verificar se é uma data de exceção (feriado)

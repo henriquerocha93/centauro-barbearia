@@ -746,7 +746,19 @@
                         segment: data.segment,
                         trialEndDate: data.trialEndDate,
                         createdAt: data.date,
-                        status: 'active'
+                        status: 'active',
+                        agenda: {
+                            intervalMin: 15,
+                            schedule: {
+                                0: { active: false, open: '09:00', close: '09:01' }, // Dom
+                                1: { active: true, open: '09:00', close: '20:00' }, // Seg
+                                2: { active: true, open: '09:00', close: '20:00' }, // Ter
+                                3: { active: true, open: '09:00', close: '20:00' }, // Qua
+                                4: { active: true, open: '09:00', close: '21:00' }, // Qui
+                                5: { active: true, open: '09:00', close: '21:00' }, // Sex
+                                6: { active: true, open: '09:00', close: '21:00' }  // Sab
+                            }
+                        }
                     },
                     staff: [{
                         id: Date.now(),
