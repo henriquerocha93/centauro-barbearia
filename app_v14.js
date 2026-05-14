@@ -590,6 +590,13 @@ const app = {
         if (saved) {
             try {
                 const loaded = JSON.parse(saved);
+                
+                // [CRÍTICO] Se o tenantId carregado for diferente do atual, ignoramos para evitar vazamento
+                if (loaded.currentTenant && loaded.currentTenant !== this.getTenantId()) {
+                    console.warn('⚠️ Detectada troca de inquilino. Limpando estado local para segurança.');
+                    return;
+                }
+
                 const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                 
                 // Normalizar arrays para evitar erros de renderização iniciais
@@ -608,6 +615,7 @@ const app = {
                 }
 
                 Object.assign(this.state, loaded);
+                this.state.currentTenant = this.getTenantId(); // Vincula o estado ao tenant atual
                 console.log(`✅ Estado carregado e normalizado para loja: ${key}`);
                 this.migrateProducts();
                 this.migrateVouchersFromTransactions();
@@ -826,37 +834,12 @@ const app = {
                                 }
                             }
                             
-                            // Lógica de Mesclagem (Merge) para evitar perda de dados locais offline
-                            const merge = (local, remote) => {
-                                if (!remote) return local || [];
-                                if (!local) return remote || [];
-                                const remoteIds = new Set(remote.map(i => i.id).filter(Boolean));
-                                const localOnly = local.filter(i => i.id && !remoteIds.has(i.id));
-                                return [...remote, ...localOnly];
-                            };
-
-                            const mergeProducts = (local, remote) => {
-                                if (!remote) return local || [];
-                                if (!local) return remote || [];
-                                const localMap = new Map(local.map(p => [p.id, p]));
-                                const merged = remote.map(rp => {
-                                    const lp = localMap.get(rp.id);
-                                    if (lp) {
-                                        return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
-                                    }
-                                    return rp;
-                                });
-                                local.forEach(lp => {
-                                    if (!merged.find(p => p.id === lp.id)) merged.push(lp);
-                                });
-                                return merged;
-                            };
-
-                            this.state.transactions = merge(this.state.transactions, data.transactions);
-                            this.state.appointments = merge(this.state.appointments, data.appointments);
-                            this.state.serviceOrders = merge(this.state.serviceOrders, data.serviceOrders);
-                            this.state.tips = merge(this.state.tips, data.tips);
-                            this.state.products = mergeProducts(this.state.products, data.products);
+                            // SaaS: Prioridade absoluta para os dados da nuvem (Isolamento de Tenant)
+                            this.state.transactions = toArray(data.transactions);
+                            this.state.appointments = toArray(data.appointments);
+                            this.state.serviceOrders = toArray(data.serviceOrders);
+                            this.state.tips = toArray(data.tips);
+                            this.state.products = toArray(data.products);
                             
                             this.state.lastUpdate = data.lastUpdate;
 
