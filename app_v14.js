@@ -347,82 +347,31 @@ const app = {
             const tenantId = this.getTenantId();
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
-            // Verificação de segurança: não sobrescrever se o servidor tiver dados mais recentes
-            const dbRef = ref(this.db, dbPath);
-            const serverSnap = await get(ref(this.db, dbPath + 'lastUpdate'));
-            const serverLastUpdate = serverSnap.val() || 0;
-            const localLastUpdate = this.state.lastUpdate || 0;
+            // [MUDANÇA CRÍTICA] Removido suporte offline/merge por solicitação do usuário.
+            // Agora o sistema trabalha em modo Cloud-Truth (Nuvem é a verdade absoluta).
+            console.log('📤 Enviando atualizações para o servidor (Modo Direto)...');
+            
+            const stateToSave = {
+                services: this.state.services,
+                staff: this.state.staff,
+                customers: this.state.customers,
+                settings: this.state.settings,
+                vouchers: this.state.vouchers,
+                transactions: this.state.transactions,
+                products: this.state.products,
+                productSales: this.state.productSales || [],
+                openingBalances: this.state.openingBalances || {},
+                appointments: this.state.appointments || [],
+                serviceOrders: this.state.serviceOrders || [],
+                tips: this.state.tips || [],
+                lastConsumptionView: this.state.lastConsumptionView || 0,
+                lastUpdate: now,
+                updatedBy: this.state.user ? this.state.user.name : 'Sistema'
+            };
 
-            if (serverLastUpdate > localLastUpdate) {
-                console.warn('⚠️ Conflito detectado. Mesclando com dados do servidor antes de enviar...');
-                const fullSnap = await get(dbRef);
-                const serverData = fullSnap.val() || {};
-                
-                const merge = (local, remote) => {
-                    if (!remote) return local || [];
-                    if (!local) return remote || [];
-                    const remoteIds = new Set(remote.map(i => i.id).filter(Boolean));
-                    const localOnly = local.filter(i => i.id && !remoteIds.has(i.id));
-                    return [...remote, ...localOnly];
-                };
-
-                const mergeProducts = (local, remote) => {
-                    if (!remote) return local || [];
-                    if (!local) return remote || [];
-                    const localMap = new Map(local.map(p => [p.id, p]));
-                    const merged = remote.map(rp => {
-                        const lp = localMap.get(rp.id);
-                        if (lp) {
-                            // Mantém o menor estoque entre local e remoto para não perder baixas
-                            return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
-                        }
-                        return rp;
-                    });
-                    local.forEach(lp => {
-                        if (!merged.find(p => p.id === lp.id)) merged.push(lp);
-                    });
-                    return merged;
-                };
-
-                this.state.transactions = merge(this.state.transactions, serverData.transactions);
-                this.state.appointments = merge(this.state.appointments, serverData.appointments);
-                this.state.serviceOrders = merge(this.state.serviceOrders, serverData.serviceOrders);
-                this.state.tips = merge(this.state.tips, serverData.tips);
-                this.state.products = mergeProducts(this.state.products, serverData.products);
-                this.state.customers = merge(this.state.customers, serverData.customers);
-                this.state.productSales = merge(this.state.productSales, serverData.productSales);
-                
-                // Atualiza o local com o que veio do servidor
-                this.state.lastUpdate = serverLastUpdate;
-                this.saveState();
-            } else if (now > serverLastUpdate) {
-                // Só envia para o servidor se o local for estritamente mais novo
-                console.log('📤 Enviando atualizações para o servidor...');
-                
-                const stateToSave = {
-                    services: this.state.services,
-                    staff: this.state.staff,
-                    customers: this.state.customers,
-                    settings: this.state.settings,
-                    vouchers: this.state.vouchers,
-                    transactions: this.state.transactions,
-                    products: this.state.products,
-                    productSales: this.state.productSales || [],
-                    openingBalances: this.state.openingBalances || {},
-                    appointments: this.state.appointments || [],
-                    serviceOrders: this.state.serviceOrders || [],
-                    tips: this.state.tips || [],
-                    lastConsumptionView: this.state.lastConsumptionView || 0,
-                    lastUpdate: now,
-                    updatedBy: this.state.user ? this.state.user.name : 'Sistema'
-                };
-
-                await set(dbRef, stateToSave);
-                this.state.lastUpdate = now;
-                console.log('⚡ Sincronizado com Firebase (Tempo Real)');
-            } else {
-                console.log('✅ Servidor e local em sincronia.');
-            }
+            await set(dbRef, stateToSave);
+            this.state.lastUpdate = now;
+            console.log('⚡ Sincronizado com Firebase (Tempo Real)');
 
             // Salva o timestamp no localStorage também para consistência no reload
             const storageKey = this.getStorageKey();
@@ -829,46 +778,19 @@ const app = {
                                 }
                             }
                             
-                            // Lógica de Mesclagem Segura: Só mescla se o estado local for do mesmo inquilino
-                            const merge = (local, remote) => {
-                                if (!remote) return local || [];
-                                // Se o inquilino mudou e ainda não sincronizou, não mesclamos o "lixo" da loja anterior
-                                if (this.state.currentTenant !== tenantId) return toArray(remote);
-                                if (!local || local.length === 0) return toArray(remote);
-                                
-                                const remoteIds = new Set(toArray(remote).map(i => i.id).filter(Boolean));
-                                const localOnly = toArray(local).filter(i => i.id && !remoteIds.has(i.id));
-                                return [...toArray(remote), ...localOnly];
-                            };
-
-                            const mergeProducts = (local, remote) => {
-                                if (!remote) return local || [];
-                                if (this.state.currentTenant !== tenantId) return toArray(remote);
-                                if (!local || local.length === 0) return toArray(remote);
-
-                                const remoteArr = toArray(remote);
-                                const localMap = new Map(toArray(local).map(p => [p.id, p]));
-                                const merged = remoteArr.map(rp => {
-                                    const lp = localMap.get(rp.id);
-                                    if (lp) {
-                                        return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
-                                    }
-                                    return rp;
-                                });
-                                toArray(local).forEach(lp => {
-                                    if (!merged.find(p => p.id === lp.id)) merged.push(lp);
-                                });
-                                return merged;
-                            };
-
-                            this.state.transactions = merge(this.state.transactions, data.transactions);
-                            this.state.appointments = merge(this.state.appointments, data.appointments);
-                            this.state.serviceOrders = merge(this.state.serviceOrders, data.serviceOrders);
-                            this.state.tips = merge(this.state.tips, data.tips);
-                            this.state.products = mergeProducts(this.state.products, data.products);
-                            this.state.productSales = merge(this.state.productSales, data.productSales);
+                            // SaaS: Prioridade absoluta para os dados da nuvem (Isolamento de Tenant)
+                            // Removido 'merge' por solicitação do usuário para garantir cópia fiel do Totem -> ADM
+                            this.state.transactions = toArray(data.transactions);
+                            this.state.appointments = toArray(data.appointments);
+                            this.state.serviceOrders = toArray(data.serviceOrders);
+                            this.state.tips = toArray(data.tips);
+                            this.state.products = toArray(data.products);
+                            this.state.productSales = toArray(data.productSales);
+                            this.state.customers = toArray(data.customers);
+                            this.state.vouchers = toArray(data.vouchers);
+                            this.state.openingBalances = data.openingBalances || {};
                             
-                            this.state.currentTenant = tenantId; // Atualiza o vínculo após o merge bem sucedido
+                            this.state.currentTenant = tenantId;
                             this.state.lastUpdate = data.lastUpdate;
 
 
@@ -1584,6 +1506,9 @@ const app = {
                         <h2 style="font-size: 1.1rem; letter-spacing: -0.5px;">${viewTitles[view] || 'Painel'}</h2>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
+                        <button onclick="app.syncToFirebase()" class="btn-outline" style="font-size: 0.75rem; padding: 6px 14px; color: #4ade80; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                           <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Sincronizar
+                        </button>
                         <div id="sync-status-indicator" style="font-size: 0.7rem; font-weight: 600; color: #4ade80; display: flex; align-items: center; gap: 6px;">
                             <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
                             Tempo Real
@@ -1666,6 +1591,7 @@ const app = {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
+                    <button class="btn-outline" style="font-size: 0.78rem; padding: 7px 14px; color: #10b981; border-color: #10b981;" onclick="app.syncToFirebase()">🔄 Sincronizar Agora</button>
                     <button class="btn-primary" style="font-size: 0.78rem; padding: 7px 14px; background: #10b981;" onclick="app.installPWA()">Criar App</button>
                     <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
                 </div>
