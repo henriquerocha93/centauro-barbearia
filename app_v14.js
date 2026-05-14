@@ -834,13 +834,46 @@ const app = {
                                 }
                             }
                             
-                            // SaaS: Prioridade absoluta para os dados da nuvem (Isolamento de Tenant)
-                            this.state.transactions = toArray(data.transactions);
-                            this.state.appointments = toArray(data.appointments);
-                            this.state.serviceOrders = toArray(data.serviceOrders);
-                            this.state.tips = toArray(data.tips);
-                            this.state.products = toArray(data.products);
+                            // Lógica de Mesclagem Segura: Só mescla se o estado local for do mesmo inquilino
+                            const merge = (local, remote) => {
+                                if (!remote) return local || [];
+                                // Se o inquilino mudou e ainda não sincronizou, não mesclamos o "lixo" da loja anterior
+                                if (this.state.currentTenant !== tenantId) return toArray(remote);
+                                if (!local || local.length === 0) return toArray(remote);
+                                
+                                const remoteIds = new Set(toArray(remote).map(i => i.id).filter(Boolean));
+                                const localOnly = toArray(local).filter(i => i.id && !remoteIds.has(i.id));
+                                return [...toArray(remote), ...localOnly];
+                            };
+
+                            const mergeProducts = (local, remote) => {
+                                if (!remote) return local || [];
+                                if (this.state.currentTenant !== tenantId) return toArray(remote);
+                                if (!local || local.length === 0) return toArray(remote);
+
+                                const remoteArr = toArray(remote);
+                                const localMap = new Map(toArray(local).map(p => [p.id, p]));
+                                const merged = remoteArr.map(rp => {
+                                    const lp = localMap.get(rp.id);
+                                    if (lp) {
+                                        return { ...rp, stock: Math.min(Number(rp.stock) || 0, Number(lp.stock) || 0) };
+                                    }
+                                    return rp;
+                                });
+                                toArray(local).forEach(lp => {
+                                    if (!merged.find(p => p.id === lp.id)) merged.push(lp);
+                                });
+                                return merged;
+                            };
+
+                            this.state.transactions = merge(this.state.transactions, data.transactions);
+                            this.state.appointments = merge(this.state.appointments, data.appointments);
+                            this.state.serviceOrders = merge(this.state.serviceOrders, data.serviceOrders);
+                            this.state.tips = merge(this.state.tips, data.tips);
+                            this.state.products = mergeProducts(this.state.products, data.products);
+                            this.state.productSales = merge(this.state.productSales, data.productSales);
                             
+                            this.state.currentTenant = tenantId; // Atualiza o vínculo após o merge bem sucedido
                             this.state.lastUpdate = data.lastUpdate;
 
 
