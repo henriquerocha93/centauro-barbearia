@@ -249,19 +249,27 @@ const app = {
         let bgColor = (type === 'barbershop') ? (s.bgColor || '#0B0E14') : (theme.bg || '#0B0E14');
         let accentColor = (type === 'barbershop') ? (s.accentColor || '#D4AF37') : (theme.primary || '#D4AF37');
         
-        root.style.setProperty('--bg-color', bgColor);
-        root.style.setProperty('--surface-color', s.surfaceColor || theme.surface || '#151A21');
-        root.style.setProperty('--accent-color', accentColor);
-        root.style.setProperty('--accent-readable', accentColor); 
-        root.style.setProperty('--text-primary', s.textPrimary || theme.text || '#F3F4F6');
-        root.style.setProperty('--text-secondary', s.textSecondary || theme.textSecondary || '#9CA3AF');
-        root.style.setProperty('--glass-bg', s.glassBg || theme.glassBg || 'rgba(21, 26, 33, 0.8)');
-        root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.08)');
+        const isDark = (bgColor === '#0B0E14' || bgColor.startsWith('#0') || bgColor.startsWith('#1') || this.getLuminance(bgColor) < 0.2);
 
-        // Restaurar variáveis básicas exigidas pelo CSS
-        const isDark = (bgColor === '#0B0E14' || bgColor.includes('rgba(0,0,0') || bgColor.startsWith('#0') || bgColor.startsWith('#1'));
-        root.style.setProperty('--on-accent', isDark ? '#FFFFFF' : '#000000');
-        root.style.setProperty('--on-bg', isDark ? '#FFFFFF' : '#000000');
+        // Garantir que o sotaque seja legível
+        let readableAccent = accentColor;
+        if (isDark && this.getLuminance(accentColor) < 0.4) {
+            readableAccent = '#fbbf24'; // Um amarelo vibrante para garantir legibilidade no escuro
+        } else if (!isDark && this.getLuminance(accentColor) > 0.6) {
+            readableAccent = '#B8860B'; // Um dourado escuro para legibilidade no claro
+        }
+
+        root.style.setProperty('--bg-color', bgColor);
+        root.style.setProperty('--surface-color', s.surfaceColor || theme.surface || (isDark ? '#151A21' : '#F9FAFB'));
+        root.style.setProperty('--accent-color', accentColor);
+        root.style.setProperty('--accent-readable', readableAccent); 
+        root.style.setProperty('--text-primary', s.textPrimary || theme.text || (isDark ? '#F3F4F6' : '#111827'));
+        root.style.setProperty('--text-secondary', s.textSecondary || theme.textSecondary || (isDark ? '#9CA3AF' : '#4B5563'));
+        root.style.setProperty('--glass-bg', s.glassBg || theme.glassBg || (isDark ? 'rgba(21, 26, 33, 0.8)' : 'rgba(255, 255, 255, 0.8)'));
+        root.style.setProperty('--glass-border', isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)');
+
+        root.style.setProperty('--on-accent', this.getContrastColor(accentColor));
+        root.style.setProperty('--on-bg', this.getContrastColor(bgColor));
     },
 
     openModal(title, contentHTML) {
