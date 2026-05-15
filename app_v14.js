@@ -3599,7 +3599,7 @@ const app = {
         return `
             <div class="appointment-block" 
                  title="${hoverInfo}" 
-                 style="border-left-color: ${statusColor}; background: ${statusBg};"
+                 style="border-left-color: ${statusColor}; background: ${statusBg}; display: flex; flex-direction: column; gap: 3px; padding: 6px 8px; justify-content: flex-start; align-items: flex-start; overflow: hidden;"
                  ${isDraggable ? `
                     draggable="true" 
                     ondragstart="window.app.handleDragStart(event, ${apt.id})" 
@@ -3608,10 +3608,10 @@ const app = {
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
                  ` : ''}>
-                <span class="customer-name" style="pointer-events: none; font-size: 0.75rem; display: block; color: var(--text-primary); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${apt.customer || 'Cliente'}</span>
-                <span class="service-name" style="pointer-events: none; font-size: 0.65rem; opacity: 0.8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.55rem; color: #94a3b8; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">✅ FINALIZADO</div>` : ''}
-                ${apt.status === 'confirmado' ? `<div style="font-size: 0.55rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">🟢 CONFIRMADO</div>` : ''}
+                <div class="customer-name" style="pointer-events: none; font-size: 0.75rem; font-weight: 800; color: #fff; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${apt.customer || 'Cliente'}</div>
+                <div class="service-name" style="pointer-events: none; font-size: 0.65rem; opacity: 0.8; color: var(--text-primary); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${apt.service || 'Serviço'}</div>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.55rem; color: #94a3b8; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 3px; margin-top: auto;">✅ FINALIZADO</div>` : ''}
+                ${apt.status === 'confirmado' ? `<div style="font-size: 0.55rem; color: #4ade80; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 3px; margin-top: auto;">🟢 CONFIRMADO</div>` : ''}
             </div>
         `;
     },
