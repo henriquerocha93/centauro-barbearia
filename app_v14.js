@@ -850,20 +850,29 @@ const app = {
                             console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // Atualização do Estado
+                            // [PROTEÇÃO DE STATUS] Não permite que a nuvem 'desfinalize' um corte que já terminamos localmente
+                            const cloudApts = toArray(data.appointments);
+                            this.state.appointments = cloudApts.map(cloudApt => {
+                                const localApt = this.state.appointments.find(a => a.id === cloudApt.id);
+                                if (localApt && localApt.status === 'finalizado' && cloudApt.status !== 'finalizado') {
+                                    console.log(`🛡️ Protegendo status 'finalizado' do agendamento ${cloudApt.id}`);
+                                    return { ...cloudApt, status: 'finalizado' };
+                                }
+                                return cloudApt;
+                            });
+
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
                             this.state.customers = toArray(data.customers);
                             this.state.vouchers = toArray(data.vouchers);
                             this.state.productSales = toArray(data.productSales);
-                            this.state.appointments = toArray(data.appointments);
                             this.state.transactions = toArray(data.transactions);
                             this.state.products = toArray(data.products);
                             this.state.serviceOrders = toArray(data.serviceOrders);
                             this.state.tips = toArray(data.tips);
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
-                            this.state.needsSync = false; // Estamos em dia com o servidor
+                            this.state.needsSync = false;
 
                             if (data.settings) {
                                 this.state.settings = { ...this.state.settings, ...data.settings };
