@@ -850,12 +850,17 @@ const app = {
                             console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // [PROTEÇÃO DE STATUS] Não permite que a nuvem 'desfinalize' um corte que já terminamos localmente
+                            // [PROTEÇÃO DE STATUS ROBUSTA] 
                             const cloudApts = toArray(data.appointments);
                             this.state.appointments = cloudApts.map(cloudApt => {
-                                const localApt = this.state.appointments.find(a => a.id === cloudApt.id);
-                                if (localApt && localApt.status === 'finalizado' && cloudApt.status !== 'finalizado') {
-                                    console.log(`🛡️ Protegendo status 'finalizado' do agendamento ${cloudApt.id}`);
+                                const localApt = this.state.appointments.find(a => String(a.id) === String(cloudApt.id));
+                                
+                                // Se localmente está finalizado e na nuvem não
+                                const isLocalFinalizado = localApt && localApt.status === 'finalizado';
+                                const isCloudFinalizado = cloudApt.status === 'finalizado';
+                                
+                                if (isLocalFinalizado && !isCloudFinalizado) {
+                                    console.warn(`🛡️ Status Lock: Bloqueando tentativa da nuvem de desfinalizar o agendamento ${cloudApt.id}`);
                                     return { ...cloudApt, status: 'finalizado' };
                                 }
                                 return cloudApt;
