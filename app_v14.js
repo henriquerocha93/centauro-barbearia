@@ -311,8 +311,9 @@ const app = {
     },
 
     saveState() {
-        this.state.needsSync = true; // [NOVO] Marca que temos algo para salvar
-        // [FORÇADO] Sincronização imediata sem debounce por solicitação do usuário
+        this.state.needsSync = true;
+        this.state.lastUpdate = Date.now(); // [CRÍTICO] Atualiza o relógio para esta mudança
+
         try {
             const stateToSave = {
                     services: this.state.services,
@@ -381,16 +382,16 @@ const app = {
                 serviceOrders: this.state.serviceOrders || [],
                 tips: this.state.tips || [],
                 lastConsumptionView: this.state.lastConsumptionView || 0,
-                lastUpdate: this.state.lastUpdate || Date.now(), // [FIX] Usa o timestamp da ALTERAÇÃO, não do agora
+                lastUpdate: this.state.lastUpdate, 
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
 
-            this.state.isSyncing = true; // [NOVO] Trava de segurança contra race-condition
+            this.state.isSyncing = true;
             await set(dbRef, stateToSave);
+            
             this.state.isSyncing = false;
-            this.state.needsSync = false; // [SUCESSO] Reset da flag de pendência
-
-            this.state.lastUpdate = now;
+            this.state.needsSync = false;
+            
             console.log('✅ SUCESSO: Sincronizado com Firebase');
             
             // Feedback visual no botão
@@ -399,12 +400,6 @@ const app = {
                 syncIndicator.style.color = '#4ade80';
                 syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span> Sincronizado';
             }
-
-            // Salva o timestamp no localStorage também para consistência no reload
-            const storageKey = this.getStorageKey();
-            const localState = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            localState.lastUpdate = now;
-            localStorage.setItem(storageKey, JSON.stringify(localState));
 
         } catch (error) {
             this.state.isSyncing = false;
@@ -876,6 +871,14 @@ const app = {
                             
                             this.state.currentTenant = tenantId;
                             this.migrateProducts();
+
+                            // [SINCRONISMO CACHE] Atualiza o localStorage silenciosamente para que o F5 funcione
+                            try {
+                                localStorage.setItem(this.getStorageKey(), JSON.stringify({
+                                    ...data,
+                                    currentTenant: tenantId
+                                }));
+                            } catch (e) { }
 
                             // Re-renderização da View Atual (Instantânea)
                             if (this.state.view !== 'booking' && this.state.view !== 'login') {
