@@ -749,79 +749,103 @@ const app = {
     },
 
     init() {
-        this.loadState();
+        console.log('🚀 Inicializando Centauro Barbearia Engine...');
+        
+        // [BLINDAGEM] Sistema de recuperação de Crash
+        const crashCount = parseInt(localStorage.getItem('crash_count') || '0');
+        if (crashCount > 3) {
+            if (confirm('O sistema detectou falhas consecutivas. Deseja iniciar em MODO DE SEGURANÇA (Limpa cache temporário)?')) {
+                localStorage.removeItem(this.getStorageKey());
+                localStorage.setItem('crash_count', '0');
+                location.reload();
+                return;
+            }
+        }
 
-        // Inicializar Firebase
-        if (this.state.firebaseConfig) {
-            try {
-                const fbApp = initializeApp(this.state.firebaseConfig);
-                this.db = getDatabase(fbApp);
-                console.log('🔥 Firebase Initialized');
+        try {
+            localStorage.setItem('crash_count', (crashCount + 1).toString());
+            
+            // Suporte a Multi-Tenant dinâmico
+            const tenantId = this.getTenantId();
+            if (tenantId) {
+                console.log(`🏢 Tenant detectado: ${tenantId}`);
+                this.state.isMultiTenant = true;
+                this.state.currentTenant = tenantId;
+            }
+            
+            this.loadState();
 
-                // Monitorar visibilidade (Mobile Sleep/Wake)
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        console.log('📱 App em destaque, reativando sincronização...');
-                        goOnline(this.db);
-                        // Pequeno delay para garantir reconexão antes de renderizar
-                        setTimeout(() => {
-                            if (this.state.view !== 'booking') {
+            // Inicializar Firebase
+            if (this.state.firebaseConfig) {
+                try {
+                    const fbApp = initializeApp(this.state.firebaseConfig);
+                    this.db = getDatabase(fbApp);
+                    console.log('🔥 Firebase Initialized');
+
+                    // Monitorar visibilidade (Mobile Sleep/Wake)
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') {
+                            console.log('📱 App em destaque, reativando sincronização...');
+                            goOnline(this.db);
+                            // Pequeno delay para garantir reconexão antes de renderizar
+                            setTimeout(() => {
+                                if (this.state.view !== 'booking') {
+                                    this.render(this.state.view);
+                                }
+                            }, 500);
+                        }
+                    });
+
+
+                    const tenantId = this.getTenantId() || 'centauro';
+                    const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+
+                    // SaaS: Buscar dados da assinatura se for inquilino
+                    if (tenantId && tenantId !== 'centauro') {
+                        get(ref(this.db, `master/tenants/${tenantId}`)).then(snapshot => {
+                            this.state.subscription = snapshot.val();
+                            // Se houver aviso crítico, re-renderiza para mostrar o banner
+                            if (this.state.subscription) {
                                 this.render(this.state.view);
                             }
-                        }, 500);
+                        }).catch(e => console.error('Erro ao buscar assinatura:', e));
                     }
-                });
 
+                    // Escuta Ativa (Tempo Real)
+                    const dbRef = ref(this.db, dbPath);
+                    onValue(dbRef, (snapshot) => {
+                        // [SEGURANÇA] Se estivermos enviando dados, ignoramos o que volta da nuvem 
+                        // para evitar race-condition (sobrescrever dado novo por antigo)
+                        if (this.state.isSyncing) return;
 
-                const tenantId = this.getTenantId() || 'centauro';
-                const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                        const data = snapshot.val();
+                        if (data) {
+                            const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                            
+                            // [SEGURANÇA] Se o dado da nuvem for MAIS ANTIGO que o nosso local, 
+                            // não sobrescrevemos e forçamos um envio do nosso local para a nuvem.
+                            const cloudLastUpdate = data.lastUpdate || 0;
+                            const localLastUpdate = this.state.lastUpdate || 0;
 
-                // SaaS: Buscar dados da assinatura se for inquilino
-                if (tenantId && tenantId !== 'centauro') {
-                    get(ref(this.db, `master/tenants/${tenantId}`)).then(snapshot => {
-                        this.state.subscription = snapshot.val();
-                        // Se houver aviso crítico, re-renderiza para mostrar o banner
-                        if (this.state.subscription) {
-                            this.render(this.state.view);
-                        }
-                    }).catch(e => console.error('Erro ao buscar assinatura:', e));
-                }
+                            if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
+                                console.warn('⚠️ Nuvem desatualizada em relação ao local. Mantendo local e forçando push...');
+                                this.syncToFirebase();
+                                return;
+                            }
 
-                // Escuta Ativa (Tempo Real)
-                const dbRef = ref(this.db, dbPath);
-                onValue(dbRef, (snapshot) => {
-                    // [SEGURANÇA] Se estivermos enviando dados, ignoramos o que volta da nuvem 
-                    // para evitar race-condition (sobrescrever dado novo por antigo)
-                    if (this.state.isSyncing) return;
+                            this.state.services = toArray(data.services);
+                            this.state.staff = toArray(data.staff);
+                            this.state.customers = toArray(data.customers);
+                            this.state.vouchers = toArray(data.vouchers);
+                            this.state.productSales = toArray(data.productSales);
+                            this.state.appointments = toArray(data.appointments);
+                            this.state.transactions = toArray(data.transactions);
+                            this.state.products = toArray(data.products);
+                            this.state.serviceOrders = toArray(data.serviceOrders);
+                            this.state.tips = toArray(data.tips);
+                            this.state.openingBalances = data.openingBalances || {};
 
-                    const data = snapshot.val();
-                    if (data) {
-                        const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
-                        
-                        // [SEGURANÇA] Se o dado da nuvem for MAIS ANTIGO que o nosso local, 
-                        // não sobrescrevemos e forçamos um envio do nosso local para a nuvem.
-                        const cloudLastUpdate = data.lastUpdate || 0;
-                        const localLastUpdate = this.state.lastUpdate || 0;
-
-                        if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
-                            console.warn('⚠️ Nuvem desatualizada em relação ao local. Mantendo local e forçando push...');
-                            this.syncToFirebase();
-                            return;
-                        }
-
-                        this.state.services = toArray(data.services);
-                        this.state.staff = toArray(data.staff);
-                        this.state.customers = toArray(data.customers);
-                        this.state.vouchers = toArray(data.vouchers);
-                        this.state.productSales = toArray(data.productSales);
-                        this.state.appointments = toArray(data.appointments);
-                        this.state.transactions = toArray(data.transactions);
-                        this.state.products = toArray(data.products);
-                        this.state.serviceOrders = toArray(data.serviceOrders);
-                        this.state.tips = toArray(data.tips);
-                        this.state.openingBalances = data.openingBalances || {};
-
-                        this.state.lastUpdate = cloudLastUpdate;
+                            this.state.lastUpdate = cloudLastUpdate;
 
                             if (data.settings) {
                                 const oldAgenda = this.state.settings.agenda;
@@ -872,14 +896,6 @@ const app = {
                                 }
                             }
                         }
-                });
-
-                // [HEARTBEAT] Sincronização Forçada Periódica (5s)
-                setInterval(() => {
-                    if (!this.state.isSyncing) {
-                        this.syncToFirebase();
-                    }
-                }, 5000);
 
             } catch (e) {
                 console.error('Erro ao conectar Firebase:', e);
@@ -1327,6 +1343,15 @@ const app = {
     },
 
     render(view) {
+        try {
+            this._renderWithSafety(view);
+        } catch (e) {
+            console.error(`Erro ao renderizar view ${view}:`, e);
+            this.handleGlobalError(e, `Renderização: ${view}`);
+        }
+    },
+
+    _renderWithSafety(view) {
         this.applyTheme();
         const appContainer = document.getElementById('app');
 
@@ -8162,6 +8187,20 @@ const app = {
             toast.style.animation = 'slideDown 0.3s ease-in forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+};
+
+// [BLINDAGEM] Captura de erros globais (Sintaxe/Runtime)
+window.onerror = function(message, source, lineno, colno, error) {
+    if (window.app) {
+        window.app.handleGlobalError(error || message, 'Global Browser Error');
+    }
+    return false;
+};
+
+window.onunhandledrejection = function(event) {
+    if (window.app) {
+        window.app.handleGlobalError(event.reason, 'Promessa Rejeitada');
     }
 };
 
