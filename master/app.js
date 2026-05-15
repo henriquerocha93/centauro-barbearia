@@ -322,36 +322,37 @@ const app = {
         
         billingView.style.display = 'block';
         billingView.innerHTML = `
-            <div class="glass-card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                <h3 style="margin-bottom: 20px;">Relatório Geral de Faturamentos (SaaS)</h3>
+            <div class="glass-card" style="background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 24px; backdrop-filter: blur(10px); color: #fff;">
+                <h3 style="margin-bottom: 25px; color: var(--p-light);">📊 Relatório Geral de Faturamentos (SaaS)</h3>
                 <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; color: #fff;">
                         <thead>
-                            <tr style="border-bottom: 2px solid #f3f4f6; color: var(--text-muted);">
-                                <th style="padding: 12px;">Cliente</th>
-                                <th style="padding: 12px;">Vencimento</th>
-                                <th style="padding: 12px;">Valor</th>
-                                <th style="padding: 12px;">Status</th>
-                                <th style="padding: 12px;">Ações</th>
+                            <tr style="border-bottom: 2px solid var(--glass-border); color: #94a3b8; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                                <th style="padding: 15px;">Cliente</th>
+                                <th style="padding: 15px;">Vencimento</th>
+                                <th style="padding: 15px;">Valor</th>
+                                <th style="padding: 15px;">Status</th>
+                                <th style="padding: 15px;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${Object.keys(this.tenants).map(key => {
                                 const t = this.tenants[key];
+                                if (t.plan === 'trial') return ''; // Pula trials no faturamento
                                 const nextDate = new Date(t.nextPayment);
                                 const isLate = nextDate < new Date();
                                 return `
-                                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                                        <td style="padding: 12px; font-weight: 600;">${t.name}</td>
-                                        <td style="padding: 12px;">${nextDate.toLocaleDateString('pt-BR')}</td>
-                                        <td style="padding: 12px; font-weight: 700; color: var(--primary-color);">R$ ${(t.subscriptionPrice || 0).toFixed(2)}</td>
-                                        <td style="padding: 12px;">
-                                            <span style="padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; background: ${isLate ? '#fee2e2; color: #b91c1c' : '#dcfce7; color: #15803d'};">
-                                                ${isLate ? 'Atrasado' : 'Em dia'}
+                                    <tr style="border-bottom: 1px solid var(--glass-border); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 15px; font-weight: 600;">${t.name}</td>
+                                        <td style="padding: 15px; color: #94a3b8;">${nextDate.toLocaleDateString('pt-BR')}</td>
+                                        <td style="padding: 15px; font-weight: 700; color: #10b981;">R$ ${(t.subscriptionPrice || 0).toFixed(2)}</td>
+                                        <td style="padding: 15px;">
+                                            <span style="padding: 5px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; background: ${isLate ? 'rgba(239, 68, 68, 0.1); color: #ef4444' : 'rgba(16, 185, 129, 0.1); color: #10b981'};">
+                                                ${isLate ? '⚠️ ATRASADO' : '✅ EM DIA'}
                                             </span>
                                         </td>
-                                        <td style="padding: 12px;">
-                                            <button class="btn-outline" style="padding: 5px 10px; font-size: 0.7rem;" onclick="app.renewSubscription('${key}')">Registrar Pagamento</button>
+                                        <td style="padding: 15px;">
+                                            <button class="btn-action" style="font-size: 0.7rem; padding: 6px 12px; background: var(--p-main);" onclick="app.renewSubscription('${key}')">Renovar Plano</button>
                                         </td>
                                     </tr>
                                 `;
