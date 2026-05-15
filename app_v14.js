@@ -819,9 +819,20 @@ const app = {
 
                         const data = snapshot.val();
                         if (data) {
+                            // [NOVO] Proteção contra Nuvem Atrasada (Race Condition)
+                            // Só aceitamos dados da nuvem se eles forem MAIS RECENTES que o nosso estado local
+                            const cloudLastUpdate = data.lastUpdate || 0;
+                            const localLastUpdate = this.state.lastUpdate || 0;
+
+                            if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
+                                console.warn('⚠️ Nuvem desatualizada (Cloud: ' + cloudLastUpdate + ' < Local: ' + localLastUpdate + '). Mantendo local e forçando sincronismo.');
+                                this.saveState(); // Força a nuvem a se atualizar com o nosso local
+                                return;
+                            }
+
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // [SEGURANÇA] Lógica Cloud-Truth (Nuvem é a verdade)
+                            // Atualização do Estado
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
                             this.state.customers = toArray(data.customers);
@@ -833,7 +844,7 @@ const app = {
                             this.state.serviceOrders = toArray(data.serviceOrders);
                             this.state.tips = toArray(data.tips);
                             this.state.openingBalances = data.openingBalances || {};
-                            this.state.lastUpdate = data.lastUpdate || Date.now();
+                            this.state.lastUpdate = cloudLastUpdate;
 
                             if (data.settings) {
                                 this.state.settings = { ...this.state.settings, ...data.settings };
@@ -3441,7 +3452,9 @@ const app = {
         (this.state.appointments || []).forEach(a => {
             const aDate = a.date || todayStr;
             if (aDate === currentDate) {
-                aptMap.set(`${a.barber}-${a.time}`, a);
+                // Usar normalização na chave para evitar problemas com espaços ou maiúsculas
+                const key = `${this.normalizeString(a.barber)}-${a.time}`;
+                aptMap.set(key, a);
             }
         });
 
@@ -3512,7 +3525,8 @@ const app = {
                         ${timeSlots.map(time => `
                             <div class="time-col">${time}</div>
                             ${barbersToShow.map(b => {
-                                const apt = aptMap.get(`${b.name}-${time}`);
+                                const key = `${this.normalizeString(b.name)}-${time}`;
+                                const apt = aptMap.get(key);
                                 return `
                                     <div class="agenda-cell" 
                                          data-barber="${b.name}"
