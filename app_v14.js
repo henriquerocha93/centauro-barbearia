@@ -379,7 +379,6 @@ const app = {
 
             this.state.lastUpdate = now;
             console.log('✅ SUCESSO: Sincronizado com Firebase');
-            this.showToast('✅ Dados salvos na nuvem!');
             
             // Feedback visual no botão
             const syncIndicator = document.getElementById('sync-status-indicator');
