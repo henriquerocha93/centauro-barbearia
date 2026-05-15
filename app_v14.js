@@ -77,6 +77,8 @@ const app = {
         pdvTab: 'catalog',   // [NOVO] catalog | cart
         isDragging: false,    // [NOVO] Controle para evitar conflito com clique
         draggingAptId: null,  // [NOVO] Fallback para o dataTransfer
+        needsSync: false,     // [NOVO] Controla se há alterações locais pendentes
+        _lastDataHash: null,  // [NOVO] Evita re-render se os dados forem iguais
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -308,6 +310,7 @@ const app = {
     },
 
     saveState() {
+        this.state.needsSync = true; // [NOVO] Marca que temos algo para salvar
         // [FORÇADO] Sincronização imediata sem debounce por solicitação do usuário
         try {
             const stateToSave = {
@@ -334,11 +337,13 @@ const app = {
     },
 
     async syncToFirebase() {
+        if (this.state.isSyncing) return;
+        if (!this.state.needsSync) return; // [OTIMIZAÇÃO] Evita loop de timestamp
+
         console.log('🔄 Tentando sincronizar com Firebase...');
         if (!this.state.firebaseConfig) { console.error('Falta firebaseConfig'); return; }
         if (!this.db) { 
             console.error('Banco de dados (this.db) não inicializado!');
-            alert('Erro de Conexão: O banco de dados ainda não carregou. Verifique sua internet.');
             return; 
         }
 
@@ -376,6 +381,7 @@ const app = {
             this.state.isSyncing = true; // [NOVO] Trava de segurança contra race-condition
             await set(dbRef, stateToSave);
             this.state.isSyncing = false;
+            this.state.needsSync = false; // [SUCESSO] Reset da flag de pendência
 
             this.state.lastUpdate = now;
             console.log('✅ SUCESSO: Sincronizado com Firebase');
@@ -819,17 +825,29 @@ const app = {
                             const cloudLastUpdate = data.lastUpdate || 0;
                             const localLastUpdate = this.state.lastUpdate || 0;
 
-                            // [INSTANTÂNEO] Se a nuvem tem dados novos (alguém agendou em outro lugar)
-                            // Nós DEVEMOS atualizar, mesmo que o isSyncing esteja true (a menos que o nosso local seja mais novo)
+                            // [INSTANTÂNEO] Se a nuvem tem dados novos
                             if (cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
-                                // Nosso local é mais novo ou igual, ignoramos a nuvem para não perder o que acabamos de digitar
                                 return;
                             }
 
-                            console.log('⚡ Dados recebidos da nuvem (Instantâneo). Atualizando UI...');
+                            // [OTIMIZAÇÃO ANTI-FLICKER] 
+                            // Só re-renderiza se os dados CRÍTICOS mudarem de fato
+                            const newDataHash = JSON.stringify({
+                                a: data.appointments,
+                                s: data.staff,
+                                se: data.settings
+                            });
+                            
+                            if (this.state._lastDataHash === newDataHash) {
+                                this.state.lastUpdate = cloudLastUpdate;
+                                return;
+                            }
+                            this.state._lastDataHash = newDataHash;
+
+                            console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // Atualização Silenciosa do Estado
+                            // Atualização do Estado
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
                             this.state.customers = toArray(data.customers);
@@ -842,14 +860,13 @@ const app = {
                             this.state.tips = toArray(data.tips);
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
+                            this.state.needsSync = false; // Estamos em dia com o servidor
 
                             if (data.settings) {
                                 this.state.settings = { ...this.state.settings, ...data.settings };
                             }
                             
                             this.state.currentTenant = tenantId;
-
-                            // Migrações Rápidas
                             this.migrateProducts();
 
                             // Re-renderização da View Atual (Instantânea)
@@ -861,7 +878,7 @@ const app = {
                                 }
                             }
 
-                            // Feedback visual de que "chegou coisa nova"
+                            // Feedback visual
                             const syncIndicator = document.getElementById('sync-status-indicator');
                             if (syncIndicator) {
                                 syncIndicator.style.color = '#4ade80';
@@ -870,9 +887,9 @@ const app = {
                         }
                     });
 
-                    // [HEARTBEAT] Sincronização Forçada Periódica (5s) para evitar perda de dados
+                    // [HEARTBEAT] Sincronização Forçada Periódica (5s) apenas se houver alterações locais
                     setInterval(() => {
-                        if (!this.state.isSyncing) {
+                        if (!this.state.isSyncing && this.state.needsSync) {
                             this.syncToFirebase();
                         }
                     }, 5000);
