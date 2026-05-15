@@ -3608,10 +3608,10 @@ const app = {
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
                  ` : ''}>
-                <span class="customer-name" style="pointer-events: none; ${apt.status === 'finalizado' ? 'opacity: 0.6; text-decoration: line-through;' : ''}">${apt.customer}</span>
-                <span class="service-name" style="pointer-events: none; ${apt.status === 'finalizado' ? 'opacity: 0.5;' : ''}">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #94a3b8; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">✅ FINALIZADO</div>` : ''}
-                ${apt.status === 'confirmado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">🟢 CONFIRMADO</div>` : ''}
+                <span class="customer-name" style="pointer-events: none; font-size: 0.85rem; display: block; color: var(--text-primary); margin-bottom: 2px;">${apt.customer}</span>
+                <span class="service-name" style="pointer-events: none; font-size: 0.7rem; opacity: 0.8; display: block;">${apt.service || 'Serviço'}</span>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #94a3b8; margin-top: 4px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">✅ FINALIZADO</div>` : ''}
+                ${apt.status === 'confirmado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 4px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">🟢 CONFIRMADO</div>` : ''}
             </div>
         `;
     },
