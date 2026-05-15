@@ -602,11 +602,40 @@ const app = {
     migrateProducts() {
         console.log('🔄 Verificando integridade dos preços dos produtos...');
         if (!this.state.products) this.state.products = [];
+        
+        let changed = false;
         this.state.products.forEach(p => {
+            // 1. Corrigir Preços e Estoque
             if (typeof p.price === 'string') {
                 p.price = parseFloat(String(p.price).replace(',', '.')) || 0;
             }
             p.stock = parseInt(p.stock) || 0;
+
+            // 2. Categorização Automática (Legacy migration)
+            if (!p.category || p.category === 'Geral' || p.category === 'undefined' || p.category === '') {
+                const name = (p.name || '').toLowerCase();
+                if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
+                    name.includes('água') || name.includes('suco') || name.includes('soda') || 
+                    name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
+                    name.includes('garrafa') || name.includes('budweiser') || name.includes('stella') ||
+                    name.includes('red bull') || name.includes('monster') || name.includes('café') || name.includes('cafe')) {
+                    p.category = 'Bebidas';
+                    changed = true;
+                } else if (name.includes('barba') || name.includes('bigode') || name.includes('shave') || name.includes('balm') || name.includes('pós-barba') || name.includes('pos-barba')) {
+                    p.category = 'Barba';
+                    changed = true;
+                } else if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
+                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
+                    name.includes('serum') || name.includes('cabelo') || name.includes('fixador') || name.includes('laque')) {
+                    p.category = 'Cabelo';
+                    changed = true;
+                } else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia') || name.includes('minoxidil')) {
+                    p.category = 'Outros';
+                    changed = true;
+                } else {
+                    p.category = 'Geral';
+                }
+            }
         });
         
         // Garantir que agendamentos e transações tenham preços numéricos
@@ -616,49 +645,9 @@ const app = {
         if (this.state.transactions) {
             this.state.transactions.forEach(t => t.amount = parseFloat(t.amount) || 0);
         }
-    },
-        if (!this.state.products || this.state.products.length === 0) return;
-        
-        let changed = false;
-        this.state.products.forEach(p => {
-            // Migrar apenas se não tiver categoria ou se for a categoria padrão 'Geral' vinda do sistema antigo
-            if (!p.category || p.category === 'Geral' || p.category === 'undefined' || p.category === '') {
-                const name = (p.name || '').toLowerCase();
-                
-                // BEBIDAS (Prioridade alta pois nomes de bebidas são muito específicos)
-                if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
-                    name.includes('água') || name.includes('suco') || name.includes('soda') || 
-                    name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
-                    name.includes('garrafa') || name.includes('budweiser') || name.includes('stella') ||
-                    name.includes('red bull') || name.includes('monster') || name.includes('café') || name.includes('cafe')) {
-                    p.category = 'Bebidas';
-                    changed = true;
-                } 
-                // BARBA
-                else if (name.includes('barba') || name.includes('bigode') || name.includes('shave') || name.includes('balm') || name.includes('pós-barba') || name.includes('pos-barba')) {
-                    p.category = 'Barba';
-                    changed = true;
-                } 
-                // CABELO
-                else if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
-                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
-                    name.includes('serum') || name.includes('cabelo') || name.includes('fixador') || name.includes('laque')) {
-                    p.category = 'Cabelo';
-                    changed = true;
-                }
-                // OUTROS
-                else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia') || name.includes('minoxidil')) {
-                    p.category = 'Outros';
-                    changed = true;
-                } 
-                else {
-                    p.category = 'Geral';
-                }
-            }
-        });
 
         if (changed) {
-            console.log('📦 Sincronizando categorias automáticas...');
+            console.log('📦 Categorias automáticas aplicadas.');
             this.saveState();
         }
     },
