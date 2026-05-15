@@ -308,12 +308,9 @@ const app = {
     },
 
     saveState() {
-        if (this._saveTimeout) clearTimeout(this._saveTimeout);
-        this._saveTimeout = setTimeout(() => {
-            // [OTIMIZAÇÃO] Se o estado for muito grande, o stringify pode travar a UI.
-            // Poderíamos usar um Web Worker aqui, mas por agora vamos apenas garantir que não aconteça toda hora.
-            try {
-                const stateToSave = {
+        // [FORÇADO] Sincronização imediata sem debounce por solicitação do usuário
+        try {
+            const stateToSave = {
                     services: this.state.services,
                     staff: this.state.staff,
                     customers: this.state.customers,
@@ -334,7 +331,6 @@ const app = {
             } catch (e) {
                 console.error("Erro ao salvar estado (possivelmente estouro de memória):", e);
             }
-        }, 50); // Reduzido para 50ms para sincronização imediata
     },
 
     async syncToFirebase() {
@@ -872,6 +868,14 @@ const app = {
                             }
                         }
                 });
+
+                // [HEARTBEAT] Sincronização Forçada Periódica (5s)
+                setInterval(() => {
+                    if (!this.state.isSyncing) {
+                        this.syncToFirebase();
+                    }
+                }, 5000);
+
             } catch (e) {
                 console.error('Erro ao conectar Firebase:', e);
             }
@@ -1562,12 +1566,9 @@ const app = {
                         <h2 style="font-size: 1.1rem; letter-spacing: -0.5px;">${viewTitles[view] || 'Painel'}</h2>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <button id="manual-sync-btn" onclick="window.app.syncToFirebase()" class="btn-outline" style="font-size: 0.75rem; padding: 6px 14px; color: #4ade80; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                           <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Sincronizar
-                        </button>
                         <div id="sync-status-indicator" style="font-size: 0.7rem; font-weight: 600; color: #4ade80; display: flex; align-items: center; gap: 6px;">
                             <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
-                            Tempo Real
+                            Sincronização Automática
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; padding-left: 20px; border-left: 1px solid var(--glass-border);">
                             <span style="font-size: 0.85rem; font-weight: 600;">${this.state.user.name}</span>
@@ -1647,7 +1648,6 @@ const app = {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-outline" style="font-size: 0.78rem; padding: 7px 14px; color: #10b981; border-color: #10b981;" onclick="window.app.syncToFirebase()">🔄 Sincronizar Agora</button>
                     <button class="btn-primary" style="font-size: 0.78rem; padding: 7px 14px; background: #10b981;" onclick="app.installPWA()">Criar App</button>
                     <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
                 </div>
