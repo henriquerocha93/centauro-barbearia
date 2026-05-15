@@ -3564,13 +3564,21 @@ const app = {
 
     getAppointmentBlock(apt) {
         const colors = {
-            'agendado': '#38bdf8',
-            'confirmado': '#4ade80',
-            'finalizado': '#94a3b8',
-            'bloqueado': '#f87171'
+            'agendado': '#38bdf8',   // Azul
+            'confirmado': '#4ade80', // Verde
+            'finalizado': '#94a3b8', // Cinza/Slate
+            'bloqueado': '#f87171'   // Vermelho
+        };
+
+        const bgs = {
+            'agendado': 'rgba(56, 189, 248, 0.05)',
+            'confirmado': 'rgba(74, 222, 128, 0.08)',
+            'finalizado': 'rgba(148, 163, 184, 0.15)',
+            'bloqueado': 'rgba(248, 113, 113, 0.05)'
         };
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
+        const statusBg = bgs[apt.status] || 'rgba(255,255,255,0.02)';
         const origin = apt.origin || 'Encaixe (Manual)';
         const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
         const price = parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -3591,7 +3599,7 @@ const app = {
         return `
             <div class="appointment-block" 
                  title="${hoverInfo}" 
-                 style="border-left-color: ${statusColor};"
+                 style="border-left-color: ${statusColor}; background: ${statusBg};"
                  ${isDraggable ? `
                     draggable="true" 
                     ondragstart="window.app.handleDragStart(event, ${apt.id})" 
@@ -3600,9 +3608,10 @@ const app = {
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
                  ` : ''}>
-                <span class="customer-name" style="pointer-events: none;">${apt.customer}</span>
-                <span class="service-name" style="pointer-events: none;">${apt.service || 'Serviço'}</span>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none;">✓ Finalizado</div>` : ''}
+                <span class="customer-name" style="pointer-events: none; ${apt.status === 'finalizado' ? 'opacity: 0.6; text-decoration: line-through;' : ''}">${apt.customer}</span>
+                <span class="service-name" style="pointer-events: none; ${apt.status === 'finalizado' ? 'opacity: 0.5;' : ''}">${apt.service || 'Serviço'}</span>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.6rem; color: #94a3b8; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">✅ FINALIZADO</div>` : ''}
+                ${apt.status === 'confirmado' ? `<div style="font-size: 0.6rem; color: #4ade80; margin-top: 2px; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">🟢 CONFIRMADO</div>` : ''}
             </div>
         `;
     },
