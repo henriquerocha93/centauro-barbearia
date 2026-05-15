@@ -1764,11 +1764,11 @@ const app = {
 
                 <!-- Abas Mobile [NOVO] -->
                 <div class="pdv-mobile-tabs">
-                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="app.state.pdvTab='catalog'; app.setTotemTab('pdv')">
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="window.app.state.pdvTab='catalog'; window.app.setTotemTab('pdv')">
                         📦 Catálogo
                     </div>
-                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="app.state.pdvTab='cart'; app.setTotemTab('pdv')">
-                        🛒 Carrinho (${cart.length})
+                    <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="window.app.state.pdvTab='cart'; window.app.setTotemTab('pdv')">
+                        🛒 Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.7rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
                     </div>
                 </div>
 
@@ -5408,7 +5408,7 @@ const app = {
                         📦 Catálogo
                     </div>
                     <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="window.app.state.pdvTab='cart'; window.app.render('pdv')">
-                        🛒 Carrinho (${cart.length})
+                        🛒 Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.75rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
                     </div>
                 </div>
 
@@ -5698,7 +5698,7 @@ const app = {
             
             return `
                 <div class="product-card-container ${outOfStock ? 'out-of-stock' : ''}" 
-                     onclick="${outOfStock ? "app.showToast('Produto esgotado!', 'error')" : `app.pdvAddToCart(${p.id})`}">
+                     onclick="${outOfStock ? "window.app.showToast('Produto esgotado!', 'error')" : `window.app.pdvAddToCart(${p.id})`}">
                     
                     <!-- Preço Badge -->
                     <div class="product-card-price">
@@ -5856,7 +5856,7 @@ const app = {
     },
 
     pdvAddToCart(productId) {
-        const product = this.state.products.find(p => p.id === productId);
+        const product = this.state.products.find(p => Number(p.id) === Number(productId));
         if (!product || product.stock <= 0) return;
         if (!this.state.cart) this.state.cart = [];
 
@@ -5872,7 +5872,13 @@ const app = {
                 qty: 1
             });
         }
-        this.showToast(`+1 ${product.name}`);
+        
+        // Recalcular total para o Toast
+        const subtotal = this.state.cart.reduce((acc, i) => acc + (Number(i.unitPrice) * Number(i.qty)), 0);
+        const discount = parseFloat(this.state.pdvDiscount || 0);
+        const total = Math.max(0, subtotal - discount);
+
+        this.showToast(`+1 ${product.name} (Total: R$ ${total.toFixed(2)})`);
         this.saveState();
         this._refreshPDVView();
     },
