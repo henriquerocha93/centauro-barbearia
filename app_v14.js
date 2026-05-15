@@ -79,6 +79,7 @@ const app = {
         draggingAptId: null,  // [NOVO] Fallback para o dataTransfer
         needsSync: false,     // [NOVO] Controla se há alterações locais pendentes
         _lastDataHash: null,  // [NOVO] Evita re-render se os dados forem iguais
+        isInitializedFromCloud: false, // [NOVO] Trava de segurança contra sobrescrita de cache antigo
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -338,7 +339,13 @@ const app = {
 
     async syncToFirebase() {
         if (this.state.isSyncing) return;
-        if (!this.state.needsSync) return; // [OTIMIZAÇÃO] Evita loop de timestamp
+        if (!this.state.needsSync) return; 
+
+        // [SEGURANÇA CRÍTICA] Não permite subir dados se ainda não recebemos a versão da nuvem
+        if (!this.state.isInitializedFromCloud) {
+            console.warn('⚠️ Bloqueio de Sincronismo: Tentativa de subir cache local antes de receber dados da nuvem. Abortando para evitar perda de dados.');
+            return;
+        }
 
         console.log('🔄 Tentando sincronizar com Firebase...');
         if (!this.state.firebaseConfig) { console.error('Falta firebaseConfig'); return; }
@@ -820,6 +827,7 @@ const app = {
                     // Escuta Ativa (Tempo Real)
                     const dbRef = ref(this.db, dbPath);
                     onValue(dbRef, (snapshot) => {
+                        this.state.isInitializedFromCloud = true; // [TRAVA LIBERADA] Agora sabemos a verdade da nuvem
                         const data = snapshot.val();
                         if (data) {
                             const cloudLastUpdate = data.lastUpdate || 0;
