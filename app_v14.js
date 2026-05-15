@@ -850,18 +850,26 @@ const app = {
                             console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // [PROTEÇÃO DE STATUS ROBUSTA] 
+                            // [PROTEÇÃO DE HIERARQUIA DE STATUS] 
+                            const getRank = (s) => {
+                                if (s === 'finalizado') return 2;
+                                if (s === 'confirmado') return 1;
+                                return 0;
+                            };
+
                             const cloudApts = toArray(data.appointments);
                             this.state.appointments = cloudApts.map(cloudApt => {
                                 const localApt = this.state.appointments.find(a => String(a.id) === String(cloudApt.id));
                                 
-                                // Se localmente está finalizado e na nuvem não
-                                const isLocalFinalizado = localApt && localApt.status === 'finalizado';
-                                const isCloudFinalizado = cloudApt.status === 'finalizado';
-                                
-                                if (isLocalFinalizado && !isCloudFinalizado) {
-                                    console.warn(`🛡️ Status Lock: Bloqueando tentativa da nuvem de desfinalizar o agendamento ${cloudApt.id}`);
-                                    return { ...cloudApt, status: 'finalizado' };
+                                if (localApt) {
+                                    const localRank = getRank(localApt.status);
+                                    const cloudRank = getRank(cloudApt.status);
+                                    
+                                    // Se localmente temos um status mais 'avançado', mantemos o local
+                                    if (localRank > cloudRank) {
+                                        console.warn(`🛡️ Hierarchy Lock: Mantendo status '${localApt.status}' (local) vs '${cloudApt.status}' (cloud) para ${cloudApt.id}`);
+                                        return { ...cloudApt, status: localApt.status };
+                                    }
                                 }
                                 return cloudApt;
                             });
@@ -886,11 +894,11 @@ const app = {
                             this.state.currentTenant = tenantId;
                             this.migrateProducts();
 
-                            // [SINCRONISMO CACHE] Atualiza o localStorage silenciosamente para que o F5 funcione
+                            // [SINCRONISMO CACHE] Atualiza o localStorage com o estado PROTEGIDO
                             try {
                                 localStorage.setItem(this.getStorageKey(), JSON.stringify({
-                                    ...data,
-                                    currentTenant: tenantId
+                                    ...this.state,
+                                    _lastDataHash: newDataHash
                                 }));
                             } catch (e) { }
 
