@@ -858,16 +858,26 @@ const app = {
                             };
 
                             const cloudApts = toArray(data.appointments);
+                            const cloudTransactions = toArray(data.transactions);
+
                             this.state.appointments = cloudApts.map(cloudApt => {
                                 const localApt = this.state.appointments.find(a => String(a.id) === String(cloudApt.id));
                                 
+                                // [SEGURANÇA FINANCEIRA] Se existe transação para este agendamento, ele é FINALIZADO obrigatoriamente
+                                const hasTransaction = cloudTransactions.some(t => 
+                                    t.id === cloudApt.transactionId || 
+                                    (t.date === cloudApt.date && t.description.includes(cloudApt.customer) && t.amount === cloudApt.price)
+                                );
+
+                                if (hasTransaction) {
+                                    return { ...cloudApt, status: 'finalizado' };
+                                }
+
                                 if (localApt) {
                                     const localRank = getRank(localApt.status);
                                     const cloudRank = getRank(cloudApt.status);
                                     
-                                    // Se localmente temos um status mais 'avançado', mantemos o local
                                     if (localRank > cloudRank) {
-                                        console.warn(`🛡️ Hierarchy Lock: Mantendo status '${localApt.status}' (local) vs '${cloudApt.status}' (cloud) para ${cloudApt.id}`);
                                         return { ...cloudApt, status: localApt.status };
                                     }
                                 }
