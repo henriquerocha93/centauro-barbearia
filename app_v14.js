@@ -374,7 +374,7 @@ const app = {
                 serviceOrders: this.state.serviceOrders || [],
                 tips: this.state.tips || [],
                 lastConsumptionView: this.state.lastConsumptionView || 0,
-                lastUpdate: now,
+                lastUpdate: this.state.lastUpdate || Date.now(), // [FIX] Usa o timestamp da ALTERAÇÃO, não do agora
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
 
