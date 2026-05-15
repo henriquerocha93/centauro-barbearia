@@ -600,6 +600,23 @@ const app = {
     },
 
     migrateProducts() {
+        console.log('🔄 Verificando integridade dos preços dos produtos...');
+        if (!this.state.products) this.state.products = [];
+        this.state.products.forEach(p => {
+            if (typeof p.price === 'string') {
+                p.price = parseFloat(String(p.price).replace(',', '.')) || 0;
+            }
+            p.stock = parseInt(p.stock) || 0;
+        });
+        
+        // Garantir que agendamentos e transações tenham preços numéricos
+        if (this.state.appointments) {
+            this.state.appointments.forEach(a => a.price = parseFloat(a.price) || 0);
+        }
+        if (this.state.transactions) {
+            this.state.transactions.forEach(t => t.amount = parseFloat(t.amount) || 0);
+        }
+    },
         if (!this.state.products || this.state.products.length === 0) return;
         
         let changed = false;
@@ -1719,10 +1736,10 @@ const app = {
         const seller = this.state.pdvSeller;
         const barbers = this.state.staff.filter(s => s.role === 'barber');
         const products = this.state.products;
-        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const subtotal = cart.reduce((acc, i) => acc + (Number(i.unitPrice || 0) * Number(i.qty || 0)), 0);
         const discount = parseFloat(this.state.pdvDiscount || 0);
         const total = Math.max(0, subtotal - discount);
-        const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
+        const commission = cart.reduce((acc, i) => acc + (Number(i.unitPrice || 0) * Number(i.qty || 0) * (Number(i.commissionPct || 0) / 100)), 0);
 
         container.innerHTML = `
             <div class="fade-in">
@@ -5355,10 +5372,10 @@ const app = {
         const products = this.state.products;
 
         // Totais do carrinho
-        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const subtotal = cart.reduce((acc, i) => acc + (Number(i.unitPrice || 0) * Number(i.qty || 0)), 0);
         const discount = parseFloat(this.state.pdvDiscount || 0);
         const total = Math.max(0, subtotal - discount);
-        const commission = cart.reduce((s, i) => s + (i.unitPrice * i.qty * (i.commissionPct || 0) / 100), 0);
+        const commission = cart.reduce((acc, i) => acc + (Number(i.unitPrice || 0) * Number(i.qty || 0) * (Number(i.commissionPct || 0) / 100)), 0);
 
         container.innerHTML = `
             <section id="pdv-view" class="fade-in" style="padding-bottom: 40px;">
@@ -5845,16 +5862,18 @@ const app = {
 
         const existing = this.state.cart.find(i => i.productId === productId);
         if (existing) {
-            existing.qty++;
+            existing.qty = Number(existing.qty) + 1;
         } else {
             this.state.cart.push({
-                productId, name: product.name,
-                unitPrice: product.price,
-                commissionPct: product.commissionPct || 0,
+                productId, 
+                name: product.name,
+                unitPrice: Number(product.price) || 0,
+                commissionPct: Number(product.commissionPct) || 0,
                 qty: 1
             });
         }
-        this.showToast(`${product.name} adicionado!`);
+        this.showToast(`+1 ${product.name}`);
+        this.saveState();
         this._refreshPDVView();
     },
 
@@ -5917,8 +5936,9 @@ const app = {
             }
         }
 
-        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+        const subtotal = cart.reduce((acc, i) => acc + (Number(i.unitPrice) * Number(i.qty)), 0);
         const total = Math.max(0, subtotal - discount);
+        console.log(`💰 Cálculo PDV: Subtotal=${subtotal}, Desconto=${discount}, Total=${total}`);
         let totalCommission = 0;
 
         // Descontar estoque + registrar histórico
