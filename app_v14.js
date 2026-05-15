@@ -814,25 +814,22 @@ const app = {
                     // Escuta Ativa (Tempo Real)
                     const dbRef = ref(this.db, dbPath);
                     onValue(dbRef, (snapshot) => {
-                        // [SEGURANÇA] Se estivermos enviando dados, ignoramos o que volta da nuvem 
-                        if (this.state.isSyncing) return;
-
                         const data = snapshot.val();
                         if (data) {
-                            // [NOVO] Proteção contra Nuvem Atrasada (Race Condition)
-                            // Só aceitamos dados da nuvem se eles forem MAIS RECENTES que o nosso estado local
                             const cloudLastUpdate = data.lastUpdate || 0;
                             const localLastUpdate = this.state.lastUpdate || 0;
 
-                            if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
-                                console.warn('⚠️ Nuvem desatualizada (Cloud: ' + cloudLastUpdate + ' < Local: ' + localLastUpdate + '). Mantendo local e forçando sincronismo.');
-                                this.saveState(); // Força a nuvem a se atualizar com o nosso local
+                            // [INSTANTÂNEO] Se a nuvem tem dados novos (alguém agendou em outro lugar)
+                            // Nós DEVEMOS atualizar, mesmo que o isSyncing esteja true (a menos que o nosso local seja mais novo)
+                            if (cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
+                                // Nosso local é mais novo ou igual, ignoramos a nuvem para não perder o que acabamos de digitar
                                 return;
                             }
 
+                            console.log('⚡ Dados recebidos da nuvem (Instantâneo). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // Atualização do Estado
+                            // Atualização Silenciosa do Estado
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
                             this.state.customers = toArray(data.customers);
@@ -852,23 +849,23 @@ const app = {
                             
                             this.state.currentTenant = tenantId;
 
-                            // Migrações e Renderização
+                            // Migrações Rápidas
                             this.migrateProducts();
-                            this.migrateVouchersFromTransactions();
 
-                            if (this.state.settings) {
-                                if (this.state.settings.shopName) {
-                                    document.title = `${this.state.settings.shopName} | Premium Grooming`;
-                                }
-                                this.applyTheme();
-                            }
-
-                            if (this.state.view !== 'booking') {
+                            // Re-renderização da View Atual (Instantânea)
+                            if (this.state.view !== 'booking' && this.state.view !== 'login') {
                                 if (this.state.user && this.state.user.role === 'totem') {
                                     this.renderTotem();
                                 } else {
                                     this.render(this.state.view);
                                 }
+                            }
+
+                            // Feedback visual de que "chegou coisa nova"
+                            const syncIndicator = document.getElementById('sync-status-indicator');
+                            if (syncIndicator) {
+                                syncIndicator.style.color = '#4ade80';
+                                syncIndicator.innerHTML = '<span class="pulse-green"></span> Em Tempo Real';
                             }
                         }
                     });
