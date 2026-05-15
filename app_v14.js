@@ -334,18 +334,26 @@ const app = {
             } catch (e) {
                 console.error("Erro ao salvar estado (possivelmente estouro de memória):", e);
             }
-        }, 500); // Aumentado debounce para 500ms
+        }, 50); // Reduzido para 50ms para sincronização imediata
     },
 
     async syncToFirebase() {
-        if (!this.state.firebaseConfig || !this.db) return;
+        console.log('🔄 Tentando sincronizar com Firebase...');
+        if (!this.state.firebaseConfig) { console.error('Falta firebaseConfig'); return; }
+        if (!this.db) { 
+            console.error('Banco de dados (this.db) não inicializado!');
+            alert('Erro de Conexão: O banco de dados ainda não carregou. Verifique sua internet.');
+            return; 
+        }
 
         try {
             const now = new Date().getTime();
             
             // Suporte a Multi-Tenant
-            const tenantId = this.getTenantId();
+            const tenantId = this.getTenantId() || 'centauro';
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            console.log(`📤 Caminho de Sincronização: ${dbPath}`);
+            const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
             // [MUDANÇA CRÍTICA] Removido suporte offline/merge por solicitação do usuário.
             // Agora o sistema trabalha em modo Cloud-Truth (Nuvem é a verdade absoluta).
@@ -369,9 +377,20 @@ const app = {
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
 
+            this.state.isSyncing = true; // [NOVO] Trava de segurança contra race-condition
             await set(dbRef, stateToSave);
+            this.state.isSyncing = false;
+
             this.state.lastUpdate = now;
-            console.log('⚡ Sincronizado com Firebase (Tempo Real)');
+            console.log('✅ SUCESSO: Sincronizado com Firebase');
+            this.showToast('✅ Dados salvos na nuvem!');
+            
+            // Feedback visual no botão
+            const syncIndicator = document.getElementById('sync-status-indicator');
+            if (syncIndicator) {
+                syncIndicator.style.color = '#4ade80';
+                syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span> Sincronizado';
+            }
 
             // Salva o timestamp no localStorage também para consistência no reload
             const storageKey = this.getStorageKey();
@@ -380,7 +399,18 @@ const app = {
             localStorage.setItem(storageKey, JSON.stringify(localState));
 
         } catch (error) {
+            this.state.isSyncing = false;
             console.error('❌ Erro no Firebase Sync:', error);
+            // Feedback visual de erro
+            const syncIndicator = document.getElementById('sync-status-indicator');
+            if (syncIndicator) {
+                syncIndicator.style.color = '#ef4444';
+                syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span> Erro ao Sincronizar';
+            }
+            // Alerta discreto para o usuário
+            if (this.state.user && this.state.user.role === 'admin') {
+                console.warn('Falha na sincronização. Verifique sua conexão.');
+            }
         }
     },
 
@@ -742,7 +772,7 @@ const app = {
                 });
 
 
-                const tenantId = this.getTenantId();
+                const tenantId = this.getTenantId() || 'centauro';
                 const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
                 // SaaS: Buscar dados da assinatura se for inquilino
@@ -759,15 +789,38 @@ const app = {
                 // Escuta Ativa (Tempo Real)
                 const dbRef = ref(this.db, dbPath);
                 onValue(dbRef, (snapshot) => {
+                    // [SEGURANÇA] Se estivermos enviando dados, ignoramos o que volta da nuvem 
+                    // para evitar race-condition (sobrescrever dado novo por antigo)
+                    if (this.state.isSyncing) return;
+
                     const data = snapshot.val();
                     if (data) {
                         const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                        
+                        // [SEGURANÇA] Se o dado da nuvem for MAIS ANTIGO que o nosso local, 
+                        // não sobrescrevemos e forçamos um envio do nosso local para a nuvem.
+                        const cloudLastUpdate = data.lastUpdate || 0;
+                        const localLastUpdate = this.state.lastUpdate || 0;
+
+                        if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
+                            console.warn('⚠️ Nuvem desatualizada em relação ao local. Mantendo local e forçando push...');
+                            this.syncToFirebase();
+                            return;
+                        }
+
                         this.state.services = toArray(data.services);
-                            this.state.staff = toArray(data.staff);
-                            this.state.customers = toArray(data.customers);
-                            this.state.vouchers = toArray(data.vouchers);
-                            this.state.productSales = toArray(data.productSales);
-                            this.state.openingBalances = data.openingBalances || {};
+                        this.state.staff = toArray(data.staff);
+                        this.state.customers = toArray(data.customers);
+                        this.state.vouchers = toArray(data.vouchers);
+                        this.state.productSales = toArray(data.productSales);
+                        this.state.appointments = toArray(data.appointments);
+                        this.state.transactions = toArray(data.transactions);
+                        this.state.products = toArray(data.products);
+                        this.state.serviceOrders = toArray(data.serviceOrders);
+                        this.state.tips = toArray(data.tips);
+                        this.state.openingBalances = data.openingBalances || {};
+
+                        this.state.lastUpdate = cloudLastUpdate;
 
                             if (data.settings) {
                                 const oldAgenda = this.state.settings.agenda;
@@ -1400,7 +1453,10 @@ const app = {
                     <i data-lucide="menu"></i>
                 </button>
                 <span style="font-weight: 800; color: var(--accent-readable); font-size: 0.9rem;">${shopName}</span>
-                <div id="sync-status-indicator" style="font-size: 0.5rem; opacity: 0.6;">⚡</div>
+                <div id="sync-status-indicator" onclick="app.syncToFirebase()" style="font-size: 0.5rem; opacity: 0.8; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <span id="sync-dot" style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%;"></span>
+                    <span>SINC</span>
+                </div>
             </div>
             
             <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
@@ -1506,7 +1562,7 @@ const app = {
                         <h2 style="font-size: 1.1rem; letter-spacing: -0.5px;">${viewTitles[view] || 'Painel'}</h2>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <button onclick="app.syncToFirebase()" class="btn-outline" style="font-size: 0.75rem; padding: 6px 14px; color: #4ade80; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <button id="manual-sync-btn" onclick="window.app.syncToFirebase()" class="btn-outline" style="font-size: 0.75rem; padding: 6px 14px; color: #4ade80; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05); display: flex; align-items: center; gap: 6px; cursor: pointer;">
                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Sincronizar
                         </button>
                         <div id="sync-status-indicator" style="font-size: 0.7rem; font-weight: 600; color: #4ade80; display: flex; align-items: center; gap: 6px;">
@@ -1591,7 +1647,7 @@ const app = {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-outline" style="font-size: 0.78rem; padding: 7px 14px; color: #10b981; border-color: #10b981;" onclick="app.syncToFirebase()">🔄 Sincronizar Agora</button>
+                    <button class="btn-outline" style="font-size: 0.78rem; padding: 7px 14px; color: #10b981; border-color: #10b981;" onclick="window.app.syncToFirebase()">🔄 Sincronizar Agora</button>
                     <button class="btn-primary" style="font-size: 0.78rem; padding: 7px 14px; background: #10b981;" onclick="app.installPWA()">Criar App</button>
                     <button class="btn-secondary" style="font-size: 0.78rem; padding: 7px 14px;" onclick="app.logout()">Sair</button>
                 </div>
