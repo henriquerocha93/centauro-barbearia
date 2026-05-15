@@ -815,24 +815,13 @@ const app = {
                     const dbRef = ref(this.db, dbPath);
                     onValue(dbRef, (snapshot) => {
                         // [SEGURANÇA] Se estivermos enviando dados, ignoramos o que volta da nuvem 
-                        // para evitar race-condition (sobrescrever dado novo por antigo)
                         if (this.state.isSyncing) return;
 
                         const data = snapshot.val();
                         if (data) {
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
-                            // [SEGURANÇA] Se o dado da nuvem for MAIS ANTIGO que o nosso local, 
-                            // não sobrescrevemos e forçamos um envio do nosso local para a nuvem.
-                            const cloudLastUpdate = data.lastUpdate || 0;
-                            const localLastUpdate = this.state.lastUpdate || 0;
-
-                            if (cloudLastUpdate < localLastUpdate && localLastUpdate > 0) {
-                                console.warn('⚠️ Nuvem desatualizada em relação ao local. Mantendo local e forçando push...');
-                                this.syncToFirebase();
-                                return;
-                            }
-
+                            // [SEGURANÇA] Lógica Cloud-Truth (Nuvem é a verdade)
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
                             this.state.customers = toArray(data.customers);
@@ -844,50 +833,25 @@ const app = {
                             this.state.serviceOrders = toArray(data.serviceOrders);
                             this.state.tips = toArray(data.tips);
                             this.state.openingBalances = data.openingBalances || {};
-
-                            this.state.lastUpdate = cloudLastUpdate;
+                            this.state.lastUpdate = data.lastUpdate || Date.now();
 
                             if (data.settings) {
-                                const oldAgenda = this.state.settings.agenda;
                                 this.state.settings = { ...this.state.settings, ...data.settings };
-                                // Preserva agenda se ela sumiu no objeto vindo do Firebase
-                                if (!data.settings.agenda && oldAgenda) {
-                                    this.state.settings.agenda = oldAgenda;
-                                }
                             }
                             
-                            // SaaS: Prioridade absoluta para os dados da nuvem (Isolamento de Tenant)
-                            // Removido 'merge' por solicitação do usuário para garantir cópia fiel do Totem -> ADM
-                            this.state.transactions = toArray(data.transactions);
-                            this.state.appointments = toArray(data.appointments);
-                            this.state.serviceOrders = toArray(data.serviceOrders);
-                            this.state.tips = toArray(data.tips);
-                            this.state.products = toArray(data.products);
-                            this.state.productSales = toArray(data.productSales);
-                            this.state.customers = toArray(data.customers);
-                            this.state.vouchers = toArray(data.vouchers);
-                            this.state.openingBalances = data.openingBalances || {};
-                            
                             this.state.currentTenant = tenantId;
-                            this.state.lastUpdate = data.lastUpdate;
 
-
-                            // Migrar produtos e vales se necessário (SaaS/Cloud Sync)
+                            // Migrações e Renderização
                             this.migrateProducts();
                             this.migrateVouchersFromTransactions();
 
-                            // SaaS: Atualiza textos da interface com base no Tenant
                             if (this.state.settings) {
-                                const s = this.state.settings;
-
-                                if (s.shopName) {
-                                    document.title = `${s.shopName} | Premium Grooming`;
+                                if (this.state.settings.shopName) {
+                                    document.title = `${this.state.settings.shopName} | Premium Grooming`;
                                 }
-
                                 this.applyTheme();
                             }
 
-                            // Atualiza a tela se não estiver no meio de um agendamento
                             if (this.state.view !== 'booking') {
                                 if (this.state.user && this.state.user.role === 'totem') {
                                     this.renderTotem();
@@ -896,10 +860,26 @@ const app = {
                                 }
                             }
                         }
+                    });
 
-            } catch (e) {
-                console.error('Erro ao conectar Firebase:', e);
+                    // [HEARTBEAT] Sincronização Forçada Periódica (5s) para evitar perda de dados
+                    setInterval(() => {
+                        if (!this.state.isSyncing) {
+                            this.syncToFirebase();
+                        }
+                    }, 5000);
+                } catch (e) {
+                    console.error('Erro ao conectar Firebase:', e);
+                }
             }
+
+            // [BLINDAGEM] Se chegou aqui sem erro, reseta o contador de crash
+            localStorage.setItem('crash_count', '0');
+            console.log('🏁 Sistema inicializado com sucesso.');
+
+        } catch (e) {
+            console.error('❌ ERRO CRÍTICO NA INICIALIZAÇÃO:', e);
+            this.handleGlobalError(e, 'Inicialização');
         }
 
         // loadFromCloud removido para evitar sobrescrita de dados novos por antigos
