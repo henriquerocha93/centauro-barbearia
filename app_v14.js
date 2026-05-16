@@ -850,6 +850,13 @@ const app = {
                             console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             
+                            // Função auxiliar para mesclar arrays sem duplicar e sem perder dados locais novos
+                            const mergeArrays = (local, cloud) => {
+                                const map = new Map();
+                                toArray(cloud).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                                toArray(local).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                                return Array.from(map.values());
+                            };
                             // [PROTEÇÃO DE HIERARQUIA DE STATUS] 
                             const getRank = (s) => {
                                 if (s === 'finalizado') return 2;
@@ -886,13 +893,13 @@ const app = {
 
                             this.state.services = toArray(data.services);
                             this.state.staff = toArray(data.staff);
-                            this.state.customers = toArray(data.customers);
-                            this.state.vouchers = toArray(data.vouchers);
-                            this.state.productSales = toArray(data.productSales);
-                            this.state.transactions = toArray(data.transactions);
+                            this.state.customers = mergeArrays(this.state.customers, data.customers);
+                            this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
+                            this.state.productSales = mergeArrays(this.state.productSales, data.productSales);
+                            this.state.transactions = mergeArrays(this.state.transactions, data.transactions);
                             this.state.products = toArray(data.products);
-                            this.state.serviceOrders = toArray(data.serviceOrders);
-                            this.state.tips = toArray(data.tips);
+                            this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
+                            this.state.tips = mergeArrays(this.state.tips, data.tips);
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
                             this.state.needsSync = false;
@@ -4589,7 +4596,7 @@ const app = {
             const price = parseFloat(apt.finalPrice || apt.price) || 0;
             const servicePart = parseFloat(apt.price) || 0;
             serviceGross += servicePart;
-            const barber = this.state.staff.find(s => s.name === apt.barber);
+            const barber = this.state.staff.find(s => (s.name || '').trim() === (apt.barber || '').trim());
             const pct = barber ? (barber.commissionPct || 50) : 50;
             serviceCommissions += servicePart * (pct / 100);
         });
