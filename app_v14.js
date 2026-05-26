@@ -7512,6 +7512,7 @@ const app = {
                         <select id="staff-role" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                             <option value="admin" ${staff.role === 'admin' ? 'selected' : ''}>Administrativo Total</option>
                             <option value="barber" ${staff.role === 'barber' ? 'selected' : ''}>Apenas Painel do Barbeiro</option>
+                            <option value="totem" ${staff.role === 'totem' ? 'selected' : ''}>Totem de Atendimento</option>
                         </select>
                     </div>
                     <div>
