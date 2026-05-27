@@ -158,6 +158,233 @@
 
         .nav-back:hover { color: #fff; }
 
+        /* VIDEO GRID & CARDS */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .video-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+            overflow: hidden;
+        }
+
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .video-card:hover .video-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .video-play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .video-card:hover .video-play-overlay {
+            opacity: 1;
+            background: rgba(124, 58, 237, 0.2);
+        }
+
+        .play-btn-circle {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .video-card:hover .play-btn-circle {
+            transform: scale(1.1);
+            background: var(--accent);
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.6);
+        }
+
+        .play-btn-circle svg {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+            margin-left: 3px; /* visual center alignment */
+        }
+
+        .video-info {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #f1f5f9;
+            margin: 0 0 8px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-tag {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-top: auto;
+        }
+
+        /* LIGHTBOX MODAL */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .video-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 900px;
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .video-modal.active .video-modal-content {
+            transform: scale(1);
+        }
+
+        .video-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .video-modal-close:hover {
+            background: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .video-modal-title {
+            padding: 20px;
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            background: #0f172a;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        /* SECTION HEADERS */
+        .section-divider-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 30px 0 20px 0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-divider-line {
+            flex-grow: 1;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
     </style>
 </head>
 <body>
@@ -239,10 +466,25 @@
 
     </div>
 
+    <!-- MODAL DE VÍDEO -->
+    <div id="video-modal" class="video-modal" onclick="closeVideo(event)">
+        <div class="video-modal-content">
+            <button class="video-modal-close" onclick="closeVideo(event, true)">×</button>
+            <div class="iframe-container">
+                <iframe id="video-iframe" src="" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <h3 id="video-modal-title" class="video-modal-title"></h3>
+        </div>
+    </div>
+
     <script>
         const tutorials = {
             start: {
                 title: "🚀 Primeiros Passos",
+                videos: [
+                    { id: "4iIS5bbUKlQ", title: "Cadastro completo no sistema de barbearia | Tutorial rápido" },
+                    { id: "1uR7vKF-UAs", title: "Aprenda a Configurar a Recepção no Agendamento Fácil BR" }
+                ],
                 steps: [
                     { t: "Personalize sua Marca", d: "Acesse Configurações > Minha Unidade. Lá você pode subir sua logo e escolher a cor principal que seus clientes verão no site de agendamento." },
                     { t: "Horário de Funcionamento", d: "Defina os dias e horários que sua loja abre. O sistema bloqueará automaticamente os domingos ou feriados que você desativar." }
@@ -250,29 +492,73 @@
             },
             agenda: {
                 title: "📅 Gestão de Agenda",
+                videos: [
+                    { id: "iQAmN8wJDPI", title: "Sistema para Barbearia | Como Fazer Agendamentos" },
+                    { id: "MEtHvsMp6sU", title: "Agendamento Fácil BR | Como Bloquear Agenda" }
+                ],
                 steps: [
                     { t: "Bloquear Horários", d: "Precisa sair para almoçar? Clique no horário desejado na agenda e selecione 'Bloquear Horário' para que nenhum cliente agende." },
                     { t: "Agendamento Manual", d: "Se o cliente ligar, você pode clicar no horário vago, selecionar o cliente e o serviço para agendar na hora." }
                 ]
             },
+            clients: {
+                title: "👥 Clientes",
+                videos: [
+                    { id: "LFmC1Nht7s8", title: "Aprenda a Cadastrar Consumo no Agendamento Fácil BR" }
+                ],
+                steps: [
+                    { t: "Cadastro de Clientes", d: "Gerencie o cadastro de clientes, acompanhe o histórico de visitas completas e cadastre consumo de serviços ou produtos de forma simples e rápida." }
+                ]
+            },
             pdv: {
                 title: "🛒 Produtos e PDV Integrado",
+                videos: [
+                    { id: "uYmQxU_QEtA", title: "Nova OS no Agendamento Fácil BR | Tutorial Completo" }
+                ],
                 steps: [
                     { t: "Leitor de Código de Barras", d: "No menu PDV, basta conectar seu leitor USB. Ao bipar um produto, ele aparecerá no carrinho automaticamente." },
                     { t: "Finalizar Venda", d: "Selecione a forma de pagamento (Pix, Cartão ou Dinheiro). O sistema já abate o item do estoque e soma no faturamento do dia." }
                 ]
             },
+            services: {
+                title: "✂️ Serviços",
+                videos: [
+                    { id: "VwbjtRI9nMM", title: "Aprenda a Adicionar Serviços no Agendamento Fácil BR" }
+                ],
+                steps: [
+                    { t: "Preços e Tempos", d: "Ao cadastrar um serviço (ex: Barba), defina o tempo médio. Isso evita que o sistema agende dois clientes no mesmo horário para o mesmo profissional." }
+                ]
+            },
+            staff: {
+                title: "👤 Colaboradores",
+                videos: [
+                    { id: "Zu2v3aVGsqk", title: "Aprenda a Adicionar Colaboradores no Agendamento Fácil BR" },
+                    { id: "nxAhG5iVdoc", title: "Como Usar o App do Barbeiro | Tutorial Completo" },
+                    { id: "_BlzVC65WeY", title: "Aprenda a Registrar Vales no Agendamento Fácil BR" },
+                    { id: "GXJD9vdT2eM", title: "Como Fazer o Pagamento dos Colaboradores na Barbearia" }
+                ],
+                steps: [
+                    { t: "Controle e Comissões", d: "Adicione profissionais, configure comissões customizadas por serviço, controle vales, registre pagamentos de comissões e configure o App do Barbeiro para sua equipe." }
+                ]
+            },
             reports: {
                 title: "📊 Relatórios Financeiros",
+                videos: [
+                    { id: "IujmS99q5P8", title: "Gestão de Faturamento na Barbearia | Tutorial Completo" },
+                    { id: "CceU-9BTv94", title: "Aprenda a Gerenciar Gorjetas no Agendamento Fácil BR" }
+                ],
                 steps: [
                     { t: "Faturamento Bruto vs Líquido", d: "O sistema separa o que entrou de dinheiro do que é lucro real após pagar as comissões dos barbeiros." },
                     { t: "Desempenho da Equipe", d: "Veja qual colaborador mais atendeu e quanto ele gerou de receita no mês." }
                 ]
             },
-            services: {
-                title: "✂️ Configuração de Serviços",
+            payments: {
+                title: "💰 Pagamentos",
+                videos: [
+                    { id: "peIRHvyWZMI", title: "Agendamento Fácil BR: Como Pagar Sua Fatura" }
+                ],
                 steps: [
-                    { t: "Preços e Tempos", d: "Ao cadastrar um serviço (ex: Barba), defina o tempo médio. Isso evita que o sistema agende dois clientes no mesmo horário para o mesmo profissional." }
+                    { t: "Renovação e Fatura", d: "Veja como efetuar o pagamento da mensalidade do sistema de forma fácil para manter seu sistema e agendamentos sempre ativos." }
                 ]
             }
         };
@@ -284,24 +570,91 @@
             const grid = document.getElementById('main-grid');
 
             let html = `<h2>${t.title}</h2>`;
-            t.steps.forEach((step, index) => {
+
+            // Render Videos section if any exist
+            if (t.videos && t.videos.length > 0) {
                 html += `
-                    <div class="tutorial-step">
-                        <strong>Passo ${index + 1}: ${step.t}</strong>
-                        <p>${step.d}</p>
+                    <div class="section-divider-title">
+                        <span>📹 Vídeos Tutoriais</span>
+                        <div class="section-divider-line"></div>
+                    </div>
+                    <div class="video-grid">
+                `;
+                
+                t.videos.forEach(video => {
+                    html += `
+                        <div class="video-card" onclick="openVideo('${video.id}', '${video.title.replace(/'/g, "\\'")}')">
+                            <div class="video-thumbnail-container">
+                                <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" alt="${video.title}" class="video-thumbnail" loading="lazy">
+                                <div class="video-play-overlay">
+                                    <div class="play-btn-circle">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-info">
+                                <h4 class="video-title">${video.title}</h4>
+                                <span class="video-tag">Assistir Tutorial</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+
+            // Render Steps section
+            if (t.steps && t.steps.length > 0) {
+                html += `
+                    <div class="section-divider-title">
+                        <span>📝 Passo a Passo</span>
+                        <div class="section-divider-line"></div>
                     </div>
                 `;
-            });
+                t.steps.forEach((step, index) => {
+                    html += `
+                        <div class="tutorial-step">
+                            <strong>Passo ${index + 1}: ${step.t}</strong>
+                            <p>${step.d}</p>
+                        </div>
+                    `;
+                });
+            }
 
             content.innerHTML = html;
             grid.style.display = 'none';
             display.style.display = 'block';
-            window.scrollTo(0, 0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function closeTutorial() {
             document.getElementById('tutorial-display').style.display = 'none';
             document.getElementById('main-grid').style.display = 'grid';
+        }
+
+        function openVideo(id, title) {
+            const modal = document.getElementById('video-modal');
+            const iframe = document.getElementById('video-iframe');
+            const titleElem = document.getElementById('video-modal-title');
+            
+            iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+            titleElem.textContent = title;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideo(event, force = false) {
+            if (force || event.target.id === 'video-modal') {
+                const modal = document.getElementById('video-modal');
+                const iframe = document.getElementById('video-iframe');
+                
+                iframe.src = '';
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
     </script>
 
