@@ -4965,7 +4965,7 @@
       "time": "18:30"
     },
     {
-      "barber": "Matheus Fernandes",
+      "barber": "Miguel Macedo",
       "customer": "miguel nunes",
       "date": "2026-05-29",
       "id": 1780082404328,
@@ -4973,7 +4973,8 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:30"
+      "time": "15:30",
+      "transactionId": 1780082415531
     },
     {
       "barber": "Miguel Macedo",
@@ -4998,7 +4999,8 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "16:15"
+      "time": "16:15",
+      "transactionId": 1780084278846
     },
     {
       "barber": "Marcos Barbosa",
@@ -5371,45 +5373,6 @@
       "status": "finalizado",
       "time": "16:15",
       "transactionId": 1780081449807
-    },
-    {
-      "barber": "Matheus Fernandes",
-      "customer": "miguel nunes",
-      "date": "2026-05-29",
-      "id": 1780082415531,
-      "origin": "Reconstruído do Caixa (Correção Automática)",
-      "payment": "debito",
-      "price": 35,
-      "service": "Corte",
-      "status": "finalizado",
-      "time": "16:30",
-      "transactionId": 1780082415531
-    },
-    {
-      "barber": "Matheus Fernandes",
-      "customer": "davi Oliveira",
-      "date": "2026-05-29",
-      "id": 1780084268366,
-      "origin": "Reconstruído do Caixa (Correção Automática)",
-      "payment": "pix",
-      "price": 35,
-      "service": "Corte",
-      "status": "finalizado",
-      "time": "16:45",
-      "transactionId": 1780084268366
-    },
-    {
-      "barber": "Matheus Fernandes",
-      "customer": "davi Oliveira",
-      "date": "2026-05-29",
-      "id": 1780084278846,
-      "origin": "Reconstruído do Caixa (Correção Automática)",
-      "payment": "pix",
-      "price": 35,
-      "service": "Corte",
-      "status": "finalizado",
-      "time": "17:00",
-      "transactionId": 1780084278846
     }
   ],
   "customers": [
@@ -13794,7 +13757,7 @@
     }
   ],
   "lastConsumptionView": 0,
-  "lastUpdate": 2500000000005,
+  "lastUpdate": 2500000000010,
   "productSales": [
     {
       "date": "2026-05-04",
@@ -20532,7 +20495,7 @@
       "type": "in"
     }
   ],
-  "updatedBy": "Atribuicao Correta de Barbeiros Antigravity",
+  "updatedBy": "Limpeza de Duplicatas Antigravity",
   "vouchers": [
     {
       "amount": 10,
