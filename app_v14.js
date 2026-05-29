@@ -4252,8 +4252,10 @@ const app = {
                         ${apt.status === 'agendado' ? `
                             <button class="btn-primary" style="background: #2E8B57; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.updateAptStatus(${apt.id}, 'confirmado')">CONFIRMAR PRESENÇA</button>
                         ` : ''}
+                        ${(apt.status !== 'finalizado' || this.state.user.role === 'admin') ? `
+                            <button class="btn-primary" style="background: #7c3aed; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openEditApt(${apt.id})">✏️ ALTERAR SERVIÇOS / PROFISSIONAL / VALOR</button>
+                        ` : ''}
                         ${apt.status !== 'finalizado' ? `
-                            <button class="btn-primary" style="background: #7c3aed; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openEditApt(${apt.id})">✏️ ALTERAR SERVIÇOS / VALOR</button>
                             <button class="btn-primary" style="background: #48C17E; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openFinalizeOS(${apt.id})">FINALIZAR ATENDIMENTO</button>
                         ` : ''}
                         <button class="btn-secondary" style="border: 1px solid #ff4444; color: #ff4444; width: 100%; border-radius: 8px;" onclick="app.cancelApt(${apt.id})">Remover / Cancelar</button>
@@ -4271,15 +4273,38 @@ const app = {
         // Identificar serviços já selecionados
         const currentServices = apt.service.split(', ').map(s => s.trim());
 
-        this.openModal('Editar Serviços', `
-            <section class="fade-in">
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
-                    Editando agendamento de <strong>${apt.customer}</strong>
+        this.openModal('Alterar Agendamento', `
+            <section class="fade-in" style="max-height: 80vh; overflow-y: auto; padding-right: 5px;" class="custom-scrollbar">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">
+                    Editando atendimento de <strong>${apt.customer}</strong>
                 </p>
+                
+                <!-- 1. Campo Barbeiro -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Profissional (Barbeiro)</label>
+                    <select id="edit-apt-barber" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
+                        ${this.state.staff.filter(s => s.showInAgenda).map(s => `
+                            <option value="${s.name}" ${s.name === apt.barber ? 'selected' : ''}>${s.name}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
+                <!-- 2. Campo Data -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Data</label>
+                    <input type="date" id="edit-apt-date" class="glass" value="${apt.date}" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
+                </div>
+
+                <!-- 3. Campo Horário -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Horário</label>
+                    <input type="time" id="edit-apt-time" class="glass" value="${apt.time}" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
+                </div>
+
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços</label>
+                    <label style="display: block; margin-bottom: 10px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços</label>
                     <div id="edit-walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Recalculando...</div>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 250px; overflow-y: auto; padding: 5px;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => {
             const isSelected = currentServices.includes(s.name);
             return `
@@ -4334,12 +4359,34 @@ const app = {
 
         if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
+        const newBarber = document.getElementById('edit-apt-barber').value;
+        const newDate = document.getElementById('edit-apt-date').value;
+        const newTime = document.getElementById('edit-apt-time').value;
+
+        // Validar se o novo horário de destino já está ocupado por outro cliente (se mudou o horário/barbeiro/data)
+        if (newBarber !== apt.barber || newTime !== apt.time || newDate !== apt.date) {
+            const targetApt = this.state.appointments.find(a => 
+                a.id !== apt.id &&
+                a.barber === newBarber && 
+                a.time === newTime && 
+                a.date === newDate
+            );
+            if (targetApt) {
+                alert(`O horário ${newTime} no dia ${newDate} com ${newBarber} já está ocupado por ${targetApt.customer}.`);
+                return;
+            }
+        }
+
         apt.service = checkedBoxes.map(cb => cb.dataset.name).join(', ');
         apt.price = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        apt.barber = newBarber;
+        apt.date = newDate;
+        apt.time = newTime;
 
         this.saveState();
         this.openAppointmentManagement(aptId);
         this.render(this.state.view);
+        this.showToast(`Agendamento de ${apt.customer} atualizado com sucesso!`);
     },
 
     updateAptStatus(aptId, status) {
