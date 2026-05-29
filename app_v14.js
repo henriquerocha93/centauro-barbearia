@@ -78,6 +78,8 @@ const app = {
         isDragging: false,    // [NOVO] Controle para evitar conflito com clique
         draggingAptId: null,  // [NOVO] Fallback para o dataTransfer
         needsSync: false,     // [NOVO] Controla se há alterações locais pendentes
+        isSyncing: false,     // [NOVO] Controla se há um sincronismo em andamento
+        syncPending: false,   // [NOVO] Controla se há um sincronismo pendente na fila
         _lastDataHash: null,  // [NOVO] Evita re-render se os dados forem iguais
         isInitializedFromCloud: false, // [NOVO] Trava de segurança contra sobrescrita de cache antigo
         firebaseConfig: {
@@ -339,7 +341,11 @@ const app = {
     },
 
     async syncToFirebase() {
-        if (this.state.isSyncing) return;
+        if (this.state.isSyncing) {
+            this.state.syncPending = true;
+            console.log('⏳ Sincronização em andamento. Nova sincronização agendada na fila (syncPending = true).');
+            return;
+        }
         if (!this.state.needsSync) return; 
 
         // [SEGURANÇA CRÍTICA] Não permite subir dados se ainda não recebemos a versão da nuvem
@@ -354,6 +360,11 @@ const app = {
             console.error('Banco de dados (this.db) não inicializado!');
             return; 
         }
+
+        // Marcar sincronização em andamento
+        this.state.isSyncing = true;
+        this.state.syncPending = false;
+        const currentSyncTimestamp = this.state.lastUpdate;
 
         try {
             const now = new Date().getTime();
@@ -441,13 +452,8 @@ const app = {
                 updatedBy: this.state.user ? this.state.user.name : 'Sistema'
             };
 
-            this.state.isSyncing = true;
-            
             // Usamos update() no lugar de set() para isolar o salvamento e evitar conflitos em sub-pastas
             await update(dbRef, updates);
-            
-            this.state.isSyncing = false;
-            this.state.needsSync = false;
             
             console.log('✅ SUCESSO: Sincronizado com Firebase');
             
@@ -462,7 +468,6 @@ const app = {
             this.checkAndTriggerBackup();
 
         } catch (error) {
-            this.state.isSyncing = false;
             console.error('❌ Erro no Firebase Sync:', error);
             // Feedback visual de erro
             const syncIndicator = document.getElementById('sync-status-indicator');
@@ -473,6 +478,22 @@ const app = {
             // Alerta discreto para o usuário
             if (this.state.user && this.state.user.role === 'admin') {
                 console.warn('Falha na sincronização. Verifique sua conexão.');
+            }
+        } finally {
+            this.state.isSyncing = false;
+            
+            // Se o timestamp local continua o mesmo de quando o sync começou,
+            // significa que não houve edições locais novas concorrentes. Podemos limpar o needsSync.
+            if (this.state.lastUpdate === currentSyncTimestamp) {
+                this.state.needsSync = false;
+            }
+
+            // Se houve edições locais concorrentes (syncPending ou needsSync ainda ativo),
+            // disparamos um novo ciclo de sincronização para garantir que tudo suba.
+            if (this.state.syncPending || this.state.needsSync) {
+                console.log('🔄 Executando sincronização de itens da fila acumulados durante o processo anterior...');
+                this.state.syncPending = false;
+                setTimeout(() => this.syncToFirebase(), 50);
             }
         }
     },
@@ -989,19 +1010,31 @@ const app = {
                                     (t.date === cloudApt.date && t.description.includes(cloudApt.customer) && t.amount === cloudApt.price)
                                 );
 
+                                let mergedApt = { ...cloudApt };
                                 if (hasTransaction) {
-                                    return { ...cloudApt, status: 'finalizado' };
+                                    mergedApt.status = 'finalizado';
                                 }
 
                                 if (localApt) {
                                     const localRank = getRank(localApt.status);
                                     const cloudRank = getRank(cloudApt.status);
                                     
+                                    // [BLINDAGEM CONTRA EFEITO ELÁSTICO]
+                                    // Se temos alterações locais pendentes de sincronismo (ou sincronismo em andamento),
+                                    // preservamos as coordenadas de Barbeiro, Data e Horário locais para evitar reversão.
+                                    if (this.state.needsSync || this.state.isSyncing) {
+                                        mergedApt.barber = localApt.barber;
+                                        mergedApt.date = localApt.date;
+                                        mergedApt.time = localApt.time;
+                                        mergedApt.service = localApt.service;
+                                        mergedApt.price = localApt.price;
+                                    }
+
                                     if (localRank > cloudRank) {
-                                        return { ...cloudApt, status: localApt.status };
+                                        mergedApt.status = localApt.status;
                                     }
                                 }
-                                return cloudApt;
+                                return mergedApt;
                             });
 
                             this.state.services = toArray(data.services);
@@ -1015,7 +1048,9 @@ const app = {
                             this.state.tips = mergeArrays(this.state.tips, data.tips);
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
-                            this.state.needsSync = false;
+                            if (!this.state.needsSync && !this.state.isSyncing) {
+                                this.state.needsSync = false;
+                            }
 
                             if (data.settings) {
                                 this.state.settings = { ...this.state.settings, ...data.settings };
