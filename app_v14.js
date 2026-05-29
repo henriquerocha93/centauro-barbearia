@@ -401,7 +401,7 @@ const app = {
                     if (cloudApt) {
                         const localRank = getRank(localApt.status);
                         const cloudRank = getRank(cloudApt.status);
-                        if (localRank > cloudRank) {
+                        if (localRank >= cloudRank) {
                             mergedAptsMap.set(idStr, { ...cloudApt, ...localApt });
                         } else {
                             // Se a nuvem tem status maior, mantém a nuvem
