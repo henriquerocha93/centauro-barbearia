@@ -3904,6 +3904,12 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (!apt) return;
 
+        // [SEGURANÇA FINANCEIRA] Somente administradores podem mover agendamentos finalizados
+        if (apt.status === 'finalizado' && this.state.user.role !== 'admin') {
+            alert('⚠️ Somente um administrador pode mover atendimentos finalizados.');
+            return;
+        }
+
         // Se soltar no mesmo lugar, não faz nada
         if (apt.barber === newBarber && apt.time === newTime) return;
 
