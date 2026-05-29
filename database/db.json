@@ -5002,6 +5002,53 @@
     },
     {
       "barber": "Marcos Barbosa",
+      "customer": "Cassiano Pereira",
+      "date": "2026-05-29",
+      "finalPrice": 85,
+      "id": 1780087225922,
+      "origin": "Encaixe (Totem: Recepção (Totem))",
+      "payment": "PIX",
+      "price": 85,
+      "service": "Corte, Barba e sobrancelha",
+      "status": "finalizado",
+      "time": "17:30",
+      "transactionId": 1780087239530
+    },
+    {
+      "barber": "Matheus Fernandes",
+      "customer": "Henrique",
+      "date": "2026-05-29",
+      "id": 1780089001114,
+      "origin": "Encaixe (Totem: Recepção (Totem))",
+      "price": 30,
+      "service": "Corte Brigada Militar (exclusivo p/ forças de segurança)",
+      "status": "finalizado",
+      "time": "18:00"
+    },
+    {
+      "barber": "Miguel Macedo",
+      "customer": "Roger Patricio",
+      "date": "2026-05-29",
+      "id": 1780089175401,
+      "origin": "Encaixe (Barbeiro: Miguel Macedo)",
+      "price": 60,
+      "service": "Barba, Corte máquina",
+      "status": "agendado",
+      "time": "17:45"
+    },
+    {
+      "barber": "Marcos Barbosa",
+      "customer": "Andreis",
+      "date": "2026-05-29",
+      "id": 1780089406276,
+      "origin": "Encaixe (Totem: Recepção (Totem))",
+      "price": 35,
+      "service": "Corte",
+      "status": "agendado",
+      "time": "18:15"
+    },
+    {
+      "barber": "Marcos Barbosa",
       "customer": "sidney",
       "date": "2026-05-28",
       "id": 1779977866128,
@@ -5010,7 +5057,7 @@
       "price": 70,
       "service": "Barba, Corte",
       "status": "finalizado",
-      "time": "11:17",
+      "time": "11:15",
       "transactionId": 1779977866128
     },
     {
@@ -5023,7 +5070,7 @@
       "price": 25,
       "service": "Corte máquina",
       "status": "finalizado",
-      "time": "11:40",
+      "time": "11:45",
       "transactionId": 1779979202252
     },
     {
@@ -5036,7 +5083,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "14:05",
+      "time": "14:00",
       "transactionId": 1779987904629
     },
     {
@@ -5049,7 +5096,7 @@
       "price": 25,
       "service": "Corte máquina",
       "status": "finalizado",
-      "time": "14:18",
+      "time": "14:15",
       "transactionId": 1779988725899
     },
     {
@@ -5062,7 +5109,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "14:40",
+      "time": "14:45",
       "transactionId": 1779990000193
     },
     {
@@ -5075,7 +5122,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:12",
+      "time": "15:15",
       "transactionId": 1779991932225
     },
     {
@@ -5088,7 +5135,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:13",
+      "time": "15:30",
       "transactionId": 1779992000914
     },
     {
@@ -5101,7 +5148,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:37",
+      "time": "15:45",
       "transactionId": 1779993421626
     },
     {
@@ -5114,7 +5161,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "20:52",
+      "time": "20:45",
       "transactionId": 1780012371077
     },
     {
@@ -5127,7 +5174,7 @@
       "price": 70,
       "service": "Barba, Corte",
       "status": "finalizado",
-      "time": "20:52",
+      "time": "21:00",
       "transactionId": 1780012370484
     },
     {
@@ -5140,7 +5187,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "20:52",
+      "time": "21:15",
       "transactionId": 1780012370425
     },
     {
@@ -5153,7 +5200,7 @@
       "price": 50,
       "service": "Corte + sobrancelha",
       "status": "finalizado",
-      "time": "20:52",
+      "time": "21:30",
       "transactionId": 1780012371134
     },
     {
@@ -5166,7 +5213,7 @@
       "price": 25,
       "service": "Corte máquina",
       "status": "finalizado",
-      "time": "11:02",
+      "time": "11:00",
       "transactionId": 1780063335772
     },
     {
@@ -5179,7 +5226,7 @@
       "price": 70,
       "service": "Barba, Corte",
       "status": "finalizado",
-      "time": "11:03",
+      "time": "11:15",
       "transactionId": 1780063410206
     },
     {
@@ -5192,7 +5239,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "11:03",
+      "time": "11:30",
       "transactionId": 1780063435097
     },
     {
@@ -5205,7 +5252,7 @@
       "price": 50,
       "service": "Corte + sobrancelha",
       "status": "finalizado",
-      "time": "12:35",
+      "time": "12:30",
       "transactionId": 1780068928688
     },
     {
@@ -5218,7 +5265,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "12:36",
+      "time": "12:45",
       "transactionId": 1780068972425
     },
     {
@@ -5231,7 +5278,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "12:54",
+      "time": "13:00",
       "transactionId": 1780070047159
     },
     {
@@ -5244,7 +5291,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "13:18",
+      "time": "13:15",
       "transactionId": 1780071501070
     },
     {
@@ -5257,7 +5304,7 @@
       "price": 70,
       "service": "Barba, Corte",
       "status": "finalizado",
-      "time": "13:28",
+      "time": "13:30",
       "transactionId": 1780072123677
     },
     {
@@ -5270,7 +5317,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "14:39",
+      "time": "14:45",
       "transactionId": 1780076347386
     },
     {
@@ -5283,7 +5330,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:37",
+      "time": "15:30",
       "transactionId": 1780079875490
     },
     {
@@ -5296,7 +5343,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:41",
+      "time": "15:45",
       "transactionId": 1780080119874
     },
     {
@@ -5309,7 +5356,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "15:49",
+      "time": "16:00",
       "transactionId": 1780080578508
     },
     {
@@ -5322,7 +5369,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "16:04",
+      "time": "16:15",
       "transactionId": 1780081449807
     },
     {
@@ -5335,7 +5382,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "16:20",
+      "time": "16:30",
       "transactionId": 1780082415531
     },
     {
@@ -5348,7 +5395,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "16:51",
+      "time": "16:45",
       "transactionId": 1780084268366
     },
     {
@@ -5361,7 +5408,7 @@
       "price": 35,
       "service": "Corte",
       "status": "finalizado",
-      "time": "16:51",
+      "time": "17:00",
       "transactionId": 1780084278846
     }
   ],
@@ -6105,6 +6152,7 @@
       "birthDate": "2015-05-22",
       "gender": "M",
       "id": 2892461,
+      "lastCongratsDate": "2026-05-22",
       "name": "artur Oliveira",
       "phone": ""
     },
@@ -8319,6 +8367,7 @@
       "birthDate": "1994-05-29",
       "gender": "M",
       "id": 2882679,
+      "lastCongratsDate": "2026-05-29",
       "name": "gean",
       "phone": ""
     },
@@ -9604,6 +9653,7 @@
       "birthDate": "1969-05-29",
       "gender": "M",
       "id": 2848811,
+      "lastCongratsDate": "2026-05-29",
       "name": "Jose chagas",
       "phone": ""
     },
@@ -13513,6 +13563,7 @@
       "birthDate": "2026-05-18",
       "gender": "M",
       "id": 1779122014532,
+      "lastCongratsDate": "2026-05-18",
       "name": "karoline naymer",
       "phone": "0000000"
     },
@@ -13569,6 +13620,7 @@
       "birthDate": "2026-05-22",
       "gender": "M",
       "id": 1779285323086,
+      "lastCongratsDate": "2026-05-22",
       "name": "Diego Ramos",
       "phone": "51992701387"
     },
@@ -13741,8 +13793,8 @@
       "phone": "51982995826"
     }
   ],
-  "lastConsumptionView": 1778112082229,
-  "lastUpdate": 1780086274925,
+  "lastConsumptionView": 0,
+  "lastUpdate": 2500000000000,
   "productSales": [
     {
       "date": "2026-05-04",
@@ -20448,9 +20500,39 @@
       "method": "dinheiro",
       "timestamp": "2026-05-29T19:58:16.129Z",
       "type": "out"
+    },
+    {
+      "amount": 85,
+      "category": "servico",
+      "date": "2026-05-29",
+      "description": "Finalização OS: Cassiano Pereira (Corte, Barba e sobrancelha)",
+      "id": 1780087239530,
+      "method": "pix",
+      "timestamp": "2026-05-29T20:40:39.372Z",
+      "type": "in"
+    },
+    {
+      "amount": 30,
+      "category": "servico",
+      "date": "2026-05-29",
+      "description": "Finalização OS: Henrique (Corte Brigada Militar (exclusivo p/ forças de segurança))",
+      "id": 1780089022617,
+      "method": "debito",
+      "timestamp": "2026-05-29T21:10:22.254Z",
+      "type": "in"
+    },
+    {
+      "amount": 35,
+      "category": "servico",
+      "date": "2026-05-29",
+      "description": "Finalização OS: Andreis (Corte)",
+      "id": 1780089414056,
+      "method": "dinheiro",
+      "timestamp": "2026-05-29T21:16:53.389Z",
+      "type": "in"
     }
   ],
-  "updatedBy": "Restauração Automática Antigravity",
+  "updatedBy": "Restauração com Alinhamento de Grade Antigravity",
   "vouchers": [
     {
       "amount": 10,
