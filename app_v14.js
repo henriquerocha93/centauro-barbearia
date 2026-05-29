@@ -364,18 +364,73 @@ const app = {
             console.log(`📤 Caminho de Sincronização: ${dbPath}`);
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
-            // [MUDANÇA CRÍTICA] Removido suporte offline/merge por solicitação do usuário.
-            // Agora o sistema trabalha em modo Cloud-Truth (Nuvem é a verdade absoluta).
-            console.log('📤 Enviando atualizações para o servidor (Modo Direto)...');
+            // [ISOLAMENTO E MERGE INTELIGENTE]
+            // Antes de gravar na nuvem, fazemos um GET rápido para mesclar alterações simultâneas de outros aparelhos
+            let cloudData = null;
+            try {
+                const snapshot = await get(dbRef);
+                cloudData = snapshot.val();
+            } catch (e) {
+                console.warn('⚠️ Não foi possível ler dados para merge, prosseguindo com gravação direta:', e);
+            }
+
+            const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+
+            if (cloudData) {
+                // Mesclar clientes e outros arrays secundários
+                const mergeMap = (localArr, cloudArr) => {
+                    const map = new Map();
+                    toArray(cloudArr).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                    toArray(localArr).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                    return Array.from(map.values());
+                };
+                
+                // Mesclar agendamentos de forma inteligente preservando o status finalizado/confirmado
+                const getRank = (s) => {
+                    if (s === 'finalizado') return 2;
+                    if (s === 'confirmado') return 1;
+                    return 0;
+                };
+                
+                const mergedAptsMap = new Map();
+                toArray(cloudData.appointments).forEach(a => { if (a && a.id) mergedAptsMap.set(String(a.id), a); });
+                toArray(this.state.appointments).forEach(localApt => {
+                    if (!localApt || !localApt.id) return;
+                    const idStr = String(localApt.id);
+                    const cloudApt = mergedAptsMap.get(idStr);
+                    if (cloudApt) {
+                        const localRank = getRank(localApt.status);
+                        const cloudRank = getRank(cloudApt.status);
+                        if (localRank > cloudRank) {
+                            mergedAptsMap.set(idStr, { ...cloudApt, ...localApt });
+                        } else {
+                            // Se a nuvem tem status maior, mantém a nuvem
+                            mergedAptsMap.set(idStr, { ...localApt, ...cloudApt });
+                        }
+                    } else {
+                        mergedAptsMap.set(idStr, localApt);
+                    }
+                });
+                
+                this.state.appointments = Array.from(mergedAptsMap.values());
+                this.state.customers = mergeMap(this.state.customers, cloudData.customers);
+                this.state.vouchers = mergeMap(this.state.vouchers, cloudData.vouchers);
+                this.state.productSales = mergeMap(this.state.productSales, cloudData.productSales);
+                this.state.transactions = mergeMap(this.state.transactions, cloudData.transactions);
+                this.state.serviceOrders = mergeMap(this.state.serviceOrders, cloudData.serviceOrders);
+                this.state.tips = mergeMap(this.state.tips, cloudData.tips);
+            }
+
+            console.log('📤 Enviando atualizações modulares para o servidor...');
             
-            const stateToSave = {
-                services: this.state.services,
-                staff: this.state.staff,
-                customers: this.state.customers,
-                settings: this.state.settings,
-                vouchers: this.state.vouchers,
-                transactions: this.state.transactions,
-                products: this.state.products,
+            const updates = {
+                services: this.state.services || [],
+                staff: this.state.staff || [],
+                customers: this.state.customers || [],
+                settings: this.state.settings || {},
+                vouchers: this.state.vouchers || [],
+                transactions: this.state.transactions || [],
+                products: this.state.products || [],
                 productSales: this.state.productSales || [],
                 openingBalances: this.state.openingBalances || {},
                 appointments: this.state.appointments || [],
@@ -387,7 +442,9 @@ const app = {
             };
 
             this.state.isSyncing = true;
-            await set(dbRef, stateToSave);
+            
+            // Usamos update() no lugar de set() para isolar o salvamento e evitar conflitos em sub-pastas
+            await update(dbRef, updates);
             
             this.state.isSyncing = false;
             this.state.needsSync = false;
@@ -400,6 +457,9 @@ const app = {
                 syncIndicator.style.color = '#4ade80';
                 syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span> Sincronizado';
             }
+
+            // [BACKUP AUTOMÁTICO] Executa a verificação a cada sincronismo bem-sucedido
+            this.checkAndTriggerBackup();
 
         } catch (error) {
             this.state.isSyncing = false;
@@ -414,6 +474,59 @@ const app = {
             if (this.state.user && this.state.user.role === 'admin') {
                 console.warn('Falha na sincronização. Verifique sua conexão.');
             }
+        }
+    },
+
+    async checkAndTriggerBackup() {
+        if (!this.db || !this.state.isInitializedFromCloud) return;
+        
+        try {
+            const tenantId = this.getTenantId() || 'centauro';
+            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            const backupPath = (tenantId === 'centauro') ? 'database_backup/' : `tenants_backup/${tenantId}/`;
+            
+            // Buscar o timestamp do último backup automático
+            const backupInfoRef = ref(this.db, dbPath + 'lastAutomaticBackup');
+            const snapshot = await get(backupInfoRef);
+            const lastBackupTime = snapshot.val() || 0;
+            const now = Date.now();
+            
+            // 6 horas = 21.600.000 ms
+            if (now - lastBackupTime >= 21600000) {
+                console.log('💾 [BACKUP AUTOMÁTICO] Mais de 6 horas se passaram. Iniciando backup silencioso...');
+                
+                // Preparar dados do backup
+                const stateToBackup = {
+                    services: this.state.services || [],
+                    staff: this.state.staff || [],
+                    customers: this.state.customers || [],
+                    settings: this.state.settings || {},
+                    vouchers: this.state.vouchers || [],
+                    transactions: this.state.transactions || [],
+                    products: this.state.products || [],
+                    productSales: this.state.productSales || [],
+                    openingBalances: this.state.openingBalances || {},
+                    appointments: this.state.appointments || [],
+                    serviceOrders: this.state.serviceOrders || [],
+                    tips: this.state.tips || [],
+                    lastConsumptionView: this.state.lastConsumptionView || 0,
+                    lastUpdate: this.state.lastUpdate || 0,
+                    backupTimestamp: now,
+                    backedUpBy: this.state.user ? this.state.user.name : 'Sistema (Auto)'
+                };
+                
+                // Gravar na pasta dedicada do backup (que substitui o anterior)
+                await set(ref(this.db, backupPath), stateToBackup);
+                
+                // Atualizar o timestamp do último backup na base principal
+                const updates = {};
+                updates['lastAutomaticBackup'] = now;
+                await update(ref(this.db, dbPath), updates);
+                
+                console.log('💾 [BACKUP AUTOMÁTICO] Backup em nuvem realizado com sucesso em:', backupPath);
+            }
+        } catch (e) {
+            console.error('💾 [BACKUP AUTOMÁTICO] Erro ao executar backup automático:', e);
         }
     },
 
@@ -927,6 +1040,9 @@ const app = {
                                     this.render(this.state.view);
                                 }
                             }
+
+                            // [BACKUP AUTOMÁTICO] Verifica backup na inicialização
+                            setTimeout(() => { this.checkAndTriggerBackup(); }, 3000);
 
                             // Feedback visual
                             const syncIndicator = document.getElementById('sync-status-indicator');
