@@ -331,7 +331,8 @@ const app = {
                     serviceOrders: this.state.serviceOrders || [],
                     tips: this.state.tips || [],
                     lastConsumptionView: this.state.lastConsumptionView || 0,
-                    lastUpdate: this.state.lastUpdate || 0
+                    lastUpdate: this.state.lastUpdate || 0,
+                    _deletedIds: this.state._deletedIds || []
                 };
                 localStorage.setItem(this.getStorageKey(), JSON.stringify(stateToSave));
                 this.syncToFirebase();
@@ -388,12 +389,14 @@ const app = {
             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
 
             if (cloudData) {
+                const deletedSet = new Set(this.state._deletedIds || []);
+
                 // Mesclar clientes e outros arrays secundários
                 const mergeMap = (localArr, cloudArr) => {
                     const map = new Map();
                     toArray(cloudArr).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
                     toArray(localArr).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
-                    return Array.from(map.values());
+                    return Array.from(map.values()).filter(item => item && item.id && !deletedSet.has(String(item.id)));
                 };
                 
                 // Mesclar agendamentos de forma inteligente preservando o status finalizado/confirmado
@@ -423,7 +426,7 @@ const app = {
                     }
                 });
                 
-                this.state.appointments = Array.from(mergedAptsMap.values());
+                this.state.appointments = Array.from(mergedAptsMap.values()).filter(a => a && a.id && !deletedSet.has(String(a.id)));
                 this.state.customers = mergeMap(this.state.customers, cloudData.customers);
                 this.state.vouchers = mergeMap(this.state.vouchers, cloudData.vouchers);
                 this.state.productSales = mergeMap(this.state.productSales, cloudData.productSales);
@@ -486,6 +489,7 @@ const app = {
             // significa que não houve edições locais novas concorrentes. Podemos limpar o needsSync.
             if (this.state.lastUpdate === currentSyncTimestamp) {
                 this.state.needsSync = false;
+                this.state._deletedIds = []; // [BLINDAGEM] Confirma remoções locais e limpa cache de deletados
             }
 
             // Se houve edições locais concorrentes (syncPending ou needsSync ainda ativo),
@@ -983,13 +987,14 @@ const app = {
 
                             console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+                            const deletedSet = new Set(this.state._deletedIds || []);
                             
                             // Função auxiliar para mesclar arrays sem duplicar e sem perder dados locais novos
                             const mergeArrays = (local, cloud) => {
                                 const map = new Map();
                                 toArray(cloud).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
                                 toArray(local).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
-                                return Array.from(map.values());
+                                return Array.from(map.values()).filter(item => item && item.id && !deletedSet.has(String(item.id)));
                             };
                             // [PROTEÇÃO DE HIERARQUIA DE STATUS] 
                             const getRank = (s) => {
@@ -998,7 +1003,7 @@ const app = {
                                 return 0;
                             };
 
-                            const cloudApts = toArray(data.appointments);
+                            const cloudApts = toArray(data.appointments).filter(a => a && a.id && !deletedSet.has(String(a.id)));
                             const cloudTransactions = toArray(data.transactions);
 
                             this.state.appointments = cloudApts.map(cloudApt => {
@@ -2479,6 +2484,16 @@ const app = {
     },
 
     // --- Helpers de Dados ---
+    registerDeletion(id) {
+        if (!id) return;
+        if (!this.state._deletedIds) this.state._deletedIds = [];
+        const strId = String(id);
+        if (!this.state._deletedIds.includes(strId)) {
+            this.state._deletedIds.push(strId);
+            console.log(`🗑️ Registrado ID excluído localmente: ${strId}`);
+        }
+    },
+
     addTransaction(type, description, amount, category, method = 'dinheiro') {
         const transId = Date.now() + Math.floor(Math.random() * 1000);
         const cleanAmount = parseFloat(amount) || 0;
@@ -4745,14 +4760,33 @@ const app = {
             const idToCancel = Number(aptId);
             const apt = this.state.appointments.find(a => a.id === idToCancel);
 
+            // Registrar exclusão do agendamento
+            this.registerDeletion(idToCancel);
+
             if (apt && apt.transactionId) {
-                // Remover transação financeira se existir
+                // Registrar e remover transação financeira se existir
+                this.registerDeletion(apt.transactionId);
                 this.state.transactions = this.state.transactions.filter(t => t.id !== apt.transactionId);
             } else if (apt) {
                 // Fallback para agendamentos antigos sem ID de transação
                 const desc = `Serviço: ${apt.service} (${apt.customer})`;
-                this.state.transactions = this.state.transactions.filter(t => t.description === desc && t.date === apt.date);
+                const transactionsToDelete = this.state.transactions.filter(t => t.description === desc && t.date === apt.date);
+                transactionsToDelete.forEach(t => this.registerDeletion(t.id));
+                this.state.transactions = this.state.transactions.filter(t => t.description !== desc || t.date !== apt.date);
             }
+
+            // Excluir também vendas de produtos vinculadas a este agendamento (se houver)
+            const salesToDelete = (this.state.productSales || []).filter(s => s.aptId === idToCancel || (apt && s.transactionId === apt.transactionId));
+            salesToDelete.forEach(s => this.registerDeletion(s.id));
+            this.state.productSales = (this.state.productSales || []).filter(s => s.aptId !== idToCancel && (!apt || s.transactionId !== apt.transactionId));
+
+            // Excluir gorjetas associadas (se houver)
+            const tipsToDelete = (this.state.tips || []).filter(t => t.aptDate === (apt && apt.date) && t.barber === (apt && apt.barber));
+            tipsToDelete.forEach(t => {
+                this.registerDeletion(t.id);
+                if (t.transactionId) this.registerDeletion(t.transactionId);
+            });
+            this.state.tips = (this.state.tips || []).filter(t => t.aptDate !== (apt && apt.date) || t.barber !== (apt && apt.barber));
 
             this.state.appointments = this.state.appointments.filter(a => a.id !== idToCancel);
             this.saveState();
@@ -6358,6 +6392,9 @@ const app = {
         console.log('🗑️ Tentando excluir transação:', transId);
 
         if (confirm('Deseja realmente excluir esta movimentação? Isso afetará o faturamento e o estoque permanentemente.')) {
+            // Registrar exclusão da transação
+            this.registerDeletion(transId);
+
             // 1. Verificar se há agendamento vinculado
             const apt = this.state.appointments.find(a => Number(a.transactionId) === transId);
             if (apt) {
@@ -6377,6 +6414,7 @@ const app = {
                 if (salesToDelete.length > 0) {
                     console.log(`📦 Encontradas ${salesToDelete.length} vendas de produtos vinculadas.`);
                     salesToDelete.forEach(sale => {
+                        this.registerDeletion(sale.id);
                         // Restaurar Estoque
                         const prod = this.state.products.find(p => Number(p.id) === Number(sale.productId));
                         if (prod) {
@@ -6827,12 +6865,19 @@ const app = {
     deleteVoucher(voucherId) {
         if (confirm('Deseja realmente excluir este vale? Esta ação não pode ser desfeita.')) {
             const voucher = this.state.vouchers.find(v => v.id === voucherId);
+            
+            // Registrar exclusão do vale
+            this.registerDeletion(voucherId);
+
             if (voucher && voucher.transactionId) {
+                this.registerDeletion(voucher.transactionId);
                 this.state.transactions = this.state.transactions.filter(t => t.id !== voucher.transactionId);
             } else if (voucher) {
                 // Fallback busca flexível
                 const desc = `Vale: ${voucher.barber}`;
-                this.state.transactions = this.state.transactions.filter(t => t.description.includes(desc) && t.amount === voucher.amount);
+                const transactionsToDelete = this.state.transactions.filter(t => t.description.includes(desc) && t.amount === voucher.amount);
+                transactionsToDelete.forEach(t => this.registerDeletion(t.id));
+                this.state.transactions = this.state.transactions.filter(t => !t.description.includes(desc) || t.amount !== voucher.amount);
             }
             this.state.vouchers = this.state.vouchers.filter(v => v.id !== voucherId);
             this.saveState();
@@ -7659,6 +7704,7 @@ const app = {
 
     deleteCustomer(customerId) {
         if (confirm('Tem certeza que deseja excluir permanentemente este cliente e todo o seu histórico? Esta ação não pode ser desfeita.')) {
+            this.registerDeletion(customerId);
             this.state.customers = this.state.customers.filter(c => c.id !== customerId);
             this.saveState();
             this.closeModal();
@@ -7780,6 +7826,7 @@ const app = {
 
     deleteStaff(staffId) {
         if (confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
+            this.registerDeletion(staffId);
             this.state.staff = this.state.staff.filter(s => s.id !== staffId);
             this.saveState();
             this.closeModal();
@@ -8001,6 +8048,7 @@ const app = {
 
     deleteService(serviceId) {
         if (confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
+            this.registerDeletion(serviceId);
             this.state.services = this.state.services.filter(s => s.id !== serviceId);
             this.saveState();
             this.render('admin-services');
