@@ -437,26 +437,19 @@ const app = {
 
             console.log('📤 Enviando atualizações modulares para o servidor...');
             
-            const updates = {
-                services: this.state.services || [],
-                staff: this.state.staff || [],
-                customers: this.state.customers || [],
-                settings: this.state.settings || {},
-                vouchers: this.state.vouchers || [],
-                transactions: this.state.transactions || [],
-                products: this.state.products || [],
-                productSales: this.state.productSales || [],
-                openingBalances: this.state.openingBalances || {},
-                appointments: this.state.appointments || [],
-                serviceOrders: this.state.serviceOrders || [],
-                tips: this.state.tips || [],
-                lastConsumptionView: this.state.lastConsumptionView || 0,
-                lastUpdate: this.state.lastUpdate, 
-                updatedBy: this.state.user ? this.state.user.name : 'Sistema'
-            };
-
-            // Usamos update() no lugar de set() para isolar o salvamento e evitar conflitos em sub-pastas
-            await update(dbRef, updates);
+            // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
+            // Usamos set() nos caminhos específicos dos arrays para garantir que as listas sejam totalmente
+            // substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
+            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders'];
+            
+            await Promise.all([
+                ...pathsToSet.map(key => set(ref(this.db, dbPath + key), this.state[key] || [])),
+                set(ref(this.db, dbPath + 'settings'), this.state.settings || {}),
+                set(ref(this.db, dbPath + 'openingBalances'), this.state.openingBalances || {}),
+                set(ref(this.db, dbPath + 'lastConsumptionView'), this.state.lastConsumptionView || 0),
+                set(ref(this.db, dbPath + 'lastUpdate'), this.state.lastUpdate),
+                set(ref(this.db, dbPath + 'updatedBy'), this.state.user ? this.state.user.name : 'Sistema')
+            ]);
             
             console.log('✅ SUCESSO: Sincronizado com Firebase');
             
