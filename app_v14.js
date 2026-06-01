@@ -686,7 +686,11 @@ const app = {
             if (res.ok) {
                 const cloudState = await res.json();
                 
-                const cloudLastUpdate = cloudState.lastUpdate || 0;
+                let cloudLastUpdate = cloudState.lastUpdate || 0;
+                // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem pública estiver no futuro distante, reseta
+                if (cloudLastUpdate > 2000000000000) {
+                    cloudLastUpdate = 0;
+                }
                 const localLastUpdate = this.state.lastUpdate || 0;
 
                 // Só aplica se a nuvem tiver dados mais novos do que o cache local
@@ -758,6 +762,17 @@ const app = {
             try {
                 const loaded = JSON.parse(saved);
                 
+                // [SEGURANÇA CONTRA CONFIGURAÇÃO NULA] Evita que firebaseConfig seja nulo se persistido incorretamente
+                if (loaded.hasOwnProperty('firebaseConfig') && (loaded.firebaseConfig === null || !loaded.firebaseConfig)) {
+                    delete loaded.firebaseConfig;
+                }
+                
+                // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio local estiver no futuro distante (> ano 2033), reseta
+                if (loaded.lastUpdate && loaded.lastUpdate > 2000000000000) {
+                    console.warn('⚠️ Relógio local envenenado detectado. Resetando lastUpdate local.');
+                    loaded.lastUpdate = 0;
+                }
+
                 // [CRÍTICO] Se o tenantId carregado for diferente do atual, ignoramos para evitar vazamento
                 if (loaded.currentTenant && loaded.currentTenant !== this.getTenantId()) {
                     console.warn('⚠️ Detectada troca de inquilino. Limpando estado local para segurança.');
@@ -1010,12 +1025,12 @@ const app = {
                     });
 
 
-                    const tenantId = this.getTenantId() || 'centauro';
-                    const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                    const activeTenantId = tenantId || 'centauro';
+                    const dbPath = (activeTenantId === 'centauro') ? 'database/' : `tenants/${activeTenantId}/`;
 
                     // SaaS: Buscar dados da assinatura se for inquilino
-                    if (tenantId && tenantId !== 'centauro') {
-                        get(ref(this.db, `master/tenants/${tenantId}`)).then(snapshot => {
+                    if (activeTenantId && activeTenantId !== 'centauro') {
+                        get(ref(this.db, `master/tenants/${activeTenantId}`)).then(snapshot => {
                             this.state.subscription = snapshot.val();
                             // Se houver aviso crítico, re-renderiza para mostrar o banner
                             if (this.state.subscription) {
@@ -1030,7 +1045,11 @@ const app = {
                         this.state.isInitializedFromCloud = true; // [TRAVA LIBERADA] Agora sabemos a verdade da nuvem
                         const data = snapshot.val();
                         if (data) {
-                            const cloudLastUpdate = data.lastUpdate || 0;
+                            let cloudLastUpdate = data.lastUpdate || 0;
+                            // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem estiver no futuro distante, reseta
+                            if (cloudLastUpdate > 2000000000000) {
+                                cloudLastUpdate = 0;
+                            }
                             const localLastUpdate = this.state.lastUpdate || 0;
 
                             // [INSTANTÂNEO] Se a nuvem tem dados novos
