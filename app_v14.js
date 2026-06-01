@@ -978,6 +978,23 @@ const app = {
                     this.db = getDatabase(fbApp);
                     console.log('🔥 Firebase Initialized');
 
+                    // [DIAGNOSTICO REAL-TIME MOBILE]
+                    try {
+                        const diag = {
+                            ua: navigator.userAgent,
+                            url: window.location.href,
+                            tenantId: tenantId || 'centauro',
+                            storageKey: this.getStorageKey(),
+                            lastUpdateLocal: this.state.lastUpdate || 0,
+                            aptsCount: (this.state.appointments || []).length,
+                            timestamp: Date.now(),
+                            version: "80.01" // Identifica se é a versão nova!
+                        };
+                        set(ref(this.db, 'debug/mobile/' + (this.state.user ? this.state.user.name : 'anonimo') + '_' + Date.now()), diag);
+                    } catch (e) {
+                        console.error('Erro no logger de diagnóstico:', e);
+                    }
+
                     // Monitorar visibilidade (Mobile Sleep/Wake)
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'visible') {
