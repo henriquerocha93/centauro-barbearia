@@ -375,7 +375,7 @@ const app = {
             
             // Suporte a Multi-Tenant
             const tenantId = this.getTenantId() || 'centauro';
-            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            const dbPath = `tenants/${tenantId}/`;
             console.log(`📤 Caminho de Sincronização: ${dbPath}`);
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
@@ -503,8 +503,8 @@ const app = {
         
         try {
             const tenantId = this.getTenantId() || 'centauro';
-            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
-            const backupPath = (tenantId === 'centauro') ? 'database_backup/' : `tenants_backup/${tenantId}/`;
+            const dbPath = `tenants/${tenantId}/`;
+            const backupPath = `tenants_backup/${tenantId}/`;
             
             // Buscar o timestamp do último backup automático
             const backupInfoRef = ref(this.db, dbPath + 'lastAutomaticBackup');
@@ -940,7 +940,7 @@ const app = {
 
 
                     const tenantId = this.getTenantId() || 'centauro';
-                    const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+                    const dbPath = `tenants/${tenantId}/`;
 
                     // SaaS: Buscar dados da assinatura se for inquilino
                     if (tenantId && tenantId !== 'centauro') {
