@@ -375,7 +375,7 @@ const app = {
             
             // Suporte a Multi-Tenant
             const tenantId = this.getTenantId() || 'centauro';
-            const dbPath = `tenants/${tenantId}/`;
+            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
             console.log(`📤 Caminho de Sincronização: ${dbPath}`);
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
@@ -466,6 +466,9 @@ const app = {
             // [BACKUP AUTOMÁTICO] Executa a verificação a cada sincronismo bem-sucedido
             this.checkAndTriggerBackup();
 
+            // [SINCRONISMO SECUNDÁRIO GITHUB] Sincroniza em segundo plano se configurado
+            this.syncToCloud();
+
         } catch (error) {
             console.error('❌ Erro no Firebase Sync:', error);
             // Feedback visual de erro
@@ -503,8 +506,8 @@ const app = {
         
         try {
             const tenantId = this.getTenantId() || 'centauro';
-            const dbPath = `tenants/${tenantId}/`;
-            const backupPath = `tenants_backup/${tenantId}/`;
+            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            const backupPath = (tenantId === 'centauro') ? 'database_backup/' : `tenants_backup/${tenantId}/`;
             
             // Buscar o timestamp do último backup automático
             const backupInfoRef = ref(this.db, dbPath + 'lastAutomaticBackup');
@@ -665,6 +668,54 @@ const app = {
             }
         } catch (error) {
             console.error('❌ Erro ao carregar da nuvem:', error);
+        }
+    },
+
+    async loadFromCloudPublicSilence() {
+        const tenantId = this.getTenantId() || 'centauro';
+        if (tenantId !== 'centauro') return; // Apenas Centauro Barbearia por enquanto
+        
+        try {
+            console.log('☁️ [GITHUB FALLBACK] Buscando base pública mais recente do GitHub...');
+            const url = `https://raw.githubusercontent.com/henriquerocha93/centauro-barbearia/master/database/db.json`;
+            
+            // Evita buscar se já foi carregado na sessão atual para economizar banda
+            if (sessionStorage.getItem('github_fallback_loaded')) return;
+
+            const res = await fetch(url);
+            if (res.ok) {
+                const cloudState = await res.json();
+                
+                const cloudLastUpdate = cloudState.lastUpdate || 0;
+                const localLastUpdate = this.state.lastUpdate || 0;
+
+                // Só aplica se a nuvem tiver dados mais novos do que o cache local
+                if (cloudLastUpdate > localLastUpdate) {
+                    console.log('☁️ [GITHUB FALLBACK] Nuvem possui dados mais recentes. Mesclando...');
+                    
+                    this.state.services = cloudState.services || this.state.services;
+                    this.state.staff = cloudState.staff || this.state.staff;
+                    this.state.customers = cloudState.customers || this.state.customers;
+                    this.state.settings = cloudState.settings || this.state.settings;
+                    this.state.vouchers = cloudState.vouchers || this.state.vouchers;
+                    this.state.transactions = cloudState.transactions || this.state.transactions;
+                    this.state.products = cloudState.products || this.state.products;
+                    this.state.productSales = cloudState.productSales || [];
+                    this.state.appointments = cloudState.appointments || [];
+                    this.state.serviceOrders = cloudState.serviceOrders || [];
+                    this.state.tips = cloudState.tips || [];
+                    this.state.lastUpdate = cloudLastUpdate;
+
+                    localStorage.setItem(this.getStorageKey(), JSON.stringify(this.state));
+                    
+                    if (this.render && this.state.view !== 'booking' && this.state.view !== 'login') {
+                        this.render(this.state.view);
+                    }
+                }
+                sessionStorage.setItem('github_fallback_loaded', 'true');
+            }
+        } catch (e) {
+            console.warn('☁️ [GITHUB FALLBACK] Não foi possível carregar base de segurança do GitHub:', e);
         }
     },
 
@@ -917,6 +968,9 @@ const app = {
             
             this.loadState();
 
+            // [FALLBACK AUTOMÁTICO GITHUB] Busca a versão pública mais recente do GitHub para evitar tela em branco no celular/totem
+            this.loadFromCloudPublicSilence();
+
             // Inicializar Firebase
             if (this.state.firebaseConfig) {
                 try {
@@ -940,7 +994,7 @@ const app = {
 
 
                     const tenantId = this.getTenantId() || 'centauro';
-                    const dbPath = `tenants/${tenantId}/`;
+                    const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
 
                     // SaaS: Buscar dados da assinatura se for inquilino
                     if (tenantId && tenantId !== 'centauro') {
