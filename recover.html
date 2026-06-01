@@ -301,13 +301,13 @@
                     return;
                 }
 
-                // 2. Ler dados atuais da nuvem de Bemp (carregados separadamente para evitar restrições de permissão no nó raiz bemp)
+                // 2. Ler dados atuais da nuvem (carregados separadamente para evitar restrições de permissão)
                 log('📥 Buscando agendamentos e transações atuais na nuvem...');
                 let bempApts = [];
                 let bempTrans = [];
                 
                 try {
-                    const aptsSnap = await get(ref(db, 'tenants/bemp/appointments'));
+                    const aptsSnap = await get(ref(db, 'database/appointments'));
                     bempApts = toArray(aptsSnap.val());
                     log('✅ Agendamentos existentes carregados.');
                 } catch (e) {
@@ -315,7 +315,7 @@
                 }
                 
                 try {
-                    const transSnap = await get(ref(db, 'tenants/bemp/transactions'));
+                    const transSnap = await get(ref(db, 'database/transactions'));
                     bempTrans = toArray(transSnap.val());
                     log('✅ Transações existentes carregadas.');
                 } catch (e) {
@@ -323,7 +323,7 @@
                 }
 
                 // 3. Mesclar evitando duplicados
-                log('🔄 Mesclando registros locais com a nuvem de bemp...');
+                log('🔄 Mesclando registros locais com a nuvem...');
                 let addedAptsCount = 0;
                 let addedTransCount = 0;
 
@@ -363,22 +363,22 @@
                 log(`🔄 ${addedTransCount} novas transações prontas para subir.`);
 
                 if (addedAptsCount === 0 && addedTransCount === 0) {
-                    log('✨ Todos os agendamentos encontrados já constavam na base bemp na nuvem!', true);
+                    log('✨ Todos os agendamentos encontrados já constavam na base na nuvem!', true);
                     document.getElementById('results-area').style.display = 'block';
                     btn.innerText = 'Recuperado com Sucesso';
                     return;
                 }
 
-                // 4. Salvar de volta na base bemp usando set() para truncar e evitar duplicações
-                log('📤 Gravando dados atualizados no banco de bemp na nuvem...');
-                await set(ref(db, 'tenants/bemp/appointments'), bempApts);
-                await set(ref(db, 'tenants/bemp/transactions'), bempTrans);
+                // 4. Salvar de volta na base usando set() para truncar e evitar duplicações
+                log('📤 Gravando dados atualizados no banco na nuvem...');
+                await set(ref(db, 'database/appointments'), bempApts);
+                await set(ref(db, 'database/transactions'), bempTrans);
 
-                // Atualizar o timestamp de sincronização do bemp (embrulhado para evitar travamento se a permissão no nó raiz bemp for negada)
+                // Atualizar o timestamp de sincronização
                 try {
-                    await set(ref(db, 'tenants/bemp/lastUpdate'), Date.now());
+                    await set(ref(db, 'database/lastUpdate'), Date.now());
                 } catch (e) {
-                    console.log('Sem permissão para atualizar lastUpdate (nó raiz bemp), prosseguindo com sucesso...', e);
+                    console.log('Sem permissão para atualizar lastUpdate, prosseguindo com sucesso...', e);
                 }
 
                 log('✅ GRAVAÇÃO CONCLUÍDA COM SUCESSO NA NUVEM!', true);
@@ -443,7 +443,7 @@
 (async function() {
     console.log('%c♻️ INICIANDO IMPORTAÇÃO DIRETA...', 'color: #10b981; font-weight: bold; font-size: 14px;');
     if (!window.app || !window.app.state) {
-        alert('Erro: Certifique-se de colar e executar este código estando na página do seu painel administrativo bemp!');
+        alert('Erro: Certifique-se de colar e executar este código estando na página do seu painel administrativo centauro!');
         return;
     }
     const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
