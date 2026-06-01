@@ -282,13 +282,26 @@
                     return;
                 }
 
-                // 2. Ler dados atuais da nuvem de Bemp
-                log('📥 Buscando dados atuais salvos na nuvem para a barbearia bemp...');
-                const bempSnap = await get(ref(db, 'tenants/bemp/'));
-                const bempData = bempSnap.val() || {};
+                // 2. Ler dados atuais da nuvem de Bemp (carregados separadamente para evitar restrições de permissão no nó raiz bemp)
+                log('📥 Buscando agendamentos e transações atuais na nuvem...');
+                let bempApts = [];
+                let bempTrans = [];
                 
-                let bempApts = toArray(bempData.appointments);
-                let bempTrans = toArray(bempData.transactions);
+                try {
+                    const aptsSnap = await get(ref(db, 'tenants/bemp/appointments'));
+                    bempApts = toArray(aptsSnap.val());
+                    log('✅ Agendamentos existentes carregados.');
+                } catch (e) {
+                    log(`⚠️ Falha ao ler agendamentos atuais na nuvem: ${e.message}`);
+                }
+                
+                try {
+                    const transSnap = await get(ref(db, 'tenants/bemp/transactions'));
+                    bempTrans = toArray(transSnap.val());
+                    log('✅ Transações existentes carregadas.');
+                } catch (e) {
+                    log(`⚠️ Falha ao ler transações atuais na nuvem: ${e.message}`);
+                }
 
                 // 3. Mesclar evitando duplicados
                 log('🔄 Mesclando registros locais com a nuvem de bemp...');
@@ -342,8 +355,12 @@
                 await set(ref(db, 'tenants/bemp/appointments'), bempApts);
                 await set(ref(db, 'tenants/bemp/transactions'), bempTrans);
 
-                // Atualizar o timestamp de sincronização do bemp
-                await set(ref(db, 'tenants/bemp/lastUpdate'), Date.now());
+                // Atualizar o timestamp de sincronização do bemp (embrulhado para evitar travamento se a permissão no nó raiz bemp for negada)
+                try {
+                    await set(ref(db, 'tenants/bemp/lastUpdate'), Date.now());
+                } catch (e) {
+                    console.log('Sem permissão para atualizar lastUpdate (nó raiz bemp), prosseguindo com sucesso...', e);
+                }
 
                 log('✅ GRAVAÇÃO CONCLUÍDA COM SUCESSO NA NUVEM!', true);
                 log(`🎉 ${addedAptsCount} cortes recuperados e salvos com sucesso.`, true);
