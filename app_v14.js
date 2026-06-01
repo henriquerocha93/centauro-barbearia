@@ -305,6 +305,9 @@ const app = {
             // Encontra o primeiro segmento de caminho que não esteja na lista de ignorados
             tenantId = paths.find(p => !ignoreList.includes(p));
         }
+        if (tenantId === 'totem') {
+            tenantId = 'centauro';
+        }
         return tenantId || 'centauro';
     },
 
