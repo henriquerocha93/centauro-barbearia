@@ -238,38 +238,25 @@
                 
                 let localApts = [];
                 let localTrans = [];
-                let foundKey = null;
+                let foundKeys = [];
 
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     if (key && key.startsWith('centauro_state_')) {
-                        if (key !== 'centauro_state_bemp') {
-                            const raw = localStorage.getItem(key);
-                            if (raw) {
-                                try {
-                                    const parsed = JSON.parse(raw);
-                                    localApts = toArray(parsed.appointments);
-                                    localTrans = toArray(parsed.transactions);
-                                    foundKey = key;
-                                    log(`✅ Encontrado cache local na chave: ${key} com ${localApts.length} agendamentos.`, true);
-                                    break;
-                                } catch (err) { }
-                            }
+                        const raw = localStorage.getItem(key);
+                        if (raw) {
+                            try {
+                                const parsed = JSON.parse(raw);
+                                const apts = toArray(parsed.appointments);
+                                const trans = toArray(parsed.transactions);
+                                if (apts.length > 0 || trans.length > 0) {
+                                    localApts = localApts.concat(apts);
+                                    localTrans = localTrans.concat(trans);
+                                    foundKeys.push(key);
+                                    log(`✅ Encontrado cache local na chave: ${key} com ${apts.length} agendamentos e ${trans.length} transações.`, true);
+                                }
+                            } catch (err) { }
                         }
-                    }
-                }
-
-                // Fallback para a chave bemp se não achou outra
-                if (!foundKey) {
-                    const raw = localStorage.getItem('centauro_state_bemp');
-                    if (raw) {
-                        try {
-                            const parsed = JSON.parse(raw);
-                            localApts = toArray(parsed.appointments);
-                            localTrans = toArray(parsed.transactions);
-                            foundKey = 'centauro_state_bemp';
-                            log(`✅ Encontrado cache local na chave: ${foundKey} com ${localApts.length} agendamentos.`, true);
-                        } catch (err) { }
                     }
                 }
 
@@ -405,26 +392,15 @@
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key && key.startsWith('centauro_state_') && key !== 'centauro_state_bemp') {
+                if (key && key.startsWith('centauro_state_')) {
                     const raw = localStorage.getItem(key);
                     if (raw) {
                         try {
                             const parsed = JSON.parse(raw);
-                            localApts = toArray(parsed.appointments);
-                            localTrans = toArray(parsed.transactions);
-                            break;
+                            localApts = localApts.concat(toArray(parsed.appointments));
+                            localTrans = localTrans.concat(toArray(parsed.transactions));
                         } catch(e){}
                     }
-                }
-            }
-            if (localApts.length === 0) {
-                const raw = localStorage.getItem('centauro_state_bemp');
-                if (raw) {
-                    try {
-                        const parsed = JSON.parse(raw);
-                        localApts = toArray(parsed.appointments);
-                        localTrans = toArray(parsed.transactions);
-                    } catch(e){}
                 }
             }
             
