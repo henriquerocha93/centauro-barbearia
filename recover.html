@@ -441,33 +441,28 @@
             
             const scriptCode = `
 (async function() {
-    console.log('%c♻️ INICIANDO IMPORTAÇÃO DOS CORTES DO TOTEM...', 'color: #10b981; font-weight: bold; font-size: 14px;');
-    if (!window.app || !window.app.db) {
+    console.log('%c♻️ INICIANDO IMPORTAÇÃO DIRETA...', 'color: #10b981; font-weight: bold; font-size: 14px;');
+    if (!window.app || !window.app.state) {
         alert('Erro: Certifique-se de colar e executar este código estando na página do seu painel administrativo bemp!');
         return;
     }
-    const db = window.app.db;
-    const { ref, get, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
     const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
     
     try {
-        const aptsSnap = await get(ref(db, 'tenants/bemp/appointments'));
-        let bempApts = toArray(aptsSnap.val());
-        
-        const transSnap = await get(ref(db, 'tenants/bemp/transactions'));
-        let bempTrans = toArray(transSnap.val());
-        
         const todayApts = ${JSON.stringify(todayApts)};
         const todayTrans = ${JSON.stringify(todayTrans)};
         
         let addedApts = 0;
         let addedTrans = 0;
         
+        window.app.state.appointments = toArray(window.app.state.appointments);
+        window.app.state.transactions = toArray(window.app.state.transactions);
+        
         todayApts.forEach(apt => {
             if (!apt || !apt.id) return;
-            const exists = bempApts.some(a => a && String(a.id) === String(apt.id));
+            const exists = window.app.state.appointments.some(a => a && String(a.id) === String(apt.id));
             if (!exists) {
-                bempApts.push(apt);
+                window.app.state.appointments.push(apt);
                 addedApts++;
                 console.log('➕ Importando corte: ' + apt.customer);
             }
@@ -475,25 +470,28 @@
         
         todayTrans.forEach(trans => {
             if (!trans || !trans.id) return;
-            const exists = bempTrans.some(t => t && String(t.id) === String(trans.id));
+            const exists = window.app.state.transactions.some(t => t && String(t.id) === String(trans.id));
             if (!exists) {
-                bempTrans.push(trans);
+                window.app.state.transactions.push(trans);
                 addedTrans++;
             }
         });
         
         if (addedApts > 0 || addedTrans > 0) {
-            await set(ref(db, 'tenants/bemp/appointments'), bempApts);
-            await set(ref(db, 'tenants/bemp/transactions'), bempTrans);
-            try {
-                await set(ref(db, 'tenants/bemp/lastUpdate'), Date.now());
-            } catch(e){}
-            alert('🎉 Sincronização Concluída com Sucesso! ' + addedApts + ' cortes recuperados foram importados e salvos na nuvem! Atualize o seu painel.');
+            // Deixar a própria aplicação administrativa salvar e sincronizar da forma oficial
+            window.app.saveState();
+            
+            // Re-renderizar a agenda administrativa imediatamente para exibir as novidades
+            if (window.app.render) {
+                window.app.render(window.app.state.view);
+            }
+            
+            alert('🎉 Sincronização Concluída com Sucesso! ' + addedApts + ' agendamentos recuperados do Totem foram mesclados e estão sendo sincronizados na nuvem! A sua agenda administrativa já foi atualizada.');
         } else {
-            alert('Os cortes já constavam na nuvem. Nenhuma ação necessária!');
+            alert('Os cortes do Totem já constam no seu sistema. Nenhuma ação necessária!');
         }
     } catch(err) {
-        alert('Erro ao salvar na nuvem: ' + err.message);
+        alert('Erro ao processar dados: ' + err.message);
     }
 })();
             `;
