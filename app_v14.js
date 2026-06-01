@@ -300,10 +300,10 @@ const app = {
         let tenantId = urlParams.get('loja');
 
         if (!tenantId) {
-            const path = window.location.pathname.split('/').filter(p => p && p !== 'index.html')[0];
-            if (path && !['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt'].includes(path)) {
-                tenantId = path;
-            }
+            const paths = window.location.pathname.split('/').filter(p => p && p !== 'index.html');
+            const ignoreList = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt'];
+            // Encontra o primeiro segmento de caminho que não esteja na lista de ignorados
+            tenantId = paths.find(p => !ignoreList.includes(p));
         }
         return tenantId || 'centauro';
     },
