@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperação de Agendamentos - Centauro Barbearia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-color: #7c3aed;
+            --accent-glow: rgba(124, 58, 237, 0.4);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --success-color: #10b981;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            padding: 40px;
+            box-sizing: border-box;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #fff 30%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .status-box {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 25px;
+            text-align: left;
+            font-size: 0.9rem;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            color: #34d399;
+        }
+
+        .status-line {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            width: 100%;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+        }
+
+        .btn:disabled {
+            background: #374151;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cut-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .cut-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cut-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cut-customer {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .cut-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .cut-price {
+            font-weight: 700;
+            color: var(--success-color);
+            font-size: 1rem;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="font-size: 4rem; margin-bottom: 15px;">♻️</div>
+        <h1>Recuperador de Cortes do Totem</h1>
+        <p class="subtitle">Transfere os agendamentos realizados hoje no Totem de volta para a agenda do administrador da barbearia bemp.</p>
+
+        <div id="log-box" class="status-box">
+            <div>Pronto para iniciar a recuperação...</div>
+        </div>
+
+        <button id="start-btn" class="btn" onclick="startRecovery()">Iniciar Recuperação de Dados</button>
+
+        <div id="results-area" style="display: none;">
+            <h3 style="margin-top: 30px; margin-bottom: 15px; text-align: left; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">📊 Agendamentos Recuperados com Sucesso:</h3>
+            <div id="recovered-cuts-list" class="cut-list"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
+            authDomain: "centauro-barbearia.firebaseapp.com",
+            projectId: "centauro-barbearia",
+            storageBucket: "centauro-barbearia.firebasestorage.app",
+            messagingSenderId: "96712816127",
+            appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
+            databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.startRecovery = async function() {
+            const btn = document.getElementById('start-btn');
+            const logBox = document.getElementById('log-box');
+            
+            btn.disabled = true;
+            btn.innerText = 'Processando...';
+            
+            logBox.innerHTML = '';
+            
+            const log = (msg, isSuccess = false) => {
+                const color = isSuccess ? 'color: #10b981;' : '';
+                logBox.innerHTML += `<div style="${color}">${msg}</div>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            };
+
+            try {
+                log('🔌 Conectando ao Firebase...');
+                
+                const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+
+                // 1. Tentar ler do localStorage deste navegador (para capturar os dados travados no Totem)
+                log('📥 Buscando dados no armazenamento local (cache do Totem)...');
+                
+                let localApts = [];
+                let localTrans = [];
+                let foundKey = null;
+
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('centauro_state_')) {
+                        if (key !== 'centauro_state_bemp') {
+                            const raw = localStorage.getItem(key);
+                            if (raw) {
+                                try {
+                                    const parsed = JSON.parse(raw);
+                                    localApts = toArray(parsed.appointments);
+                                    localTrans = toArray(parsed.transactions);
+                                    foundKey = key;
+                                    log(`✅ Encontrado cache local na chave: ${key} com ${localApts.length} agendamentos.`, true);
+                                    break;
+                                } catch (err) { }
+                            }
+                        }
+                    }
+                }
+
+                // Fallback para a chave bemp se não achou outra
+                if (!foundKey) {
+                    const raw = localStorage.getItem('centauro_state_bemp');
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            localApts = toArray(parsed.appointments);
+                            localTrans = toArray(parsed.transactions);
+                            foundKey = 'centauro_state_bemp';
+                            log(`✅ Encontrado cache local na chave: ${foundKey} com ${localApts.length} agendamentos.`, true);
+                        } catch (err) { }
+                    }
+                }
+
+                if (localApts.length === 0) {
+                    log('⚠️ Nenhum dado local foi encontrado no cache deste navegador.');
+                    log('ℹ️ Para recuperar os cortes, esta ferramenta precisa ser aberta no navegador do computador do Totem.');
+                    btn.disabled = false;
+                    btn.innerText = 'Tentar Novamente';
+                    return;
+                }
+
+                // Filtrar registros do dia de HOJE, ontem e amanhã (fuso horário)
+                const targetDates = ["2026-05-31", "2026-06-01", "2026-06-02"];
+                const todayApts = localApts.filter(a => a && targetDates.includes(a.date));
+                const todayAptsTransIds = todayApts.map(a => a.transactionId).filter(Boolean);
+                const todayTrans = localTrans.filter(t => 
+                    t && (targetDates.includes(t.date) || todayAptsTransIds.includes(t.id))
+                );
+
+                log(`🟢 Identificados ${todayApts.length} agendamentos e ${todayTrans.length} transações de hoje no cache.`, true);
+
+                if (todayApts.length === 0) {
+                    log('⚠️ Nenhum corte de hoje foi encontrado no cache local deste navegador.');
+                    btn.disabled = false;
+                    btn.innerText = 'Tentar Novamente';
+                    return;
+                }
+
+                // 2. Ler dados atuais da nuvem de Bemp
+                log('📥 Buscando dados atuais salvos na nuvem para a barbearia bemp...');
+                const bempSnap = await get(ref(db, 'tenants/bemp/'));
+                const bempData = bempSnap.val() || {};
+                
+                let bempApts = toArray(bempData.appointments);
+                let bempTrans = toArray(bempData.transactions);
+
+                // 3. Mesclar evitando duplicados
+                log('🔄 Mesclando registros locais com a nuvem de bemp...');
+                let addedAptsCount = 0;
+                let addedTransCount = 0;
+
+                const listEl = document.getElementById('recovered-cuts-list');
+                listEl.innerHTML = '';
+
+                todayApts.forEach(apt => {
+                    if (!apt || !apt.id) return;
+                    const exists = bempApts.some(a => a && String(a.id) === String(apt.id));
+                    if (!exists) {
+                        bempApts.push(apt);
+                        addedAptsCount++;
+                        
+                        // Adicionar na visualização
+                        listEl.innerHTML += `
+                            <div class="cut-item">
+                                <div class="cut-info">
+                                    <span class="cut-customer">${apt.customer}</span>
+                                    <span class="cut-meta">💈 ${apt.service} | Profissional: ${apt.barber} | Horário: ${apt.time} (${apt.date})</span>
+                                </div>
+                                <span class="cut-price">R$ ${parseFloat(apt.price || 0).toFixed(2)}</span>
+                            </div>
+                        `;
+                    }
+                });
+
+                todayTrans.forEach(trans => {
+                    if (!trans || !trans.id) return;
+                    const exists = bempTrans.some(t => t && String(t.id) === String(trans.id));
+                    if (!exists) {
+                        bempTrans.push(trans);
+                        addedTransCount++;
+                    }
+                });
+
+                log(`🔄 ${addedAptsCount} novos agendamentos prontos para subir.`);
+                log(`🔄 ${addedTransCount} novas transações prontas para subir.`);
+
+                if (addedAptsCount === 0 && addedTransCount === 0) {
+                    log('✨ Todos os agendamentos encontrados já constavam na base bemp na nuvem!', true);
+                    document.getElementById('results-area').style.display = 'block';
+                    btn.innerText = 'Recuperado com Sucesso';
+                    return;
+                }
+
+                // 4. Salvar de volta na base bemp usando set() para truncar e evitar duplicações
+                log('📤 Gravando dados atualizados no banco de bemp na nuvem...');
+                await set(ref(db, 'tenants/bemp/appointments'), bempApts);
+                await set(ref(db, 'tenants/bemp/transactions'), bempTrans);
+
+                // Atualizar o timestamp de sincronização do bemp
+                await set(ref(db, 'tenants/bemp/lastUpdate'), Date.now());
+
+                log('✅ GRAVAÇÃO CONCLUÍDA COM SUCESSO NA NUVEM!', true);
+                log(`🎉 ${addedAptsCount} cortes recuperados e salvos com sucesso.`, true);
+
+                document.getElementById('results-area').style.display = 'block';
+                btn.innerText = 'Concluído com Sucesso 🎉';
+
+            } catch (error) {
+                log(`❌ ERRO CRÍTICO: ${error.message}`);
+                console.error(error);
+                btn.disabled = false;
+                btn.innerText = 'Tentar Novamente';
+            }
+        };
+
+        // Iniciar recuperação automaticamente ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.startRecovery();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
