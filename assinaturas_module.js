@@ -272,7 +272,6 @@ window.renderSubscriptionsView = function(app, container) {
         const d = new Date();
         d.setDate(d.getDate() + 30);
         document.getElementById('sub-validity').value = d.toISOString().split('T')[0];
-        app.showAssinaturasPlanos();
     };
 
     app.approveAssinatura = function(i) {
@@ -324,6 +323,11 @@ window.renderSubscriptionsView = function(app, container) {
         }
     };
 
-    // Initialize with first tab
-    app.showAssinaturasPlanos();
+    // [AUTO-RENDER] Renderiza a primeira aba por padrão para não ficar tela em branco no reload
+    setTimeout(() => {
+        const content = document.getElementById('assinaturas-content');
+        if (content && !content.innerHTML.trim()) {
+            app.showAssinaturasPlanos();
+        }
+    }, 50);
 };
