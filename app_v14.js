@@ -441,9 +441,8 @@ const app = {
             console.log('📤 Enviando atualizações modulares para o servidor...');
             
             // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
-            // Usamos set() nos caminhos específicos dos arrays para garantir que as listas sejam totalmente
-            // substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
-            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders'];
+            // Substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
+            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions'];
             
             await Promise.all([
                 ...pathsToSet.map(key => set(ref(this.db, dbPath + key), this.state[key] || [])),
@@ -1146,6 +1145,11 @@ const app = {
                             this.state.products = toArray(data.products);
                             this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
                             this.state.tips = mergeArrays(this.state.tips, data.tips);
+                            
+                            this.state.subscriptionPlans = data.subscriptionPlans ? toArray(data.subscriptionPlans) : (this.state.subscriptionPlans || []);
+                            this.state.subscribers = data.subscribers ? toArray(data.subscribers) : (this.state.subscribers || []);
+                            this.state.pendingSubscriptions = data.pendingSubscriptions ? toArray(data.pendingSubscriptions) : (this.state.pendingSubscriptions || []);
+
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
                             if (!this.state.needsSync && !this.state.isSyncing) {
