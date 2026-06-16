@@ -4765,25 +4765,69 @@ const app = {
         
         // Lógica de Limites e Serviços do Clube
         let isIncludedService = false;
+        let isPartiallyIncluded = false;
         let usageWarning = '';
         let planObj = null;
+        let finalCommBase = apt.price;
+        let finalAptPrice = apt.price;
 
         if (isActiveSubscriber && !apt.service.includes('[Clube:')) {
             planObj = this.state.subscriptionPlans.find(p => p.name === subscriberPlan);
             
-            // 1. Serviço está incluso?
-            if (planObj && planObj.includedServices && planObj.includedServices.includes(apt.service)) {
-                isIncludedService = true;
+            // Separa os serviços se houver mais de um (ex: "Corte, Barba")
+            let allServices = (this.state.services || []).map(s => s.name).sort((a,b) => b.length - a.length);
+            let individualServices = [];
+            const chunks = apt.service.split(', ');
+            let i = 0;
+            while (i < chunks.length) {
+                let matched = false;
+                for (let j = chunks.length; j > i; j--) {
+                    const candidate = chunks.slice(i, j).join(', ');
+                    if (allServices.includes(candidate)) {
+                        individualServices.push(candidate);
+                        i = j;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    individualServices.push(chunks[i]);
+                    i++;
+                }
             }
 
-            if (isIncludedService) {
-                // 2. Calcula uso no ciclo atual
+            // Checa quais estão inclusos
+            let includedList = [];
+            let notIncludedList = [];
+            let sumIncludedCatalog = 0;
+            let sumIncludedCommBase = 0;
+
+            individualServices.forEach(svc => {
+                if (planObj && planObj.includedServices && planObj.includedServices.includes(svc)) {
+                    includedList.push(svc);
+                    const sObj = (this.state.services || []).find(s => s.name === svc);
+                    sumIncludedCatalog += sObj ? parseFloat(sObj.price) : 0;
+                    
+                    let base = sObj ? parseFloat(sObj.price) : 0;
+                    if (planObj.serviceValues && planObj.serviceValues[svc] !== undefined) {
+                        base = parseFloat(planObj.serviceValues[svc]);
+                    }
+                    sumIncludedCommBase += base;
+                } else {
+                    notIncludedList.push(svc);
+                }
+            });
+
+            if (includedList.length > 0) {
+                // Pelo menos 1 serviço está incluso
+                isIncludedService = true;
+                
+                // Checa limites de uso
                 const validUntilDate = new Date(subscriberValidUntil + "T00:00:00");
                 const cycleStartDate = new Date(validUntilDate);
                 cycleStartDate.setDate(cycleStartDate.getDate() - 30);
                 cycleStartDate.setHours(0,0,0,0);
                 
-                // 3. Calcula uso na semana atual (Segunda a Domingo)
                 const aptDateObj = new Date(apt.date + "T00:00:00");
                 const day = aptDateObj.getDay(); 
                 const diffToMonday = aptDateObj.getDate() - day + (day === 0 ? -6 : 1);
@@ -4812,22 +4856,28 @@ const app = {
                     isIncludedService = false;
                     usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit})`;
                 }
-            } else if (planObj && planObj.includedServices) {
-                // Se a propriedade includedServices existir mas o serviço não estiver lá
-                usageWarning = `O serviço ${apt.service} não está incluso no plano`;
+            } else {
+                usageWarning = `O(s) serviço(s) não estão inclusos no plano.`;
             }
 
             if (isIncludedService) {
-                let commBase = apt.price;
-                if (planObj && planObj.serviceValues && planObj.serviceValues[apt.service] !== undefined) {
-                    commBase = planObj.serviceValues[apt.service];
+                if (notIncludedList.length > 0) {
+                    // Misto: Cobra a diferença
+                    isPartiallyIncluded = true;
+                    finalAptPrice = Math.max(0, apt.price - sumIncludedCatalog);
+                    finalCommBase = sumIncludedCommBase + finalAptPrice;
+                    usageWarning = `Atenção: ${notIncludedList.join(', ')} será cobrado a parte.`;
+                } else {
+                    // 100% incluso
+                    finalAptPrice = 0;
+                    finalCommBase = sumIncludedCommBase;
                 }
-                apt.commissionBase = commBase;
-                apt.price = 0;
+                
+                apt.commissionBase = finalCommBase;
+                apt.price = finalAptPrice;
                 apt.service += ` [Clube: ${subscriberPlan}]`;
             }
         } else if (isActiveSubscriber && apt.service.includes('[Clube:')) {
-            // Se já foi processado (caso feche e abra o modal de novo)
             isIncludedService = true;
         }
 
@@ -4848,7 +4898,8 @@ const app = {
                         <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
                         <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
                         <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
-                        ${usageWarning ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Este serviço será cobrado normalmente.</span></div>` : ''}
+                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Este serviço será cobrado normalmente.</span></div>` : ''}
+                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Os itens não inclusos serão cobrados abaixo.</span></div>` : ''}
                        </div>`
                     : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
                         <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
