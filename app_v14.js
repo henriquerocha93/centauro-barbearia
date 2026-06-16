@@ -5296,10 +5296,11 @@ const app = {
         appointments.forEach(apt => {
             const price = parseFloat(apt.finalPrice || apt.price) || 0;
             const servicePart = parseFloat(apt.price) || 0;
+            const commBase = apt.commissionBase !== undefined ? parseFloat(apt.commissionBase) : servicePart;
             serviceGross += servicePart;
             const barber = this.state.staff.find(s => (s.name || '').trim() === (apt.barber || '').trim());
             const pct = barber ? (barber.commissionPct || 50) : 50;
-            serviceCommissions += servicePart * (pct / 100);
+            serviceCommissions += (commBase || 0) * (pct / 100);
         });
 
         // 2. Calcular de Vendas de Produtos (exceto ADM)
