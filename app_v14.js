@@ -1741,6 +1741,7 @@ const app = {
             'barber-dash': 'Minha Agenda',
             'barber-financial': 'Meu Faturamento',
             'admin-customers': 'Gestão de Clientes',
+            'admin-subscriptions': 'Clube de Assinaturas',
             'admin-stock': 'Estoque de Produtos',
             'admin-cashflow': 'Fluxo de Caixa',
             'admin-vouchers': this.getTerm('voucherTerm'),
@@ -1820,6 +1821,9 @@ const app = {
                     
                     <div class="menu-category">Cadastros</div>
                     ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item ${view === 'admin-subscriptions' ? 'active' : ''}" onclick="window.app.navigateTo('admin-subscriptions')">
+                            <i data-lucide="star"></i> Assinaturas
+                        </a>
                         <a class="menu-item ${view === 'admin-customers' ? 'active' : ''}" onclick="window.app.navigateTo('admin-customers')">
                             <i data-lucide="users"></i> Clientes
                         </a>
@@ -1924,6 +1928,9 @@ const app = {
                 case 'barber-dash': this.renderBarberDash(container); break;
                 case 'barber-financial': this.renderBarberFinancial(container); break;
                 case 'admin-customers': this.renderAdminCustomers(container); break;
+                case 'admin-subscriptions': 
+                    if (typeof window.renderSubscriptionsView === 'function') window.renderSubscriptionsView(this, container); 
+                    break;
                 case 'admin-stock': this.renderAdminStock(container); break;
                 case 'admin-cashflow': this.renderAdminCashFlow(container); break;
                 case 'admin-vouchers': this.renderAdminVouchers(container); break;
@@ -2777,6 +2784,69 @@ const app = {
         const buttonText = s.buttonText || 'AGENDAR HORÁRIO';
         const heroImg = theme.hero;
 
+        const plans = this.state.subscriptionPlans || [];
+        const plansHtml = plans.length > 0 ? `
+            <style>
+            @keyframes premium-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5); }
+                70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+            }
+            @keyframes shine-sweep {
+                0% { left: -100%; }
+                20% { left: 100%; }
+                100% { left: 100%; }
+            }
+            .premium-badge {
+                display: inline-block;
+                padding: 6px 18px;
+                border-radius: 20px;
+                background: linear-gradient(45deg, var(--accent-color), #d4af37);
+                color: #000;
+                font-size: 0.8rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+                letter-spacing: 2px;
+                animation: premium-pulse 2s infinite;
+                position: relative;
+                overflow: hidden;
+                border: none;
+            }
+            .premium-badge::after {
+                content: '';
+                position: absolute;
+                top: 0; left: -100%; width: 50%; height: 100%;
+                background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+                transform: skewX(-20deg);
+                animation: shine-sweep 4s infinite;
+            }
+            </style>
+            <section id="subscriptions" style="padding: 100px 20px; background: radial-gradient(circle at top, rgba(212, 175, 55, 0.1) 0%, var(--bg-color) 70%); border-top: 1px solid rgba(212, 175, 55, 0.2); border-bottom: 1px solid rgba(212, 175, 55, 0.2); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; background: var(--accent-color); filter: blur(150px); opacity: 0.15; border-radius: 50%;"></div>
+                <div style="max-width: 1100px; margin: 0 auto; position: relative; z-index: 1;">
+                    <div style="text-align: center; margin-bottom: 60px;">
+                        <div class="premium-badge">EXCLUSIVO</div>
+                        <h2 style="font-size: 2.8rem; margin-bottom: 10px; color: var(--text-primary); text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);">Clube de Assinaturas</h2>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Seja VIP e tenha benefícios ilimitados o mês inteiro.</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+                        ${plans.map(p => `
+                            <div class="glass fade-in-up" style="padding: 40px 30px; text-align: center; border: 1px solid rgba(212, 175, 55, 0.3); position: relative; overflow: hidden; border-radius: 15px; transition: transform 0.3s ease, box-shadow 0.3s ease; background: rgba(20, 20, 25, 0.7); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(212, 175, 55, 0.1);">
+                                <div style="position: absolute; top: 15px; right: -35px; background: var(--accent-color); color: #000; padding: 5px 40px; transform: rotate(45deg); font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">PLANO VIP</div>
+                                <h3 style="font-size: 1.6rem; margin-bottom: 15px; color: var(--accent-readable);">${p.name}</h3>
+                                <div style="font-size: 2.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                                    <span style="font-size: 1.2rem; vertical-align: top; color: var(--accent-readable);">R$</span>${Number(p.price).toFixed(2).replace('.', ',')}
+                                    <span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 400; text-shadow: none;">/mês</span>
+                                </div>
+                                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; min-height: 40px; display: flex; align-items: center; justify-content: center;">${p.description || 'Benefícios VIP inclusos'}</p>
+                                <button class="btn-primary" style="width: 100%; padding: 15px; font-size: 1rem; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);" onclick="app.openSelfSubscriptionModal('${p.name}')">Quero Assinar</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        ` : '';
+
         container.innerHTML = `
             <section id="home-hero" class="hero" style="background-image: url('${heroImg}');">
                 <div class="hero-content fade-in-up">
@@ -2788,6 +2858,8 @@ const app = {
                     <button class="btn-primary" style="padding: 18px 45px; font-size: 1rem;" onclick="app.navigateTo('booking')">${buttonText}</button>
                 </div>
             </section>
+
+            ${plansHtml}
 
             <section id="features" style="padding: 100px 20px; background: var(--bg-color);">
                 <div style="max-width: 1100px; margin: 0 auto;">
@@ -2855,6 +2927,76 @@ const app = {
                 <p style="opacity: 0.3; font-size: 0.7rem; margin-top: 10px;">Desenvolvido com excelência tecnológica.</p>
             </footer>
         `;
+    },
+
+    openSelfSubscriptionModal(planName) {
+        this.openModal('Clube de Assinaturas', `
+            <section class="fade-in">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="font-size: 2.5rem;">💎</span>
+                    <h3 style="margin: 10px 0 5px; color: var(--accent-readable); font-size: 1.3rem;">Assinar Plano VIP</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Plano escolhido: <strong style="color: var(--accent-color);">${planName}</strong></p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; text-align: left;">Seu Nome Completo *</label>
+                    <input type="text" id="sub-client-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: João da Silva">
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; text-align: left;">Seu WhatsApp *</label>
+                    <input type="text" id="sub-client-phone" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: (51) 99999-9999">
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--accent-color); text-align: left;">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">Você será redirecionado para o nosso WhatsApp oficial para enviar o comprovante de pagamento via PIX. Após isso, nossa equipe irá liberar seu plano imediatamente no sistema!</p>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="app.processSelfSubscription('${planName}')">
+                    Continuar para o WhatsApp
+                </button>
+            </section>
+        `);
+    },
+
+    processSelfSubscription(planName) {
+        const name = document.getElementById('sub-client-name').value.trim();
+        const phone = document.getElementById('sub-client-phone').value.trim();
+
+        if (!name || !phone) {
+            alert('Por favor, preencha seu nome e telefone.');
+            return;
+        }
+
+        // Pré-cadastra o cliente na base se ainda não existir
+        let customer = this.state.customers.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
+        if (!customer) {
+            const newId = this.state.customers.length ? Math.max(...this.state.customers.map(c => c.id || 0)) + 1 : 1;
+            customer = {
+                id: newId,
+                name: name,
+                phone: phone,
+                birthDate: '',
+                gender: 'M',
+                history: []
+            };
+            this.state.customers.push(customer);
+            this.saveState();
+        }
+
+        this.closeModal();
+
+        // Envia para o WhatsApp do ADMIN/Barbearia
+        const shopPhone = (this.state.settings.shopInfo && this.state.settings.shopInfo.phone) ? this.state.settings.shopInfo.phone.replace(/\D/g, '') : ''; 
+        if (!shopPhone) {
+            alert('Atenção: O telefone da barbearia não está configurado no painel. Avise a recepção sobre a sua assinatura!');
+            return;
+        }
+
+        const message = `Olá, me chamo *${name}*! 👋\n\nGostaria de entrar para o Clube de Assinaturas no plano: *${planName}* 💎\n\nJá fiz meu cadastro no app, qual é a chave PIX para eu enviar o comprovante?`;
+        const encodedMsg = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/55${shopPhone}?text=${encodedMsg}`;
+
+        window.open(whatsappUrl, '_blank');
     },
 
     renderLogin(container) {
@@ -3671,7 +3813,7 @@ const app = {
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${a.customer}</span>
-                                <span style="font-weight: 700; color: var(--accent-readable);">+ R$ ${(a.price * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
+                                <span style="font-weight: 700; color: var(--accent-readable);">+ R$ ${((a.commissionBase !== undefined ? a.commissionBase : a.price) * (staffProfile.commission / 100)).toFixed(2)} <small style="font-weight: normal; opacity: 0.6; font-size: 0.6rem;">(${staffProfile.commission}%)</small></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
                                 <span>${a.time ? `[${a.time}] ` : ''}${a.service}</span>
@@ -4602,6 +4744,93 @@ const app = {
             `).join('');
         };
 
+        let isSubscriber = false;
+        let isActiveSubscriber = false;
+        let subscriberPlan = null;
+        let subscriberValidUntil = null;
+        if (this.state.subscribers && apt.customer) {
+            const sub = this.state.subscribers.find(s => {
+                const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
+                return c && c.name.trim().toLowerCase() === apt.customer.trim().toLowerCase();
+            });
+            if (sub) {
+                isSubscriber = true;
+                subscriberPlan = sub.planName;
+                subscriberValidUntil = sub.validUntil;
+                if (new Date(sub.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0))) {
+                    isActiveSubscriber = true;
+                }
+            }
+        }
+        
+        // Lógica de Limites e Serviços do Clube
+        let isIncludedService = false;
+        let usageWarning = '';
+        let planObj = null;
+
+        if (isActiveSubscriber && !apt.service.includes('[Clube:')) {
+            planObj = this.state.subscriptionPlans.find(p => p.name === subscriberPlan);
+            
+            // 1. Serviço está incluso?
+            if (planObj && planObj.includedServices && planObj.includedServices.includes(apt.service)) {
+                isIncludedService = true;
+            }
+
+            if (isIncludedService) {
+                // 2. Calcula uso no ciclo atual
+                const validUntilDate = new Date(subscriberValidUntil + "T00:00:00");
+                const cycleStartDate = new Date(validUntilDate);
+                cycleStartDate.setDate(cycleStartDate.getDate() - 30);
+                cycleStartDate.setHours(0,0,0,0);
+                
+                // 3. Calcula uso na semana atual (Segunda a Domingo)
+                const aptDateObj = new Date(apt.date + "T00:00:00");
+                const day = aptDateObj.getDay(); 
+                const diffToMonday = aptDateObj.getDate() - day + (day === 0 ? -6 : 1);
+                const weekStart = new Date(aptDateObj);
+                weekStart.setDate(diffToMonday);
+                weekStart.setHours(0,0,0,0);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                weekEnd.setHours(23,59,59,999);
+
+                let weekCount = 0;
+                let monthCount = 0;
+
+                (this.state.appointments || []).forEach(a => {
+                    if (a.id !== apt.id && a.customer.trim().toLowerCase() === apt.customer.trim().toLowerCase() && a.status === 'finalizado' && a.service.includes('[Clube:')) {
+                        const aDate = new Date(a.date + "T00:00:00");
+                        if (aDate >= cycleStartDate && aDate <= validUntilDate) monthCount++;
+                        if (aDate >= weekStart && aDate <= weekEnd) weekCount++;
+                    }
+                });
+
+                if (planObj.weeklyLimit && weekCount >= planObj.weeklyLimit) {
+                    isIncludedService = false;
+                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit})`;
+                } else if (planObj.monthlyLimit && monthCount >= planObj.monthlyLimit) {
+                    isIncludedService = false;
+                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit})`;
+                }
+            } else if (planObj && planObj.includedServices) {
+                // Se a propriedade includedServices existir mas o serviço não estiver lá
+                usageWarning = `O serviço ${apt.service} não está incluso no plano`;
+            }
+
+            if (isIncludedService) {
+                let commBase = apt.price;
+                if (planObj && planObj.serviceValues && planObj.serviceValues[apt.service] !== undefined) {
+                    commBase = planObj.serviceValues[apt.service];
+                }
+                apt.commissionBase = commBase;
+                apt.price = 0;
+                apt.service += ` [Clube: ${subscriberPlan}]`;
+            }
+        } else if (isActiveSubscriber && apt.service.includes('[Clube:')) {
+            // Se já foi processado (caso feche e abra o modal de novo)
+            isIncludedService = true;
+        }
+
         const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
         const finalTotal = apt.price + totalProducts;
 
@@ -4611,6 +4840,23 @@ const app = {
                     <label style="display: block; margin-bottom: 5px;">Confirme o Nome do Cliente *</label>
                     <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
                 </div>
+
+                ${isSubscriber ? (
+                    isActiveSubscriber 
+                    ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">💎</span>
+                        <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
+                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
+                        <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
+                        ${usageWarning ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Este serviço será cobrado normalmente.</span></div>` : ''}
+                       </div>`
+                    : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
+                        <h4 style="margin: 0; color: #ff4444; font-size: 1.1rem; text-transform: uppercase;">Assinatura Vencida!</h4>
+                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">O plano <strong>${subscriberPlan}</strong> venceu em ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}.</p>
+                        <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renovação antes de finalizar a OS!</p>
+                       </div>`
+                ) : ''}
 
                 <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
                     <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
@@ -4635,7 +4881,8 @@ const app = {
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
                     <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${finalTotal})">
-                        <option value="">Selecione...</option>
+                        <option value="" ${finalTotal !== 0 && !isActiveSubscriber ? 'selected' : ''}>Selecione...</option>
+                        <option value="Assinatura / Cortesia" ${finalTotal === 0 || isActiveSubscriber ? 'selected' : ''}>Assinatura / Cortesia</option>
                         <option value="Dinheiro">Dinheiro</option>
                         <option value="PIX">PIX</option>
                         <option value="Cartão de Débito">Cartão de Débito</option>
@@ -4986,7 +5233,7 @@ const app = {
 
             const sGross = bApts.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
             const pGross = bProducts.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
-            const sComm = bApts.reduce((sum, a) => sum + ((parseFloat(a.price) || 0) * ((barber.commissionPct || 50) / 100)), 0);
+            const sComm = bApts.reduce((sum, a) => sum + ((parseFloat(a.commissionBase !== undefined ? a.commissionBase : a.price) || 0) * ((barber.commissionPct || 50) / 100)), 0);
             const pComm = bProducts.reduce((sum, s) => sum + (parseFloat(s.sellerCommission) || 0), 0);
             const vTotal = bVouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
             const tTotal = bTips.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
@@ -7481,8 +7728,23 @@ const app = {
             this.state.customers.push(customer);
         }
 
-        const totalPrice = bs.services.reduce((acc, s) => acc + s.price, 0);
-        const serviceNames = bs.services.map(s => s.name).join(', ');
+        let isSubscriber = false;
+        let subscriberPlan = null;
+        if (customer && this.state.subscribers) {
+            const sub = this.state.subscribers.find(s => s.customerId == customer.id);
+            if (sub && new Date(sub.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0))) {
+                isSubscriber = true;
+                subscriberPlan = sub.planName;
+            }
+        }
+
+        let totalPrice = bs.services.reduce((acc, s) => acc + s.price, 0);
+        let serviceNames = bs.services.map(s => s.name).join(', ');
+
+        if (isSubscriber) {
+            totalPrice = 0;
+            serviceNames += ` [Clube: ${subscriberPlan}]`;
+        }
 
         const newAptId = Date.now() + Math.floor(Math.random() * 1000);
         const appointment = {
@@ -8286,7 +8548,7 @@ const app = {
                             </div>
                             <div style="text-align: right;">
                                 <strong style="color: var(--text-primary);">R$ ${a.price.toFixed(2)}</strong><br>
-                                <span style="color: var(--accent-readable);">+ R$ ${(a.price * (staff.commission / 100)).toFixed(2)} (comissão)</span>
+                                <span style="color: var(--accent-readable);">+ R$ ${((a.commissionBase !== undefined ? a.commissionBase : a.price) * (staff.commission / 100)).toFixed(2)} (comissão)</span>
                             </div>
                         </div>
                     `).join('')}
