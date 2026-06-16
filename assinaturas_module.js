@@ -215,9 +215,36 @@ window.renderSubscriptionsView = function(app, container) {
             return;
         }
 
+        let pendingHtml = '';
+        if (app.state.pendingSubscriptions && app.state.pendingSubscriptions.length > 0) {
+            pendingHtml = app.state.pendingSubscriptions.map((ps, i) => {
+                const customer = (app.state.customers || []).find(c => c.id == ps.customerId) || { name: 'Cliente Removido' };
+                return `
+                <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.1);">
+                    <div>
+                        <h4 style="margin: 0; color: var(--accent-readable);">${customer.name} <span style="font-size: 0.7rem; color: var(--text-secondary);">(${customer.phone || 'Sem número'})</span></h4>
+                        <span style="font-size: 0.8rem; color: var(--text-primary);">Plano Desejado: <strong>${ps.planName}</strong></span>
+                        <br>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Solicitado em: ${ps.requestDate.split('-').reverse().join('/')} via Site</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #10b981;" onclick="app.approveAssinatura(${i})">Aprovar PIX</button>
+                        <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; border-color: #ff4444; color: #ff4444;" onclick="app.rejectAssinatura(${i})">Recusar</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            pendingHtml = `
+                <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--accent-readable); font-size: 0.9rem; text-transform: uppercase;">Aguardando Pagamento / Liberação (Site)</h3>
+                ${pendingHtml}
+                <hr style="border: none; border-top: 1px dashed var(--glass-border); margin: 25px 0;">
+            `;
+        }
+
         content.innerHTML = `
             <div class="glass" style="padding: 20px; border-left: 4px solid #10b981; margin-bottom: 25px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px;">Vincular Assinante</h3>
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Vincular Assinante (Manual)</h3>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                     <select id="sub-customer" class="glass" style="padding: 10px; flex: 1; min-width: 250px;">
                         <option value="">Selecione o Cliente</option>
@@ -235,7 +262,9 @@ window.renderSubscriptionsView = function(app, container) {
                 </div>
             </div>
             
-            <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Lista de Assinantes</h3>
+            ${pendingHtml}
+            
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Lista de Assinantes Ativos</h3>
             ${subHtml}
         `;
         
@@ -243,6 +272,33 @@ window.renderSubscriptionsView = function(app, container) {
         const d = new Date();
         d.setDate(d.getDate() + 30);
         document.getElementById('sub-validity').value = d.toISOString().split('T')[0];
+    };
+
+    app.approveAssinatura = function(i) {
+        if (confirm('Confirma que o cliente pagou o PIX? O plano será liberado por 30 dias.')) {
+            const pending = app.state.pendingSubscriptions[i];
+            const d = new Date();
+            d.setDate(d.getDate() + 30);
+            
+            app.state.subscribers = app.state.subscribers.filter(s => s.customerId != pending.customerId);
+            app.state.subscribers.push({
+                customerId: pending.customerId,
+                planName: pending.planName,
+                validUntil: d.toISOString().split('T')[0]
+            });
+            
+            app.state.pendingSubscriptions.splice(i, 1);
+            app.saveState();
+            app.showAssinaturasClientes();
+        }
+    };
+
+    app.rejectAssinatura = function(i) {
+        if (confirm('Deseja recusar e apagar esta solicitação?')) {
+            app.state.pendingSubscriptions.splice(i, 1);
+            app.saveState();
+            app.showAssinaturasClientes();
+        }
     };
 
     app.addAssinante = function() {

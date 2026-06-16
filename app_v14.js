@@ -2980,8 +2980,20 @@ const app = {
                 history: []
             };
             this.state.customers.push(customer);
-            this.saveState();
         }
+
+        if (!this.state.pendingSubscriptions) this.state.pendingSubscriptions = [];
+        const alreadyPending = this.state.pendingSubscriptions.find(ps => ps.customerId === customer.id && ps.planName === planName);
+        if (!alreadyPending) {
+            this.state.pendingSubscriptions.push({
+                id: Date.now(),
+                customerId: customer.id,
+                planName: planName,
+                requestDate: new Date().toISOString().split('T')[0]
+            });
+        }
+        
+        this.saveState();
 
         this.closeModal();
 
