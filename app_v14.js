@@ -581,6 +581,9 @@ const app = {
                 appointments: this.state.appointments || [],
                 serviceOrders: this.state.serviceOrders || [],
                 tips: this.state.tips || [],
+                subscriptionPlans: this.state.subscriptionPlans || [],
+                subscribers: this.state.subscribers || [],
+                pendingSubscriptions: this.state.pendingSubscriptions || [],
                 lastSync: new Date().toISOString()
             };
 
@@ -660,6 +663,9 @@ const app = {
                     this.state.appointments = cloudState.appointments || [];
                     this.state.serviceOrders = cloudState.serviceOrders || [];
                     this.state.tips = cloudState.tips || [];
+                    this.state.subscriptionPlans = cloudState.subscriptionPlans || this.state.subscriptionPlans || [];
+                    this.state.subscribers = cloudState.subscribers || this.state.subscribers || [];
+                    this.state.pendingSubscriptions = cloudState.pendingSubscriptions || this.state.pendingSubscriptions || [];
 
                     this.saveState();
                     alert('✅ Dados da nuvem carregados com sucesso!');
@@ -708,6 +714,9 @@ const app = {
                     this.state.appointments = cloudState.appointments || [];
                     this.state.serviceOrders = cloudState.serviceOrders || [];
                     this.state.tips = cloudState.tips || [];
+                    this.state.subscriptionPlans = cloudState.subscriptionPlans || this.state.subscriptionPlans || [];
+                    this.state.subscribers = cloudState.subscribers || this.state.subscribers || [];
+                    this.state.pendingSubscriptions = cloudState.pendingSubscriptions || this.state.pendingSubscriptions || [];
                     this.state.lastUpdate = cloudLastUpdate;
 
                     localStorage.setItem(this.getStorageKey(), JSON.stringify(this.state));
