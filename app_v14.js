@@ -4851,13 +4851,19 @@ const app = {
 
                 if (planObj.weeklyLimit && weekCount >= planObj.weeklyLimit) {
                     isIncludedService = false;
-                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit})`;
+                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit}). Nenhum serviço será isento.`;
+                    notIncludedList = [...includedList, ...notIncludedList];
+                    includedList = [];
                 } else if (planObj.monthlyLimit && monthCount >= planObj.monthlyLimit) {
                     isIncludedService = false;
-                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit})`;
+                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit}). Nenhum serviço será isento.`;
+                    notIncludedList = [...includedList, ...notIncludedList];
+                    includedList = [];
                 }
             } else {
-                usageWarning = `O(s) serviço(s) não estão inclusos no plano.`;
+                usageWarning = (!planObj.includedServices || planObj.includedServices.length === 0) 
+                    ? `O Plano não possui nenhum serviço configurado. Edite o plano no menu Assinaturas e marque os serviços.` 
+                    : `Os serviços selecionados não estão inclusos neste plano.`;
             }
 
             if (isIncludedService) {
@@ -4866,7 +4872,7 @@ const app = {
                     isPartiallyIncluded = true;
                     finalAptPrice = Math.max(0, apt.price - sumIncludedCatalog);
                     finalCommBase = sumIncludedCommBase + finalAptPrice;
-                    usageWarning = `Atenção: ${notIncludedList.join(', ')} será cobrado a parte.`;
+                    usageWarning = `Atenção: A isenção cobriu apenas os serviços do plano. O restante será cobrado.`;
                 } else {
                     // 100% incluso
                     finalAptPrice = 0;
@@ -4878,11 +4884,40 @@ const app = {
                 apt.service += ` [Clube: ${subscriberPlan}]`;
             }
         } else if (isActiveSubscriber && apt.service.includes('[Clube:')) {
+            // Se já foi processado na abertura anterior do modal
             isIncludedService = true;
+            // Para efeitos visuais no modal já processado (apenas estético se ele fechar e abrir)
+            finalAptPrice = apt.price;
         }
 
         const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
-        const finalTotal = apt.price + totalProducts;
+        const finalTotal = finalAptPrice + totalProducts;
+
+        // Monta os resumos de listas para o HTML
+        let isencaoHtml = '';
+        if (isActiveSubscriber && planObj && !apt.service.includes('[Clube:')) {
+            // Recriar o parser visual se estivermos no primeiro load
+            const inc = includedList || [];
+            const nInc = notIncludedList || [];
+            
+            isencaoHtml = `
+                <div style="margin-top: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <h5 style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Resumo do Atendimento</h5>
+                    ${inc.length > 0 ? `
+                        <div style="margin-bottom: 8px;">
+                            <strong style="color: #10b981; font-size: 0.8rem;">✔️ Cobertos pelo Plano:</strong>
+                            <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${inc.join(', ')} <span style="float: right; color: #10b981;">Isento</span></div>
+                        </div>
+                    ` : ''}
+                    ${nInc.length > 0 ? `
+                        <div>
+                            <strong style="color: #ff4444; font-size: 0.8rem;">❌ A Pagar (Fora do Plano):</strong>
+                            <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${nInc.join(', ')} <span style="float: right; color: var(--text-primary);">Cobrado na O.S.</span></div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
 
         this.openModal('Finalizar OS', `
             <section class="fade-in">
@@ -4898,8 +4933,11 @@ const app = {
                         <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
                         <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
                         <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
-                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Este serviço será cobrado normalmente.</span></div>` : ''}
-                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}<br><span style="font-size: 0.75rem; color: var(--text-primary); font-weight: normal;">Os itens não inclusos serão cobrados abaixo.</span></div>` : ''}
+                        
+                        ${isencaoHtml}
+
+                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}</div>` : ''}
+                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}</div>` : ''}
                        </div>`
                     : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
                         <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
@@ -4908,6 +4946,13 @@ const app = {
                         <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renovação antes de finalizar a OS!</p>
                        </div>`
                 ) : ''}
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
+                        <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">R$ ${finalAptPrice.toFixed(2)}</span>
+                    </div>
+                </div>
 
                 <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
                     <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
