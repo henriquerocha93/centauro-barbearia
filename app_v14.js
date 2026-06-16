@@ -340,8 +340,11 @@ const app = {
                     lastUpdate: this.state.lastUpdate || 0,
                     _deletedIds: this.state._deletedIds || []
                 };
-                localStorage.setItem(this.getStorageKey(), JSON.stringify(stateToSave));
+                
+                // Dispara sincronização para a nuvem independentemente do armazenamento local falhar ou não
                 this.syncToFirebase();
+                
+                localStorage.setItem(this.getStorageKey(), JSON.stringify(stateToSave));
             } catch (e) {
                 console.error("Erro ao salvar estado (possivelmente estouro de memória):", e);
             }
