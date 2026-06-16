@@ -333,6 +333,9 @@ const app = {
                     appointments: this.state.appointments || [],
                     serviceOrders: this.state.serviceOrders || [],
                     tips: this.state.tips || [],
+                    subscriptionPlans: this.state.subscriptionPlans || [],
+                    subscribers: this.state.subscribers || [],
+                    pendingSubscriptions: this.state.pendingSubscriptions || [],
                     lastConsumptionView: this.state.lastConsumptionView || 0,
                     lastUpdate: this.state.lastUpdate || 0,
                     _deletedIds: this.state._deletedIds || []
