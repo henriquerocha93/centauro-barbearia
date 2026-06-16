@@ -1070,7 +1070,10 @@ const app = {
                             const newDataHash = JSON.stringify({
                                 a: data.appointments,
                                 s: data.staff,
-                                se: data.settings
+                                se: data.settings,
+                                sp: data.subscriptionPlans,
+                                p: data.products,
+                                sv: data.services
                             });
                             
                             if (this.state._lastDataHash === newDataHash) {
