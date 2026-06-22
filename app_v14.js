@@ -5259,6 +5259,18 @@ const app = {
         }
     },
 
+    applyRevenueFilter() {
+        const start = document.getElementById('rev-start').value;
+        const end = document.getElementById('rev-end').value;
+        if (start && end) {
+            this.state.revenueStart = start;
+            this.state.revenueEnd = end;
+            this.renderAdminFaturamento(document.getElementById('main-content'));
+        } else {
+            alert('Por favor, selecione as datas de início e fim.');
+        }
+    },
+
     renderAdminFaturamento(container) {
         this.reconcileTransactions();
         const period = this.state.revenuePeriod || 'month';
@@ -5270,7 +5282,8 @@ const app = {
             endDate = new Date(now.setHours(23, 59, 59, 999));
         } else if (period === 'week') {
             const day = now.getDay();
-            const diff = now.getDate() - day;
+            // Start the week on Monday. If today is Sunday (0), go back 6 days.
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
             startDate = new Date(now.setDate(diff));
             startDate.setHours(0, 0, 0, 0);
             endDate = new Date();
