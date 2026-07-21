@@ -4455,7 +4455,7 @@ const app = {
                     
                     serviceNamesArr.forEach(svc => {
                         if (planObj.includedServices.includes(svc)) {
-                            const sObj = (this.state.services || []).find(s => s.name === svc);
+                            const sObj = (this.state.services || []).find(s => normalizeName(s.name) === normalizeName(svc));
                             sumIncludedCatalog += sObj ? parseFloat(sObj.price) : 0;
                             isIncludedService = true;
                         }
@@ -4876,7 +4876,7 @@ const app = {
         if (this.state.subscribers && apt.customer) {
             const sub = this.state.subscribers.find(s => {
                 const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
-                return c && c.name && c.name.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase();
+                return c && c.name && c.name.trim().toLowerCase().replace(/\s+/g, " ") === (apt.customer || "").trim().toLowerCase().replace(/\s+/g, " ");
             });
             if (sub) {
                 isSubscriber = true;
@@ -4930,13 +4930,16 @@ const app = {
             let sumIncludedCommBase = 0;
 
             individualServices.forEach(svc => {
-                if (planObj && planObj.includedServices && planObj.includedServices.includes(svc)) {
+                const normalizeName = (name) => (name || "").trim().toLowerCase().replace(/\s+/g, " ");
+                if (planObj && planObj.includedServices && planObj.includedServices.some(is => normalizeName(is) === normalizeName(svc))) {
                     includedList.push(svc);
-                    const sObj = (this.state.services || []).find(s => s.name === svc);
+                    const sObj = (this.state.services || []).find(s => normalizeName(s.name) === normalizeName(svc));
                     sumIncludedCatalog += sObj ? parseFloat(sObj.price || 0) : 0;
                     
                     let base = sObj ? parseFloat(sObj.price || 0) : 0;
-                    if (planObj.serviceValues && planObj.serviceValues[svc] !== undefined) {
+                    const matchedKey = planObj.serviceValues ? Object.keys(planObj.serviceValues).find(k => normalizeName(k) === normalizeName(svc)) : null;
+                    if (matchedKey) {
+                        svc = matchedKey;
                         base = parseFloat(planObj.serviceValues[svc]);
                     }
                     sumIncludedCommBase += base;
@@ -5012,7 +5015,7 @@ const app = {
             }
         }
 
-        const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
+        const totalProducts = (apt.products || []).reduce((sum, p) => sum + ((parseFloat(p.price)||0) * (p.qty||1)), 0);
         const finalTotal = finalAptPrice + totalProducts;
 
         // Monta os resumos de listas para o HTML
