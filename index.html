@@ -12,10 +12,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="favicon.png">
-    <script src="app_v14.js?v=80.29" type="module"></script>
-    <script src="assinaturas_module.js?v=80.29"></script>
+    <script src="app_v14.js?v=80.30" type="module"></script>
+    <script src="assinaturas_module.js?v=80.30"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("ERRO: " + message + " Linha: " + lineno);
+        };
         window.addEventListener('load', () => {
             console.log('Sistema Centauro v80.00 (Versão Final) Carregado');
             
