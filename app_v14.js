@@ -4899,7 +4899,7 @@ const app = {
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
         if (isActiveSubscriber) {
-            planObj = this.state.subscriptionPlans.find(p => p.name === subscriberPlan);
+            planObj = this.state.subscriptionPlans.find(p => p.name.trim() === subscriberPlan.trim());
             
             // Separa os serviços se houver mais de um (ex: "Corte, Barba")
             let allServices = (this.state.services || []).map(s => s.name).sort((a,b) => b.length - a.length);
@@ -4988,7 +4988,7 @@ const app = {
                     includedList = [];
                 }
             } else {
-                usageWarning = (!planObj.includedServices || planObj.includedServices.length === 0) 
+                usageWarning = (!planObj || !planObj.includedServices || planObj.includedServices.length === 0) 
                     ? `O Plano não possui nenhum serviço configurado. Edite o plano no menu Assinaturas e marque os serviços.` 
                     : `Os serviços selecionados não estão inclusos neste plano.`;
             }
