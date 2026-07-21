@@ -197,7 +197,10 @@ window.renderSubscriptionsView = function(app, container) {
                     <br>
                     <span style="font-size: 0.8rem; font-weight: 600; color: ${isActive ? '#10b981' : '#ff4444'};">Válido até: ${new Date(s.validUntil + "T00:00:00").toLocaleDateString('pt-BR')} ${isActive ? '(Ativo)' : '(Vencido)'}</span>
                 </div>
-                <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; border-color: #ff4444; color: #ff4444;" onclick="app.removeAssinante(${i})">Desvincular</button>
+                <div>
+                    <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #10b981; margin-right: 5px;" onclick="app.renovarAssinatura(${i})">Renovar</button>
+                    <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; border-color: #ff4444; color: #ff4444;" onclick="app.removeAssinante(${i})">Desvincular</button>
+                </div>
             </div>
         `}).join('');
 
@@ -272,6 +275,22 @@ window.renderSubscriptionsView = function(app, container) {
         const d = new Date();
         d.setDate(d.getDate() + 30);
         document.getElementById('sub-validity').value = d.toISOString().split('T')[0];
+    };
+
+    app.renovarAssinatura = function(i) {
+        const sub = app.state.subscribers[i];
+        const newDate = prompt("Informe a nova data de vencimento (AAAA-MM-DD):", sub.validUntil);
+        if (newDate) {
+            // Valida o formato da data (AAAA-MM-DD)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+                sub.validUntil = newDate;
+                app.saveState();
+                app.showAssinaturasClientes();
+                alert('Assinatura renovada com sucesso!');
+            } else {
+                alert('Formato de data inválido. Use AAAA-MM-DD.');
+            }
+        }
     };
 
     app.approveAssinatura = function(i) {

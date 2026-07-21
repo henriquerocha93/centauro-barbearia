@@ -4349,15 +4349,39 @@ const app = {
         document.getElementById('customer-results').style.display = 'none';
 
         const customer = this.state.customers.find(c => c.name === name);
-        if (customer && customer.history.length > 0) {
+        if (customer) {
             const preview = document.getElementById('cust-history-preview');
-            const last = customer.history[customer.history.length - 1];
-            preview.innerHTML = `
-                <strong>Cliente Fidelizado</strong><br>
-                Última visita: ${new Date(last.date + 'T00:00:00').toLocaleDateString()}<br>
-                Favorito: ${last.service} (Barbeiro: ${last.barber})
-            `;
-            preview.style.display = 'block';
+            preview.innerHTML = '';
+            let hasPreview = false;
+
+            const subscriberObj = (this.state.subscribers || []).find(s => s.customerId == customer.id);
+            if (subscriberObj) {
+                const isActiveSubscriber = new Date(subscriberObj.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0));
+                preview.innerHTML += `
+                    <div style="margin-bottom: 10px; padding: 10px; border-radius: 8px; border: 1px solid ${isActiveSubscriber ? '#10b981' : '#ff4444'}; background: ${isActiveSubscriber ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 68, 68, 0.1)'};">
+                        <strong style="color: ${isActiveSubscriber ? '#10b981' : '#ff4444'};">${isActiveSubscriber ? '💎 Assinante Ativo' : '⚠️ Assinatura Vencida'}</strong><br>
+                        Plano: ${subscriberObj.planName}<br>
+                        Válido até: ${new Date(subscriberObj.validUntil + "T00:00:00").toLocaleDateString('pt-BR')}
+                    </div>
+                `;
+                hasPreview = true;
+            }
+
+            if (customer.history && customer.history.length > 0) {
+                const last = customer.history[customer.history.length - 1];
+                preview.innerHTML += `
+                    <strong>Cliente Fidelizado</strong><br>
+                    Última visita: ${new Date(last.date + 'T00:00:00').toLocaleDateString()}<br>
+                    Favorito: ${last.service} (Barbeiro: ${last.barber})
+                `;
+                hasPreview = true;
+            }
+
+            if (hasPreview) {
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
         }
     },
 
@@ -4368,8 +4392,9 @@ const app = {
         if (!name) { alert('Por favor, informe o nome do cliente.'); return; }
         if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
-        const serviceNames = checkedBoxes.map(cb => cb.dataset.name).join(', ');
-        const totalPrice = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        const serviceNamesArr = checkedBoxes.map(cb => cb.dataset.name);
+        let serviceNames = serviceNamesArr.join(', ');
+        let totalPrice = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
 
         // Registrar cliente se for novo
         let customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
@@ -4379,6 +4404,34 @@ const app = {
             return;
         }
 
+        // Lógica de Assinatura para o Agendamento Inicial
+        const subscriberObj = (this.state.subscribers || []).find(s => s.customerId == customer.id);
+        let finalPrice = totalPrice;
+        if (subscriberObj) {
+            const isActiveSubscriber = new Date(subscriberObj.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0));
+            if (isActiveSubscriber) {
+                const planObj = (this.state.subscriptionPlans || []).find(p => p.name === subscriberObj.planName);
+                if (planObj && planObj.includedServices) {
+                    let sumIncludedCatalog = 0;
+                    let isIncludedService = false;
+                    
+                    serviceNamesArr.forEach(svc => {
+                        if (planObj.includedServices.includes(svc)) {
+                            const sObj = (this.state.services || []).find(s => s.name === svc);
+                            sumIncludedCatalog += sObj ? parseFloat(sObj.price) : 0;
+                            isIncludedService = true;
+                        }
+                    });
+
+                    if (isIncludedService) {
+                        // Não validamos os limites semanais/mensais aqui (é feito no Finalizar OS), mas já abatemos visualmente na agenda
+                        finalPrice = Math.max(0, finalPrice - sumIncludedCatalog);
+                        serviceNames += ` [Clube: ${subscriberObj.planName}]`;
+                    }
+                }
+            }
+        }
+
         const apt = {
             id: Date.now(),
             barber,
@@ -4386,7 +4439,7 @@ const app = {
             date: this.state.currentDate,
             customer: customer.name,
             service: serviceNames,
-            price: totalPrice,
+            price: finalPrice,
             status: 'agendado',
             origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
