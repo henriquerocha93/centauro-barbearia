@@ -4854,262 +4854,278 @@ const app = {
     },
 
     openFinalizeOS(aptId) {
-        try {
-            const idToFind = Number(aptId);
-            const apt = this.state.appointments.find(a => a.id === idToFind);
-            if (!apt) return;
-            if (!apt.products) apt.products = [];
-            
-            const renderProductsList = () => {
-                if (!apt.products || apt.products.length === 0) return '';
-                return apt.products.map((p, idx) => `
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 5px;">
-                        <span>${p.name} (x${p.qty})</span>
-                        <span>R$ ${((p.price || 0) * (p.qty || 1)).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
-                    </div>
-                `).join('');
-            };
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return;
+        if (!apt.products) apt.products = [];
+        
+        const renderProductsList = () => {
+            if (!apt.products || apt.products.length === 0) return '';
+            return apt.products.map((p, idx) => `
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 5px;">
+                    <span>${p.name} (x${p.qty})</span>
+                    <span>R$ ${((p.price || 0) * (p.qty || 1)).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
+                </div>
+            `).join('');
+        };
 
-            let isSubscriber = false;
-            let isActiveSubscriber = false;
-            let subscriberPlan = null;
-            let subscriberValidUntil = null;
-            if (this.state.subscribers && apt.customer) {
-                const sub = this.state.subscribers.find(s => {
-                    const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
-                    return c && c.name && c.name.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase();
-                });
-                if (sub) {
-                    isSubscriber = true;
-                    subscriberPlan = sub.planName;
-                    subscriberValidUntil = sub.validUntil;
-                    if (new Date(sub.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0))) {
-                        isActiveSubscriber = true;
-                    }
+        let isSubscriber = false;
+        let isActiveSubscriber = false;
+        let subscriberPlan = null;
+        let subscriberValidUntil = null;
+        if (this.state.subscribers && apt.customer) {
+            const sub = this.state.subscribers.find(s => {
+                const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
+                return c && c.name && c.name.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase();
+            });
+            if (sub) {
+                isSubscriber = true;
+                subscriberPlan = sub.planName;
+                subscriberValidUntil = sub.validUntil;
+                if (new Date(sub.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0))) {
+                    isActiveSubscriber = true;
                 }
             }
-            
-            // Lógica de Limites e Serviços do Clube
-            let isIncludedService = false;
-            let isPartiallyIncluded = false;
-            let usageWarning = '';
-            let planObj = null;
-            let finalCommBase = parseFloat(apt.price) || 0;
-            let finalAptPrice = parseFloat(apt.price) || 0;
-            
-            let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
+        }
+        
+        // Lógica de Limites e Serviços do Clube
+        let isIncludedService = false;
+        let isPartiallyIncluded = false;
+        let usageWarning = '';
+        let planObj = null;
+        let finalCommBase = parseFloat(apt.price) || 0;
+        let finalAptPrice = parseFloat(apt.price) || 0;
+        
+        let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
-            if (isActiveSubscriber) {
-                planObj = (this.state.subscriptionPlans || []).find(p => p && p.name && subscriberPlan && p.name.trim() === subscriberPlan.trim());
-                
-                // Separa os serviços se houver mais de um (ex: "Corte, Barba")
-                let allServices = (this.state.services || []).map(s => s.name || '').sort((a,b) => b.length - a.length);
-                let individualServices = [];
-                const chunks = pureService.split(', ');
-                let i = 0;
-                while (i < chunks.length) {
-                    let matched = false;
-                    for (let j = chunks.length; j > i; j--) {
-                        const candidate = chunks.slice(i, j).join(', ').trim();
-                        if (candidate && allServices.includes(candidate)) {
-                            individualServices.push(candidate);
-                            i = j;
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if (!matched) {
-                        if (chunks[i]) individualServices.push(chunks[i].trim());
-                        i++;
+        if (isActiveSubscriber) {
+            planObj = (this.state.subscriptionPlans || []).find(p => p && p.name && subscriberPlan && p.name.trim() === subscriberPlan.trim());
+            
+            // Separa os serviços se houver mais de um (ex: "Corte, Barba")
+            let allServices = (this.state.services || []).map(s => s.name || '').sort((a,b) => b.length - a.length);
+            let individualServices = [];
+            const chunks = pureService.split(', ');
+            let i = 0;
+            while (i < chunks.length) {
+                let matched = false;
+                for (let j = chunks.length; j > i; j--) {
+                    const candidate = chunks.slice(i, j).join(', ').trim();
+                    if (candidate && allServices.includes(candidate)) {
+                        individualServices.push(candidate);
+                        i = j;
+                        matched = true;
+                        break;
                     }
                 }
+                if (!matched) {
+                    if (chunks[i]) individualServices.push(chunks[i].trim());
+                    i++;
+                }
+            }
 
-                // Checa quais estão inclusos
-                let includedList = [];
-                let notIncludedList = [];
-                let sumIncludedCatalog = 0;
-                let sumIncludedCommBase = 0;
+            // Checa quais estão inclusos
+            let includedList = [];
+            let notIncludedList = [];
+            let sumIncludedCatalog = 0;
+            let sumIncludedCommBase = 0;
 
-                individualServices.forEach(svc => {
-                    if (planObj && planObj.includedServices && planObj.includedServices.includes(svc)) {
-                        includedList.push(svc);
-                        const sObj = (this.state.services || []).find(s => s.name === svc);
-                        sumIncludedCatalog += sObj ? parseFloat(sObj.price || 0) : 0;
-                        
-                        let base = sObj ? parseFloat(sObj.price || 0) : 0;
-                        if (planObj.serviceValues && planObj.serviceValues[svc] !== undefined) {
-                            base = parseFloat(planObj.serviceValues[svc]);
-                        }
-                        sumIncludedCommBase += base;
-                    } else {
-                        notIncludedList.push(svc);
-                    }
-                });
-
-                if (includedList.length > 0) {
-                    // Pelo menos 1 serviço está incluso
-                    isIncludedService = true;
+            individualServices.forEach(svc => {
+                if (planObj && planObj.includedServices && planObj.includedServices.includes(svc)) {
+                    includedList.push(svc);
+                    const sObj = (this.state.services || []).find(s => s.name === svc);
+                    sumIncludedCatalog += sObj ? parseFloat(sObj.price || 0) : 0;
                     
-                    // Checa limites de uso
-                    const validUntilDate = new Date(subscriberValidUntil + "T00:00:00");
-                    const cycleStartDate = new Date(validUntilDate);
-                    cycleStartDate.setDate(cycleStartDate.getDate() - 30);
-                    cycleStartDate.setHours(0,0,0,0);
-                    
-                    const aptDateObj = new Date(apt.date + "T00:00:00");
-                    const day = aptDateObj.getDay(); 
-                    const diffToMonday = aptDateObj.getDate() - day + (day === 0 ? -6 : 1);
-                    const weekStart = new Date(aptDateObj);
-                    weekStart.setDate(diffToMonday);
-                    weekStart.setHours(0,0,0,0);
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekStart.getDate() + 6);
-                    weekEnd.setHours(23,59,59,999);
-
-                    let weekCount = 0;
-                    let monthCount = 0;
-
-                    (this.state.appointments || []).forEach(a => {
-                        if (a.id !== apt.id && a.customer && a.customer.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase() && a.status === 'finalizado' && a.service && a.service.includes('[Clube:')) {
-                            const aDate = new Date(a.date + "T00:00:00");
-                            if (aDate >= cycleStartDate && aDate <= validUntilDate) monthCount++;
-                            if (aDate >= weekStart && aDate <= weekEnd) weekCount++;
-                        }
-                    });
-
-                    if (planObj.weeklyLimit && weekCount >= planObj.weeklyLimit) {
-                        isIncludedService = false;
-                        usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit}). Nenhum serviço será isento.`;
-                        notIncludedList = [...includedList, ...notIncludedList];
-                        includedList = [];
-                    } else if (planObj.monthlyLimit && monthCount >= planObj.monthlyLimit) {
-                        isIncludedService = false;
-                        usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit}). Nenhum serviço será isento.`;
-                        notIncludedList = [...includedList, ...notIncludedList];
-                        includedList = [];
+                    let base = sObj ? parseFloat(sObj.price || 0) : 0;
+                    if (planObj.serviceValues && planObj.serviceValues[svc] !== undefined) {
+                        base = parseFloat(planObj.serviceValues[svc]);
                     }
+                    sumIncludedCommBase += base;
                 } else {
-                    usageWarning = (!planObj || !planObj.includedServices || planObj.includedServices.length === 0) 
-                        ? `O Plano não possui nenhum serviço configurado. Edite o plano no menu Assinaturas e marque os serviços.` 
-                        : `Os serviços selecionados não estão inclusos neste plano.`;
+                    notIncludedList.push(svc);
                 }
+            });
 
-                if (isIncludedService) {
-                    if (notIncludedList.length > 0) {
-                        // Misto: Cobra a diferença
-                        isPartiallyIncluded = true;
-                        finalAptPrice = Math.max(0, (parseFloat(apt.price) || 0) - sumIncludedCatalog);
-                        finalCommBase = sumIncludedCommBase + finalAptPrice;
-                        usageWarning = `Atenção: A isenção cobriu apenas os serviços do plano. O restante será cobrado.`;
-                    } else {
-                        // 100% incluso
-                        finalAptPrice = 0;
-                        finalCommBase = sumIncludedCommBase;
-                    }
-                    
-                    apt.commissionBase = finalCommBase;
-                    apt.price = finalAptPrice;
-                    apt.service = `${pureService} [Clube: ${subscriberPlan}]`;
-                }
-            }
-
-            const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
-            const finalTotal = finalAptPrice + totalProducts;
-
-            // Monta os resumos de listas para o HTML
-            let isencaoHtml = '';
-            if (isActiveSubscriber && planObj) {
-                // Recriar o parser visual se estivermos no primeiro load
-                const inc = includedList || [];
-                const nInc = notIncludedList || [];
+            if (includedList.length > 0) {
+                // Pelo menos 1 serviço está incluso
+                isIncludedService = true;
                 
-                isencaoHtml = `
-                    <div style="margin-top: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                        <h5 style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Resumo do Atendimento</h5>
-                        ${inc.length > 0 ? `
-                            <div style="margin-bottom: 8px;">
-                                <strong style="color: #10b981; font-size: 0.8rem;">✔️ Cobertos pelo Plano:</strong>
-                                <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${inc.join(', ')} <span style="float: right; color: #10b981;">Isento</span></div>
-                            </div>
-                        ` : ''}
-                        ${nInc.length > 0 ? `
-                            <div>
-                                <strong style="color: #ff4444; font-size: 0.8rem;">❌ A Pagar (Fora do Plano):</strong>
-                                <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${nInc.join(', ')} <span style="float: right; color: var(--text-primary);">Cobrado na O.S.</span></div>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
+                // Checa limites de uso
+                const validUntilDate = new Date(subscriberValidUntil + "T00:00:00");
+                const cycleStartDate = new Date(validUntilDate);
+                cycleStartDate.setDate(cycleStartDate.getDate() - 30);
+                cycleStartDate.setHours(0,0,0,0);
+                
+                const aptDateObj = new Date(apt.date + "T00:00:00");
+                const day = aptDateObj.getDay(); 
+                const diffToMonday = aptDateObj.getDate() - day + (day === 0 ? -6 : 1);
+                const weekStart = new Date(aptDateObj);
+                weekStart.setDate(diffToMonday);
+                weekStart.setHours(0,0,0,0);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                weekEnd.setHours(23,59,59,999);
+
+                let weekCount = 0;
+                let monthCount = 0;
+
+                (this.state.appointments || []).forEach(a => {
+                    if (a.id !== apt.id && a.customer && a.customer.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase() && a.status === 'finalizado' && a.service && a.service.includes('[Clube:')) {
+                        const aDate = new Date(a.date + "T00:00:00");
+                        if (aDate >= cycleStartDate && aDate <= validUntilDate) monthCount++;
+                        if (aDate >= weekStart && aDate <= weekEnd) weekCount++;
+                    }
+                });
+
+                if (planObj.weeklyLimit && weekCount >= planObj.weeklyLimit) {
+                    isIncludedService = false;
+                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit}). Nenhum serviço será isento.`;
+                    notIncludedList = [...includedList, ...notIncludedList];
+                    includedList = [];
+                } else if (planObj.monthlyLimit && monthCount >= planObj.monthlyLimit) {
+                    isIncludedService = false;
+                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit}). Nenhum serviço será isento.`;
+                    notIncludedList = [...includedList, ...notIncludedList];
+                    includedList = [];
+                }
+            } else {
+                usageWarning = (!planObj || !planObj.includedServices || planObj.includedServices.length === 0) 
+                    ? `O Plano não possui nenhum serviço configurado. Edite o plano no menu Assinaturas e marque os serviços.` 
+                    : `Os serviços selecionados não estão inclusos neste plano.`;
             }
 
-            this.openModal('Finalizar OS', `
-                <section class="fade-in">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Confirme o Nome do Cliente *</label>
-                        <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
-                    </div>
+            if (isIncludedService) {
+                if (notIncludedList.length > 0) {
+                    // Misto: Cobra a diferença
+                    isPartiallyIncluded = true;
+                    finalAptPrice = Math.max(0, (parseFloat(apt.price) || 0) - sumIncludedCatalog);
+                    finalCommBase = sumIncludedCommBase + finalAptPrice;
+                    usageWarning = `Atenção: A isenção cobriu apenas os serviços do plano. O restante será cobrado.`;
+                } else {
+                    // 100% incluso
+                    finalAptPrice = 0;
+                    finalCommBase = sumIncludedCommBase;
+                }
+                
+                apt.commissionBase = finalCommBase;
+                apt.price = finalAptPrice;
+                apt.service = `${pureService} [Clube: ${subscriberPlan}]`;
+            }
+        }
 
-                    ${isSubscriber ? (
-                        isActiveSubscriber 
-                        ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
-                            <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">💎</span>
-                            <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
-                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
-                            <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
-                            
-                            ${isencaoHtml}
+        const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
+        const finalTotal = finalAptPrice + totalProducts;
 
-                            ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}</div>` : ''}
-                            ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}</div>` : ''}
-                           </div>`
-                        : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
-                            <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
-                            <h4 style="margin: 0; color: #ff4444; font-size: 1.1rem; text-transform: uppercase;">Assinatura Vencida!</h4>
-                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">O plano <strong>${subscriberPlan}</strong> venceu em ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}.</p>
-                            <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renovação antes de finalizar a OS!</p>
-                           </div>`
-                    ) : ''}
-                    
-                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 4px solid var(--accent-color);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
-                            <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
-                                ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}`}
-                            </span>
+        // Monta os resumos de listas para o HTML
+        let isencaoHtml = '';
+        if (isActiveSubscriber && planObj) {
+            // Recriar o parser visual se estivermos no primeiro load
+            const inc = includedList || [];
+            const nInc = notIncludedList || [];
+            
+            isencaoHtml = `
+                <div style="margin-top: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <h5 style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Resumo do Atendimento</h5>
+                    ${inc.length > 0 ? `
+                        <div style="margin-bottom: 8px;">
+                            <strong style="color: #10b981; font-size: 0.8rem;">✔️ Cobertos pelo Plano:</strong>
+                            <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${inc.join(', ')} <span style="float: right; color: #10b981;">Isento</span></div>
                         </div>
-                    </div>
+                    ` : ''}
+                    ${nInc.length > 0 ? `
+                        <div>
+                            <strong style="color: #ff4444; font-size: 0.8rem;">❌ A Pagar (Fora do Plano):</strong>
+                            <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${nInc.join(', ')} <span style="float: right; color: var(--text-primary);">Cobrado na O.S.</span></div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
 
-                    <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
+        this.openModal('Finalizar OS', `
+            <section class="fade-in">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Confirme o Nome do Cliente *</label>
+                    <input type="text" id="final-cust-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${apt.customer}">
+                </div>
+
+                ${isSubscriber ? (
+                    isActiveSubscriber 
+                    ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">💎</span>
+                        <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
+                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
+                        <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
                         
-                        <div style="margin-bottom: 10px;">
-                            <select id="os-product-select" class="glass" style="width: 100%; padding: 10px; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 8px;">
-                                <option value="">Selecione o Produto...</option>
-                                ${(this.state.products || []).filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${(parseFloat(p.price) || 0).toFixed(2)}</option>`).join('')}
-                            </select>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="number" id="os-product-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; color: var(--text-primary);" value="1" min="1" placeholder="Qtd">
-                                <button class="btn-primary" style="flex: 2; padding: 10px; font-size: 0.85rem; background: #2E8B57; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="app.addProductToOS('${apt.id}')">
-                                    <span>Adicionar</span>
-                                </button>
-                            </div>
-                        </div>
+                        ${isencaoHtml}
 
-                        <div id="os-products-list">
-                            ${renderProductsList()}
+                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}</div>` : ''}
+                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}</div>` : ''}
+                       </div>`
+                    : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
+                        <h4 style="margin: 0; color: #ff4444; font-size: 1.1rem; text-transform: uppercase;">Assinatura Vencida!</h4>
+                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">O plano <strong>${subscriberPlan}</strong> venceu em ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}.</p>
+                        <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renovação antes de finalizar a OS!</p>
+                       </div>`
+                ) : ''}
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
+                        <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
+                            ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}`}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px; border: 1px solid var(--glass-border); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.2);">
+                    <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Consumo de Produtos</label>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <select id="os-product-select" class="glass" style="width: 100%; padding: 10px; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 8px;">
+                            <option value="">Selecione o Produto...</option>
+                            ${(this.state.products || []).filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${(parseFloat(p.price) || 0).toFixed(2)}</option>`).join('')}
+                        </select>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="os-product-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; color: var(--text-primary);" value="1" min="1" placeholder="Qtd">
+                            <button class="btn-primary" style="flex: 2; padding: 10px; font-size: 0.85rem; background: #2E8B57; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="app.addProductToOS('${apt.id}')">
+                                <span>Adicionar</span>
+                            </button>
                         </div>
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
-                        <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${finalTotal})">
-                            <option value="" ${finalTotal !== 0 && !isActiveSubscriber ? 'selected' : ''}>Selecione...</option>
-                            <option value="Assinatura / Cortesia" ${finalTotal === 0 || isActiveSubscriber ? 'selected' : ''}>Assinatura / Cortesia</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="PIX">PIX</option>
-                            <option value="Cartão de Débito">Cartão de Débito</option>
-                            <option value="Cartão de Crédito">Cartão de Crédito</option>
-                            <option value="Misto">Pagamento Misto (Dividir)</option>
-                        </select>
+
+                    <div id="os-products-list">
+                        ${renderProductsList()}
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
+                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${finalTotal})">
+                        <option value="" ${finalTotal !== 0 && !isActiveSubscriber ? 'selected' : ''}>Selecione...</option>
+                        <option value="Assinatura / Cortesia" ${finalTotal === 0 || isActiveSubscriber ? 'selected' : ''}>Assinatura / Cortesia</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Misto">Pagamento Misto (Dividir)</option>
+                    </select>
+                </div>
+                <div id="split-payment-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Parte 1 via:</label>
+                            <select id="split-method-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="split-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01" oninput="app.updateSplitRemainder(${finalTotal})">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">Parte 2 via:</label>
+                            <select id="split-method-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
+                                <option value="PIX">PIX</option>
                                 <option value="Dinheiro">Dinheiro</option>
                                 <option value="Cartão de Débito">Débito</option>
                                 <option value="Cartão de Crédito">Crédito</option>
