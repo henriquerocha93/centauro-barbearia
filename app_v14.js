@@ -4059,9 +4059,20 @@ const app = {
         const statusBg = bgs[apt.status] || 'rgba(255,255,255,0.02)';
         const origin = apt.origin || 'Encaixe (Manual)';
         const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
-        const price = parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        let isSubscriber = false;
+        if (this.state.subscribers && apt.customer) {
+            const sub = this.state.subscribers.find(s => {
+                const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
+                return c && c.name.trim().toLowerCase() === apt.customer.trim().toLowerCase();
+            });
+            if (sub && new Date(sub.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0))) {
+                isSubscriber = true;
+            }
+        }
+
+        const priceStr = isSubscriber ? 'Assinatura' : parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nValor: ${price}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
@@ -4857,19 +4868,21 @@ const app = {
         let planObj = null;
         let finalCommBase = apt.price;
         let finalAptPrice = apt.price;
+        
+        let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
-        if (isActiveSubscriber && !apt.service.includes('[Clube:')) {
+        if (isActiveSubscriber) {
             planObj = this.state.subscriptionPlans.find(p => p.name === subscriberPlan);
             
             // Separa os serviços se houver mais de um (ex: "Corte, Barba")
             let allServices = (this.state.services || []).map(s => s.name).sort((a,b) => b.length - a.length);
             let individualServices = [];
-            const chunks = apt.service.split(', ');
+            const chunks = pureService.split(', ');
             let i = 0;
             while (i < chunks.length) {
                 let matched = false;
                 for (let j = chunks.length; j > i; j--) {
-                    const candidate = chunks.slice(i, j).join(', ');
+                    const candidate = chunks.slice(i, j).join(', ').trim();
                     if (allServices.includes(candidate)) {
                         individualServices.push(candidate);
                         i = j;
@@ -4878,7 +4891,7 @@ const app = {
                     }
                 }
                 if (!matched) {
-                    individualServices.push(chunks[i]);
+                    individualServices.push(chunks[i].trim());
                     i++;
                 }
             }
@@ -4968,13 +4981,8 @@ const app = {
                 
                 apt.commissionBase = finalCommBase;
                 apt.price = finalAptPrice;
-                apt.service += ` [Clube: ${subscriberPlan}]`;
+                apt.service = `${pureService} [Clube: ${subscriberPlan}]`;
             }
-        } else if (isActiveSubscriber && apt.service.includes('[Clube:')) {
-            // Se já foi processado na abertura anterior do modal
-            isIncludedService = true;
-            // Para efeitos visuais no modal já processado (apenas estético se ele fechar e abrir)
-            finalAptPrice = apt.price;
         }
 
         const totalProducts = (apt.products || []).reduce((sum, p) => sum + (p.price * p.qty), 0);
@@ -4982,7 +4990,7 @@ const app = {
 
         // Monta os resumos de listas para o HTML
         let isencaoHtml = '';
-        if (isActiveSubscriber && planObj && !apt.service.includes('[Clube:')) {
+        if (isActiveSubscriber && planObj) {
             // Recriar o parser visual se estivermos no primeiro load
             const inc = includedList || [];
             const nInc = notIncludedList || [];
@@ -5037,7 +5045,9 @@ const app = {
                 <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 4px solid var(--accent-color);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
-                        <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">R$ ${finalAptPrice.toFixed(2)}</span>
+                        <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
+                            ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${finalAptPrice.toFixed(2)}`}
+                        </span>
                     </div>
                 </div>
 
