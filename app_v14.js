@@ -4876,7 +4876,7 @@ const app = {
         if (this.state.subscribers && apt.customer) {
             const sub = this.state.subscribers.find(s => {
                 const c = (this.state.customers || []).find(cx => cx.id == s.customerId);
-                return c && c.name.trim().toLowerCase() === apt.customer.trim().toLowerCase();
+                return c && c.name && c.name.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase();
             });
             if (sub) {
                 isSubscriber = true;
@@ -4893,16 +4893,16 @@ const app = {
         let isPartiallyIncluded = false;
         let usageWarning = '';
         let planObj = null;
-        let finalCommBase = apt.price;
-        let finalAptPrice = apt.price;
+        let finalCommBase = apt.price || 0;
+        let finalAptPrice = apt.price || 0;
         
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
         if (isActiveSubscriber) {
-            planObj = this.state.subscriptionPlans.find(p => p.name.trim() === subscriberPlan.trim());
+            planObj = (this.state.subscriptionPlans || []).find(p => p && p.name && subscriberPlan && p.name.trim() === subscriberPlan.trim());
             
             // Separa os serviços se houver mais de um (ex: "Corte, Barba")
-            let allServices = (this.state.services || []).map(s => s.name).sort((a,b) => b.length - a.length);
+            let allServices = (this.state.services || []).map(s => s.name || '').sort((a,b) => b.length - a.length);
             let individualServices = [];
             const chunks = pureService.split(', ');
             let i = 0;
@@ -4910,7 +4910,7 @@ const app = {
                 let matched = false;
                 for (let j = chunks.length; j > i; j--) {
                     const candidate = chunks.slice(i, j).join(', ').trim();
-                    if (allServices.includes(candidate)) {
+                    if (candidate && allServices.includes(candidate)) {
                         individualServices.push(candidate);
                         i = j;
                         matched = true;
@@ -4918,7 +4918,7 @@ const app = {
                     }
                 }
                 if (!matched) {
-                    individualServices.push(chunks[i].trim());
+                    if (chunks[i]) individualServices.push(chunks[i].trim());
                     i++;
                 }
             }
@@ -4933,9 +4933,9 @@ const app = {
                 if (planObj && planObj.includedServices && planObj.includedServices.includes(svc)) {
                     includedList.push(svc);
                     const sObj = (this.state.services || []).find(s => s.name === svc);
-                    sumIncludedCatalog += sObj ? parseFloat(sObj.price) : 0;
+                    sumIncludedCatalog += sObj ? parseFloat(sObj.price || 0) : 0;
                     
-                    let base = sObj ? parseFloat(sObj.price) : 0;
+                    let base = sObj ? parseFloat(sObj.price || 0) : 0;
                     if (planObj.serviceValues && planObj.serviceValues[svc] !== undefined) {
                         base = parseFloat(planObj.serviceValues[svc]);
                     }
@@ -4969,7 +4969,7 @@ const app = {
                 let monthCount = 0;
 
                 (this.state.appointments || []).forEach(a => {
-                    if (a.id !== apt.id && a.customer.trim().toLowerCase() === apt.customer.trim().toLowerCase() && a.status === 'finalizado' && a.service.includes('[Clube:')) {
+                    if (a.id !== apt.id && a.customer && a.customer.trim().toLowerCase() === (apt.customer || '').trim().toLowerCase() && a.status === 'finalizado' && a.service && a.service.includes('[Clube:')) {
                         const aDate = new Date(a.date + "T00:00:00");
                         if (aDate >= cycleStartDate && aDate <= validUntilDate) monthCount++;
                         if (aDate >= weekStart && aDate <= weekEnd) weekCount++;
