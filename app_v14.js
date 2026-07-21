@@ -8044,10 +8044,16 @@ const app = {
                                         </td>
                                         <td style="padding: 15px 20px; color: var(--text-secondary); font-size: 0.8rem;">${lastVisit}</td>
                                         <td style="padding: 15px 20px; text-align: right;">
-                                            <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-readable); border-radius: 8px; cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
-                                                    onclick="event.stopPropagation(); window.app.viewCustomerDetails(${c.id})">
-                                                <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px; pointer-events: none;"></i> Detalhes
-                                            </button>
+                                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                                <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: var(--accent-readable); border-radius: 8px; cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
+                                                        onclick="event.stopPropagation(); window.app.viewCustomerDetails(${c.id})">
+                                                    <i data-lucide="eye" style="width: 14px; vertical-align: middle; margin-right: 5px; pointer-events: none;"></i> Detalhes
+                                                </button>
+                                                <button class="glass" style="padding: 8px 15px; font-size: 0.75rem; color: #ff4444; border-radius: 8px; border: 1px solid rgba(255,68,68,0.3); cursor: pointer !important; pointer-events: auto !important; position: relative; z-index: 10;" 
+                                                        onclick="event.stopPropagation(); window.app.deleteCustomer(${c.id})">
+                                                    <i data-lucide="trash-2" style="width: 14px; vertical-align: middle; margin-right: 5px; pointer-events: none;"></i> Excluir
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 `;
