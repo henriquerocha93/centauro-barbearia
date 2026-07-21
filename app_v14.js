@@ -4864,7 +4864,7 @@ const app = {
             return apt.products.map((p, idx) => `
                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 5px;">
                     <span>${p.name} (x${p.qty})</span>
-                    <span>R$ ${(p.price * p.qty).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
+                    <span>R$ ${((p.price || 0) * (p.qty || 1)).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
                 </div>
             `).join('');
         };
@@ -4893,8 +4893,8 @@ const app = {
         let isPartiallyIncluded = false;
         let usageWarning = '';
         let planObj = null;
-        let finalCommBase = apt.price || 0;
-        let finalAptPrice = apt.price || 0;
+        let finalCommBase = parseFloat(apt.price) || 0;
+        let finalAptPrice = parseFloat(apt.price) || 0;
         
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
@@ -4997,7 +4997,7 @@ const app = {
                 if (notIncludedList.length > 0) {
                     // Misto: Cobra a diferença
                     isPartiallyIncluded = true;
-                    finalAptPrice = Math.max(0, apt.price - sumIncludedCatalog);
+                    finalAptPrice = Math.max(0, (parseFloat(apt.price) || 0) - sumIncludedCatalog);
                     finalCommBase = sumIncludedCommBase + finalAptPrice;
                     usageWarning = `Atenção: A isenção cobriu apenas os serviços do plano. O restante será cobrado.`;
                 } else {
@@ -5073,7 +5073,7 @@ const app = {
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
                         <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
-                            ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${finalAptPrice.toFixed(2)}`}
+                            ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}`}
                         </span>
                     </div>
                 </div>
@@ -5084,7 +5084,7 @@ const app = {
                     <div style="margin-bottom: 10px;">
                         <select id="os-product-select" class="glass" style="width: 100%; padding: 10px; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 8px;">
                             <option value="">Selecione o Produto...</option>
-                            ${this.state.products.filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
+                            ${(this.state.products || []).filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} - R$ ${(parseFloat(p.price) || 0).toFixed(2)}</option>`).join('')}
                         </select>
                         <div style="display: flex; gap: 8px;">
                             <input type="number" id="os-product-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; color: var(--text-primary);" value="1" min="1" placeholder="Qtd">
@@ -5133,7 +5133,7 @@ const app = {
                             <input type="number" id="split-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01">
                         </div>
                     </div>
-                    <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">Total OS + Consumo: <strong>R$ ${finalTotal.toFixed(2)}</strong></p>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">Total OS + Consumo: <strong>R$ ${(parseFloat(finalTotal) || 0).toFixed(2)}</strong></p>
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px;">Gorjeta (Opcional)</label>
