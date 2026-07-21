@@ -4393,6 +4393,33 @@ const app = {
             } else {
                 preview.style.display = 'none';
             }
+
+            // Atualiza a lista de serviços baseada no plano
+            document.querySelectorAll('input[name="walkin-services"]').forEach(input => {
+                const sObj = this.state.services.find(s => s.id == input.dataset.id);
+                const label = input.closest('label');
+                const priceP = label ? label.querySelector('p:last-child') : null;
+                
+                let isIncluded = false;
+                if (subscriberObj) {
+                    const isActiveSubscriber = new Date(subscriberObj.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0));
+                    if (isActiveSubscriber) {
+                        const planObj = (this.state.subscriptionPlans || []).find(p => p.name === subscriberObj.planName);
+                        if (planObj && planObj.includedServices && planObj.includedServices.includes(sObj.name)) {
+                            isIncluded = true;
+                        }
+                    }
+                }
+
+                if (isIncluded) {
+                    input.dataset.price = "0";
+                    if (priceP) priceP.innerHTML = `<span style="color: #10b981; font-weight: 700;">💎 Incluso no Plano</span>`;
+                } else if (sObj) {
+                    input.dataset.price = sObj.price;
+                    if (priceP) priceP.innerHTML = `R$ ${parseFloat(sObj.price).toFixed(2)}`;
+                }
+            });
+            app.updateWalkinCounter();
         }
     },
 
