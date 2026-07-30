@@ -5678,10 +5678,10 @@ const app = {
         const hoje = new Date().toLocaleDateString('pt-BR');
 
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = \`
+        tempDiv.innerHTML = `
             <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; max-width: 100%;">
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
-                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">\${businessName}</h1>
+                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">${businessName}</h1>
                     <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprovação de Faturamento</p>
                 </div>
                 
@@ -5690,11 +5690,11 @@ const app = {
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">\${mes}/\${ano}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${mes}/${ano}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Data de Emissão</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">\${hoje}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${hoje}</td>
                         </tr>
                     </table>
                 </div>
@@ -5704,15 +5704,15 @@ const app = {
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; width: 70%; background: #f9f9f9;">Faturamento com Serviços Prestados</td>
-                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ \${serviceGross.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${serviceGross.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Venda de Produtos</td>
-                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ \${productGross.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${productGross.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 12px 8px; border: 1px solid #000; font-weight: bold; font-size: 16px; background: #eee;">TOTAL FATURAMENTO BRUTO</td>
-                            <td style="padding: 12px 8px; border: 1px solid #000; text-align: right; font-weight: bold; font-size: 16px; background: #eee;">R$ \${totalGross.toFixed(2)}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #000; text-align: right; font-weight: bold; font-size: 16px; background: #eee;">R$ ${totalGross.toFixed(2)}</td>
                         </tr>
                     </table>
                     <p style="font-size: 12px; color: #666; margin-top: 10px;">
@@ -5722,17 +5722,17 @@ const app = {
 
                 <div style="margin-top: 80px; text-align: center;">
                     <div style="border-top: 1px solid #000; width: 300px; margin: 0 auto; padding-top: 10px;">
-                        <p style="margin: 0; font-weight: bold;">\${businessName}</p>
+                        <p style="margin: 0; font-weight: bold;">${businessName}</p>
                         <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Responsável</p>
                     </div>
                 </div>
             </div>
-        \`;
+        `;
 
         try {
             const opt = {
                 margin:       10,
-                filename:     \`Comprovante_Faturamento_\${mes}_\${ano}.pdf\`,
+                filename:     `Comprovante_Faturamento_${mes}_${ano}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
