@@ -5599,6 +5599,153 @@ const app = {
         `;
     },
 
+    openEmissaoFaturamentoModal() {
+        const dialog = document.getElementById('app-modal');
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1;
+
+        let mesesHtml = '';
+        for (let i = 1; i <= 12; i++) {
+            const mesStr = i.toString().padStart(2, '0');
+            mesesHtml += `<option value="${mesStr}" ${i === mesAtual ? 'selected' : ''}>${mesStr}</option>`;
+        }
+
+        let anosHtml = '';
+        for (let i = anoAtual - 5; i <= anoAtual; i++) {
+            anosHtml += `<option value="${i}" ${i === anoAtual ? 'selected' : ''}>${i}</option>`;
+        }
+
+        dialog.innerHTML = `
+            <section>
+                <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Emitir Comprovante</h2>
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.85rem;">Mês</label>
+                    <select id="comprovante-mes" class="glass" style="width: 100%; padding: 10px;">
+                        ${mesesHtml}
+                    </select>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.85rem;">Ano</label>
+                    <select id="comprovante-ano" class="glass" style="width: 100%; padding: 10px;">
+                        ${anosHtml}
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-secondary" style="padding: 10px 15px;" onclick="document.getElementById('app-modal').close()">Cancelar</button>
+                    <button class="btn-primary" id="btn-gerar-pdf" style="padding: 10px 15px;" onclick="app.gerarPdfFaturamento()">Gerar PDF</button>
+                </div>
+            </section>
+        `;
+        dialog.showModal();
+    },
+
+    async gerarPdfFaturamento() {
+        const mes = document.getElementById('comprovante-mes').value;
+        const ano = document.getElementById('comprovante-ano').value;
+        
+        const btn = document.getElementById('btn-gerar-pdf');
+        if (btn) btn.innerText = "Gerando...";
+
+        // Filtra appointments do mês
+        const appointments = (this.state.appointments || []).filter(a => {
+            if (a.status !== 'completed' || !a.date) return false;
+            const aDate = new Date(a.date + 'T12:00:00Z');
+            return aDate.getUTCFullYear() == ano && (aDate.getUTCMonth() + 1) == mes;
+        });
+
+        // Filtra vendas de produtos do mês
+        const productSales = (this.state.productSales || []).filter(s => {
+            if (s.target === 'adm' || !s.date) return false;
+            const sDate = new Date(s.date + 'T12:00:00Z');
+            return sDate.getUTCFullYear() == ano && (sDate.getUTCMonth() + 1) == mes;
+        });
+
+        let serviceGross = 0;
+        appointments.forEach(apt => {
+            serviceGross += parseFloat(apt.price) || 0;
+        });
+
+        let productGross = 0;
+        productSales.forEach(s => {
+            productGross += parseFloat(s.total) || 0;
+        });
+
+        const totalGross = serviceGross + productGross;
+
+        // Montar HTML do comprovante
+        const businessName = this.state.settings?.businessName || 'Nossa Barbearia';
+        const hoje = new Date().toLocaleDateString('pt-BR');
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = \`
+            <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; max-width: 100%;">
+                <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
+                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">\${businessName}</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprovação de Faturamento</p>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">1. Identificação do Período</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">\${mes}/\${ano}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Data de Emissão</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">\${hoje}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">2. Demonstrativo de Faturamento Bruto</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 70%; background: #f9f9f9;">Faturamento com Serviços Prestados</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ \${serviceGross.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Venda de Produtos</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ \${productGross.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px 8px; border: 1px solid #000; font-weight: bold; font-size: 16px; background: #eee;">TOTAL FATURAMENTO BRUTO</td>
+                            <td style="padding: 12px 8px; border: 1px solid #000; text-align: right; font-weight: bold; font-size: 16px; background: #eee;">R$ \${totalGross.toFixed(2)}</td>
+                        </tr>
+                    </table>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        * Este documento tem caráter declaratório e reflete o faturamento bruto registrado no sistema interno de gestão no período selecionado.
+                    </p>
+                </div>
+
+                <div style="margin-top: 80px; text-align: center;">
+                    <div style="border-top: 1px solid #000; width: 300px; margin: 0 auto; padding-top: 10px;">
+                        <p style="margin: 0; font-weight: bold;">\${businessName}</p>
+                        <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Responsável</p>
+                    </div>
+                </div>
+            </div>
+        \`;
+
+        try {
+            const opt = {
+                margin:       10,
+                filename:     \`Comprovante_Faturamento_\${mes}_\${ano}.pdf\`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
+        } catch (e) {
+            console.error("Erro ao gerar PDF", e);
+            alert("Não foi possível gerar o PDF. Verifique se o html2pdf foi carregado corretamente.");
+        }
+
+        document.getElementById('app-modal').close();
+    },
+
     renderAdminTips(container) {
         const today = new Date().toLocaleDateString('en-CA');
         const allTips = this.state.tips || [];
