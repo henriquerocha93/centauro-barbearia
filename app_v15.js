@@ -5649,16 +5649,23 @@ const app = {
 
         // Filtra appointments do mês
         const appointments = (this.state.appointments || []).filter(a => {
-            if (a.status !== 'completed' || !a.date) return false;
-            const aDate = new Date(a.date + 'T12:00:00Z');
-            return aDate.getUTCFullYear() == ano && (aDate.getUTCMonth() + 1) == mes;
+            if (a.status !== 'finalizado' || !a.date) return false;
+            // a.date geralmente vem como YYYY-MM-DD
+            const parts = a.date.split('-');
+            if (parts.length >= 2) {
+                return parts[0] == ano && parts[1] == mes;
+            }
+            return false;
         });
 
         // Filtra vendas de produtos do mês
         const productSales = (this.state.productSales || []).filter(s => {
             if (s.target === 'adm' || !s.date) return false;
-            const sDate = new Date(s.date + 'T12:00:00Z');
-            return sDate.getUTCFullYear() == ano && (sDate.getUTCMonth() + 1) == mes;
+            const parts = s.date.split('-');
+            if (parts.length >= 2) {
+                return parts[0] == ano && parts[1] == mes;
+            }
+            return false;
         });
 
         let serviceGross = 0;
@@ -5681,15 +5688,27 @@ const app = {
         tempDiv.innerHTML = `
             <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; max-width: 100%;">
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
-                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">${businessName}</h1>
+                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">CENTAUROS BARBEARIA</h1>
                     <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprovação de Faturamento</p>
                 </div>
                 
                 <div style="margin-bottom: 30px;">
-                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">1. Identificação do Período</h2>
+                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">1. Identificação do Emissor e Período</h2>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Razão Social / Nome Fantasia</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Centauros Barbearia</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">CNPJ</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">63.039.029/0001-05</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Proprietário Responsável</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Henrique Rocha Clavijo (CPF: 852.216.190-91)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${mes}/${ano}</td>
                         </tr>
                         <tr>
@@ -5722,7 +5741,7 @@ const app = {
 
                 <div style="margin-top: 80px; text-align: center;">
                     <div style="border-top: 1px solid #000; width: 300px; margin: 0 auto; padding-top: 10px;">
-                        <p style="margin: 0; font-weight: bold;">${businessName}</p>
+                        <p style="margin: 0; font-weight: bold;">Centauros Barbearia</p>
                         <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Responsável</p>
                     </div>
                 </div>
