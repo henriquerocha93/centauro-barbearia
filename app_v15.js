@@ -8808,7 +8808,12 @@ const app = {
 
         container.innerHTML = `
             <section id="admin-payments" class="fade-in">
-                <h2 class="section-title" style="margin-bottom: 20px;">% Pagamentos</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin: 0;">% Pagamentos</h2>
+                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;" onclick="app.openEmissaoFaturamentoModal()">
+                        📄 Emitir Comprovante
+                    </button>
+                </div>
                 
                 <div class="glass" style="padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                     <h3 style="font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
