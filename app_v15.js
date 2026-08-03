@@ -4906,6 +4906,12 @@ const app = {
         
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
+        // Declaradas aqui para ficarem acessíveis fora do bloco isActiveSubscriber
+        let includedList = [];
+        let notIncludedList = [];
+        let sumIncludedCatalog = 0;
+        let sumIncludedCommBase = 0;
+
         if (isActiveSubscriber) {
             planObj = (this.state.subscriptionPlans || []).find(p => p && p.name && subscriberPlan && p.name.trim() === subscriberPlan.trim());
             
@@ -4932,10 +4938,8 @@ const app = {
             }
 
             // Checa quais estão inclusos
-            let includedList = [];
-            let notIncludedList = [];
-            let sumIncludedCatalog = 0;
-            let sumIncludedCommBase = 0;
+            sumIncludedCatalog = 0;
+            sumIncludedCommBase = 0;
 
             const normalizeName = (name) => (name || "").trim().toLowerCase().replace(/\s+/g, " ");
             individualServices.forEach(svcOrig => {
