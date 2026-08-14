@@ -1249,22 +1249,37 @@ const app = {
             initialSubView = parts[1] || null;
         }
 
-        // Carregamento inicial com verificação de sessão (Manter Logado)
-        const savedUserStr = localStorage.getItem('centauros_user');
+        // [SEGURANÇA] Carregamento inicial com verificação de sessão amarrada ao tenant ativo
+        const tenantId = this.getTenantId();
+        const sessionKey = `centauros_user_${tenantId}`;
+        const savedUserStr = localStorage.getItem(sessionKey);
+
+        // [MIGRAÇÃO LEGADA] Limpa chave global antiga se existir, para não deixar resíduos
+        if (localStorage.getItem('centauros_user')) {
+            localStorage.removeItem('centauros_user');
+        }
+
         if (savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr);
-                this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
 
-                // Se não houver hash, define a view padrão por cargo
-                if (!hash) {
-                    if (this.state.user.role === 'admin') initialView = 'admin-dash';
-                    else if (this.state.user.role === 'totem') initialView = 'totem-dash';
-                    else initialView = 'barber-dash';
+                // [SEGURANÇA CRÍTICA] Verifica se a sessão pertence a esta loja
+                if (savedUser.tenantId && savedUser.tenantId !== tenantId) {
+                    console.warn(`⚠️ [SEGURANÇA] Sessão de outro tenant bloqueada. Sessão: '${savedUser.tenantId}', Tenant ativo: '${tenantId}'`);
+                    localStorage.removeItem(sessionKey);
+                } else {
+                    this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
+
+                    // Se não houver hash, define a view padrão por cargo
+                    if (!hash) {
+                        if (this.state.user.role === 'admin') initialView = 'admin-dash';
+                        else if (this.state.user.role === 'totem') initialView = 'totem-dash';
+                        else initialView = 'barber-dash';
+                    }
                 }
             } catch (e) {
                 console.error("Erro ao ler sessão salva:", e);
-                localStorage.removeItem('centauros_user');
+                localStorage.removeItem(sessionKey);
             }
         }
 
@@ -1638,6 +1653,8 @@ const app = {
         if (confirm('⚠️ ATENÇÃO: Isso irá apagar TODOS os dados (clientes, agendamentos, transações, vales). Esta ação é irreversível.\n\nDeseja continuar?')) {
             if (confirm('Tem ABSOLUTA certeza? Todos os dados serão perdidos permanentemente.')) {
                 localStorage.removeItem('centauro_state');
+                localStorage.removeItem(`centauros_user_${this.getTenantId()}`);
+                // [MIGRAÇÃO LEGADA] Remove chave global antiga se ainda existir
                 localStorage.removeItem('centauros_user');
                 alert('Dados limpos. O sistema será reiniciado.');
                 location.reload();
@@ -2456,6 +2473,8 @@ const app = {
     logout() {
         if (confirm('Deseja realmente sair?')) {
             this.state.user = null;
+            localStorage.removeItem(`centauros_user_${this.getTenantId()}`);
+            // [MIGRAÇÃO LEGADA] Remove chave global antiga se ainda existir
             localStorage.removeItem('centauros_user');
             this.navigateTo('home');
         }
@@ -3082,21 +3101,25 @@ const app = {
         document.getElementById('btn-do-login').onclick = () => {
             const user = document.getElementById('username').value.trim().toLowerCase();
             const pass = document.getElementById('password').value.trim();
+            const tenantId = this.getTenantId();
 
-            // Procura o usuário que cruza os dados (Aceita Login ou Email)
+            // [SEGURANÇA] Procura o usuário APENAS dentro do staff do tenant ativo
             const matchedUser = this.state.staff.find(s =>
                 ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
                 (s.password && String(s.password).trim() === pass)
             );
 
             if (matchedUser) {
+                // [SEGURANÇA] Salva o tenantId junto com a sessão para evitar reutilização entre lojas
+                const sessionData = { ...matchedUser, tenantId };
                 this.state.user = { id: matchedUser.id, name: matchedUser.name, role: matchedUser.role };
 
+                const sessionKey = `centauros_user_${tenantId}`;
                 if (document.getElementById('keep-logged-in').checked) {
-                    localStorage.setItem('centauros_user', JSON.stringify(matchedUser));
+                    localStorage.setItem(sessionKey, JSON.stringify(sessionData));
                 } else {
                     // Limpa sessão anterior se não quiser manter logado
-                    localStorage.removeItem('centauros_user');
+                    localStorage.removeItem(sessionKey);
                 }
 
                 if (matchedUser.role === 'admin') {

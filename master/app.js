@@ -100,8 +100,8 @@ const app = {
             const adminSnap = await get(adminRef);
             const adminData = adminSnap.val() || { user: 'henrique', pass: '123' };
 
-            // 2. Tenta login com dados do banco OU reserva
-            if ((login === adminData.user && pass === adminData.pass) || (login === 'henrique' && pass === '123')) {
+            // 2. Tenta login com dados do banco (SEM backdoor hardcoded por segurança)
+            if (login === adminData.user && pass === adminData.pass) {
                 if (keep) {
                     localStorage.setItem('master_auth', JSON.stringify({ user: login, pass: pass }));
                 }
