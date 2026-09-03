@@ -2927,17 +2927,34 @@ const app = {
                         <p style="color: var(--text-secondary);">Venha nos visitar e conhecer nosso espaço</p>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; align-items: stretch;">
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address || 'Brasil')}" target="_blank" class="glass fade-in-up" style="overflow: hidden; text-decoration: none; display: flex; flex-direction: column;">
-                            <img src="map_real.png" style="width: 100%; height: 300px; object-fit: cover;">
+                        <div class="glass fade-in-up" style="overflow: hidden; display: flex; flex-direction: column;">
+                            ${s.address
+                                ? `<iframe
+                                    src="https://maps.google.com/maps?q=${encodeURIComponent(s.address)}&output=embed&z=15&hl=pt-BR"
+                                    width="100%"
+                                    height="300"
+                                    style="border:0; display:block; width:100%; height:300px;"
+                                    allowfullscreen=""
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    title="Localização da loja no Google Maps">
+                                  </iframe>`
+                                : `<div style="width:100%;height:300px;background:rgba(255,255,255,0.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-bottom:1px solid var(--glass-border);">
+                                     <span style="font-size:3rem;opacity:0.3;">📍</span>
+                                     <p style="font-size:0.85rem;opacity:0.4;text-align:center;padding:0 20px;">Mapa indisponível.<br>Cadastre o endereço no painel administrativo.</p>
+                                   </div>`
+                            }
                             <div style="padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
                                  <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-readable); margin-bottom: 10px;">${s.address || 'Endereço não cadastrado'}</p>
                                  <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Por favor, atualize o endereço no painel administrativo.'}</p>
                                  ${s.phone ? `<p style="font-weight: bold; color: var(--accent-readable); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
-                                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-readable); font-size: 0.85rem; font-weight: 600;">
-                                     📍 VER NO GOOGLE MAPS
-                                 </div>
+                                 ${s.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}" target="_blank" style="text-decoration:none;">
+                                     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-readable); font-size: 0.85rem; font-weight: 600;">
+                                         📍 VER NO GOOGLE MAPS
+                                     </div>
+                                 </a>` : ''}
                             </div>
-                        </a>
+                        </div>
                         <div class="glass fade-in-up" style="padding: 40px; display: flex; flex-direction: column; justify-content: center;">
                             <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-readable); text-align: center;">Horários de Funcionamento</h3>
                             <div style="display: flex; flex-direction: column; gap: 20px;">
