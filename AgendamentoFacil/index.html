@@ -482,23 +482,44 @@
 
                     </svg>
 
-                    <!-- Legenda flutuante -->
-                    <div style="position:absolute; top:15px; right:15px; background:rgba(15,5,30,0.9); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:15px 18px; backdrop-filter:blur(8px);">
-                        <div style="font-size:0.7rem; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Legenda</div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                            <div style="width:14px; height:14px; background:#4c1d95; border:2.5px solid #fb923c; border-radius:3px;"></div>
-                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.7);">Destaque (SP, RJ)</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                            <div style="width:14px; height:14px; background:#3b0764; border:2px solid #a855f7; border-radius:3px;"></div>
-                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.7);">Estados ativos</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="width:14px; height:14px; background:#2d1b69; border:1.5px solid #6d28d9; border-radius:3px;"></div>
-                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.4);">Em expansão</span>
-                        </div>
-                    </div>
 
+                </div>
+
+                <!-- FILTROS CLICÁVEIS DA LEGENDA -->
+                <div id="mapa-filtros" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:28px; padding:0 10px;">
+                    <div style="font-size:0.72rem; color:rgba(255,255,255,0.35); width:100%; text-align:center; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:4px;">🔍 Clique para filtrar no mapa</div>
+
+                    <button class="mapa-filtro-btn mapa-filtro-ativo" data-filtro="todos"
+                        style="display:flex;align-items:center;gap:10px;padding:10px 22px;border-radius:30px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.25s;backdrop-filter:blur(8px);">
+                        <span style="font-size:1rem;">🗺️</span> Todos os Estados
+                        <span class="filtro-count" style="background:rgba(255,255,255,0.2);border-radius:12px;padding:2px 8px;font-size:0.72rem;">27</span>
+                    </button>
+
+                    <button class="mapa-filtro-btn" data-filtro="destaque"
+                        style="display:flex;align-items:center;gap:10px;padding:10px 22px;border-radius:30px;border:2px solid rgba(251,146,60,0.5);background:rgba(251,146,60,0.1);color:#fed7aa;cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.25s;backdrop-filter:blur(8px);">
+                        <span style="display:inline-block;width:14px;height:14px;background:#4c1d95;border:2.5px solid #fb923c;border-radius:3px;flex-shrink:0;"></span>
+                        🔥 Maiores Mercados
+                        <span class="filtro-count" style="background:rgba(251,146,60,0.3);border-radius:12px;padding:2px 8px;font-size:0.72rem;">2</span>
+                    </button>
+
+                    <button class="mapa-filtro-btn" data-filtro="ativo"
+                        style="display:flex;align-items:center;gap:10px;padding:10px 22px;border-radius:30px;border:2px solid rgba(168,85,247,0.5);background:rgba(168,85,247,0.1);color:#e9d5ff;cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.25s;backdrop-filter:blur(8px);">
+                        <span style="display:inline-block;width:14px;height:14px;background:#3b0764;border:2px solid #a855f7;border-radius:3px;flex-shrink:0;"></span>
+                        ✅ Estados Ativos
+                        <span class="filtro-count" style="background:rgba(168,85,247,0.3);border-radius:12px;padding:2px 8px;font-size:0.72rem;">12</span>
+                    </button>
+
+                    <button class="mapa-filtro-btn" data-filtro="expansao"
+                        style="display:flex;align-items:center;gap:10px;padding:10px 22px;border-radius:30px;border:2px solid rgba(109,40,217,0.5);background:rgba(109,40,217,0.08);color:rgba(255,255,255,0.55);cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.25s;backdrop-filter:blur(8px);">
+                        <span style="display:inline-block;width:14px;height:14px;background:#2d1b69;border:1.5px solid #6d28d9;border-radius:3px;flex-shrink:0;"></span>
+                        🚀 Em Expansão
+                        <span class="filtro-count" style="background:rgba(109,40,217,0.25);border-radius:12px;padding:2px 8px;font-size:0.72rem;">13</span>
+                    </button>
+                </div>
+
+                <!-- Tooltip de info do estado (aparece ao clicar filtro) -->
+                <div id="mapa-info-box" style="display:none; margin-top:18px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:16px 22px; text-align:center; transition:all 0.3s;">
+                    <span id="mapa-info-texto" style="font-size:0.9rem; color:rgba(255,255,255,0.8);"></span>
                 </div>
 
                 <!-- Lista de cidades ativas -->
@@ -573,8 +594,43 @@
         animation: mapaPin 1.5s ease-in-out infinite;
     }
 
+    /* Filtros do mapa */
+    .mapa-filtro-btn {
+        outline: none;
+        font-family: inherit;
+        letter-spacing: 0.3px;
+    }
+    .mapa-filtro-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .mapa-filtro-btn:active { transform: translateY(0); }
+    .mapa-filtro-ativo {
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.25), 0 8px 25px rgba(0,0,0,0.3) !important;
+        transform: translateY(-2px);
+    }
+    .estado-mapa-dim {
+        opacity: 0.12 !important;
+        transition: opacity 0.4s ease;
+    }
+    .estado-mapa-brilho {
+        opacity: 1 !important;
+        transition: opacity 0.4s ease;
+        filter: brightness(1.4) drop-shadow(0 0 6px rgba(251,146,60,0.5));
+    }
+    .pin-grupo-dim {
+        opacity: 0.08 !important;
+        transition: opacity 0.4s ease;
+    }
+    .pin-grupo-brilho {
+        opacity: 1 !important;
+        transition: opacity 0.4s ease;
+    }
+
     @media (max-width: 768px) {
         #user-counter { font-size: 2.8rem !important; }
+        #mapa-filtros { gap: 8px !important; }
+        .mapa-filtro-btn { font-size: 0.78rem !important; padding: 8px 14px !important; }
     }
     </style>
 
@@ -672,6 +728,119 @@
             setTimeout(function(){ addFeedItem(); scheduleNext(); }, delay);
         }
         setTimeout(scheduleNext, 3500);
+    })();
+    </script>
+
+    <!-- Script de filtros interativos do mapa -->
+    <script>
+    (function() {
+        // IDs dos paths SVG por categoria
+        var GRUPOS = {
+            destaque: ['SP', 'RJ'],
+            ativo: ['CE','RN','PB','PE','AL','SE','BA','GO','DF','MG','ES','PR','SC','RS','MS'],
+            expansao: ['AM','PA','MA','PI','TO','RO','AC','MT','RR','AP','ES']
+        };
+
+        var INFOS = {
+            todos:    '🗺️ Exibindo todos os <strong>27 estados</strong> do Brasil — nossa cobertura está crescendo!',
+            destaque: '🔥 <strong>São Paulo</strong> e <strong>Rio de Janeiro</strong> são nossos maiores mercados, com centenas de estabelecimentos ativos.',
+            ativo:    '✅ <strong>14 estados</strong> com usuários ativos — Sudeste, Sul, Nordeste e Centro-Oeste já fazem parte da nossa rede.',
+            expansao: '🚀 Estamos em <strong>expansão acelerada</strong> por todo o Brasil. Em breve, mais estados serão adicionados!'
+        };
+
+        var svgEl = document.querySelector('#usuarios-mapa svg');
+        if (!svgEl) return;
+
+        // Associa IDs aos paths do SVG via comentário vizinho não disponível,
+        // então usamos data-id embutido nos paths via texto buscado nos path-labels
+        // Estratégia: cada <text> com conteúdo = sigla está após o <path> correspondente.
+        // Criamos um mapa sigla → path buscando os <text> dentro do svg.
+        var mapaPathPorSigla = {};
+        var textos = svgEl.querySelectorAll('text');
+        textos.forEach(function(t) {
+            var sigla = t.textContent.trim();
+            // O path imediatamente anterior ao text dentro do mesmo grupo ou SVG
+            var prev = t.previousElementSibling;
+            if (prev && prev.tagName === 'path') {
+                mapaPathPorSigla[sigla] = prev;
+            }
+        });
+
+        // Todos os paths de estado
+        var todosPaths = Array.from(svgEl.querySelectorAll('path'));
+        // Todos os grupos de pinos (g[transform])
+        var todosPins = Array.from(svgEl.querySelectorAll('g[transform]'));
+
+        function resetarMapa() {
+            todosPaths.forEach(function(p) {
+                p.classList.remove('estado-mapa-dim', 'estado-mapa-brilho');
+            });
+            todosPins.forEach(function(g) {
+                g.classList.remove('pin-grupo-dim', 'pin-grupo-brilho');
+            });
+        }
+
+        function aplicarFiltro(filtro) {
+            resetarMapa();
+            if (filtro === 'todos') return;
+
+            var siglasSelecionadas = GRUPOS[filtro] || [];
+            // Esmaece todos os paths e pinos
+            todosPaths.forEach(function(p) { p.classList.add('estado-mapa-dim'); });
+            todosPins.forEach(function(g) { g.classList.add('pin-grupo-dim'); });
+
+            // Destaca os selecionados
+            siglasSelecionadas.forEach(function(sigla) {
+                if (mapaPathPorSigla[sigla]) {
+                    mapaPathPorSigla[sigla].classList.remove('estado-mapa-dim');
+                    mapaPathPorSigla[sigla].classList.add('estado-mapa-brilho');
+                }
+            });
+
+            // Destaca pins das cidades dentro dos estados selecionados
+            // Mapeamento cidade → estado
+            var cidadeEstado = {
+                'Fortaleza': 'CE', 'Salvador': 'BA', 'Belo Horizonte': 'MG',
+                'São Paulo': 'SP', 'Rio de Janeiro': 'RJ', 'Curitiba': 'PR',
+                'Porto Alegre': 'RS', 'Florianópolis': 'SC', 'Goiânia': 'GO',
+                'Brasília': 'DF', 'Recife': 'PE', 'Campo Grande': 'MS'
+            };
+            todosPins.forEach(function(g) {
+                var pinTexto = g.querySelector('text');
+                if (!pinTexto) return;
+                var cidade = pinTexto.textContent.trim();
+                var estado = cidadeEstado[cidade];
+                if (estado && siglasSelecionadas.indexOf(estado) !== -1) {
+                    g.classList.remove('pin-grupo-dim');
+                    g.classList.add('pin-grupo-brilho');
+                }
+            });
+        }
+
+        // Botões
+        var btns = document.querySelectorAll('.mapa-filtro-btn');
+        var infoBox = document.getElementById('mapa-info-box');
+        var infoTexto = document.getElementById('mapa-info-texto');
+        var filtroAtual = 'todos';
+
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var filtro = this.getAttribute('data-filtro');
+                if (filtro === filtroAtual) return; // já ativo
+
+                filtroAtual = filtro;
+                btns.forEach(function(b) { b.classList.remove('mapa-filtro-ativo'); });
+                this.classList.add('mapa-filtro-ativo');
+
+                aplicarFiltro(filtro);
+
+                // Info box
+                if (infoBox && infoTexto) {
+                    infoTexto.innerHTML = INFOS[filtro] || '';
+                    infoBox.style.display = 'block';
+                }
+            });
+        });
     })();
     </script>
 
