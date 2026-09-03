@@ -199,7 +199,482 @@
             </svg>
         </div>
     </section>
-    
+
+    <!-- ===== CONTADOR DE USUÁRIOS + MAPA DO BRASIL ===== -->
+    <section id="usuarios-mapa" style="background: linear-gradient(135deg, #1a0533 0%, #3b0764 50%, #1a0533 100%); padding: 80px 0; position: relative; overflow: hidden;">
+        <!-- Partículas de fundo -->
+        <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
+            <div style="position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(251,146,60,0.08) 0%,transparent 70%);top:-50px;right:-80px;border-radius:50%;"></div>
+            <div style="position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,0.12) 0%,transparent 70%);bottom:-100px;left:-100px;border-radius:50%;"></div>
+        </div>
+
+        <div class="container" style="position:relative;z-index:2;">
+
+            <!-- Título da seção -->
+            <div class="section-title" style="margin-bottom: 50px;">
+                <h2 style="color:#fff; font-size:2.2rem; font-weight:800; text-shadow:0 2px 20px rgba(0,0,0,0.5);">
+                    🇧🇷 NOSSOS USUÁRIOS PELO BRASIL
+                </h2>
+                <p style="color:rgba(255,255,255,0.75); font-size:1.1rem;">
+                    Negócios reais usando o sistema agora mesmo — em todo o país
+                </p>
+            </div>
+
+            <!-- CONTADOR PRINCIPAL -->
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:30px; margin-bottom:60px;">
+
+                <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.15); border-radius:24px; padding:35px 50px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); min-width:220px;">
+                    <div style="font-size:0.85rem; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px;">Total de Usuários Ativos</div>
+                    <div id="user-counter" style="font-size:4rem; font-weight:900; color:#fb923c; line-height:1; font-variant-numeric:tabular-nums; text-shadow:0 0 30px rgba(251,146,60,0.4);">1.500</div>
+                    <div style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin-top:8px;">
+                        <span style="color:#22c55e;">▲</span> <span id="hourly-new">+12 novos esta hora</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:15px; justify-content:center;">
+                    <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:18px 30px; display:flex; align-items:center; gap:15px;">
+                        <span style="font-size:1.8rem;">🏙️</span>
+                        <div>
+                            <div style="font-size:1.6rem; font-weight:900; color:#a78bfa;" id="cities-counter">47</div>
+                            <div style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Cidades Atendidas</div>
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:18px 30px; display:flex; align-items:center; gap:15px;">
+                        <span style="font-size:1.8rem;">🗺️</span>
+                        <div>
+                            <div style="font-size:1.6rem; font-weight:900; color:#34d399;" id="states-counter">14</div>
+                            <div style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Estados Presentes</div>
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:18px 30px; display:flex; align-items:center; gap:15px;">
+                        <span style="font-size:1.8rem;">⭐</span>
+                        <div>
+                            <div style="font-size:1.6rem; font-weight:900; color:#fbbf24;">98%</div>
+                            <div style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Taxa de Satisfação</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MAPA DO BRASIL COM BANDEIRAS -->
+            <div style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:40px 20px; position:relative;">
+
+                <div style="text-align:center; margin-bottom:25px;">
+                    <span style="background:rgba(251,146,60,0.2); border:1px solid rgba(251,146,60,0.4); color:#fb923c; padding:6px 18px; border-radius:20px; font-size:0.8rem; font-weight:700; letter-spacing:1px;">MAPA DE COBERTURA — BRASIL</span>
+                </div>
+
+                <!-- SVG MAP DO BRASIL -->
+                <div style="position:relative; max-width:700px; margin:0 auto;">
+
+                    <svg viewBox="0 0 700 780" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; filter:drop-shadow(0 10px 40px rgba(0,0,0,0.5));">
+                        <defs>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="blur"/>
+                                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                            </filter>
+                        </defs>
+
+                        <!-- RR -->
+                        <path d="M160,30 L200,20 L220,50 L210,70 L180,80 L155,65 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="187" y="50" fill="rgba(255,255,255,0.5)" font-size="9" text-anchor="middle" font-weight="600">RR</text>
+
+                        <!-- AP -->
+                        <path d="M360,20 L400,15 L415,45 L395,60 L370,55 L355,35 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="385" y="40" fill="rgba(255,255,255,0.5)" font-size="9" text-anchor="middle" font-weight="600">AP</text>
+
+                        <!-- AM -->
+                        <path d="M85,80 L200,65 L260,90 L280,150 L260,200 L220,230 L180,240 L120,230 L80,200 L60,150 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="170" y="165" fill="rgba(255,255,255,0.5)" font-size="11" text-anchor="middle" font-weight="600">AM</text>
+
+                        <!-- PA -->
+                        <path d="M260,65 L380,55 L420,80 L430,130 L400,180 L360,200 L300,210 L260,200 L280,150 L260,90 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="345" y="130" fill="rgba(255,255,255,0.5)" font-size="11" text-anchor="middle" font-weight="600">PA</text>
+
+                        <!-- MA -->
+                        <path d="M380,55 L440,50 L470,75 L470,120 L440,150 L410,155 L400,130 L420,80 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="430" y="100" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="middle" font-weight="600">MA</text>
+
+                        <!-- PI -->
+                        <path d="M440,50 L490,45 L510,80 L505,130 L480,150 L470,120 L470,75 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="478" y="95" fill="rgba(255,255,255,0.5)" font-size="9" text-anchor="middle" font-weight="600">PI</text>
+
+                        <!-- CE ATIVO -->
+                        <path d="M490,45 L540,42 L560,65 L555,100 L530,115 L510,100 L505,80 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="528" y="78" fill="#e9d5ff" font-size="9" text-anchor="middle" font-weight="700">CE</text>
+
+                        <!-- RN ATIVO -->
+                        <path d="M540,42 L590,40 L600,60 L585,75 L560,75 L555,65 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="570" y="60" fill="#e9d5ff" font-size="9" text-anchor="middle" font-weight="700">RN</text>
+
+                        <!-- PB ATIVO -->
+                        <path d="M560,75 L600,70 L610,88 L585,95 L560,90 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="582" y="86" fill="#e9d5ff" font-size="8" text-anchor="middle" font-weight="700">PB</text>
+
+                        <!-- PE ATIVO -->
+                        <path d="M530,115 L560,110 L610,100 L620,115 L580,130 L530,130 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="572" y="122" fill="#e9d5ff" font-size="9" text-anchor="middle" font-weight="700">PE</text>
+
+                        <!-- AL ATIVO -->
+                        <path d="M580,130 L615,125 L620,145 L590,150 L575,145 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="597" y="142" fill="#e9d5ff" font-size="8" text-anchor="middle" font-weight="700">AL</text>
+
+                        <!-- SE ATIVO -->
+                        <path d="M560,145 L580,140 L585,160 L565,165 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="571" y="156" fill="#e9d5ff" font-size="7" text-anchor="middle" font-weight="700">SE</text>
+
+                        <!-- BA ATIVO -->
+                        <path d="M440,150 L505,130 L560,130 L590,150 L600,200 L570,260 L520,290 L470,280 L430,250 L400,200 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="500" y="210" fill="#e9d5ff" font-size="12" text-anchor="middle" font-weight="700">BA</text>
+
+                        <!-- TO -->
+                        <path d="M360,200 L410,190 L420,240 L400,290 L360,300 L330,270 L320,230 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="373" y="248" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="middle" font-weight="600">TO</text>
+
+                        <!-- RO -->
+                        <path d="M120,230 L180,240 L195,280 L175,320 L130,320 L100,290 L90,250 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="148" y="278" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="middle" font-weight="600">RO</text>
+
+                        <!-- AC -->
+                        <path d="M60,250 L90,250 L80,295 L50,300 L35,280 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="60" y="278" fill="rgba(255,255,255,0.5)" font-size="9" text-anchor="middle" font-weight="600">AC</text>
+
+                        <!-- MT -->
+                        <path d="M195,240 L260,200 L300,210 L320,230 L330,270 L320,340 L280,370 L230,360 L195,320 L195,280 Z" fill="#2d1b69" stroke="#6d28d9" stroke-width="1.5"/>
+                        <text x="262" y="295" fill="rgba(255,255,255,0.5)" font-size="11" text-anchor="middle" font-weight="600">MT</text>
+
+                        <!-- GO ATIVO -->
+                        <path d="M330,270 L360,300 L400,290 L420,340 L400,380 L370,400 L330,390 L305,360 L300,320 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="360" y="340" fill="#e9d5ff" font-size="11" text-anchor="middle" font-weight="700">GO</text>
+
+                        <!-- DF ATIVO -->
+                        <path d="M373,355 L388,350 L393,365 L378,370 Z" fill="#7c3aed" stroke="#c4b5fd" stroke-width="2"/>
+                        <text x="383" y="363" fill="#fff" font-size="7" text-anchor="middle" font-weight="800">DF</text>
+
+                        <!-- MG ATIVO -->
+                        <path d="M420,250 L470,280 L520,290 L560,280 L580,310 L560,380 L510,410 L460,420 L420,400 L400,380 L420,340 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="490" y="350" fill="#e9d5ff" font-size="12" text-anchor="middle" font-weight="700">MG</text>
+
+                        <!-- ES ATIVO -->
+                        <path d="M560,280 L600,280 L610,320 L580,345 L555,330 L560,300 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="580" y="312" fill="#e9d5ff" font-size="9" text-anchor="middle" font-weight="700">ES</text>
+
+                        <!-- RJ ATIVO / DESTAQUE -->
+                        <path d="M510,410 L560,390 L590,400 L600,425 L575,445 L530,440 L505,430 Z" fill="#3b0764" stroke="#fb923c" stroke-width="2.5"/>
+                        <text x="550" y="422" fill="#fed7aa" font-size="9" text-anchor="middle" font-weight="800">RJ</text>
+
+                        <!-- SP ATIVO / DESTAQUE -->
+                        <path d="M420,400 L460,420 L510,410 L530,440 L520,480 L480,510 L440,510 L400,490 L380,460 L390,420 Z" fill="#4c1d95" stroke="#fb923c" stroke-width="3"/>
+                        <text x="460" y="460" fill="#fed7aa" font-size="13" text-anchor="middle" font-weight="900">SP</text>
+
+                        <!-- PR ATIVO -->
+                        <path d="M380,460 L400,490 L440,510 L460,530 L430,565 L380,565 L340,545 L320,510 L340,470 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="390" y="515" fill="#e9d5ff" font-size="11" text-anchor="middle" font-weight="700">PR</text>
+
+                        <!-- SC ATIVO -->
+                        <path d="M340,545 L380,565 L400,580 L390,600 L355,605 L325,585 L320,565 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="360" y="578" fill="#e9d5ff" font-size="10" text-anchor="middle" font-weight="700">SC</text>
+
+                        <!-- RS ATIVO -->
+                        <path d="M325,585 L355,605 L370,640 L345,680 L300,695 L260,680 L240,645 L260,605 L295,590 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="308" y="645" fill="#e9d5ff" font-size="11" text-anchor="middle" font-weight="700">RS</text>
+
+                        <!-- MS ATIVO -->
+                        <path d="M230,360 L280,370 L320,390 L320,460 L295,490 L260,500 L220,480 L210,430 L215,390 Z" fill="#3b0764" stroke="#a855f7" stroke-width="2"/>
+                        <text x="265" y="430" fill="#e9d5ff" font-size="10" text-anchor="middle" font-weight="700">MS</text>
+
+                        <!-- PINS com animação pulse -->
+                        <!-- CE - Fortaleza -->
+                        <g transform="translate(528,55)">
+                            <circle r="9" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="5" fill="#fb923c" opacity="0.7"/>
+                            <circle r="2.5" fill="#fff"/>
+                            <text y="-13" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Fortaleza</text>
+                        </g>
+
+                        <!-- BA - Salvador -->
+                        <g transform="translate(530,195)">
+                            <circle r="10" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="6" fill="#fb923c" opacity="0.8"/>
+                            <circle r="3" fill="#fff"/>
+                            <text y="-15" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Salvador</text>
+                        </g>
+
+                        <!-- MG - Belo Horizonte -->
+                        <g transform="translate(500,355)">
+                            <circle r="10" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="6" fill="#fb923c" opacity="0.8"/>
+                            <circle r="3" fill="#fff"/>
+                            <text y="-15" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Belo Horizonte</text>
+                        </g>
+
+                        <!-- SP - São Paulo (maior) -->
+                        <g transform="translate(460,462)">
+                            <circle r="16" fill="#fb923c" opacity="0.2" class="mapa-pin-outer"/>
+                            <circle r="10" fill="#fb923c" opacity="0.7"/>
+                            <circle r="5" fill="#fff"/>
+                            <text y="-19" fill="#fb923c" font-size="11" text-anchor="middle" font-weight="900">São Paulo</text>
+                        </g>
+
+                        <!-- RJ - Rio de Janeiro -->
+                        <g transform="translate(548,425)">
+                            <circle r="13" fill="#fb923c" opacity="0.2" class="mapa-pin-outer"/>
+                            <circle r="8" fill="#fb923c" opacity="0.7"/>
+                            <circle r="4" fill="#fff"/>
+                            <text y="-17" fill="#fb923c" font-size="10" text-anchor="middle" font-weight="800">Rio de Janeiro</text>
+                        </g>
+
+                        <!-- PR - Curitiba -->
+                        <g transform="translate(388,515)">
+                            <circle r="9" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2.5" fill="#fff"/>
+                            <text y="-13" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Curitiba</text>
+                        </g>
+
+                        <!-- RS - Porto Alegre -->
+                        <g transform="translate(305,645)">
+                            <circle r="9" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2.5" fill="#fff"/>
+                            <text y="-13" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Porto Alegre</text>
+                        </g>
+
+                        <!-- SC - Florianópolis -->
+                        <g transform="translate(357,580)">
+                            <circle r="8" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="4.5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2" fill="#fff"/>
+                            <text y="-12" fill="#fb923c" font-size="8" text-anchor="middle" font-weight="700">Florianópolis</text>
+                        </g>
+
+                        <!-- GO - Goiânia -->
+                        <g transform="translate(358,340)">
+                            <circle r="9" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2.5" fill="#fff"/>
+                            <text y="-13" fill="#fb923c" font-size="9" text-anchor="middle" font-weight="700">Goiânia</text>
+                        </g>
+
+                        <!-- DF - Brasília -->
+                        <g transform="translate(383,358)">
+                            <circle r="11" fill="#c4b5fd" opacity="0.2" class="mapa-pin-outer"/>
+                            <circle r="7" fill="#7c3aed" opacity="0.9"/>
+                            <circle r="3.5" fill="#e9d5ff"/>
+                            <text y="-15" fill="#c4b5fd" font-size="9" text-anchor="middle" font-weight="800">Brasília</text>
+                        </g>
+
+                        <!-- PE - Recife -->
+                        <g transform="translate(576,118)">
+                            <circle r="8" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="4.5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2" fill="#fff"/>
+                            <text y="-12" fill="#fb923c" font-size="8" text-anchor="middle" font-weight="700">Recife</text>
+                        </g>
+
+                        <!-- MS - Campo Grande -->
+                        <g transform="translate(260,430)">
+                            <circle r="8" fill="#fb923c" opacity="0.25" class="mapa-pin-outer"/>
+                            <circle r="4.5" fill="#fb923c" opacity="0.8"/>
+                            <circle r="2" fill="#fff"/>
+                            <text y="-12" fill="#fb923c" font-size="8" text-anchor="middle" font-weight="700">Campo Grande</text>
+                        </g>
+
+                    </svg>
+
+                    <!-- Legenda flutuante -->
+                    <div style="position:absolute; top:15px; right:15px; background:rgba(15,5,30,0.9); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:15px 18px; backdrop-filter:blur(8px);">
+                        <div style="font-size:0.7rem; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Legenda</div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                            <div style="width:14px; height:14px; background:#4c1d95; border:2.5px solid #fb923c; border-radius:3px;"></div>
+                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.7);">Destaque (SP, RJ)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                            <div style="width:14px; height:14px; background:#3b0764; border:2px solid #a855f7; border-radius:3px;"></div>
+                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.7);">Estados ativos</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:14px; height:14px; background:#2d1b69; border:1.5px solid #6d28d9; border-radius:3px;"></div>
+                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.4);">Em expansão</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Lista de cidades ativas -->
+                <div style="margin-top:35px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; padding:0 10px;">
+                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); width:100%; text-align:center; margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">📍 Cidades com usuários ativos</div>
+                    <span style="background:rgba(251,146,60,0.15); border:1px solid rgba(251,146,60,0.4); color:#fed7aa; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🏙️ São Paulo, SP</span>
+                    <span style="background:rgba(251,146,60,0.15); border:1px solid rgba(251,146,60,0.4); color:#fed7aa; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Campinas, SP</span>
+                    <span style="background:rgba(251,146,60,0.15); border:1px solid rgba(251,146,60,0.4); color:#fed7aa; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Santos, SP</span>
+                    <span style="background:rgba(251,146,60,0.15); border:1px solid rgba(251,146,60,0.4); color:#fed7aa; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Ribeirão Preto, SP</span>
+                    <span style="background:rgba(251,146,60,0.15); border:1px solid rgba(251,146,60,0.4); color:#fed7aa; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Sorocaba, SP</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🏖️ Rio de Janeiro, RJ</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Niterói, RJ</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">⛰️ Belo Horizonte, MG</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Uberlândia, MG</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌲 Curitiba, PR</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Londrina, PR</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌊 Porto Alegre, RS</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Caxias do Sul, RS</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🏄 Florianópolis, SC</span>
+                    <span style="background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#a7f3d0; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Joinville, SC</span>
+                    <span style="background:rgba(250,204,21,0.1); border:1px solid rgba(250,204,21,0.3); color:#fef08a; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌴 Salvador, BA</span>
+                    <span style="background:rgba(250,204,21,0.1); border:1px solid rgba(250,204,21,0.3); color:#fef08a; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Feira de Santana, BA</span>
+                    <span style="background:rgba(250,204,21,0.1); border:1px solid rgba(250,204,21,0.3); color:#fef08a; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">☀️ Fortaleza, CE</span>
+                    <span style="background:rgba(250,204,21,0.1); border:1px solid rgba(250,204,21,0.3); color:#fef08a; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🎭 Recife, PE</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🏛️ Brasília, DF</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌾 Goiânia, GO</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌿 Campo Grande, MS</span>
+                    <span style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#ddd6fe; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌆 Maceió, AL</span>
+                    <span style="background:rgba(250,204,21,0.1); border:1px solid rgba(250,204,21,0.3); color:#fef08a; padding:5px 14px; border-radius:20px; font-size:0.78rem; font-weight:600;">🌊 Natal, RN</span>
+                </div>
+
+            </div>
+
+            <!-- Live feed de novos usuários -->
+            <div style="margin-top:30px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:20px 25px;">
+                <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">🔴 Novos cadastros em tempo real</div>
+                <div id="live-feed" style="display:flex; flex-direction:column; gap:8px; max-height:130px; overflow:hidden;"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <style>
+    @keyframes mapaPin {
+        0%, 100% { r: 9; opacity: 0.25; }
+        50% { r: 16; opacity: 0.08; }
+    }
+    .mapa-pin-outer { animation: mapaPin 2.2s ease-in-out infinite; }
+
+    @keyframes feedSlideIn {
+        from { opacity: 0; transform: translateX(-15px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .feed-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        animation: feedSlideIn 0.4s ease;
+        font-size: 0.82rem;
+        color: rgba(255,255,255,0.8);
+        border-left: 2px solid rgba(251,146,60,0.5);
+    }
+    .feed-dot {
+        width: 8px; height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px #22c55e;
+        animation: mapaPin 1.5s ease-in-out infinite;
+    }
+
+    @media (max-width: 768px) {
+        #user-counter { font-size: 2.8rem !important; }
+    }
+    </style>
+
+    <script>
+    (function() {
+        var BASE_COUNT = 1500;
+        var BASE_TIMESTAMP = new Date('2026-09-03T00:00:00-03:00').getTime();
+        var RATE_MIN = 8, RATE_MAX = 18;
+
+        function seededRandom(seed) {
+            var x = Math.sin(seed + 1) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function getCurrentCount() {
+            var now = Date.now();
+            var hours = Math.floor((now - BASE_TIMESTAMP) / 3600000);
+            var total = BASE_COUNT;
+            for (var h = 0; h < hours; h++) {
+                total += RATE_MIN + Math.floor(seededRandom(h) * (RATE_MAX - RATE_MIN + 1));
+            }
+            return Math.max(BASE_COUNT, total);
+        }
+
+        function getHourlyNew() {
+            var h = Math.floor(Date.now() / 3600000) % 10000;
+            return RATE_MIN + Math.floor(seededRandom(h) * (RATE_MAX - RATE_MIN + 1));
+        }
+
+        function animateCounter(el, from, to, duration) {
+            var start = performance.now();
+            function step(now) {
+                var elapsed = now - start;
+                var progress = Math.min(elapsed / duration, 1);
+                var ease = 1 - Math.pow(1 - progress, 3);
+                var value = Math.round(from + (to - from) * ease);
+                el.textContent = value.toLocaleString('pt-BR');
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        var counterEl = document.getElementById('user-counter');
+        var hourlyEl  = document.getElementById('hourly-new');
+        var citiesEl  = document.getElementById('cities-counter');
+        var statesEl  = document.getElementById('states-counter');
+
+        if (counterEl) {
+            var target = getCurrentCount();
+            animateCounter(counterEl, 1000, target, 2800);
+            if (hourlyEl) hourlyEl.textContent = '+' + getHourlyNew() + ' novos esta hora';
+
+            // Atualiza na virada de hora
+            var msUntilNext = 3600000 - (Date.now() % 3600000);
+            setTimeout(function tick() {
+                var cur = parseInt(counterEl.textContent.replace(/\D/g, '')) || getCurrentCount();
+                animateCounter(counterEl, cur, getCurrentCount(), 3000);
+                if (hourlyEl) hourlyEl.textContent = '+' + getHourlyNew() + ' novos esta hora';
+                setTimeout(tick, 3600000);
+            }, msUntilNext);
+        }
+        if (citiesEl) {
+            var extraCities = Math.floor((Date.now() - BASE_TIMESTAMP) / (3600000 * 72));
+            animateCounter(citiesEl, 0, 47 + extraCities, 2000);
+        }
+        if (statesEl) animateCounter(statesEl, 0, 14, 1800);
+
+        // Live feed
+        var feedEl = document.getElementById('live-feed');
+        if (!feedEl) return;
+
+        var nomes = ['Carlos M.','João B.','Felipe R.','André S.','Bruno K.','Marcos T.','Rafael L.','Diego P.','Lucas A.','Thiago C.','Paulo V.','Rodrigo F.','Leonardo S.','Eduardo N.'];
+        var cidades = ['São Paulo, SP','Rio de Janeiro, RJ','Curitiba, PR','Belo Horizonte, MG','Salvador, BA','Fortaleza, CE','Porto Alegre, RS','Campinas, SP','Recife, PE','Goiânia, GO','Brasília, DF','Florianópolis, SC','Santos, SP','Londrina, PR','Niterói, RJ','Feira de Santana, BA','Sorocaba, SP','Campo Grande, MS','Uberlândia, MG','Joinville, SC','Caxias do Sul, RS','Ribeirão Preto, SP','Maceió, AL','Natal, RN'];
+        var tipos = ['Barbearia','Salão de Beleza','Clínica de Estética','Barbearia & Estética'];
+        var emojis = ['💈','💅','✨','🪒'];
+
+        var seedFeed = Math.floor(Date.now() / 60000);
+
+        function addFeedItem() {
+            seedFeed++;
+            var nome   = nomes[Math.floor(seededRandom(seedFeed) * nomes.length)];
+            var cidade = cidades[Math.floor(seededRandom(seedFeed + 1) * cidades.length)];
+            var ti     = Math.floor(seededRandom(seedFeed + 2) * tipos.length);
+            var item   = document.createElement('div');
+            item.className = 'feed-item';
+            item.innerHTML = '<div class="feed-dot"></div><span>' + emojis[ti] + ' <strong>' + nome + '</strong> de <strong>' + cidade + '</strong> cadastrou seu <em>' + tipos[ti] + '</em> agora mesmo!</span>';
+            feedEl.insertBefore(item, feedEl.firstChild);
+            if (feedEl.children.length > 4) feedEl.removeChild(feedEl.lastChild);
+        }
+
+        for (var i = 0; i < 3; i++) { (function(idx){ setTimeout(addFeedItem, idx * 500); })(i); }
+
+        function scheduleNext() {
+            var delay = 12000 + Math.floor(seededRandom(seedFeed % 9999) * 13000);
+            setTimeout(function(){ addFeedItem(); scheduleNext(); }, delay);
+        }
+        setTimeout(scheduleNext, 3500);
+    })();
+    </script>
+
     <!-- MOCKUP PROVA REAL -->
     <div class="mockup-section" style="background: #fff; padding: 60px 0; display: flex; justify-content: center; position: relative; z-index: 10;">
         <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 50px; width: 100%;">
