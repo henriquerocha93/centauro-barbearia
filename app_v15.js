@@ -1498,8 +1498,23 @@ const app = {
                             <input type="text" id="shop-instagram" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.instagram || ''}" placeholder="@suabarbearia">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endereço</label>
-                            <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Ex: Rua Principal, 123">
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">CEP</label>
+                            <div style="position: relative;">
+                                <input type="text" id="shop-cep" class="glass" maxlength="9"
+                                    style="width: 100%; padding: 10px 36px 10px 10px; color: var(--text-primary); letter-spacing: 1px;"
+                                    value="${shopInfo.cep || ''}"
+                                    placeholder="00000-000"
+                                    oninput="app.formatCep(this)"
+                                    onblur="app.buscarCep(this.value, 'settings')">
+                                <span id="settings-cep-status" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:1rem;"></span>
+                            </div>
+                            <p id="settings-cep-msg" style="font-size:0.75rem;margin-top:4px;min-height:16px;color:var(--text-secondary);"></p>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endereço
+                                <span style="font-weight:400;opacity:0.5;"> — preenchido pelo CEP ou edite manualmente</span>
+                            </label>
+                            <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Ex: Rua Principal, 123 - Bairro - Cidade/UF">
                         </div>
                     </div>
                 </div>
@@ -1619,6 +1634,8 @@ const app = {
         this.state.settings.shopInfo.name = document.getElementById('shop-name').value.trim();
         this.state.settings.shopInfo.phone = document.getElementById('shop-phone').value.trim();
         this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
+        const cepEl = document.getElementById('shop-cep');
+        if (cepEl) this.state.settings.shopInfo.cep = cepEl.value.trim();
         this.state.settings.shopInfo.address = document.getElementById('shop-address').value.trim();
 
         // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
@@ -3172,14 +3189,33 @@ const app = {
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Instagram (opcional)</label>
                             <input type="text" id="setup-instagram" class="glass" style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;" placeholder="@suabarbearia">
                         </div>
+
+                        <!-- CEP com auto-preenchimento -->
                         <div>
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Endereço Completo *</label>
-                            <input type="text" id="setup-address" class="glass" style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;" placeholder="Rua, Número, Bairro - Cidade">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">CEP *</label>
+                            <div style="position: relative;">
+                                <input type="text" id="setup-cep" class="glass" maxlength="9"
+                                    style="width: 100%; padding: 14px 44px 14px 14px; color: var(--text-primary); border-radius: 12px; letter-spacing: 1px;"
+                                    placeholder="00000-000"
+                                    oninput="app.formatCep(this)"
+                                    onblur="app.buscarCep(this.value, 'setup')">
+                                <span id="setup-cep-status" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;"></span>
+                            </div>
+                            <p id="setup-cep-msg" style="font-size:0.78rem;margin-top:5px;min-height:18px;color:var(--text-secondary);"></p>
                         </div>
-                        
+
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Endereço Completo *
+                                <span style="font-weight:400;opacity:0.6;font-size:0.78rem;"> — preenchido automaticamente pelo CEP</span>
+                            </label>
+                            <input type="text" id="setup-address" class="glass"
+                                style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;"
+                                placeholder="Rua, Número, Bairro - Cidade/UF">
+                        </div>
+
                         <div style="margin-top: 10px; padding: 15px; background: rgba(212, 175, 55, 0.05); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
                             <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
-                                💡 <strong>Dica:</strong> Você poderá configurar seus horários de atendimento e serviços no menu de configurações após concluir este setup.
+                                💡 <strong>Dica:</strong> Digite o CEP e o endereço será preenchido automaticamente. Depois adicione o número do estabelecimento.
                             </p>
                         </div>
 
@@ -3195,21 +3231,79 @@ const app = {
     saveSetupWizard() {
         const phone = document.getElementById('setup-phone').value.trim();
         const instagram = document.getElementById('setup-instagram').value.trim();
+        const cep = (document.getElementById('setup-cep') || {}).value?.trim() || '';
         const address = document.getElementById('setup-address').value.trim();
 
         if (!phone || !address) {
-            alert('Por favor, preencha o Telefone e o Endereço para continuar.');
+            alert('Por favor, preencha o Telefone e o Endereço para continuar.\n\n💡 Dica: Digite o CEP para preencher o endereço automaticamente, depois adicione o número.');
             return;
         }
 
         if (!this.state.settings.shopInfo) this.state.settings.shopInfo = {};
         this.state.settings.shopInfo.phone = phone;
         this.state.settings.shopInfo.instagram = instagram;
+        this.state.settings.shopInfo.cep = cep;
         this.state.settings.shopInfo.address = address;
 
         this.saveState();
         this.render('admin-dash');
         alert('✅ Perfil configurado com sucesso! Bem-vindo ao Agendamento Fácil BR.');
+    },
+
+
+    // ──────── UTILS: CEP AUTO-PREENCHIMENTO ────────
+    formatCep(input) {
+        let v = input.value.replace(/\D/g, '').slice(0, 8);
+        if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+        input.value = v;
+        // Dispara busca automática ao completar 8 dígitos
+        if (v.replace('-', '').length === 8) {
+            const ctx = input.id.startsWith('setup') ? 'setup' : 'settings';
+            this.buscarCep(v, ctx);
+        }
+    },
+
+    async buscarCep(cepRaw, ctx) {
+        const cep = cepRaw.replace(/\D/g, '');
+        const statusEl = document.getElementById(ctx === 'setup' ? 'setup-cep-status' : 'settings-cep-status');
+        const msgEl    = document.getElementById(ctx === 'setup' ? 'setup-cep-msg'    : 'settings-cep-msg');
+        const addrEl   = document.getElementById(ctx === 'setup' ? 'setup-address'    : 'shop-address');
+
+        if (!statusEl || !msgEl || !addrEl) return;
+        if (cep.length !== 8) { statusEl.textContent = ''; msgEl.textContent = ''; return; }
+
+        statusEl.textContent = '⏳';
+        msgEl.textContent = 'Buscando endereço...';
+        msgEl.style.color = 'var(--text-secondary)';
+
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await res.json();
+
+            if (data.erro) {
+                statusEl.textContent = '❌';
+                msgEl.textContent = 'CEP não encontrado. Verifique e tente novamente.';
+                msgEl.style.color = '#f87171';
+                return;
+            }
+
+            // Monta endereço base (sem número — usuário adiciona)
+            const parts = [data.logradouro, data.bairro, `${data.localidade}/${data.uf}`].filter(Boolean);
+            const endereco = parts.join(', ');
+            addrEl.value = endereco;
+            addrEl.focus();
+            // Posiciona cursor no início para o usuário adicionar o número
+            addrEl.setSelectionRange(data.logradouro ? data.logradouro.length : 0, data.logradouro ? data.logradouro.length : 0);
+
+            statusEl.textContent = '✅';
+            msgEl.textContent = `📍 ${data.localidade} — ${data.uf} · Adicione o número ao endereço`;
+            msgEl.style.color = '#4ade80';
+
+        } catch (e) {
+            statusEl.textContent = '⚠️';
+            msgEl.textContent = 'Erro ao buscar CEP. Verifique sua conexão.';
+            msgEl.style.color = '#fbbf24';
+        }
     },
 
     getBarberRankingHTML() {
