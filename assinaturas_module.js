@@ -188,17 +188,34 @@ window.renderSubscriptionsView = function(app, container) {
             const plan = app.state.subscriptionPlans.find(p => p.name === s.planName) || { name: s.planName };
             // Adicionando "T00:00:00" para evitar problema de fuso horário onde o dia volta -1
             const isActive = new Date(s.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0));
+
+            // Auditoria de liberação
+            let auditHtml = '';
+            if (s.releasedBy) {
+                const dt = new Date(s.releasedAt);
+                const dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const via = s.releasedVia === 'totem' ? '🖥️ Totem' : '⚙️ Admin';
+                auditHtml = `
+                    <div style="margin-top:6px; padding:6px 10px; background:rgba(255,255,255,0.04); border-radius:6px; border-left:2px solid #f59e0b;">
+                        <span style="font-size:0.72rem; color:var(--text-secondary);">
+                            ${via} · <strong style="color:#f59e0b;">${s.releasedBy}</strong> · ${dtStr}
+                            ${s.obs ? `· <em style="opacity:0.7;">${s.obs}</em>` : ''}
+                        </span>
+                    </div>
+                `;
+            }
             
             return `
-            <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isActive ? '#10b981' : '#ff4444'};">
-                <div>
+            <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; border-left: 4px solid ${isActive ? '#10b981' : '#ff4444'};">
+                <div style="flex:1; min-width:0;">
                     <h4 style="margin: 0; color: var(--text-primary);">${customer.name}</h4>
                     <span style="font-size: 0.8rem; color: var(--text-secondary);">Plano: ${plan.name}</span>
                     <br>
                     <span style="font-size: 0.8rem; font-weight: 600; color: ${isActive ? '#10b981' : '#ff4444'};">Válido até: ${new Date(s.validUntil + "T00:00:00").toLocaleDateString('pt-BR')} ${isActive ? '(Ativo)' : '(Vencido)'}</span>
+                    ${auditHtml}
                 </div>
-                <div>
-                    <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #10b981; margin-right: 5px;" onclick="app.renovarAssinatura(${i})">Renovar</button>
+                <div style="display:flex; flex-direction:column; gap:6px; margin-left:12px; flex-shrink:0;">
+                    <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #10b981;" onclick="app.renovarAssinatura(${i})">Renovar</button>
                     <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; border-color: #ff4444; color: #ff4444;" onclick="app.removeAssinante(${i})">Desvincular</button>
                 </div>
             </div>

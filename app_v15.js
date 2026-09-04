@@ -1516,9 +1516,23 @@ const app = {
                             </label>
                             <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Ex: Rua Principal, 123 - Bairro - Cidade/UF">
                         </div>
+                        <div style="border-top:1px solid var(--glass-border); padding-top:15px; margin-top:5px;">
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">
+                                🔐 PIN do Recepcionista
+                                <span style="font-weight:400; opacity:0.5;"> — exigido ao liberar planos no totem</span>
+                            </label>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input type="password" id="shop-recep-pin" class="glass"
+                                    style="width:140px; padding:10px; color:var(--text-primary); letter-spacing:4px; text-align:center; font-size:1rem;"
+                                    maxlength="6" placeholder="••••"
+                                    value="${this.state.settings?.receptionistPin || ''}">
+                                <span style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
+                                    Mínimo 4 dígitos.<br>Se deixado em branco, qualquer PIN de 4+ dígitos será aceito.
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
 
                 <!-- BLOCO 4: Backup & Sistema -->
                 <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #4ade80;">
@@ -1637,6 +1651,8 @@ const app = {
         const cepEl = document.getElementById('shop-cep');
         if (cepEl) this.state.settings.shopInfo.cep = cepEl.value.trim();
         this.state.settings.shopInfo.address = document.getElementById('shop-address').value.trim();
+        const pinEl = document.getElementById('shop-recep-pin');
+        if (pinEl) this.state.settings.receptionistPin = pinEl.value.trim();
 
         // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
         const ghToken = document.getElementById('gh-token');
@@ -2069,6 +2085,14 @@ const app = {
                            margin-bottom: -2px; transition: all 0.2s;">
                     📦 Estoque
                 </button>
+                <button id="totem-tab-planos"
+                    onclick="app.setTotemTab('planos')"
+                    style="padding: 14px 24px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; background: transparent;
+                           color: ${tab === 'planos' ? '#f59e0b' : 'var(--text-secondary)'};
+                           border-bottom: 3px solid ${tab === 'planos' ? '#f59e0b' : 'transparent'};
+                           margin-bottom: -2px; transition: all 0.2s;">
+                    💳 Planos
+                </button>
             </nav>
 
             <!-- CONTEÚDO DA ABA -->
@@ -2101,7 +2125,387 @@ const app = {
 
         } else if (tab === 'estoque') {
             this._renderTotemEstoque(el);
+
+        } else if (tab === 'planos') {
+            this._renderTotemPlanos(el);
         }
+    },
+
+
+    // ─── TOTEM: PLANOS ────────────────────────────────────────────────────────
+
+    _renderTotemPlanos(container) {
+        const plans = this.state.subscriptionPlans || [];
+        const subscribers = this.state.subscribers || [];
+
+        // Contagem de ativos
+        const today = new Date(); today.setHours(0,0,0,0);
+        const ativos = subscribers.filter(s => new Date(s.validUntil + 'T00:00:00') >= today).length;
+
+        container.innerHTML = `
+            <div class="fade-in">
+                <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:20px;">
+                    ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', hour:'2-digit', minute:'2-digit' })}
+                </p>
+
+                <!-- Cards de resumo -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:15px; margin-bottom:28px;">
+                    <div class="glass" style="padding:20px; text-align:center; border-left:4px solid #f59e0b;">
+                        <div style="font-size:2rem; font-weight:900; color:#f59e0b;">${plans.length}</div>
+                        <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">Planos Disponíveis</div>
+                    </div>
+                    <div class="glass" style="padding:20px; text-align:center; border-left:4px solid #10b981;">
+                        <div style="font-size:2rem; font-weight:900; color:#10b981;">${ativos}</div>
+                        <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">Assinantes Ativos</div>
+                    </div>
+                    <div class="glass" style="padding:20px; text-align:center; border-left:4px solid #60a5fa;">
+                        <div style="font-size:2rem; font-weight:900; color:#60a5fa;">${subscribers.length}</div>
+                        <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">Total de Membros</div>
+                    </div>
+                </div>
+
+                <!-- Botão principal -->
+                <div style="display:flex; justify-content:center; margin-bottom:30px;">
+                    <button onclick="app._totemAbrirModalPlano()"
+                        style="padding:18px 40px; font-size:1.1rem; font-weight:800; border-radius:16px;
+                               background:linear-gradient(135deg,#f59e0b,#d97706); color:#000; border:none; cursor:pointer;
+                               display:flex; align-items:center; gap:12px; box-shadow:0 8px 30px rgba(245,158,11,0.4);
+                               transition:transform 0.2s,box-shadow 0.2s;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 40px rgba(245,158,11,0.5)'"
+                        onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 30px rgba(245,158,11,0.4)'">
+                        <span style="font-size:1.5rem;">💳</span>
+                        LIBERAR / CONFIRMAR PLANO
+                    </button>
+                </div>
+
+                <!-- Lista de planos disponíveis (informativa) -->
+                ${plans.length === 0
+                    ? `<div class="glass" style="padding:20px; text-align:center; opacity:0.5;">
+                           <p>Nenhum plano cadastrado.<br>Cadastre planos no painel administrativo.</p>
+                       </div>`
+                    : `<div class="glass" style="padding:20px; border-left:4px solid var(--glass-border);">
+                           <h4 style="margin:0 0 14px; color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Planos Ativos nesta Unidade</h4>
+                           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;">
+                               ${plans.map(p => `
+                                   <div style="padding:14px; background:rgba(255,255,255,0.04); border-radius:10px; border:1px solid var(--glass-border);">
+                                       <div style="font-weight:700; color:var(--accent-readable); margin-bottom:4px;">${p.name}</div>
+                                       <div style="font-size:1.1rem; font-weight:900; color:#f59e0b;">R$ ${parseFloat(p.price).toFixed(2)}<span style="font-size:0.7rem; font-weight:400; color:var(--text-secondary);">/mês</span></div>
+                                       ${p.description ? `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">${p.description}</div>` : ''}
+                                   </div>
+                               `).join('')}
+                           </div>
+                       </div>`
+                }
+
+                <!-- Log recente de liberações (últimas 5) -->
+                ${this._getTotemRecentReleasesHTML()}
+            </div>
+        `;
+    },
+
+    _getTotemRecentReleasesHTML() {
+        const subs = (this.state.subscribers || [])
+            .filter(s => s.releasedAt)
+            .sort((a,b) => new Date(b.releasedAt) - new Date(a.releasedAt))
+            .slice(0, 5);
+
+        if (subs.length === 0) return '';
+
+        const rows = subs.map(s => {
+            const customer = (this.state.customers || []).find(c => c.id == s.customerId) || { name: 'Desconhecido' };
+            const dt = new Date(s.releasedAt);
+            const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--glass-border); flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span style="font-weight:600; color:var(--text-primary);">${customer.name}</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:8px;">${s.planName}</span>
+                    </div>
+                    <div style="text-align:right; font-size:0.78rem; color:var(--text-secondary);">
+                        <div>👤 <strong style="color:#f59e0b;">${s.releasedBy || '—'}</strong></div>
+                        <div>🕐 ${dtStr}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="glass" style="padding:20px; margin-top:20px; border-left:4px solid #60a5fa;">
+                <h4 style="margin:0 0 12px; color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">⏱️ Últimas Liberações (Nesta Recepção)</h4>
+                ${rows}
+            </div>
+        `;
+    },
+
+    _totemAbrirModalPlano() {
+        // Etapa 1: Identificação do recepcionista
+        this.openModal('💳 Liberar Plano — Identificação', `
+            <div class="fade-in">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <div style="font-size:2.5rem; margin-bottom:8px;">🔐</div>
+                    <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.5;">
+                        Para liberar um plano, o <strong>recepcionista responsável</strong> precisa se identificar.<br>
+                        Esse registro ficará visível no relatório do administrador.
+                    </p>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">
+                        Seu Nome Completo *
+                    </label>
+                    <input type="text" id="recep-nome" class="glass"
+                        style="width:100%; padding:13px; color:var(--text-primary); border-radius:10px; font-size:1rem;"
+                        placeholder="Ex: Maria Santos">
+                </div>
+
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">
+                        Código / PIN de Acesso * <span style="font-weight:400; opacity:0.6;">(definido pelo administrador)</span>
+                    </label>
+                    <input type="password" id="recep-pin" class="glass"
+                        style="width:100%; padding:13px; color:var(--text-primary); border-radius:10px; font-size:1.2rem; letter-spacing:4px; text-align:center;"
+                        placeholder="• • • •" maxlength="6">
+                    <p id="pin-erro" style="color:#f87171; font-size:0.78rem; margin-top:5px; min-height:18px;"></p>
+                </div>
+
+                <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px 15px; margin-bottom:20px;">
+                    <p style="font-size:0.78rem; color:var(--text-secondary); margin:0; line-height:1.5;">
+                        ⚠️ <strong>Atenção:</strong> O nome digitado acima será registrado no sistema junto com data e horário desta liberação. O administrador poderá visualizar esta informação.
+                    </p>
+                </div>
+
+                <button class="btn-primary" style="width:100%; padding:15px; font-size:1rem; font-weight:700; border-radius:12px;"
+                    onclick="app._totemValidarIdentidade()">
+                    CONFIRMAR IDENTIDADE E CONTINUAR →
+                </button>
+            </div>
+        `);
+    },
+
+    _totemValidarIdentidade() {
+        const nome = (document.getElementById('recep-nome')?.value || '').trim();
+        const pin  = (document.getElementById('recep-pin')?.value || '').trim();
+        const errEl = document.getElementById('pin-erro');
+
+        if (!nome) {
+            if (errEl) errEl.textContent = 'Informe seu nome completo.';
+            document.getElementById('recep-nome')?.focus();
+            return;
+        }
+        if (!pin || pin.length < 4) {
+            if (errEl) errEl.textContent = 'Informe o PIN de acesso (mínimo 4 dígitos).';
+            document.getElementById('recep-pin')?.focus();
+            return;
+        }
+
+        // Valida PIN: verifica contra o pin configurado nas settings, ou aceita o PIN padrão se não configurado
+        const configPin = (this.state.settings?.receptionistPin || '').toString();
+        const pinValido = configPin ? pin === configPin : pin.length >= 4;
+        if (!pinValido) {
+            if (errEl) errEl.textContent = 'PIN incorreto. Verifique com o administrador.';
+            document.getElementById('recep-pin').value = '';
+            document.getElementById('recep-pin')?.focus();
+            return;
+        }
+
+        // Armazena temporariamente para usar na finalização
+        this._totemRecepNome = nome;
+        this._totemRecepPin = pin;
+
+        // Etapa 2: Selecionar ou cadastrar cliente
+        this._totemEtapaCliente();
+    },
+
+    _totemEtapaCliente() {
+        const customers = (this.state.customers || []).sort((a,b) => a.name.localeCompare(b.name));
+        const plans = this.state.subscriptionPlans || [];
+
+        if (plans.length === 0) {
+            this.openModal('⚠️ Atenção', `
+                <div style="text-align:center; padding:20px;">
+                    <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
+                    <p>Nenhum plano cadastrado no sistema.</p>
+                    <p style="font-size:0.85rem; color:var(--text-secondary);">Peça ao administrador para cadastrar os planos disponíveis.</p>
+                </div>
+            `);
+            return;
+        }
+
+        const custOptions = customers.map(c =>
+            `<option value="${c.id}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`
+        ).join('');
+
+        const planOptions = plans.map(p =>
+            `<option value="${p.name}">💳 ${p.name} — R$ ${parseFloat(p.price).toFixed(2)}/mês</option>`
+        ).join('');
+
+        // Data padrão: hoje + 30 dias
+        const d30 = new Date(); d30.setDate(d30.getDate() + 30);
+        const d30str = d30.toISOString().split('T')[0];
+
+        this.openModal('💳 Liberar Plano — Dados do Cliente', `
+            <div class="fade-in" style="max-height:75vh; overflow-y:auto; padding-right:6px;">
+
+                <!-- Identificação confirmada -->
+                <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:10px 14px; margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.3rem;">✅</span>
+                    <div>
+                        <div style="font-size:0.78rem; color:var(--text-secondary);">Recepcionista identificado(a):</div>
+                        <div style="font-weight:700; color:#10b981;">${this._totemRecepNome}</div>
+                    </div>
+                </div>
+
+                <!-- Seleção de cliente -->
+                <div style="margin-bottom:14px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Cliente *</label>
+                    <div style="display:flex; gap:8px;">
+                        <select id="totem-plano-cliente" class="glass"
+                            style="flex:1; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;">
+                            <option value="">— Selecione um cliente existente —</option>
+                            ${custOptions}
+                        </select>
+                    </div>
+                    <div style="text-align:center; margin:10px 0; font-size:0.78rem; color:var(--text-secondary);">— ou —</div>
+                    <button onclick="app._totemToggleNovoCli()" id="btn-novo-cli"
+                        style="width:100%; padding:10px; border-radius:10px; border:1.5px dashed var(--glass-border); background:transparent; color:var(--accent-readable); cursor:pointer; font-weight:600; font-size:0.85rem;">
+                        + Cadastrar novo cliente
+                    </button>
+                </div>
+
+                <!-- Formulário novo cliente (oculto) -->
+                <div id="novo-cli-form" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px; padding:15px; margin-bottom:14px;">
+                    <p style="font-size:0.8rem; color:var(--accent-readable); font-weight:700; margin:0 0 12px;">📋 Novo Cliente</p>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <input type="text" id="novo-cli-nome" class="glass"
+                            style="padding:11px; color:var(--text-primary); border-radius:8px;" placeholder="Nome completo *">
+                        <input type="tel" id="novo-cli-fone" class="glass"
+                            style="padding:11px; color:var(--text-primary); border-radius:8px;" placeholder="WhatsApp (opcional)">
+                        <input type="email" id="novo-cli-email" class="glass"
+                            style="padding:11px; color:var(--text-primary); border-radius:8px;" placeholder="E-mail (opcional)">
+                    </div>
+                </div>
+
+                <!-- Plano -->
+                <div style="margin-bottom:14px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Plano *</label>
+                    <select id="totem-plano-sel" class="glass"
+                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;">
+                        <option value="">— Selecione o plano —</option>
+                        ${planOptions}
+                    </select>
+                </div>
+
+                <!-- Vencimento -->
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Válido até *</label>
+                    <input type="date" id="totem-plano-venc" class="glass"
+                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px;"
+                        value="${d30str}">
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Padrão: 30 dias a partir de hoje</p>
+                </div>
+
+                <!-- Observação -->
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Observação (opcional)</label>
+                    <input type="text" id="totem-plano-obs" class="glass"
+                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px;"
+                        placeholder="Ex: Pagou em dinheiro, renovação, etc.">
+                </div>
+
+                <p id="totem-plano-erro" style="color:#f87171; font-size:0.82rem; min-height:18px; margin-bottom:10px;"></p>
+
+                <button class="btn-primary" style="width:100%; padding:15px; font-size:1rem; font-weight:700; border-radius:12px; background:#f59e0b; color:#000;"
+                    onclick="app._totemFinalizarPlano()">
+                    ✅ CONFIRMAR E LIBERAR PLANO
+                </button>
+            </div>
+        `);
+    },
+
+    _totemToggleNovoCli() {
+        const form = document.getElementById('novo-cli-form');
+        const sel  = document.getElementById('totem-plano-cliente');
+        const btn  = document.getElementById('btn-novo-cli');
+        if (!form) return;
+        const showing = form.style.display !== 'none';
+        form.style.display = showing ? 'none' : 'block';
+        sel.disabled = !showing;
+        btn.textContent = showing ? '+ Cadastrar novo cliente' : '✕ Usar cliente existente';
+        if (!showing) { sel.value = ''; }
+    },
+
+    _totemFinalizarPlano() {
+        const errEl = document.getElementById('totem-plano-erro');
+        const novoCliForm = document.getElementById('novo-cli-form');
+        const isNovoCli = novoCliForm && novoCliForm.style.display !== 'none';
+
+        let customerId = null;
+
+        if (isNovoCli) {
+            // Cadastrar novo cliente
+            const nome  = (document.getElementById('novo-cli-nome')?.value || '').trim();
+            const fone  = (document.getElementById('novo-cli-fone')?.value || '').trim();
+            const email = (document.getElementById('novo-cli-email')?.value || '').trim();
+
+            if (!nome) {
+                if (errEl) errEl.textContent = 'Informe o nome do novo cliente.';
+                return;
+            }
+
+            const newCli = {
+                id: Date.now(),
+                name: nome,
+                phone: fone,
+                email: email,
+                createdAt: new Date().toISOString(),
+                registeredBy: this._totemRecepNome
+            };
+            if (!this.state.customers) this.state.customers = [];
+            this.state.customers.push(newCli);
+            customerId = newCli.id;
+
+        } else {
+            customerId = document.getElementById('totem-plano-cliente')?.value;
+            if (!customerId) {
+                if (errEl) errEl.textContent = 'Selecione um cliente ou cadastre um novo.';
+                return;
+            }
+        }
+
+        const planName = document.getElementById('totem-plano-sel')?.value;
+        const validUntil = document.getElementById('totem-plano-venc')?.value;
+        const obs = (document.getElementById('totem-plano-obs')?.value || '').trim();
+
+        if (!planName) { if (errEl) errEl.textContent = 'Selecione o plano.'; return; }
+        if (!validUntil) { if (errEl) errEl.textContent = 'Informe a data de vencimento.'; return; }
+
+        // Remove assinatura anterior deste cliente (sem duplicar)
+        if (!this.state.subscribers) this.state.subscribers = [];
+        this.state.subscribers = this.state.subscribers.filter(s => s.customerId != customerId);
+
+        // Adiciona com dados de auditoria completos
+        this.state.subscribers.push({
+            customerId,
+            planName,
+            validUntil,
+            obs,
+            releasedBy: this._totemRecepNome,
+            releasedAt: new Date().toISOString(),
+            releasedVia: 'totem'
+        });
+
+        this.saveState();
+        this.closeModal();
+
+        // Limpa dados temporários
+        delete this._totemRecepNome;
+        delete this._totemRecepPin;
+
+        // Atualiza a aba
+        this._renderTotemPlanos(document.getElementById('totem-tab-content'));
+
+        // Feedback visual
+        this.showToast('✅ Plano liberado com sucesso!', 'success');
     },
 
     // ─── TOTEM: PDV ───────────────────────────────────────────────────────────
