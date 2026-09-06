@@ -1,11 +1,11 @@
-// Service Worker - Centauro Barbearia (v72.00 - Push Notifications)
+// Service Worker - Centauro Barbearia (v72.01 - Push Notifications)
 // Suporte a Push Notifications + Auto-limpeza de cache
 
 // ============================================================
 // INSTALAÇÃO
 // ============================================================
 self.addEventListener('install', event => {
-    console.log('[SW] Instalado v72.00');
+    console.log('[SW] Instalado v72.01');
     self.skipWaiting();
 });
 
@@ -13,7 +13,7 @@ self.addEventListener('install', event => {
 // ATIVAÇÃO - Limpa caches antigos
 // ============================================================
 self.addEventListener('activate', event => {
-    console.log('[SW] Ativado v72.00');
+    console.log('[SW] Ativado v72.01');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
