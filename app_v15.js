@@ -1270,6 +1270,9 @@ const app = {
                 } else {
                     this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
 
+                    // [PUSH NOTIFICATION] Re-registrar push ao auto-login
+                    setTimeout(() => this.initPushNotifications(), 4000);
+
                     // Se não houver hash, define a view padrão por cargo
                     if (!hash) {
                         if (this.state.user.role === 'admin') initialView = 'admin-dash';
@@ -3567,6 +3570,9 @@ const app = {
                 } else {
                     this.navigateTo('barber-dash');
                 }
+
+                // [PUSH NOTIFICATION] Inicializar push após login
+                setTimeout(() => this.initPushNotifications(), 2000);
             } else {
                 alert('Credenciais inválidas: Verifique o nome de usuário (' + user + ') ou senha digitados.');
             }
@@ -5021,6 +5027,10 @@ const app = {
         };
         this.state.appointments.push(apt);
         this.saveState(); // PERSISTÊNCIA ADICIONADA
+
+        // [PUSH NOTIFICATION] Notificar barbeiro do novo encaixe
+        this.sendPushToBarber(barber, apt);
+
         this.closeModal();
         this.render(this.state.view);
     },
@@ -5142,6 +5152,9 @@ const app = {
         };
         this.state.appointments.push(apt);
         this.saveState();
+
+        // [PUSH NOTIFICATION] Notificar barbeiro do novo encaixe (cliente novo)
+        this.sendPushToBarber(apt.barber, apt);
 
         this.closeModal();
         this.render(this.state.view);
@@ -8735,6 +8748,9 @@ const app = {
         this.state.appointments.push(appointment);
         this.saveState();
 
+        // [PUSH NOTIFICATION] Notificar barbeiro do novo agendamento
+        this.sendPushToBarber(bs.barber.name, appointment);
+
         alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name}!`);
 
         this.state.bookingState = {
@@ -9798,6 +9814,207 @@ const app = {
         const val1 = parseFloat(amt1El.value) || 0;
         const remainder = Math.max(0, total - val1);
         amt2El.value = remainder.toFixed(2);
+    },
+
+    // ============================================================
+    // PUSH NOTIFICATIONS MODULE
+    // ============================================================
+
+    // Chave pública VAPID (gerada para este projeto)
+    VAPID_PUBLIC_KEY: 'BLAW86ZqXoODtdYVe5mqYm4lQnWpLn8_0J2pX8mvbUOnOxpCTu6TiIdXH5RR4WnmrCAf1GtYcGJW5q-1DtVgCHQ',
+
+    // Converte chave VAPID de base64url para Uint8Array (necessário para a Push API)
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    },
+
+    // Inicializa push notifications após o login (solicita permissão se for barbeiro/admin)
+    async initPushNotifications() {
+        // Verificações de compatibilidade
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('[Push] Push Notifications não suportadas neste navegador.');
+            return;
+        }
+
+        // Só ativa para barbeiros e admins (totem não precisa)
+        if (!this.state.user || this.state.user.role === 'totem') {
+            return;
+        }
+
+        try {
+            // Aguardar o Service Worker estar pronto
+            const registration = await navigator.serviceWorker.ready;
+
+            // Verificar se já tem uma subscription ativa
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                console.log('[Push] Subscription existente encontrada.');
+                await this.savePushSubscription(subscription);
+                return;
+            }
+
+            // Verificar estado da permissão
+            const permission = Notification.permission;
+
+            if (permission === 'denied') {
+                console.warn('[Push] Permissão de notificação negada pelo usuário.');
+                return;
+            }
+
+            if (permission === 'default') {
+                // Mostrar um modal elegante antes de pedir permissão ao navegador
+                this.showPushPermissionModal(registration);
+                return;
+            }
+
+            // permission === 'granted' - assinar diretamente
+            await this.subscribeToPush(registration);
+
+        } catch (error) {
+            console.error('[Push] Erro ao inicializar push notifications:', error);
+        }
+    },
+
+    // Exibe modal elegante pedindo permissão para notificações
+    showPushPermissionModal(registration) {
+        this.openModal('🔔 Ativar Notificações', `
+            <section class="fade-in" style="text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 15px;">📱</div>
+                <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600;">
+                    Receba alertas de novos agendamentos!
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6;">
+                    Ative as notificações push para ser avisado(a) instantaneamente quando um cliente agendar um horário com você — mesmo com o celular bloqueado.
+                </p>
+                <button class="btn-primary" style="width: 100%; margin-bottom: 10px; padding: 16px; font-size: 1rem;" 
+                        onclick="app.handlePushPermissionAccept()">
+                    ✅ Ativar Notificações
+                </button>
+                <button class="btn-secondary" style="width: 100%; padding: 12px; font-size: 0.85rem; opacity: 0.7;" 
+                        onclick="app.closeModal()">
+                    Agora não
+                </button>
+            </section>
+        `);
+        // Guardar referência ao registration para uso posterior
+        this._pendingPushRegistration = registration;
+    },
+
+    // Handler do botão "Ativar Notificações" no modal
+    async handlePushPermissionAccept() {
+        this.closeModal();
+        const registration = this._pendingPushRegistration || await navigator.serviceWorker.ready;
+        this._pendingPushRegistration = null;
+
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            await this.subscribeToPush(registration);
+            this.showToast('🔔 Notificações ativadas com sucesso!', 'success');
+        } else {
+            console.warn('[Push] Permissão negada pelo usuário.');
+            this.showToast('Notificações não foram ativadas.', 'warning');
+        }
+    },
+
+    // Cria a subscription no PushManager e salva no Firebase
+    async subscribeToPush(registration) {
+        try {
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(this.VAPID_PUBLIC_KEY)
+            });
+
+            console.log('[Push] Nova subscription criada:', subscription.endpoint.substring(0, 50) + '...');
+            await this.savePushSubscription(subscription);
+
+        } catch (error) {
+            console.error('[Push] Erro ao criar subscription:', error);
+            if (error.name === 'NotAllowedError') {
+                console.warn('[Push] Permissão negada.');
+            }
+        }
+    },
+
+    // Salva a push subscription no Firebase RTDB vinculada ao usuário logado
+    async savePushSubscription(subscription) {
+        if (!this.state.user || !this.db) {
+            console.warn('[Push] Impossível salvar subscription: sem usuário logado ou DB não inicializado.');
+            return;
+        }
+
+        try {
+            const tenantId = this.getTenantId() || 'centauro';
+            const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
+            const staffId = this.state.user.id;
+
+            // Gerar hash curto do endpoint para usar como chave
+            const endpointHash = btoa(subscription.endpoint).replace(/[.#$/\[\]]/g, '_').substring(0, 40);
+
+            const tokenData = {
+                subscription: subscription.toJSON(),
+                device: navigator.userAgent.substring(0, 100),
+                userName: this.state.user.name,
+                userRole: this.state.user.role,
+                createdAt: Date.now()
+            };
+
+            await set(ref(this.db, `${dbPath}push_tokens/${staffId}/${endpointHash}`), tokenData);
+            console.log(`[Push] Subscription salva para ${this.state.user.name} (ID: ${staffId})`);
+
+        } catch (error) {
+            console.error('[Push] Erro ao salvar subscription no Firebase:', error);
+        }
+    },
+
+    // Envia push notification para o barbeiro via Vercel Serverless API
+    async sendPushToBarber(barberName, appointment) {
+        // Não envia push se foi o próprio barbeiro que criou o agendamento
+        if (this.state.user && this.state.user.name === barberName && this.state.user.role === 'barber') {
+            console.log('[Push] Agendamento criado pelo próprio barbeiro. Push suprimido.');
+            return;
+        }
+
+        try {
+            const tenantId = this.getTenantId() || 'centauro';
+
+            const response = await fetch('/api/send-push', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    barberName,
+                    appointment: {
+                        id: appointment.id,
+                        customer: appointment.customer,
+                        service: appointment.service,
+                        time: appointment.time,
+                        date: appointment.date,
+                        price: appointment.price,
+                        origin: appointment.origin
+                    },
+                    tenantId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log(`[Push] Notificação enviada: ${result.sent} dispositivo(s) para ${barberName}`);
+            } else {
+                console.warn('[Push] Falha ao enviar notificação:', result);
+            }
+
+        } catch (error) {
+            // Silencioso - não deve quebrar o fluxo de agendamento
+            console.error('[Push] Erro ao enviar push (não-crítico):', error);
+        }
     },
 
     showToast(message, type = 'success') {

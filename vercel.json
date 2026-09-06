@@ -28,7 +28,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!AgendamentoFacil|master|assets|.*\\.).*)",
+      "source": "/((?!AgendamentoFacil|master|assets|api|.*\\.).*)",
       "destination": "/index.html"
     }
   ]

@@ -1,0 +1,9 @@
+{
+  "name": "centauro-barbearia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Gestão - Centauro Barbearia",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

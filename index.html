@@ -23,13 +23,16 @@
         window.addEventListener('load', () => {
             console.log('Sistema Centauro v80.00 (Versão Final) Carregado');
             
-            // Removemos o Service Worker para evitar o bloqueio (ERR_FAILED) offline
+            // Registra Service Worker para Push Notifications (sem cache offline)
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(function(registration) {
+                        console.log('[Push] Service Worker registrado:', registration.scope);
+                        window._swRegistration = registration;
+                    })
+                    .catch(function(error) {
+                        console.warn('[Push] Falha ao registrar Service Worker:', error);
+                    });
             }
         });
     </script>
