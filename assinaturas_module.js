@@ -265,20 +265,69 @@ window.renderSubscriptionsView = function(app, container) {
         content.innerHTML = `
             <div class="glass" style="padding: 20px; border-left: 4px solid #10b981; margin-bottom: 25px;">
                 <h3 style="margin-top: 0; margin-bottom: 15px;">Vincular Assinante (Manual)</h3>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
                     <select id="sub-customer" class="glass" style="padding: 10px; flex: 1; min-width: 250px;">
                         <option value="">Selecione o Cliente</option>
                         ${customersOptions}
                     </select>
-                    <select id="sub-plan" class="glass" style="padding: 10px; flex: 1; min-width: 200px;">
+                    <select id="sub-plan" class="glass" style="padding: 10px; flex: 1; min-width: 200px;" onchange="app.updateSubPlanPrice()">
                         <option value="">Selecione o Plano</option>
                         ${plansOptions}
                     </select>
                 </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <label style="font-size: 0.8rem; color: var(--text-secondary);">Vencimento:</label>
-                    <input type="date" id="sub-validity" class="glass" style="padding: 10px;" title="Data de Vencimento">
-                    <button class="btn-primary" onclick="app.addAssinante()" style="margin-left: auto;">+ Salvar Assinatura</button>
+                
+                <div id="sub-plan-price-badge" style="display:none; margin-bottom: 12px; padding: 8px 12px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.85rem; color: #f59e0b; font-weight: 700;">
+                    Valor do Plano: R$ <span id="sub-plan-val-display">0.00</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 220px;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Forma de Pagamento *</label>
+                        <select id="sub-payment-method" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="app.onSubPaymentChange()">
+                            <option value="Dinheiro">💵 Dinheiro na Barbearia</option>
+                            <option value="PIX">📱 PIX</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                            <option value="Misto">🔀 Pagamento Misto (Dividir)</option>
+                            <option value="Cortesia">🎁 Cortesia / Isento de Pagamento</option>
+                        </select>
+                    </div>
+
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Vencimento:</label>
+                        <input type="date" id="sub-validity" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" title="Data de Vencimento">
+                    </div>
+                </div>
+
+                <!-- Box Pagamento Misto -->
+                <div id="sub-split-wrapper" style="display:none; background:rgba(255,255,255,0.03); padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed var(--glass-border);">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 1 via:</label>
+                            <select id="sub-split-method-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="sub-split-amount-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01" oninput="app.updateSubSplitRemainder()">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 2 via:</label>
+                            <select id="sub-split-method-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="PIX">PIX</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="sub-split-amount-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01">
+                        </div>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin:0;">Total do Plano: <strong id="sub-split-total-info">R$ 0,00</strong></p>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button class="btn-primary" onclick="app.addAssinante()">+ Salvar e Lançar Pagamento</button>
                 </div>
             </div>
             
@@ -294,39 +343,277 @@ window.renderSubscriptionsView = function(app, container) {
         document.getElementById('sub-validity').value = d.toISOString().split('T')[0];
     };
 
-    app.renovarAssinatura = function(i) {
-        const sub = app.state.subscribers[i];
-        const newDate = prompt("Informe a nova data de vencimento (AAAA-MM-DD):", sub.validUntil);
-        if (newDate) {
-            // Valida o formato da data (AAAA-MM-DD)
-            if (/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
-                sub.validUntil = newDate;
-                app.saveState();
-                app.showAssinaturasClientes();
-                alert('Assinatura renovada com sucesso!');
-            } else {
-                alert('Formato de data inválido. Use AAAA-MM-DD.');
-            }
+    app.updateSubPlanPrice = function() {
+        const planName = document.getElementById('sub-plan')?.value;
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === planName);
+        const badge = document.getElementById('sub-plan-price-badge');
+        const display = document.getElementById('sub-plan-val-display');
+        const splitInfo = document.getElementById('sub-split-total-info');
+        if (plan && badge && display) {
+            const price = parseFloat(plan.price) || 0;
+            display.textContent = price.toFixed(2);
+            badge.style.display = 'block';
+            if (splitInfo) splitInfo.textContent = `R$ ${price.toFixed(2)}`;
+            app.updateSubSplitRemainder();
+        } else if (badge) {
+            badge.style.display = 'none';
         }
     };
 
-    app.approveAssinatura = function(i) {
-        if (confirm('Confirma que o cliente pagou o PIX? O plano será liberado por 30 dias.')) {
-            const pending = app.state.pendingSubscriptions[i];
-            const d = new Date();
-            d.setDate(d.getDate() + 30);
-            
-            app.state.subscribers = app.state.subscribers.filter(s => s.customerId != pending.customerId);
-            app.state.subscribers.push({
-                customerId: pending.customerId,
-                planName: pending.planName,
-                validUntil: d.toISOString().split('T')[0]
-            });
-            
-            app.state.pendingSubscriptions.splice(i, 1);
-            app.saveState();
-            app.showAssinaturasClientes();
+    app.onSubPaymentChange = function() {
+        const method = document.getElementById('sub-payment-method')?.value;
+        const wrapper = document.getElementById('sub-split-wrapper');
+        if (!wrapper) return;
+        wrapper.style.display = method === 'Misto' ? 'block' : 'none';
+        if (method === 'Misto') {
+            app.updateSubSplitRemainder();
         }
+    };
+
+    app.updateSubSplitRemainder = function() {
+        const planName = document.getElementById('sub-plan')?.value;
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === planName);
+        const total = plan ? parseFloat(plan.price) || 0 : 0;
+        const val1 = parseFloat(document.getElementById('sub-split-amount-1')?.value) || 0;
+        const input2 = document.getElementById('sub-split-amount-2');
+        if (input2) {
+            input2.value = Math.max(0, total - val1).toFixed(2);
+        }
+    };
+
+    const getM = (m) => {
+        if (!m) return 'dinheiro';
+        const s = m.toLowerCase();
+        if (s.includes('pix')) return 'pix';
+        if (s.includes('debito') || s.includes('débito')) return 'debito';
+        if (s.includes('credito') || s.includes('crédito')) return 'credito';
+        return 'dinheiro';
+    };
+
+    app.renovarAssinatura = function(i) {
+        const sub = app.state.subscribers[i];
+        if (!sub) return;
+        const customer = (app.state.customers || []).find(c => c.id == sub.customerId) || { name: 'Cliente' };
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === sub.planName) || { name: sub.planName, price: 0 };
+        const planPrice = parseFloat(plan.price) || 0;
+
+        // Calcula próxima data: se a validade atual ainda for futura, adiciona 30 dias a ela; senão hoje + 30 dias
+        const currValid = new Date(sub.validUntil + "T00:00:00");
+        const baseDate = currValid > new Date() ? currValid : new Date();
+        const nextDate = new Date(baseDate);
+        nextDate.setDate(nextDate.getDate() + 30);
+        const nextDateStr = nextDate.toISOString().split('T')[0];
+
+        app.openModal('Renovar Assinatura / Convênio', `
+            <div class="fade-in" style="max-height:80vh; overflow-y:auto; padding-right:5px;">
+                <div style="background:rgba(212,175,55,0.08); border-radius:10px; padding:15px; margin-bottom:15px; border-left:4px solid var(--accent-color);">
+                    <h4 style="margin:0 0 5px; color:var(--text-primary); font-size:1rem;">${customer.name}</h4>
+                    <p style="margin:0; font-size:0.85rem; color:var(--accent-readable);">Plano: <strong>${sub.planName}</strong> — R$ ${planPrice.toFixed(2)}/mês</p>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:5px;">Nova Data de Vencimento *</label>
+                    <input type="date" id="renew-validity" class="glass" style="width:100%; padding:10px; color:var(--text-primary); border-radius:8px;" value="${nextDateStr}">
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:5px;">Forma de Pagamento da Renovação *</label>
+                    <select id="renew-payment" class="glass" style="width:100%; padding:10px; color:var(--text-primary); border-radius:8px;"
+                        onchange="document.getElementById('renew-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none';">
+                        <option value="Dinheiro">💵 Dinheiro na Barbearia</option>
+                        <option value="PIX">📱 PIX</option>
+                        <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                        <option value="Misto">🔀 Pagamento Misto (Dividir)</option>
+                        <option value="Cortesia">🎁 Cortesia / Sem Cobrança</option>
+                    </select>
+                </div>
+
+                <!-- Box Misto Renovação -->
+                <div id="renew-split-wrapper" style="display:none; background:rgba(255,255,255,0.03); padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed var(--glass-border);">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 1 via:</label>
+                            <select id="renew-split-m1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="renew-split-v1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01" 
+                                oninput="const v1 = parseFloat(this.value)||0; document.getElementById('renew-split-v2').value = Math.max(0, ${planPrice} - v1).toFixed(2);">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 2 via:</label>
+                            <select id="renew-split-m2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="PIX">PIX</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="renew-split-v2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01">
+                        </div>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin:0;">Total: <strong>R$ ${planPrice.toFixed(2)}</strong></p>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-primary" style="flex:1; padding:12px; background:#10b981;" onclick="app.confirmRenovarAssinatura(${i})">✅ Confirmar Renovação</button>
+                    <button class="btn-secondary" style="flex:1; padding:12px;" onclick="app.closeModal()">Cancelar</button>
+                </div>
+            </div>
+        `);
+    };
+
+    app.confirmRenovarAssinatura = function(i) {
+        const sub = app.state.subscribers[i];
+        if (!sub) return;
+        const newDate = document.getElementById('renew-validity')?.value;
+        const payment = document.getElementById('renew-payment')?.value;
+        if (!newDate) return alert('Informe a data de vencimento.');
+
+        const customer = (app.state.customers || []).find(c => c.id == sub.customerId) || { name: 'Cliente' };
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === sub.planName);
+        const planPrice = plan ? parseFloat(plan.price) || 0 : 0;
+
+        if (payment !== 'Cortesia' && planPrice > 0) {
+            if (payment === 'Misto') {
+                const v1 = parseFloat(document.getElementById('renew-split-v1')?.value) || 0;
+                const v2 = parseFloat(document.getElementById('renew-split-v2')?.value) || 0;
+                const m1 = document.getElementById('renew-split-m1')?.value || 'Dinheiro';
+                const m2 = document.getElementById('renew-split-m2')?.value || 'PIX';
+
+                if (Math.abs((v1 + v2) - planPrice) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(v1 + v2).toFixed(2)}) é diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
+                }
+                if (v1 > 0) app.addTransaction('in', `Renovação Plano: ${sub.planName} (${customer.name}) [Parte 1/${m1}]`, v1, 'plano', getM(m1));
+                if (v2 > 0) app.addTransaction('in', `Renovação Plano: ${sub.planName} (${customer.name}) [Parte 2/${m2}]`, v2, 'plano', getM(m2));
+            } else {
+                app.addTransaction('in', `Renovação Plano: ${sub.planName} (${customer.name})`, planPrice, 'plano', getM(payment));
+            }
+        }
+
+        sub.validUntil = newDate;
+        sub.releasedAt = new Date().toISOString();
+        sub.releasedBy = app.state.user ? app.state.user.name : 'Admin';
+        sub.releasedVia = 'admin-renovacao';
+        sub.paymentMethod = payment;
+
+        app.saveState();
+        app.closeModal();
+        app.showAssinaturasClientes();
+        app.showToast(`✅ Assinatura renovada! ${payment !== 'Cortesia' ? `R$ ${planPrice.toFixed(2)} somado ao faturamento.` : ''}`, 'success');
+    };
+
+    app.approveAssinatura = function(i) {
+        const pending = app.state.pendingSubscriptions[i];
+        if (!pending) return;
+        const customer = (app.state.customers || []).find(c => c.id == pending.customerId) || { name: 'Cliente' };
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === pending.planName) || { name: pending.planName, price: 0 };
+        const planPrice = parseFloat(plan.price) || 0;
+
+        app.openModal('Aprovar Assinatura / Pagamento', `
+            <div class="fade-in" style="max-height:80vh; overflow-y:auto; padding-right:5px;">
+                <div style="background:rgba(16,185,129,0.08); border-radius:10px; padding:15px; margin-bottom:15px; border-left:4px solid #10b981;">
+                    <h4 style="margin:0 0 5px; color:var(--text-primary); font-size:1rem;">${customer.name}</h4>
+                    <p style="margin:0; font-size:0.85rem; color:var(--text-secondary);">Solicitação via Site em: ${pending.requestDate || 'Recente'}</p>
+                    <p style="margin:5px 0 0; font-size:0.9rem; color:#10b981; font-weight:700;">Plano: ${pending.planName} — R$ ${planPrice.toFixed(2)}</p>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:5px;">Como o cliente realizou o pagamento? *</label>
+                    <select id="approve-payment" class="glass" style="width:100%; padding:10px; color:var(--text-primary); border-radius:8px;"
+                        onchange="document.getElementById('approve-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none';">
+                        <option value="PIX" selected>📱 PIX (Comprovante verificado)</option>
+                        <option value="Dinheiro">💵 Dinheiro na Barbearia</option>
+                        <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                        <option value="Misto">🔀 Pagamento Misto (Dividir)</option>
+                        <option value="Cortesia">🎁 Cortesia / Isento</option>
+                    </select>
+                </div>
+
+                <!-- Box Misto Aprovação -->
+                <div id="approve-split-wrapper" style="display:none; background:rgba(255,255,255,0.03); padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed var(--glass-border);">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 1 via:</label>
+                            <select id="approve-split-m1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="PIX">PIX</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="approve-split-v1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01"
+                                oninput="const v1 = parseFloat(this.value)||0; document.getElementById('approve-split-v2').value = Math.max(0, ${planPrice} - v1).toFixed(2);">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 2 via:</label>
+                            <select id="approve-split-m2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="approve-split-v2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01">
+                        </div>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin:0;">Total: <strong>R$ ${planPrice.toFixed(2)}</strong></p>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-primary" style="flex:1; padding:12px; background:#10b981;" onclick="app.confirmApproveAssinatura(${i})">✅ Liberar e Lançar no Faturamento</button>
+                    <button class="btn-secondary" style="flex:1; padding:12px;" onclick="app.closeModal()">Cancelar</button>
+                </div>
+            </div>
+        `);
+    };
+
+    app.confirmApproveAssinatura = function(i) {
+        const pending = app.state.pendingSubscriptions[i];
+        if (!pending) return;
+        const payment = document.getElementById('approve-payment')?.value || 'PIX';
+        const customer = (app.state.customers || []).find(c => c.id == pending.customerId) || { name: 'Cliente' };
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === pending.planName);
+        const planPrice = plan ? parseFloat(plan.price) || 0 : 0;
+
+        if (payment !== 'Cortesia' && planPrice > 0) {
+            if (payment === 'Misto') {
+                const v1 = parseFloat(document.getElementById('approve-split-v1')?.value) || 0;
+                const v2 = parseFloat(document.getElementById('approve-split-v2')?.value) || 0;
+                const m1 = document.getElementById('approve-split-m1')?.value || 'PIX';
+                const m2 = document.getElementById('approve-split-m2')?.value || 'Dinheiro';
+
+                if (Math.abs((v1 + v2) - planPrice) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(v1 + v2).toFixed(2)}) é diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
+                }
+                if (v1 > 0) app.addTransaction('in', `Plano/Convênio: ${pending.planName} (${customer.name}) [Parte 1/${m1}]`, v1, 'plano', getM(m1));
+                if (v2 > 0) app.addTransaction('in', `Plano/Convênio: ${pending.planName} (${customer.name}) [Parte 2/${m2}]`, v2, 'plano', getM(m2));
+            } else {
+                app.addTransaction('in', `Plano/Convênio: ${pending.planName} (${customer.name})`, planPrice, 'plano', getM(payment));
+            }
+        }
+
+        const d = new Date();
+        d.setDate(d.getDate() + 30);
+        
+        app.state.subscribers = app.state.subscribers.filter(s => s.customerId != pending.customerId);
+        app.state.subscribers.push({
+            customerId: pending.customerId,
+            planName: pending.planName,
+            validUntil: d.toISOString().split('T')[0],
+            paymentMethod: payment,
+            paymentAmount: planPrice,
+            releasedBy: app.state.user ? app.state.user.name : 'Admin',
+            releasedAt: new Date().toISOString(),
+            releasedVia: 'admin-aprovacao'
+        });
+        
+        app.state.pendingSubscriptions.splice(i, 1);
+        app.saveState();
+        app.closeModal();
+        app.showAssinaturasClientes();
+        app.showToast(`✅ Plano aprovado! R$ ${planPrice.toFixed(2)} somado ao faturamento do dia.`, 'success');
     };
 
     app.rejectAssinatura = function(i) {
@@ -338,17 +625,52 @@ window.renderSubscriptionsView = function(app, container) {
     };
 
     app.addAssinante = function() {
-        const customerId = document.getElementById('sub-customer').value;
-        const planName = document.getElementById('sub-plan').value;
-        const validUntil = document.getElementById('sub-validity').value;
+        const customerId = document.getElementById('sub-customer')?.value;
+        const planName = document.getElementById('sub-plan')?.value;
+        const validUntil = document.getElementById('sub-validity')?.value;
+        const payment = document.getElementById('sub-payment-method')?.value || 'Dinheiro';
+
         if (!customerId || !planName || !validUntil) return alert('Preencha Cliente, Plano e Data de Vencimento.');
         
+        const customer = (app.state.customers || []).find(c => c.id == customerId) || { name: 'Cliente' };
+        const plan = (app.state.subscriptionPlans || []).find(p => p.name === planName);
+        const planPrice = plan ? parseFloat(plan.price) || 0 : 0;
+
+        // Lançar transação financeira para faturamento do dia
+        if (payment !== 'Cortesia' && planPrice > 0) {
+            if (payment === 'Misto') {
+                const v1 = parseFloat(document.getElementById('sub-split-amount-1')?.value) || 0;
+                const v2 = parseFloat(document.getElementById('sub-split-amount-2')?.value) || 0;
+                const m1 = document.getElementById('sub-split-method-1')?.value || 'Dinheiro';
+                const m2 = document.getElementById('sub-split-method-2')?.value || 'PIX';
+
+                if (Math.abs((v1 + v2) - planPrice) > 0.01) {
+                    if (!confirm(`O total informado (R$ ${(v1 + v2).toFixed(2)}) é diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
+                }
+                if (v1 > 0) app.addTransaction('in', `Plano/Convênio: ${planName} (${customer.name}) [Parte 1/${m1}]`, v1, 'plano', getM(m1));
+                if (v2 > 0) app.addTransaction('in', `Plano/Convênio: ${planName} (${customer.name}) [Parte 2/${m2}]`, v2, 'plano', getM(m2));
+            } else {
+                app.addTransaction('in', `Plano/Convênio: ${planName} (${customer.name})`, planPrice, 'plano', getM(payment));
+            }
+        }
+
         // Remove existing signature for this customer to avoid duplicates
         app.state.subscribers = app.state.subscribers.filter(s => s.customerId != customerId);
         
-        app.state.subscribers.push({ customerId, planName, validUntil });
+        app.state.subscribers.push({ 
+            customerId, 
+            planName, 
+            validUntil,
+            paymentMethod: payment,
+            paymentAmount: planPrice,
+            releasedBy: app.state.user ? app.state.user.name : 'Admin',
+            releasedAt: new Date().toISOString(),
+            releasedVia: 'admin-manual'
+        });
+
         app.saveState();
         app.showAssinaturasClientes();
+        app.showToast(`✅ Assinante vinculado! R$ ${planPrice.toFixed(2)} somado ao faturamento do dia.`, 'success');
     };
 
     app.removeAssinante = function(i) {

@@ -2392,10 +2392,56 @@ const app = {
                 <div style="margin-bottom:14px;">
                     <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Plano *</label>
                     <select id="totem-plano-sel" class="glass"
-                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;">
+                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;"
+                        onchange="app._totemOnPlanoChange(this.value)">
                         <option value="">— Selecione o plano —</option>
                         ${planOptions}
                     </select>
+                    <div id="totem-plano-price-badge" style="display:none; margin-top:6px; padding:6px 10px; background:rgba(245,158,11,0.1); border-radius:8px; border:1px solid rgba(245,158,11,0.3); font-size:0.85rem; color:#f59e0b; font-weight:700;">
+                        Valor: R$ <span id="totem-plano-val-display">0.00</span>
+                    </div>
+                </div>
+
+                <!-- Forma de Pagamento -->
+                <div style="margin-bottom:14px;">
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Forma de Pagamento *</label>
+                    <select id="totem-plano-pgto" class="glass"
+                        style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;"
+                        onchange="app._totemOnPaymentChange(this.value)">
+                        <option value="">— Selecione a forma de pagamento —</option>
+                        <option value="Dinheiro">💵 Dinheiro na Barbearia</option>
+                        <option value="PIX">📱 PIX</option>
+                        <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                        <option value="Misto">🔀 Pagamento Misto (Dividir)</option>
+                    </select>
+                </div>
+
+                <!-- Box Pagamento Misto -->
+                <div id="totem-split-wrapper" style="display:none; background:rgba(255,255,255,0.03); padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed var(--glass-border);">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 1 via:</label>
+                            <select id="totem-split-method-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="totem-split-amount-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01" oninput="app._totemUpdateSplitRemainder()">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">Parte 2 via:</label>
+                            <select id="totem-split-method-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
+                                <option value="PIX">PIX</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
+                            </select>
+                            <input type="number" id="totem-split-amount-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01">
+                        </div>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin:0;">Total do Plano: <strong id="totem-split-total-info">R$ 0,00</strong></p>
                 </div>
 
                 <!-- Vencimento -->
@@ -2412,7 +2458,7 @@ const app = {
                     <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Observação (opcional)</label>
                     <input type="text" id="totem-plano-obs" class="glass"
                         style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px;"
-                        placeholder="Ex: Pagou em dinheiro, renovação, etc.">
+                        placeholder="Ex: Renovação mensal, pago no balcão, etc.">
                 </div>
 
                 <p id="totem-plano-erro" style="color:#f87171; font-size:0.82rem; min-height:18px; margin-bottom:10px;"></p>
@@ -2423,6 +2469,43 @@ const app = {
                 </button>
             </div>
         `);
+    },
+
+    _totemOnPlanoChange(planName) {
+        const plan = (this.state.subscriptionPlans || []).find(p => p.name === planName);
+        const badge = document.getElementById('totem-plano-price-badge');
+        const display = document.getElementById('totem-plano-val-display');
+        const splitInfo = document.getElementById('totem-split-total-info');
+        if (plan && badge && display) {
+            const price = parseFloat(plan.price) || 0;
+            display.textContent = price.toFixed(2);
+            badge.style.display = 'block';
+            if (splitInfo) splitInfo.textContent = `R$ ${price.toFixed(2)}`;
+            this._totemUpdateSplitRemainder();
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    },
+
+    _totemOnPaymentChange(method) {
+        const wrapper = document.getElementById('totem-split-wrapper');
+        if (!wrapper) return;
+        wrapper.style.display = method === 'Misto' ? 'block' : 'none';
+        if (method === 'Misto') {
+            this._totemUpdateSplitRemainder();
+        }
+    },
+
+    _totemUpdateSplitRemainder() {
+        const planName = document.getElementById('totem-plano-sel')?.value;
+        const plan = (this.state.subscriptionPlans || []).find(p => p.name === planName);
+        const total = plan ? parseFloat(plan.price) || 0 : 0;
+        const val1 = parseFloat(document.getElementById('totem-split-amount-1')?.value) || 0;
+        const input2 = document.getElementById('totem-split-amount-2');
+        if (input2) {
+            const remainder = Math.max(0, total - val1);
+            input2.value = remainder.toFixed(2);
+        }
     },
 
     _totemToggleNovoCli() {
@@ -2443,6 +2526,7 @@ const app = {
         const isNovoCli = novoCliForm && novoCliForm.style.display !== 'none';
 
         let customerId = null;
+        let customerName = '';
 
         if (isNovoCli) {
             // Cadastrar novo cliente
@@ -2466,6 +2550,7 @@ const app = {
             if (!this.state.customers) this.state.customers = [];
             this.state.customers.push(newCli);
             customerId = newCli.id;
+            customerName = nome;
 
         } else {
             customerId = document.getElementById('totem-plano-cliente')?.value;
@@ -2473,14 +2558,53 @@ const app = {
                 if (errEl) errEl.textContent = 'Selecione um cliente ou cadastre um novo.';
                 return;
             }
+            const foundCust = (this.state.customers || []).find(c => c.id == customerId);
+            customerName = foundCust ? foundCust.name : 'Cliente';
         }
 
         const planName = document.getElementById('totem-plano-sel')?.value;
+        const payment = document.getElementById('totem-plano-pgto')?.value;
         const validUntil = document.getElementById('totem-plano-venc')?.value;
         const obs = (document.getElementById('totem-plano-obs')?.value || '').trim();
 
         if (!planName) { if (errEl) errEl.textContent = 'Selecione o plano.'; return; }
+        if (!payment) { if (errEl) errEl.textContent = 'Selecione a forma de pagamento do plano.'; return; }
         if (!validUntil) { if (errEl) errEl.textContent = 'Informe a data de vencimento.'; return; }
+
+        const planObj = (this.state.subscriptionPlans || []).find(p => p.name === planName);
+        const planPrice = planObj ? parseFloat(planObj.price) || 0 : 0;
+
+        const getM = (m) => {
+            if (!m) return 'dinheiro';
+            const s = m.toLowerCase();
+            if (s.includes('pix')) return 'pix';
+            if (s.includes('debito') || s.includes('débito')) return 'debito';
+            if (s.includes('credito') || s.includes('crédito')) return 'credito';
+            return 'dinheiro';
+        };
+
+        // Lançar transação no faturamento do dia / caixa
+        if (payment === 'Misto') {
+            const val1 = parseFloat(document.getElementById('totem-split-amount-1')?.value) || 0;
+            const val2 = parseFloat(document.getElementById('totem-split-amount-2')?.value) || 0;
+            const m1 = document.getElementById('totem-split-method-1')?.value || 'Dinheiro';
+            const m2 = document.getElementById('totem-split-method-2')?.value || 'PIX';
+
+            if (planPrice > 0 && Math.abs((val1 + val2) - planPrice) > 0.01) {
+                if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
+            }
+
+            if (val1 > 0) {
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName}) [Parte 1/${m1}]`, val1, 'plano', getM(m1));
+            }
+            if (val2 > 0) {
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName}) [Parte 2/${m2}]`, val2, 'plano', getM(m2));
+            }
+        } else {
+            if (planPrice > 0) {
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName})`, planPrice, 'plano', getM(payment));
+            }
+        }
 
         // Remove assinatura anterior deste cliente (sem duplicar)
         if (!this.state.subscribers) this.state.subscribers = [];
@@ -2492,6 +2616,8 @@ const app = {
             planName,
             validUntil,
             obs,
+            paymentMethod: payment,
+            paymentAmount: planPrice,
             releasedBy: this._totemRecepNome,
             releasedAt: new Date().toISOString(),
             releasedVia: 'totem'
@@ -2508,7 +2634,7 @@ const app = {
         this._renderTotemPlanos(document.getElementById('totem-tab-content'));
 
         // Feedback visual
-        this.showToast('✅ Plano liberado com sucesso!', 'success');
+        this.showToast(`✅ Plano liberado! R$ ${planPrice.toFixed(2)} somado ao faturamento do dia.`, 'success');
     },
 
     // ─── TOTEM: PDV ───────────────────────────────────────────────────────────
@@ -6002,7 +6128,11 @@ const app = {
             productCommissions += (s.sellerCommission || 0);
         });
 
-        const totalGross = serviceGross + productGross;
+        // 3. Calcular de Planos e Convênios (Assinaturas)
+        const planTransactions = (this.state.transactions || []).filter(t => t.type === 'in' && (t.category === 'plano' || t.category === 'assinatura' || t.category === 'convenio') && t.date && dateFilter(t.date));
+        let planGross = planTransactions.reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
+
+        const totalGross = serviceGross + productGross + planGross;
         const totalCommissions = serviceCommissions + productCommissions;
         const netRevenue = totalGross - totalCommissions;
 
@@ -6158,6 +6288,10 @@ const app = {
                                 <span style="color: var(--text-secondary);">📦 Venda de Produtos</span>
                                 <span style="font-weight: 700; font-size: 1.1rem;">R$ ${productGross.toFixed(2)}</span>
                             </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--text-secondary);">💳 Planos e Convênios</span>
+                                <span style="font-weight: 700; font-size: 1.1rem; color: #f59e0b;">R$ ${planGross.toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="glass" style="padding: 20px;">
@@ -6261,7 +6395,17 @@ const app = {
             productGross += parseFloat(s.total) || 0;
         });
 
-        const totalGross = serviceGross + productGross;
+        let planGross = 0;
+        (this.state.transactions || []).forEach(t => {
+            if (t.type === 'in' && (t.category === 'plano' || t.category === 'assinatura' || t.category === 'convenio') && t.date) {
+                const parts = t.date.split('-');
+                if (parts.length >= 2 && parts[0] == ano && parts[1] == mes) {
+                    planGross += parseFloat(t.amount) || 0;
+                }
+            }
+        });
+
+        const totalGross = serviceGross + productGross + planGross;
 
         // Montar HTML do comprovante
         const businessName = this.state.settings?.businessName || 'Nossa Barbearia';
@@ -6311,6 +6455,10 @@ const app = {
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Venda de Produtos</td>
                             <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${productGross.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Planos e Convênios (Assinaturas)</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${planGross.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 12px 8px; border: 1px solid #000; font-weight: bold; font-size: 16px; background: #eee;">TOTAL FATURAMENTO BRUTO</td>
@@ -7838,7 +7986,8 @@ const app = {
             credito: 0,
             faturamento: 0,
             produtos: 0,
-            servicos: 0
+            servicos: 0,
+            planos: 0
         };
 
         transactionsDate.forEach(t => {
@@ -7853,6 +8002,7 @@ const app = {
 
                 const cat = (t.category || '').toLowerCase();
                 if (cat === 'produto') totals.produtos += amount;
+                else if (cat === 'plano' || cat === 'assinatura' || cat === 'convenio') totals.planos += amount;
                 else totals.servicos += amount;
             } else {
                 // Despesas saem do dinheiro físico (sangria)
@@ -7935,7 +8085,7 @@ const app = {
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.05);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Serviços</p>
                         <p style="font-weight: 700; color: var(--accent-readable);">R$ ${totals.servicos.toFixed(2)}</p>
@@ -7943,6 +8093,10 @@ const app = {
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
                         <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Produtos</p>
                         <p style="font-weight: 700; color: #38bdf8;">R$ ${totals.produtos.toFixed(2)}</p>
+                    </div>
+                    <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Planos / Convênios</p>
+                        <p style="font-weight: 700; color: #f59e0b;">R$ ${totals.planos.toFixed(2)}</p>
                     </div>
                 </div>
 
