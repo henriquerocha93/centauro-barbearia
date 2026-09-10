@@ -834,6 +834,8 @@ const app = {
                     if (!loaded.settings.agenda && defaultSettings.agenda) {
                         loaded.settings.agenda = defaultSettings.agenda;
                     }
+                }
+
                 // [CRÍTICO] A data da agenda SEMPRE deve ser a data de HOJE ao inicializar o app!
                 // Evita que navegações passadas fiquem presas no cache local
                 delete loaded.currentDate;
