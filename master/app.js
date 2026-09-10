@@ -965,10 +965,18 @@ const app = {
 
     openNewSellerModal() {
         const modal = document.getElementById('new-seller-modal');
-        if (!modal) return;
+        if (!modal) {
+            console.error('Modal new-seller-modal não encontrado');
+            return;
+        }
         const form = modal.querySelector('form');
         if (form) form.reset();
-        modal.showModal();
+        try {
+            modal.showModal();
+        } catch (err) {
+            console.warn('showModal falhou, aplicando fallback:', err);
+            modal.setAttribute('open', '');
+        }
     },
 
     async saveNewSeller(event) {
@@ -1024,7 +1032,7 @@ const app = {
                             <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">🤝 Equipe de Vendedores</h2>
                             <p style="color: #94a3b8; margin: 5px 0 0 0;">Gerencie os acessos e acompanhe os cadastros.</p>
                         </div>
-                        <button class="btn-action btn-main" onclick="app.openNewSellerModal()">+ CADASTRAR VENDEDOR</button>
+                        <button class="btn-action btn-main" onclick="window.app && window.app.openNewSellerModal ? window.app.openNewSellerModal() : document.getElementById('new-seller-modal').showModal()">+ CADASTRAR VENDEDOR</button>
                     </div>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; color: #f1f5f9;">

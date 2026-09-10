@@ -379,6 +379,8 @@
                 <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px;">Cancelar</button>
             </div>
         </form>
+    </dialog>
+
     <dialog id="new-seller-modal" class="modal" style="background: #1e293b; color: white; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; width: 90%; max-width: 450px;">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
             <span>🤝</span> Cadastrar Novo Vendedor
@@ -402,7 +404,7 @@
             </div>
 
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px 16px;">Cancelar</button>
+                <button type="button" onclick="document.getElementById('new-seller-modal').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px 16px;">Cancelar</button>
                 <button type="submit" class="btn-action btn-main" style="padding: 12px 24px;">Cadastrar Vendedor</button>
             </div>
         </form>
@@ -415,7 +417,7 @@
             window.location.reload();
         }
     </script>
-    <script type="module" src="app.js?v=1012"></script>
+    <script type="module" src="app.js?v=1015"></script>
 </body>
 
 </html>
