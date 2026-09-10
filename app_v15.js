@@ -1608,6 +1608,47 @@ const app = {
                     </div>
                 </div>
 
+                <!-- BLOCO 5: Notificações Push -->
+                <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #38bdf8;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+                        <div style="font-size:1.5rem;">🔔</div>
+                        <div style="flex:1;">
+                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Notificações Push</h3>
+                            <p style="font-size:0.8rem; color:var(--text-secondary); margin:4px 0 0;">
+                                Receba alertas instantâneos quando um cliente agendar um horário.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Status atual -->
+                    <div id="push-status-box" style="padding:12px 16px; background:var(--surface-dark); border-radius:8px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.2rem;" id="push-status-icon">⏳</span>
+                        <p id="push-status-text" style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
+                            Verificando status...
+                        </p>
+                    </div>
+
+                    <!-- Botão ativar -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px;">
+                        <button id="btn-activate-push" class="btn-primary"
+                                style="background:#38bdf8; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem;"
+                                onclick="app.activatePushFromSettings()">
+                            <span style="font-size:1.3rem;">🔔</span>
+                            <span style="text-align:left; line-height:1.3;">
+                                <strong style="display:block;">Ativar Notificações</strong>
+                                <small style="font-weight:400; opacity:0.85;">Permite receber alertas de agendamentos</small>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Instrução -->
+                    <div style="padding:10px 14px; background:rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2); border-radius:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.6;">
+                        💡 <strong style="color:#38bdf8;">Como funciona:</strong>
+                        Ao ativar, você receberá notificações no celular ou computador quando um cliente fizer um agendamento — mesmo com a tela bloqueada.
+                        Se as notificações foram bloqueadas, será necessário liberar nas configurações do navegador.
+                    </div>
+                </div>
+
                 <!-- Botão Salvar -->
                 <div style="display: flex; gap: 12px; justify-content: flex-end; padding-bottom: 30px;">
                     <button class="btn-secondary" onclick="app.navigateTo('admin-dash')">Cancelar</button>
@@ -1635,6 +1676,9 @@ const app = {
                 });
             }
         });
+
+        // Atualizar status visual das notificações push
+        this.updatePushStatusUI();
     },
 
     saveAdminSettings() {
@@ -10170,6 +10214,127 @@ const app = {
             console.error('[Push] Erro ao enviar push (não-crítico):', error);
         }
     },
+
+    // Ativa notificações push a partir da tela de Configurações
+    async activatePushFromSettings() {
+        // Verificações de compatibilidade
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            this.showToast('Seu navegador não suporta notificações push.', 'error');
+            return;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+
+            // Se a permissão foi bloqueada, instruir o usuário
+            if (Notification.permission === 'denied') {
+                this.openModal('🚫 Notificações Bloqueadas', `
+                    <section class="fade-in" style="text-align: center;">
+                        <div style="font-size: 4rem; margin-bottom: 15px;">🔇</div>
+                        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600;">
+                            As notificações foram bloqueadas neste dispositivo.
+                        </p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+                            Para reativar, abra as <strong>configurações do navegador</strong>, encontre este site e altere a permissão de notificações para <strong>"Permitir"</strong>.
+                        </p>
+                        <div style="padding:12px; background:var(--surface-dark); border-radius:10px; text-align:left; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
+                            <strong style="color:var(--text-primary);">📱 No celular:</strong> Configurações do navegador → Sites → Notificações<br>
+                            <strong style="color:var(--text-primary);">💻 No PC:</strong> Clique no cadeado 🔒 na barra de endereço → Notificações → Permitir
+                        </div>
+                        <button class="btn-secondary" style="width: 100%; padding: 12px;" onclick="app.closeModal()">
+                            Entendi
+                        </button>
+                    </section>
+                `);
+                return;
+            }
+
+            // Solicitar permissão se ainda não concedida
+            if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    this.showToast('Notificações não foram ativadas.', 'warning');
+                    this.updatePushStatusUI();
+                    return;
+                }
+            }
+
+            // Inscrever no push
+            await this.subscribeToPush(registration);
+            this.showToast('🔔 Notificações ativadas com sucesso!', 'success');
+            this.updatePushStatusUI();
+
+        } catch (error) {
+            console.error('[Push] Erro ao ativar push nas configurações:', error);
+            this.showToast('Erro ao ativar notificações. Tente novamente.', 'error');
+        }
+    },
+
+    // Atualiza o status visual das notificações push na tela de Configurações
+    async updatePushStatusUI() {
+        const iconEl = document.getElementById('push-status-icon');
+        const textEl = document.getElementById('push-status-text');
+        const btnEl = document.getElementById('btn-activate-push');
+
+        if (!iconEl || !textEl) return; // Elementos não presentes na tela
+
+        // Sem suporte
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+            iconEl.textContent = '❌';
+            textEl.innerHTML = '<span style="color:#ef4444;">Seu navegador não suporta notificações push.</span>';
+            if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.4'; btnEl.style.cursor = 'not-allowed'; }
+            return;
+        }
+
+        const permission = Notification.permission;
+
+        if (permission === 'denied') {
+            iconEl.textContent = '🚫';
+            textEl.innerHTML = '<span style="color:#f87171;">Notificações <strong>bloqueadas</strong> pelo navegador. Clique no botão abaixo para ver como liberar.</span>';
+            if (btnEl) {
+                btnEl.querySelector('strong').textContent = 'Como Desbloquear';
+                btnEl.querySelector('small').textContent = 'Veja as instruções para liberar';
+                btnEl.style.background = '#f87171';
+                btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
+            }
+            return;
+        }
+
+        if (permission === 'granted') {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    iconEl.textContent = '✅';
+                    textEl.innerHTML = '<span style="color:#4ade80;">Notificações <strong>ativas</strong>! Você será avisado(a) sobre novos agendamentos.</span>';
+                    if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.4'; btnEl.style.cursor = 'default'; btnEl.querySelector('strong').textContent = 'Notificações Ativas'; btnEl.querySelector('small').textContent = 'Tudo certo, nada mais a fazer'; btnEl.style.background = '#4ade80'; }
+                    return;
+                }
+            } catch (e) { /* fallthrough */ }
+
+            // Permissão concedida mas sem subscription — re-inscrever
+            iconEl.textContent = '⚠️';
+            textEl.innerHTML = '<span style="color:#fbbf24;">Permissão concedida, mas as notificações precisam ser reativadas neste dispositivo.</span>';
+            if (btnEl) {
+                btnEl.querySelector('strong').textContent = 'Reativar Notificações';
+                btnEl.querySelector('small').textContent = 'Reconectar este dispositivo';
+                btnEl.style.background = '#38bdf8';
+                btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
+            }
+            return;
+        }
+
+        // permission === 'default'
+        iconEl.textContent = '💤';
+        textEl.innerHTML = 'Notificações <strong>não ativadas</strong> neste dispositivo. Clique no botão abaixo para ativar.';
+        if (btnEl) {
+            btnEl.querySelector('strong').textContent = 'Ativar Notificações';
+            btnEl.querySelector('small').textContent = 'Permite receber alertas de agendamentos';
+            btnEl.style.background = '#38bdf8';
+            btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
+        }
+    },
+
 
     showToast(message, type = 'success') {
         const toast = document.createElement('div');
