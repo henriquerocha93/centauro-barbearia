@@ -245,7 +245,7 @@ const app = {
                         <p class="t-info"><strong>Dono:</strong> Henri</p>
                         <p class="t-info"><strong>Slug:</strong> (Acesso Direto)</p>
                         <div class="t-actions">
-                            <a href="../index.html" target="_blank" class="btn" style="width: 100%; text-align: center; background: #4c1d95; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold; display: block;">↗ Acessar Sistema</a>
+                            <button onclick="app.accessTenantAsAdmin('centauro-legacy')" class="btn" style="width: 100%; text-align: center; background: #4c1d95; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">↗ Acessar Sistema</button>
                         </div>
                     </div>
                 `;
@@ -289,7 +289,7 @@ const app = {
                         ${t.sellerId ? `<p style="color: #10b981; font-weight: 700; margin-top: 5px;">🤝 Vendedor: ${t.sellerId}</p>` : ''}
                     </div>
                     <div class="t-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        <a href="../index.html?loja=${key}" target="_blank" class="btn" style="width: 100%; text-align: center; margin-bottom: 5px; background: #4c1d95; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold;">↗ Acessar Sistema</a>
+                        <button onclick="app.accessTenantAsAdmin('${key}')" class="btn" style="width: 100%; text-align: center; margin-bottom: 5px; background: #4c1d95; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">↗ Acessar Sistema</button>
                         <button onclick="app.openEditRegistrationModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem; color: #fff; border-color: rgba(255,255,255,0.3);">⚙️ Cadastro</button>
                         <button onclick="app.openEditTenantModal('${key}')" class="btn-outline" style="flex: 1; font-size: 0.7rem;">✏️ Visual</button>
                         <button onclick="app.openPlanModal('${key}')" class="btn" style="flex: 1; font-size: 0.7rem; background: #2563eb; color: white; border: none;">📋 Plano</button>
@@ -642,7 +642,7 @@ const app = {
                                             <td style="padding: 12px;"><code>${key}</code></td>
                                             <td style="padding: 12px;">
                                                 <button class="btn" style="background: #10b981; color: white; border: none; font-size: 0.7rem; padding: 6px 12px;" onclick="app.renewSubscription('${key}')">Ativar Loja</button>
-                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px;" onclick="window.open('../index.html?loja=${key}', '_blank')">👁️ Acessar</button>
+                                                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px;" onclick="app.accessTenantAsAdmin('${key}')">👁️ Acessar</button>
                                                 <button class="btn btn-outline" style="font-size: 0.7rem; padding: 6px 12px; color: #ef4444; border-color: rgba(239, 68, 68, 0.5);" onclick="app.deleteTenant('${key}')">🗑️ Excluir</button>
                                             </td>
                                         </tr>
@@ -1083,6 +1083,38 @@ const app = {
         } catch (e) {
             console.error(e);
             alert('Erro ao excluir loja.');
+        }
+    },
+
+    // [IMPERSONATE] Gera token temporário e abre a loja como admin
+    async accessTenantAsAdmin(slug) {
+        try {
+            // Gerar token único
+            const token = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substring(2, 15));
+
+            // Dados do token com expiração de 5 minutos
+            const tokenData = {
+                tenantId: slug,
+                role: 'admin',
+                name: 'Administrador Master',
+                createdAt: Date.now(),
+                expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutos
+            };
+
+            // Gravar no Firebase
+            await set(ref(this.db, `master/impersonate_tokens/${token}`), tokenData);
+            console.log(`[Master] Token de acesso criado para "${slug}": ${token.substring(0, 8)}...`);
+
+            // Abrir a loja com o token
+            const url = slug === 'centauro-legacy'
+                ? `../index.html?master_token=${token}`
+                : `../index.html?loja=${slug}&master_token=${token}`;
+
+            window.open(url, '_blank');
+
+        } catch (error) {
+            console.error('[Master] Erro ao gerar token de acesso:', error);
+            alert('Erro ao acessar a loja. Tente novamente.');
         }
     }
 };

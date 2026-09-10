@@ -1253,13 +1253,15 @@ const app = {
         const tenantId = this.getTenantId();
         const sessionKey = `centauros_user_${tenantId}`;
         const savedUserStr = localStorage.getItem(sessionKey);
+        const hasMasterToken = new URLSearchParams(window.location.search).has('master_token');
 
         // [MIGRAÇÃO LEGADA] Limpa chave global antiga se existir, para não deixar resíduos
         if (localStorage.getItem('centauros_user')) {
             localStorage.removeItem('centauros_user');
         }
 
-        if (savedUserStr) {
+        // Se há master_token, pular restauração de sessão — será tratado após Firebase carregar
+        if (!hasMasterToken && savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr);
 
@@ -1269,6 +1271,7 @@ const app = {
                     localStorage.removeItem(sessionKey);
                 } else {
                     this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
+                    if (savedUser.isMasterSession) this.state.user.isMasterSession = true;
 
                     // [PUSH NOTIFICATION] Re-registrar push ao auto-login
                     setTimeout(() => this.initPushNotifications(), 4000);
@@ -1292,6 +1295,31 @@ const app = {
         }
         
         this.render(initialView);
+
+        // [MASTER IMPERSONATE] Se há master_token na URL, validar async após o Firebase estar pronto
+        if (hasMasterToken) {
+            // Aguardar um breve delay para o Firebase estar inicializado
+            const attemptMasterLogin = async () => {
+                // Espera o this.db estar disponível (máx 10s)
+                let attempts = 0;
+                while (!this.db && attempts < 20) {
+                    await new Promise(r => setTimeout(r, 500));
+                    attempts++;
+                }
+                if (!this.db) {
+                    console.error('[Master Token] Firebase não ficou disponível a tempo.');
+                    this.cleanMasterTokenFromURL();
+                    return;
+                }
+
+                const success = await this.checkMasterToken();
+                if (success) {
+                    this.state.view = 'admin-dash';
+                    this.render('admin-dash');
+                }
+            };
+            attemptMasterLogin();
+        }
         
         // Melhoria UX para inputs de data: abrir picker nativo ao clicar (Resolve o erro do ano 0001)
         document.addEventListener('click', (e) => {
@@ -1898,6 +1926,37 @@ const app = {
         appContainer.className = 'container'; // Reseta para o padrão
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML(view)}
+            ${this.state.user?.isMasterSession ? `
+            <div id="master-session-banner" style="
+                background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+                color: white;
+                padding: 8px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 0.82rem;
+                font-weight: 600;
+                z-index: 9999;
+                box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
+            ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem;">👑</span>
+                    <span>Sessão Master Ativa</span>
+                    <span style="opacity: 0.7; font-weight: 400;">— ${shopName}</span>
+                </div>
+                <button onclick="window.close(); if(!window.closed) app.logout();" style="
+                    background: rgba(255,255,255,0.2);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    color: white;
+                    padding: 4px 14px;
+                    border-radius: 6px;
+                    font-size: 0.75rem;
+                    cursor: pointer;
+                    font-weight: 600;
+                ">✕ Encerrar</button>
+            </div>
+            ` : ''}
             <div class="app-layout">
                 <div class="mobile-header">
                 <button class="hamburger" onclick="app.toggleSidebar()">
@@ -3661,6 +3720,89 @@ const app = {
         const whatsappUrl = `https://wa.me/55${shopPhone}?text=${encodedMsg}`;
 
         window.open(whatsappUrl, '_blank');
+    },
+
+    // [MASTER IMPERSONATE] Verifica se há um token de acesso master na URL
+    async checkMasterToken() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const masterToken = urlParams.get('master_token');
+
+        if (!masterToken) return false;
+
+        try {
+            // Aguardar o Firebase estar pronto
+            if (!this.db) {
+                console.warn('[Master Token] Firebase não inicializado ainda.');
+                return false;
+            }
+
+            // Ler token do Firebase
+            const tokenRef = ref(this.db, `master/impersonate_tokens/${masterToken}`);
+            const snapshot = await get(tokenRef);
+
+            if (!snapshot.exists()) {
+                console.warn('[Master Token] Token não encontrado ou já utilizado.');
+                this.cleanMasterTokenFromURL();
+                return false;
+            }
+
+            const tokenData = snapshot.val();
+
+            // Verificar expiração
+            if (Date.now() > tokenData.expiresAt) {
+                console.warn('[Master Token] Token expirado.');
+                // Deletar token expirado
+                await set(ref(this.db, `master/impersonate_tokens/${masterToken}`), null);
+                this.cleanMasterTokenFromURL();
+                return false;
+            }
+
+            // Verificar se o tenantId confere
+            const currentTenant = this.getTenantId();
+            const expectedTenant = tokenData.tenantId === 'centauro-legacy' ? 'centauro' : tokenData.tenantId;
+
+            if (expectedTenant !== currentTenant) {
+                console.warn(`[Master Token] TenantId não confere. Esperado: ${expectedTenant}, Atual: ${currentTenant}`);
+                this.cleanMasterTokenFromURL();
+                return false;
+            }
+
+            // Token válido! Deletar do Firebase (uso único)
+            await set(ref(this.db, `master/impersonate_tokens/${masterToken}`), null);
+            console.log(`[Master Token] ✅ Acesso master autorizado para tenant "${currentTenant}"`);
+
+            // Criar sessão de admin master
+            this.state.user = {
+                id: 0,
+                name: tokenData.name || 'Administrador Master',
+                role: 'admin',
+                isMasterSession: true
+            };
+
+            // Salvar sessão para este tenant
+            const sessionKey = `centauros_user_${currentTenant}`;
+            localStorage.setItem(sessionKey, JSON.stringify({
+                ...this.state.user,
+                tenantId: currentTenant
+            }));
+
+            // Limpar token da URL
+            this.cleanMasterTokenFromURL();
+
+            return true;
+
+        } catch (error) {
+            console.error('[Master Token] Erro ao validar token:', error);
+            this.cleanMasterTokenFromURL();
+            return false;
+        }
+    },
+
+    // Remove o master_token da URL sem recarregar a página
+    cleanMasterTokenFromURL() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('master_token');
+        window.history.replaceState({}, '', url.toString());
     },
 
     renderLogin(container) {
