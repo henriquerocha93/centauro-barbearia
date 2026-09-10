@@ -963,11 +963,24 @@ const app = {
         }
     },
 
+    openNewSellerModal() {
+        const modal = document.getElementById('new-seller-modal');
+        if (!modal) return;
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.showModal();
+    },
+
     async saveNewSeller(event) {
         event.preventDefault();
-        const name = document.getElementById('s-name').value;
+        const name = document.getElementById('s-name').value.trim();
         const username = document.getElementById('s-username').value.trim().toLowerCase();
-        const password = document.getElementById('s-password').value;
+        const password = document.getElementById('s-password').value.trim();
+
+        if (!name || !username || !password) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
 
         try {
             await set(ref(this.db, 'master/sellers/' + username), {
@@ -982,7 +995,7 @@ const app = {
             this.render();
         } catch (e) {
             console.error(e);
-            alert('Erro ao cadastrar vendedor.');
+            alert('Erro ao cadastrar vendedor: ' + (e.message || e));
         }
     },
 
@@ -1011,7 +1024,7 @@ const app = {
                             <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">🤝 Equipe de Vendedores</h2>
                             <p style="color: #94a3b8; margin: 5px 0 0 0;">Gerencie os acessos e acompanhe os cadastros.</p>
                         </div>
-                        <button class="btn-action btn-main" onclick="document.getElementById('new-seller-modal').showModal()">+ CADASTRAR VENDEDOR</button>
+                        <button class="btn-action btn-main" onclick="app.openNewSellerModal()">+ CADASTRAR VENDEDOR</button>
                     </div>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; color: #f1f5f9;">

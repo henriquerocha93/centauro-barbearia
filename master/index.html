@@ -379,7 +379,35 @@
                 <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px;">Cancelar</button>
             </div>
         </form>
+    <dialog id="new-seller-modal" class="modal" style="background: #1e293b; color: white; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; width: 90%; max-width: 450px;">
+        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
+            <span>🤝</span> Cadastrar Novo Vendedor
+        </h3>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">Crie um acesso para o vendedor cadastrar novas lojas e acompanhar ativações.</p>
+        <form onsubmit="app.saveNewSeller(event)">
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Nome do Vendedor</label>
+                <input type="text" id="s-name" placeholder="Ex: Carlos Silva" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Login / Usuário de Acesso</label>
+                <input type="text" id="s-username" placeholder="Ex: carlossilva" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;">
+                <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px; display: block;">Usado para acessar o portal do vendedor</small>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Senha de Acesso</label>
+                <input type="text" id="s-password" placeholder="Ex: 123456" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="this.closest('dialog').close()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 10px 16px;">Cancelar</button>
+                <button type="submit" class="btn-action btn-main" style="padding: 12px 24px;">Cadastrar Vendedor</button>
+            </div>
+        </form>
     </dialog>
+
     <script>
         function logout() {
             localStorage.removeItem('master_auth');
@@ -387,7 +415,7 @@
             window.location.reload();
         }
     </script>
-    <script type="module" src="app.js?v=1010"></script>
+    <script type="module" src="app.js?v=1012"></script>
 </body>
 
 </html>
