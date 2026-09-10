@@ -315,6 +315,32 @@ const app = {
         return `centauro_state_${this.getTenantId()}`;
     },
 
+    // Retorna a data atual local no formato YYYY-MM-DD (sem distorção de fuso horário UTC)
+    getTodayDate() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    },
+
+    // Retorna o nome de exibição do barbeiro na agenda (diferencia profissionais com o mesmo primeiro nome)
+    getBarberShortName(barber, allBarbers) {
+        if (!barber || !barber.name) return 'Profissional';
+        const cleanName = barber.name.trim();
+        const parts = cleanName.split(/\s+/);
+        const firstName = parts[0];
+        
+        const hasDuplicate = (allBarbers || []).some(o => 
+            o && o.id !== barber.id && o.name && o.name.trim().split(/\s+/)[0].toLowerCase() === firstName.toLowerCase()
+        );
+        
+        if (hasDuplicate && parts.length > 1) {
+            return `${firstName} ${parts[parts.length - 1]}`;
+        }
+        return firstName;
+    },
+
     saveState() {
         this.state.needsSync = true;
         this.state.lastUpdate = Date.now(); // [CRÍTICO] Atualiza o relógio para esta mudança
@@ -808,16 +834,21 @@ const app = {
                     if (!loaded.settings.agenda && defaultSettings.agenda) {
                         loaded.settings.agenda = defaultSettings.agenda;
                     }
-                }
+                // [CRÍTICO] A data da agenda SEMPRE deve ser a data de HOJE ao inicializar o app!
+                // Evita que navegações passadas fiquem presas no cache local
+                delete loaded.currentDate;
 
                 Object.assign(this.state, loaded);
+                this.state.currentDate = this.getTodayDate(); // SEMPRE hoje ao carregar o sistema
                 this.state.currentTenant = this.getTenantId(); // Vincula o estado ao tenant atual
-                console.log(`✅ Estado carregado e normalizado para loja: ${key}`);
+                console.log(`✅ Estado carregado e normalizado para loja: ${key} (Data da agenda: ${this.state.currentDate})`);
                 this.migrateProducts();
                 this.migrateVouchersFromTransactions();
             } catch (e) {
                 console.error('Erro ao carregar estado local:', e);
             }
+        } else {
+            this.state.currentDate = this.getTodayDate();
         }
     },
 
@@ -1066,8 +1097,8 @@ const app = {
                             }
                             const localLastUpdate = this.state.lastUpdate || 0;
 
-                            // [INSTANTÂNEO] Se a nuvem tem dados novos
-                            if (cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
+                            // [INSTANTÂNEO] Se a nuvem tem dados novos (sessões master SEMPRE processam os dados reais da nuvem)
+                            if (!this.state.user?.isMasterSession && cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
                                 return;
                             }
 
@@ -1289,6 +1320,7 @@ const app = {
             }
         }
 
+        this.state.currentDate = this.getTodayDate();
         this.state.view = initialView;
         if (initialSubView && initialView === 'totem-dash') {
             this.state.totemTab = initialSubView;
@@ -1314,6 +1346,7 @@ const app = {
 
                 const success = await this.checkMasterToken();
                 if (success) {
+                    this.state.currentDate = this.getTodayDate();
                     this.state.view = 'admin-dash';
                     this.render('admin-dash');
                 }
@@ -3779,6 +3812,11 @@ const app = {
                 isMasterSession: true
             };
 
+            // [CRÍTICO] Forçar data da agenda para HOJE e zerar lastUpdate para carregar a nuvem ao vivo
+            this.state.currentDate = this.getTodayDate();
+            this.state.lastUpdate = 0;
+            this.state._lastDataHash = null;
+
             // Salvar sessão para este tenant
             const sessionKey = `centauros_user_${currentTenant}`;
             localStorage.setItem(sessionKey, JSON.stringify({
@@ -4771,9 +4809,13 @@ const app = {
     },
 
     changeAgendaDate(offset) {
-        const current = new Date(this.state.currentDate + 'T00:00:00');
+        const [y, m, d] = (this.state.currentDate || this.getTodayDate()).split('-').map(Number);
+        const current = new Date(y, m - 1, d);
         current.setDate(current.getDate() + offset);
-        this.state.currentDate = current.toISOString().split('T')[0];
+        const ny = current.getFullYear();
+        const nm = String(current.getMonth() + 1).padStart(2, '0');
+        const nd = String(current.getDate()).padStart(2, '0');
+        this.state.currentDate = `${ny}-${nm}-${nd}`;
         this.render(this.state.view);
     },
 
@@ -4791,7 +4833,7 @@ const app = {
             : staff.filter(s => s && s.showInAgenda !== false);
 
         const timeSlots = this.generateTimeSlots();
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = this.getTodayDate();
         const isPastDate = this.state.currentDate < todayStr;
 
         // [OTIMIZAÇÃO] Indexar agendamentos do dia para busca O(1)
@@ -4826,7 +4868,7 @@ const app = {
                     </div>
 
                     <div style="display: flex; gap: 10px;">
-                        <button class="glass" style="padding: 8px 15px; font-size: 0.8rem; font-weight: 600;" onclick="app.state.currentDate = new Date().toISOString().split('T')[0]; app.render(app.state.view)">
+                        <button class="glass" style="padding: 8px 15px; font-size: 0.8rem; font-weight: 600;" onclick="app.state.currentDate = app.getTodayDate(); app.render(app.state.view)">
                             Hoje
                         </button>
                         ${this.state.user && this.state.user.role === 'admin' ? `
@@ -4861,7 +4903,7 @@ const app = {
                                 <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
                                      class="barber-avatar" 
                                      onerror="this.src='https://cdn-icons-png.flaticon.com/512/4140/4140037.png'">
-                                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); white-space: nowrap;">${b.name.split(' ')[0]}</div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); white-space: nowrap;">${this.getBarberShortName(b, barbersToShow)}</div>
                                 ${this.state.user && (this.state.user.role === 'admin' || this.state.user.name === b.name) ? `
                                     <button style="margin-top: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 4px; font-size: 0.6rem; padding: 2px 6px; cursor: pointer; font-weight: 600;" 
                                             onclick="app.blockFullDay('${b.name}', '${this.state.currentDate}')">BLOQUEAR DIA</button>
