@@ -100,8 +100,8 @@ const app = {
             beauty_salon: {
                 subtitle: 'ESTÉTICA & BELEZA',
                 hero: 'hero_beauty.png',
-                primary: '#10b981',
-                accent: '#D4AF37',
+                primary: '#ec4899',
+                accent: '#ec4899',
                 bg: '#0B0E14',
                 surface: '#151A21',
                 text: '#F3F4F6',
@@ -122,7 +122,7 @@ const app = {
                 subtitle: 'CUIDADO & ESTILO',
                 hero: 'hero_manicure.png',
                 primary: '#8b5cf6',
-                accent: '#a78bfa',
+                accent: '#8b5cf6',
                 bg: '#0B0E14',
                 surface: '#151A21',
                 text: '#F3F4F6',
@@ -143,7 +143,7 @@ const app = {
                 subtitle: 'BEM-ESTAR & SAÚDE',
                 hero: 'hero_clinic.png',
                 primary: '#0ea5e9',
-                accent: '#38bdf8',
+                accent: '#0ea5e9',
                 bg: '#0B0E14',
                 surface: '#151A21',
                 text: '#F3F4F6',
@@ -263,27 +263,82 @@ const app = {
         const theme = themes[type] || themes.barbershop || { bg: '#0B0E14', primary: '#D4AF37', text: '#F3F4F6' };
         const root = document.documentElement;
 
-        let bgColor = s.bgColor || theme.bg || '#0B0E14';
-        let accentColor = s.accentColor || s.primaryColor || theme.accent || theme.primary || '#D4AF37';
-        
-        const isDark = (bgColor === '#0B0E14' || bgColor.startsWith('#0') || bgColor.startsWith('#1') || this.getLuminance(bgColor) < 0.2);
+        // 1. Determinar o Modo do Ambiente (Dark vs Light)
+        let themeMode = s.themeMode;
+        if (!themeMode) {
+            if (s.bgColor) {
+                themeMode = this.getLuminance(s.bgColor) > 0.4 ? 'light' : 'dark';
+            } else {
+                themeMode = 'dark'; // Padrão
+            }
+        }
+        const isDark = (themeMode !== 'light');
 
-        // Garantir que o sotaque seja legível
+        // 2. Cor de Destaque / Identidade da Marca
+        let accentColor = s.accentColor || s.primaryColor || theme.accent || theme.primary || '#D4AF37';
+
+        // Prevenir cor residual preta '#111827' em lojas
+        if (accentColor === '#111827') {
+            accentColor = type === 'beauty_salon' ? '#ec4899' :
+                          type === 'manicure' ? '#8b5cf6' :
+                          type === 'clinic' ? '#0ea5e9' : '#D4AF37';
+        }
+
+        // 3. Paleta Harmonizada para todo o Sistema (Menu + Ambiente)
+        let bgColor, surfaceColor, surfaceLight, surfaceDark, sidebarBg, textPrimary, textSecondary, glassBg, glassBorder, menuHoverBg, cardShadow, inputBg;
+
+        if (isDark) {
+            // === MODO ESCURO (DARK LUXURY) ===
+            bgColor = s.bgColor && this.getLuminance(s.bgColor) < 0.3 ? s.bgColor : '#0B0E14';
+            surfaceColor = '#151A21';
+            surfaceLight = '#1C232B';
+            surfaceDark = '#0D1117';
+            sidebarBg = '#0D1117';
+            textPrimary = '#F3F4F6';
+            textSecondary = '#9CA3AF';
+            glassBg = 'rgba(21, 26, 33, 0.85)';
+            glassBorder = 'rgba(255, 255, 255, 0.08)';
+            menuHoverBg = 'rgba(255, 255, 255, 0.06)';
+            cardShadow = '0 4px 30px rgba(0, 0, 0, 0.35)';
+            inputBg = 'rgba(255, 255, 255, 0.04)';
+        } else {
+            // === MODO CLARO (CLEAN LIGHT / HARMONIZADO) ===
+            bgColor = s.bgColor && this.getLuminance(s.bgColor) > 0.4 ? s.bgColor : '#F8FAFC';
+            surfaceColor = '#FFFFFF';
+            surfaceLight = '#F1F5F9';
+            surfaceDark = '#E2E8F0';
+            sidebarBg = '#FFFFFF'; // MENU CLARO HARMONIZADO COM O AMBIENTE CLARO!
+            textPrimary = '#0F172A';
+            textSecondary = '#64748B';
+            glassBg = 'rgba(255, 255, 255, 0.95)';
+            glassBorder = 'rgba(0, 0, 0, 0.08)';
+            menuHoverBg = 'rgba(0, 0, 0, 0.04)';
+            cardShadow = '0 4px 20px rgba(0, 0, 0, 0.06)';
+            inputBg = '#FFFFFF';
+        }
+
+        // Sotaque legível com contraste ideal
         let readableAccent = accentColor;
-        if (isDark && this.getLuminance(accentColor) < 0.4) {
-            readableAccent = '#fbbf24'; // Um amarelo vibrante para garantir legibilidade no escuro
-        } else if (!isDark && this.getLuminance(accentColor) > 0.6) {
-            readableAccent = '#B8860B'; // Um dourado escuro para legibilidade no claro
+        if (isDark && this.getLuminance(accentColor) < 0.3) {
+            readableAccent = '#fbbf24';
+        } else if (!isDark && this.getLuminance(accentColor) > 0.7) {
+            readableAccent = '#B8860B';
         }
 
         root.style.setProperty('--bg-color', bgColor);
-        root.style.setProperty('--surface-color', s.surfaceColor || theme.surface || (isDark ? '#151A21' : '#F9FAFB'));
+        root.style.setProperty('--surface-color', surfaceColor);
+        root.style.setProperty('--surface-light', surfaceLight);
+        root.style.setProperty('--surface-dark', surfaceDark);
+        root.style.setProperty('--sidebar-bg', sidebarBg);
         root.style.setProperty('--accent-color', accentColor);
         root.style.setProperty('--accent-readable', readableAccent); 
-        root.style.setProperty('--text-primary', s.textPrimary || theme.text || (isDark ? '#F3F4F6' : '#111827'));
-        root.style.setProperty('--text-secondary', s.textSecondary || theme.textSecondary || (isDark ? '#9CA3AF' : '#4B5563'));
-        root.style.setProperty('--glass-bg', s.glassBg || theme.glassBg || (isDark ? 'rgba(21, 26, 33, 0.8)' : 'rgba(255, 255, 255, 0.8)'));
-        root.style.setProperty('--glass-border', isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)');
+        root.style.setProperty('--text-primary', textPrimary);
+        root.style.setProperty('--text-secondary', textSecondary);
+        root.style.setProperty('--glass-bg', glassBg);
+        root.style.setProperty('--glass-border', glassBorder);
+        root.style.setProperty('--menu-hover-bg', menuHoverBg);
+        root.style.setProperty('--card-shadow', cardShadow);
+        root.style.setProperty('--input-bg', inputBg);
 
         root.style.setProperty('--on-accent', this.getContrastColor(accentColor));
         root.style.setProperty('--on-bg', this.getContrastColor(bgColor));
@@ -1536,6 +1591,15 @@ const app = {
         const shopInfo = this.state.settings.shopInfo || {};
         const currentType = this.getBusinessType();
         const currentHero = this.state.settings?.heroImg || this.state.settings?.heroUrl || (this.state.themes[currentType] ? this.state.themes[currentType].hero : 'hero_vintage.png');
+        const sTheme = this.state.themes[currentType] || this.state.themes.barbershop;
+        let currentAccent = this.state.settings?.accentColor || this.state.settings?.primaryColor || sTheme.accent || sTheme.primary || '#D4AF37';
+        if (currentAccent === '#111827') {
+            currentAccent = currentType === 'beauty_salon' ? '#ec4899' :
+                            currentType === 'manicure' ? '#8b5cf6' :
+                            currentType === 'clinic' ? '#0ea5e9' : '#D4AF37';
+        }
+        const currentMode = this.state.settings?.themeMode || (this.state.settings?.bgColor && this.getLuminance(this.state.settings.bgColor) > 0.4 ? 'light' : 'dark');
+        const isDark = currentMode !== 'light';
 
         container.innerHTML = `
             <section id="admin-settings" class="fade-in">
@@ -1668,6 +1732,88 @@ const app = {
                                 <span style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
                                     Mínimo 4 dígitos.<br>Se deixado em branco, qualquer PIN de 4+ dígitos será aceito.
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 3: Identidade Visual & Cores do Sistema -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 1.5rem;">🎨</div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Identidade Visual & Cores do Sistema</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Personalize as cores do painel, menu lateral e botões para ornar perfeitamente com sua marca.</p>
+                        </div>
+                    </div>
+
+                    <!-- 1. Modo do Ambiente (Tema Geral) -->
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-bottom: 10px;">
+                            Ambiente & Menu Lateral (Tema Geral)
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                            <div id="theme-card-dark" 
+                                 class="theme-mode-card" 
+                                 onclick="app.setThemeMode('dark')"
+                                 style="padding: 16px; border-radius: 12px; border: 2px solid ${isDark ? 'var(--accent-color)' : 'var(--glass-border)'}; background: #0B0E14; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s; box-shadow: ${isDark ? '0 0 15px rgba(0,0,0,0.5)' : 'none'};">
+                                <div style="font-size: 1.8rem;">🌙</div>
+                                <div>
+                                    <strong style="display: block; color: #F3F4F6; font-size: 0.95rem;">Modo Noturno (Dark Luxury)</strong>
+                                    <span style="font-size: 0.75rem; color: #9CA3AF;">Fundo e menu escuros harmonizados</span>
+                                </div>
+                            </div>
+
+                            <div id="theme-card-light" 
+                                 class="theme-mode-card" 
+                                 onclick="app.setThemeMode('light')"
+                                 style="padding: 16px; border-radius: 12px; border: 2px solid ${!isDark ? 'var(--accent-color)' : 'var(--glass-border)'}; background: #FFFFFF; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s; box-shadow: ${!isDark ? '0 0 15px rgba(0,0,0,0.1)' : 'none'};">
+                                <div style="font-size: 1.8rem;">☀️</div>
+                                <div>
+                                    <strong style="display: block; color: #0F172A; font-size: 0.95rem;">Modo Claro (Clean Light)</strong>
+                                    <span style="font-size: 0.75rem; color: #64748B;">Menu e fundo claros harmonizados</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Cor de Destaque da Marca -->
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-bottom: 10px;">
+                            Cor de Destaque da Marca (Botões, Menus Ativos e Ícones)
+                        </label>
+                        
+                        <!-- Presets de cores -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                            ${[
+                                { hex: '#D4AF37', label: 'Dourado' },
+                                { hex: '#ec4899', label: 'Rosa Pink' },
+                                { hex: '#8b5cf6', label: 'Roxo' },
+                                { hex: '#10b981', label: 'Esmeralda' },
+                                { hex: '#0ea5e9', label: 'Azul Céu' },
+                                { hex: '#e11d48', label: 'Rubi' },
+                                { hex: '#f97316', label: 'Laranja' },
+                                { hex: '#6366f1', label: 'Índigo' }
+                            ].map(c => `
+                                <button type="button" 
+                                        class="color-chip" 
+                                        onclick="app.setAccentColor('${c.hex}')"
+                                        style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 20px; border: 2px solid ${currentAccent.toLowerCase() === c.hex.toLowerCase() ? 'var(--accent-color)' : 'var(--glass-border)'}; background: var(--surface-color); color: var(--text-primary); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                    <span style="width: 14px; height: 14px; border-radius: 50%; background: ${c.hex}; display: inline-block;"></span>
+                                    ${c.label}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <!-- Seletor livre personalizado -->
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface-dark); border-radius: 10px; max-width: 420px; border: 1px solid var(--glass-border);">
+                            <input type="color" id="shop-custom-color" value="${currentAccent}" onchange="app.setAccentColor(this.value)" style="width: 42px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent; padding: 0;">
+                            <div style="flex: 1;">
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Cor personalizada (Hex)</label>
+                                <input type="text" id="shop-color-hex" value="${currentAccent}" onchange="app.setAccentColor(this.value)" class="glass" style="width: 100px; padding: 5px 8px; font-size: 0.85rem; font-family: monospace; text-transform: uppercase;">
+                            </div>
+                            <div id="shop-color-preview-pill" style="padding: 7px 16px; border-radius: 6px; background: ${currentAccent}; color: ${this.getContrastColor(currentAccent)}; font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                Prévia
                             </div>
                         </div>
                     </div>
@@ -1819,11 +1965,73 @@ const app = {
 
     onAdminSegmentChange(seg) {
         const heroSelect = document.getElementById('shop-hero');
-        if (!heroSelect) return;
-        if (seg === 'beauty_salon') heroSelect.value = 'hero_beauty.png';
-        else if (seg === 'barbershop') heroSelect.value = 'hero_vintage.png';
-        else if (seg === 'manicure') heroSelect.value = 'hero_manicure.png';
-        else if (seg === 'clinic') heroSelect.value = 'hero_clinic.png';
+        if (heroSelect) {
+            if (seg === 'beauty_salon') heroSelect.value = 'hero_beauty.png';
+            else if (seg === 'barbershop') heroSelect.value = 'hero_vintage.png';
+            else if (seg === 'manicure') heroSelect.value = 'hero_manicure.png';
+            else if (seg === 'clinic') heroSelect.value = 'hero_clinic.png';
+        }
+        const currentAccent = this.state.settings?.accentColor || this.state.settings?.primaryColor;
+        if (!currentAccent || currentAccent === '#D4AF37' || currentAccent === '#111827') {
+            if (seg === 'beauty_salon') this.setAccentColor('#ec4899');
+            else if (seg === 'manicure') this.setAccentColor('#8b5cf6');
+            else if (seg === 'clinic') this.setAccentColor('#0ea5e9');
+            else if (seg === 'barbershop') this.setAccentColor('#D4AF37');
+        }
+    },
+
+    setThemeMode(mode) {
+        if (!this.state.settings) this.state.settings = {};
+        this.state.settings.themeMode = mode;
+        if (mode === 'light') {
+            this.state.settings.bgColor = '#F8FAFC';
+        } else {
+            this.state.settings.bgColor = '#0B0E14';
+        }
+        this.applyTheme();
+        
+        const darkCard = document.getElementById('theme-card-dark');
+        const lightCard = document.getElementById('theme-card-light');
+        if (darkCard && lightCard) {
+            if (mode === 'dark') {
+                darkCard.style.border = '2px solid var(--accent-color)';
+                darkCard.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';
+                lightCard.style.border = '2px solid var(--glass-border)';
+                lightCard.style.boxShadow = 'none';
+            } else {
+                lightCard.style.border = '2px solid var(--accent-color)';
+                lightCard.style.boxShadow = '0 0 15px rgba(0,0,0,0.1)';
+                darkCard.style.border = '2px solid var(--glass-border)';
+                darkCard.style.boxShadow = 'none';
+            }
+        }
+    },
+
+    setAccentColor(hex) {
+        if (!hex) return;
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (!this.state.settings) this.state.settings = {};
+        this.state.settings.accentColor = hex;
+        this.state.settings.primaryColor = hex;
+        this.applyTheme();
+        
+        const colorInput = document.getElementById('shop-custom-color');
+        if (colorInput) colorInput.value = hex;
+        const hexInput = document.getElementById('shop-color-hex');
+        if (hexInput) hexInput.value = hex;
+        const pill = document.getElementById('shop-color-preview-pill');
+        if (pill) {
+            pill.style.background = hex;
+            pill.style.color = this.getContrastColor(hex);
+        }
+        document.querySelectorAll('.color-chip').forEach(btn => {
+            const span = btn.querySelector('span');
+            if (span && span.style.background.toLowerCase().includes(hex.toLowerCase())) {
+                btn.style.borderColor = 'var(--accent-color)';
+            } else {
+                btn.style.borderColor = 'var(--glass-border)';
+            }
+        });
     },
 
     saveAdminSettings() {
@@ -1858,6 +2066,19 @@ const app = {
         if (heroEl) {
             this.state.settings.heroImg = heroEl.value;
         }
+
+        // Salvar tema e cores
+        const themeMode = this.state.settings.themeMode || (this.getLuminance(this.state.settings.bgColor || '#0B0E14') > 0.4 ? 'light' : 'dark');
+        this.state.settings.themeMode = themeMode;
+        if (!this.state.settings.bgColor) {
+            this.state.settings.bgColor = themeMode === 'light' ? '#F8FAFC' : '#0B0E14';
+        }
+        const customColorEl = document.getElementById('shop-custom-color');
+        if (customColorEl && customColorEl.value) {
+            this.state.settings.accentColor = customColorEl.value;
+            this.state.settings.primaryColor = customColorEl.value;
+        }
+        this.applyTheme();
 
         // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
         const ghToken = document.getElementById('gh-token');

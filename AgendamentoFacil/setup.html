@@ -121,13 +121,27 @@
             <p style="margin-bottom: 25px; opacity: 0.8;">Escolha a cor que melhor representa sua marca.</p>
             
             <div class="config-group">
-                <label>Cor Principal do Sistema</label>
-                <div class="color-presets">
-                    <div class="color-option selected" style="background: #581c87;" onclick="selectColor(this, '#581c87')"></div>
-                    <div class="color-option" style="background: #1e3a8a;" onclick="selectColor(this, '#1e3a8a')"></div>
-                    <div class="color-option" style="background: #065f46;" onclick="selectColor(this, '#065f46')"></div>
-                    <div class="color-option" style="background: #991b1b;" onclick="selectColor(this, '#991b1b')"></div>
-                    <div class="color-option" style="background: #111827;" onclick="selectColor(this, '#111827')"></div>
+                <label>Tema do Ambiente</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div id="setupThemeDark" onclick="selectThemeMode('dark')" style="flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #f97316; background: rgba(0,0,0,0.4); text-align: center; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
+                        🌙 Modo Noturno
+                    </div>
+                    <div id="setupThemeLight" onclick="selectThemeMode('light')" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); text-align: center; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
+                        ☀️ Modo Claro
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-group">
+                <label>Cor Principal da Marca</label>
+                <div class="color-presets" id="setupColorPresets">
+                    <div class="color-option" style="background: #D4AF37;" onclick="selectColor(this, '#D4AF37')" title="Dourado"></div>
+                    <div class="color-option" style="background: #ec4899;" onclick="selectColor(this, '#ec4899')" title="Rosa Pink"></div>
+                    <div class="color-option" style="background: #8b5cf6;" onclick="selectColor(this, '#8b5cf6')" title="Roxo"></div>
+                    <div class="color-option" style="background: #10b981;" onclick="selectColor(this, '#10b981')" title="Esmeralda"></div>
+                    <div class="color-option" style="background: #0ea5e9;" onclick="selectColor(this, '#0ea5e9')" title="Azul Safira"></div>
+                    <div class="color-option" style="background: #f97316;" onclick="selectColor(this, '#f97316')" title="Laranja"></div>
+                    <div class="color-option" style="background: #e11d48;" onclick="selectColor(this, '#e11d48')" title="Rubi"></div>
                 </div>
             </div>
 
@@ -228,7 +242,8 @@
 
         const params = new URLSearchParams(window.location.search);
         const slug = params.get('loja');
-        let selectedHex = '#581c87';
+        let selectedHex = '#D4AF37';
+        let selectedThemeMode = 'dark';
         let tenantData = {};
         let detectedType = 'barbershop';
 
@@ -236,12 +251,43 @@
 
         document.getElementById('finalUrl').innerText = `www.agendamentofacilbr.com.br/${slug}`;
 
+        window.selectThemeMode = (mode) => {
+            selectedThemeMode = mode;
+            const d = document.getElementById('setupThemeDark');
+            const l = document.getElementById('setupThemeLight');
+            if (d && l) {
+                if (mode === 'dark') {
+                    d.style.border = '2px solid #f97316';
+                    d.style.background = 'rgba(0,0,0,0.4)';
+                    l.style.border = '1px solid rgba(255,255,255,0.1)';
+                    l.style.background = 'rgba(255,255,255,0.05)';
+                } else {
+                    l.style.border = '2px solid #f97316';
+                    l.style.background = 'rgba(255,255,255,0.2)';
+                    d.style.border = '1px solid rgba(255,255,255,0.1)';
+                    d.style.background = 'rgba(0,0,0,0.2)';
+                }
+            }
+        };
+
+        function selectColorByHex(hex) {
+            selectedHex = hex;
+            document.querySelectorAll('.color-option').forEach(opt => {
+                if (opt.style.background.toLowerCase().includes(hex.toLowerCase())) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+
         function applySegmentDefaults(type) {
             const headerDesc = document.querySelector('.modal-header p');
             const welcomeInput = document.getElementById('welcomeMsg');
             const serviceList = document.getElementById('serviceList');
 
             if (type === 'beauty_salon') {
+                selectColorByHex('#ec4899');
                 if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão seu salão de beleza.';
                 if (welcomeInput) welcomeInput.placeholder = 'Ex: Realçando sua Beleza';
                 if (serviceList) {
@@ -261,6 +307,7 @@
                     `;
                 }
             } else if (type === 'manicure') {
+                selectColorByHex('#8b5cf6');
                 if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão seu espaço de manicure.';
                 if (welcomeInput) welcomeInput.placeholder = 'Ex: Unhas Impecáveis & Estilo';
                 if (serviceList) {
@@ -276,6 +323,7 @@
                     `;
                 }
             } else if (type === 'clinic') {
+                selectColorByHex('#0ea5e9');
                 if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão sua clínica de estética.';
                 if (welcomeInput) welcomeInput.placeholder = 'Ex: Cuidado, Saúde e Bem-Estar';
                 if (serviceList) {
@@ -290,6 +338,8 @@
                         </div>
                     `;
                 }
+            } else {
+                selectColorByHex('#D4AF37');
             }
         }
 
@@ -384,6 +434,8 @@
                 await update(shopRef, {
                     primaryColor: selectedHex,
                     accentColor: selectedHex,
+                    themeMode: selectedThemeMode,
+                    bgColor: selectedThemeMode === 'light' ? '#F8FAFC' : '#0B0E14',
                     welcomeMessage: welcome,
                     buttonText: btnTxt,
                     address: address,
