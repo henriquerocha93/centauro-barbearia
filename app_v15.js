@@ -100,16 +100,16 @@ const app = {
             beauty_salon: {
                 subtitle: 'ESTÉTICA & BELEZA',
                 hero: 'hero_beauty.png',
-                primary: '#ec4899',
-                accent: '#fbbf24',
-                bg: '#fff1f2',
-                surface: '#ffffff',
-                text: '#1f2937',
-                textSecondary: '#6b7280',
-                shopTerm: 'Salão',
+                primary: '#10b981',
+                accent: '#D4AF37',
+                bg: '#0B0E14',
+                surface: '#151A21',
+                text: '#F3F4F6',
+                textSecondary: '#9CA3AF',
+                shopTerm: 'Salão de Beleza',
                 workerTerm: 'Profissional',
                 workersTerm: 'Colaboradores',
-                serviceIcon: '💆‍♀️',
+                serviceIcon: '💇‍♀️',
                 workerIcon: '👩‍💼',
                 voucherTerm: 'Vales (Colaboradores)',
                 features: [
@@ -123,10 +123,10 @@ const app = {
                 hero: 'hero_manicure.png',
                 primary: '#8b5cf6',
                 accent: '#a78bfa',
-                bg: '#f5f3ff',
-                surface: '#ffffff',
-                text: '#1f2937',
-                textSecondary: '#6b7280',
+                bg: '#0B0E14',
+                surface: '#151A21',
+                text: '#F3F4F6',
+                textSecondary: '#9CA3AF',
                 shopTerm: 'Esmalteria',
                 workerTerm: 'Manicure',
                 workersTerm: 'Manicures',
@@ -144,11 +144,11 @@ const app = {
                 hero: 'hero_clinic.png',
                 primary: '#0ea5e9',
                 accent: '#38bdf8',
-                bg: '#f0f9ff',
-                surface: '#ffffff',
-                text: '#1f2937',
-                textSecondary: '#6b7280',
-                shopTerm: 'Clínica',
+                bg: '#0B0E14',
+                surface: '#151A21',
+                text: '#F3F4F6',
+                textSecondary: '#9CA3AF',
+                shopTerm: 'Clínica de Estética',
                 workerTerm: 'Especialista',
                 workersTerm: 'Especialistas',
                 serviceIcon: '🩺',
@@ -163,8 +163,43 @@ const app = {
         }
     },
 
+    getBusinessType() {
+        const s = this.state.settings || {};
+        const raw = (s.businessType || s.segment || s.segmento || '').toLowerCase().trim();
+        
+        if (raw === 'salao' || raw === 'salao_beleza' || raw === 'beauty_salon' || raw === 'beleza' || raw === 'salao-de-beleza' || raw === 'cabelo' || raw === 'cabeleireiro' || raw === 'cabeleireira') {
+            return 'beauty_salon';
+        }
+        if (raw === 'manicure' || raw === 'esmalteria' || raw === 'podologia' || raw === 'unhas') {
+            return 'manicure';
+        }
+        if (raw === 'clinica' || raw === 'clinic' || raw === 'estetica' || raw === 'clinica_estetica' || raw === 'clinica-de-estetica') {
+            return 'clinic';
+        }
+        if (raw === 'barbearia' || raw === 'barbershop' || raw === 'barber') {
+            return 'barbershop';
+        }
+
+        // Se não foi definido explicitamente nas settings, infere pelo nome da loja ou slug do tenant:
+        const tenant = (this.getTenantId() || '').toLowerCase();
+        const shopName = (s.shopName || s.shopInfo?.name || '').toLowerCase();
+        const fullIdentifier = `${tenant} ${shopName}`;
+
+        if (fullIdentifier.includes('studio') || fullIdentifier.includes('salão') || fullIdentifier.includes('salao') || fullIdentifier.includes('beauty') || fullIdentifier.includes('hair') || fullIdentifier.includes('beleza')) {
+            return 'beauty_salon';
+        }
+        if (fullIdentifier.includes('esmalteria') || fullIdentifier.includes('unhas') || fullIdentifier.includes('nail') || fullIdentifier.includes('manicure')) {
+            return 'manicure';
+        }
+        if (fullIdentifier.includes('clinica') || fullIdentifier.includes('clínica') || fullIdentifier.includes('estética') || fullIdentifier.includes('estetica')) {
+            return 'clinic';
+        }
+
+        return 'barbershop';
+    },
+
     getTerm(key) {
-        const type = this.state.settings.businessType || 'barbershop';
+        const type = this.getBusinessType();
         const theme = this.state.themes[type] || this.state.themes.barbershop;
         return theme[key] || key;
     },
@@ -223,13 +258,13 @@ const app = {
 
     applyTheme() {
         const s = this.state.settings || {};
-        const type = s.businessType || 'barbershop';
+        const type = this.getBusinessType();
         const themes = this.state.themes || {};
         const theme = themes[type] || themes.barbershop || { bg: '#0B0E14', primary: '#D4AF37', text: '#F3F4F6' };
         const root = document.documentElement;
 
-        let bgColor = (type === 'barbershop') ? (s.bgColor || '#0B0E14') : (theme.bg || '#0B0E14');
-        let accentColor = (type === 'barbershop') ? (s.accentColor || '#D4AF37') : (theme.primary || '#D4AF37');
+        let bgColor = s.bgColor || theme.bg || '#0B0E14';
+        let accentColor = s.accentColor || s.primaryColor || theme.accent || theme.primary || '#D4AF37';
         
         const isDark = (bgColor === '#0B0E14' || bgColor.startsWith('#0') || bgColor.startsWith('#1') || this.getLuminance(bgColor) < 0.2);
 
@@ -1499,6 +1534,8 @@ const app = {
         }).join('');
 
         const shopInfo = this.state.settings.shopInfo || {};
+        const currentType = this.getBusinessType();
+        const currentHero = this.state.settings?.heroImg || this.state.settings?.heroUrl || (this.state.themes[currentType] ? this.state.themes[currentType].hero : 'hero_vintage.png');
 
         container.innerHTML = `
             <section id="admin-settings" class="fade-in">
@@ -1559,19 +1596,37 @@ const app = {
                     </div>
                 </div>
 
-                <!-- BLOCO 2: Dados da Barbearia -->
+                <!-- BLOCO 2: Dados do Estabelecimento -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #a78bfa;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">💈</div>
+                        <div style="font-size: 1.5rem;">${this.getTerm('serviceIcon') || '💈'}</div>
                         <div>
-                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Dados da Barbearia</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Informações exibidas no site e nos relatórios.</p>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Dados do Estabelecimento (${this.getTerm('shopTerm')})</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Informações exibidas no site, na tela inicial e nos relatórios.</p>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                         <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Segmento do Negócio</label>
+                            <select id="shop-segment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="app.onAdminSegmentChange(this.value)">
+                                <option value="beauty_salon" ${currentType === 'beauty_salon' ? 'selected' : ''}>💇‍♀️ Salão de Beleza / Studio</option>
+                                <option value="barbershop" ${currentType === 'barbershop' ? 'selected' : ''}>💈 Barbearia</option>
+                                <option value="manicure" ${currentType === 'manicure' ? 'selected' : ''}>💅 Manicure / Esmalteria</option>
+                                <option value="clinic" ${currentType === 'clinic' ? 'selected' : ''}>🩺 Clínica de Estética</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Foto de Fundo (Capa Principal)</label>
+                            <select id="shop-hero" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
+                                <option value="hero_beauty.png" ${currentHero === 'hero_beauty.png' ? 'selected' : ''}>💇‍♀️ Salão de Beleza (Ambiente Moderno)</option>
+                                <option value="hero_vintage.png" ${currentHero === 'hero_vintage.png' ? 'selected' : ''}>💈 Barbearia Vintage Tradicional</option>
+                                <option value="hero_manicure.png" ${currentHero === 'hero_manicure.png' ? 'selected' : ''}>💅 Esmalteria & Nail Studio</option>
+                                <option value="hero_clinic.png" ${currentHero === 'hero_clinic.png' ? 'selected' : ''}>🩺 Clínica de Estética & Spa</option>
+                            </select>
+                        </div>
+                        <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Nome do Estabelecimento</label>
-                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || ''}" placeholder="Ex: Nossa ${this.getTerm('shopTerm')}">
+                            <input type="text" id="shop-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.name || this.state.settings.shopName || ''}" placeholder="Ex: Nossa ${this.getTerm('shopTerm')}">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Telefone / WhatsApp</label>
@@ -1762,6 +1817,15 @@ const app = {
         this.updatePushStatusUI();
     },
 
+    onAdminSegmentChange(seg) {
+        const heroSelect = document.getElementById('shop-hero');
+        if (!heroSelect) return;
+        if (seg === 'beauty_salon') heroSelect.value = 'hero_beauty.png';
+        else if (seg === 'barbershop') heroSelect.value = 'hero_vintage.png';
+        else if (seg === 'manicure') heroSelect.value = 'hero_manicure.png';
+        else if (seg === 'clinic') heroSelect.value = 'hero_clinic.png';
+    },
+
     saveAdminSettings() {
         // Salvar horários da agenda
         this.state.settings.agenda.intervalMin = parseInt(document.getElementById('set-inter').value);
@@ -1771,9 +1835,11 @@ const app = {
             this.state.settings.agenda.schedule[i].close = document.getElementById(`cfg-close-${i}`).value;
         }
 
-        // Salvar dados da barbearia
+        // Salvar dados do estabelecimento
         if (!this.state.settings.shopInfo) this.state.settings.shopInfo = {};
-        this.state.settings.shopInfo.name = document.getElementById('shop-name').value.trim();
+        const shopNameVal = document.getElementById('shop-name').value.trim();
+        this.state.settings.shopInfo.name = shopNameVal;
+        this.state.settings.shopName = shopNameVal;
         this.state.settings.shopInfo.phone = document.getElementById('shop-phone').value.trim();
         this.state.settings.shopInfo.instagram = document.getElementById('shop-instagram').value.trim();
         const cepEl = document.getElementById('shop-cep');
@@ -1781,6 +1847,17 @@ const app = {
         this.state.settings.shopInfo.address = document.getElementById('shop-address').value.trim();
         const pinEl = document.getElementById('shop-recep-pin');
         if (pinEl) this.state.settings.receptionistPin = pinEl.value.trim();
+
+        // Salvar segmento e foto hero da capa
+        const segEl = document.getElementById('shop-segment');
+        if (segEl) {
+            this.state.settings.businessType = segEl.value;
+            this.state.settings.segment = segEl.value;
+        }
+        const heroEl = document.getElementById('shop-hero');
+        if (heroEl) {
+            this.state.settings.heroImg = heroEl.value;
+        }
 
         // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
         const ghToken = document.getElementById('gh-token');
@@ -3532,13 +3609,13 @@ const app = {
 
     renderHome(container) {
         const s = this.state.settings || {};
-        const type = s.businessType || 'barbershop';
+        const type = this.getBusinessType();
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
         const subtitle = s.welcomeMessage || s.subtitle || theme.subtitle;
-        const name = s.shopName || 'Nossa ' + this.getTerm('shopTerm');
+        const name = s.shopName || s.shopInfo?.name || ('Nossa ' + this.getTerm('shopTerm'));
         const buttonText = s.buttonText || 'AGENDAR HORÁRIO';
-        const heroImg = theme.hero;
+        const heroImg = s.heroImg || s.heroUrl || theme.hero;
 
         const plans = this.state.subscriptionPlans || [];
         const plansHtml = plans.length > 0 ? `
@@ -3603,13 +3680,26 @@ const app = {
             </section>
         ` : '';
 
+        let heroDesc = s.heroDescription;
+        if (!heroDesc) {
+            if (type === 'beauty_salon') {
+                heroDesc = 'A melhor experiência em salão de beleza e estética da região. Estilo, sofisticação e atendimento de excelência em um só lugar.';
+            } else if (type === 'manicure') {
+                heroDesc = 'Cuidado impecável, estilo e sofisticação para suas unhas. Técnicas avançadas e biossegurança em um só lugar.';
+            } else if (type === 'clinic') {
+                heroDesc = 'Excelência em procedimentos estéticos e saúde. Tecnologia avançada, cuidado humanizado e resultados comprovados.';
+            } else {
+                heroDesc = `A melhor experiência em ${this.getTerm('shopTerm').toLowerCase()} da região. Estilo, tradição e atendimento de excelência em um só lugar.`;
+            }
+        }
+
         container.innerHTML = `
             <section id="home-hero" class="hero" style="background-image: url('${heroImg}');">
                 <div class="hero-content fade-in-up">
                     <p style="text-transform: uppercase; letter-spacing: 4px; font-size: 0.85rem; color: var(--accent-readable); font-weight: 600; margin-bottom: 15px;">${subtitle}</p>
                     <h1 style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px;">${name}</h1>
                     <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 35px; line-height: 1.6;">
-                        A melhor experiência em ${this.getTerm('shopTerm').toLowerCase()} da região. Estilo, tradição e atendimento de excelência em um só lugar.
+                        ${heroDesc}
                     </p>
                     <button class="btn-primary" style="padding: 18px 45px; font-size: 1rem;" onclick="app.navigateTo('booking')">${buttonText}</button>
                 </div>

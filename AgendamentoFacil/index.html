@@ -1388,6 +1388,38 @@
                 });
 
                 // 2. Inicializa a estrutura básica da nova loja
+                const segmentMap = {
+                    'salao': 'beauty_salon',
+                    'barbearia': 'barbershop',
+                    'clinica': 'clinic',
+                    'manicure': 'manicure'
+                };
+                const bType = segmentMap[data.segment] || 'barbershop';
+                const defaultHero = bType === 'beauty_salon' ? 'hero_beauty.png' : (bType === 'manicure' ? 'hero_manicure.png' : (bType === 'clinic' ? 'hero_clinic.png' : 'hero_vintage.png'));
+
+                let initialServices = [
+                    { id: Date.now() + 10, name: "Corte Tradicional", price: 35, duration: 30 },
+                    { id: Date.now() + 20, name: "Barba", price: 25, duration: 30 }
+                ];
+                if (data.segment === 'salao') {
+                    initialServices = [
+                        { id: Date.now() + 10, name: "Escova / Penteado", price: 50, duration: 40 },
+                        { id: Date.now() + 20, name: "Corte Feminino", price: 60, duration: 45 },
+                        { id: Date.now() + 30, name: "Manicure", price: 35, duration: 30 }
+                    ];
+                } else if (data.segment === 'manicure') {
+                    initialServices = [
+                        { id: Date.now() + 10, name: "Manicure Completa", price: 35, duration: 30 },
+                        { id: Date.now() + 20, name: "Pedicure", price: 40, duration: 40 },
+                        { id: Date.now() + 30, name: "Alongamento em Gel", price: 120, duration: 60 }
+                    ];
+                } else if (data.segment === 'clinica') {
+                    initialServices = [
+                        { id: Date.now() + 10, name: "Limpeza de Pele Profunda", price: 150, duration: 60 },
+                        { id: Date.now() + 20, name: "Drenagem Linfática", price: 120, duration: 50 }
+                    ];
+                }
+
                 const tenantRootRef = ref(db, `tenants/${slug}`);
                 await set(tenantRootRef, {
                     lastUpdate: new Date().getTime(),
@@ -1397,6 +1429,8 @@
                         owner: data.name,
                         email: data.email,
                         segment: data.segment,
+                        businessType: bType,
+                        heroImg: defaultHero,
                         trialEndDate: data.trialEndDate,
                         createdAt: data.date,
                         status: 'active',
@@ -1423,10 +1457,7 @@
                         phone: data.phone,
                         active: true
                     }],
-                    services: [
-                        { id: Date.now() + 10, name: "Corte Tradicional", price: 35, duration: 30 },
-                        { id: Date.now() + 20, name: "Barba", price: 25, duration: 30 }
-                    ]
+                    services: initialServices
                 });
 
                 alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVamos configurar seu layout agora!`);

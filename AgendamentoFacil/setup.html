@@ -211,7 +211,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, update, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
@@ -229,10 +229,96 @@
         const params = new URLSearchParams(window.location.search);
         const slug = params.get('loja');
         let selectedHex = '#581c87';
+        let tenantData = {};
+        let detectedType = 'barbershop';
 
         if(!slug) window.location.href = 'index.html';
 
         document.getElementById('finalUrl').innerText = `www.agendamentofacilbr.com.br/${slug}`;
+
+        function applySegmentDefaults(type) {
+            const headerDesc = document.querySelector('.modal-header p');
+            const welcomeInput = document.getElementById('welcomeMsg');
+            const serviceList = document.getElementById('serviceList');
+
+            if (type === 'beauty_salon') {
+                if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão seu salão de beleza.';
+                if (welcomeInput) welcomeInput.placeholder = 'Ex: Realçando sua Beleza';
+                if (serviceList) {
+                    serviceList.innerHTML = `
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Escova Modelada" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="50" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Corte Feminino" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="60" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Manicure & Pedicure" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="45" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                    `;
+                }
+            } else if (type === 'manicure') {
+                if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão seu espaço de manicure.';
+                if (welcomeInput) welcomeInput.placeholder = 'Ex: Unhas Impecáveis & Estilo';
+                if (serviceList) {
+                    serviceList.innerHTML = `
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Manicure Tradicional" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="35" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Esmaltação em Gel" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="65" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                    `;
+                }
+            } else if (type === 'clinic') {
+                if (headerDesc) headerDesc.innerText = 'Personalize como seus clientes verão sua clínica de estética.';
+                if (welcomeInput) welcomeInput.placeholder = 'Ex: Cuidado, Saúde e Bem-Estar';
+                if (serviceList) {
+                    serviceList.innerHTML = `
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Limpeza de Pele Profunda" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="120" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" placeholder="Nome do Serviço" value="Massagem Relaxante" style="flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                            <input type="text" placeholder="Preço R$" value="90" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px;">
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        async function initSetup() {
+            try {
+                const snap = await get(ref(db, `tenants/${slug}`));
+                if (snap.exists()) {
+                    tenantData = snap.val() || {};
+                    const s = tenantData.settings || {};
+                    const seg = String(tenantData.segment || tenantData.segmento || s.segment || s.businessType || '').toLowerCase();
+                    const shopName = String(tenantData.name || s.shopName || slug || '').toLowerCase();
+
+                    if (seg.includes('salao') || seg.includes('beleza') || seg.includes('beauty') || shopName.includes('studio') || shopName.includes('salao') || shopName.includes('beleza')) {
+                        detectedType = 'beauty_salon';
+                    } else if (seg.includes('manicure') || seg.includes('esmalte') || seg.includes('unha') || shopName.includes('esmalte') || shopName.includes('nail')) {
+                        detectedType = 'manicure';
+                    } else if (seg.includes('clinic') || seg.includes('estetica') || seg.includes('saude') || shopName.includes('clinic') || shopName.includes('estetica')) {
+                        detectedType = 'clinic';
+                    } else {
+                        detectedType = 'barbershop';
+                    }
+                    applySegmentDefaults(detectedType);
+                }
+            } catch (err) {
+                console.warn('Erro ao carregar tenant no setup:', err);
+            }
+        }
+
+        initSetup();
 
         window.selectColor = (el, hex) => {
             document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
@@ -268,19 +354,30 @@
             btn.innerText = 'Salvando...';
             btn.disabled = true;
             
-            const welcome = document.getElementById('welcomeMsg').value || 'Excelência e Tradição';
-            const btnTxt = document.getElementById('buttonText').value || 'AGENDAR HORÁRIO';
-            const address = document.getElementById('addressInput').value || 'Rua Tenente Alpoim, 516';
-            const h1 = document.getElementById('hours1').value || '09:00 - 20:00';
-            const h2 = document.getElementById('hours2').value || '09:00 - 21:00';
-            const h3 = document.getElementById('hours3').value || 'Fechado';
+            const defWelcome = detectedType === 'beauty_salon' ? 'Realçando sua Beleza' :
+                               detectedType === 'manicure' ? 'Unhas Impecáveis & Estilo' :
+                               detectedType === 'clinic' ? 'Cuidado, Saúde e Bem-Estar' : 'Excelência e Tradição';
+
+            const welcome = document.getElementById('welcomeMsg').value.trim() || defWelcome;
+            const btnTxt = document.getElementById('buttonText').value.trim() || 'AGENDAR HORÁRIO';
+            const address = document.getElementById('addressInput').value.trim();
+            const h1 = document.getElementById('hours1').value.trim() || '09:00 - 19:00';
+            const h2 = document.getElementById('hours2').value.trim() || '09:00 - 20:00';
+            const h3 = document.getElementById('hours3').value.trim() || 'Fechado';
+
+            let defaultHero = 'hero_vintage.png';
+            if (detectedType === 'beauty_salon') defaultHero = 'hero_beauty.png';
+            else if (detectedType === 'manicure') defaultHero = 'hero_manicure.png';
+            else if (detectedType === 'clinic') defaultHero = 'hero_clinic.png';
 
             try {
                 // Atualiza as configurações da loja
                 const tenantRef = ref(db, `tenants/${slug}`);
                 await update(tenantRef, {
                     lastUpdate: new Date().getTime(),
-                    updatedBy: 'SetupWizard'
+                    updatedBy: 'SetupWizard',
+                    segment: detectedType,
+                    segmento: detectedType
                 });
 
                 const shopRef = ref(db, `tenants/${slug}/settings`);
@@ -293,15 +390,34 @@
                     hours1: h1,
                     hours2: h2,
                     hours3: h3,
+                    businessType: detectedType,
+                    segment: detectedType,
+                    heroImg: tenantData.settings?.heroImg || defaultHero,
                     setupComplete: true
                 });
 
-                // Cria serviços iniciais padrão (já feito no index.html, mas reforçamos aqui se necessário)
-                const servicesRef = ref(db, `tenants/${slug}/services`);
-                await set(servicesRef, [
-                    { id: Date.now(), name: "Corte de Cabelo", price: 35, duration: 30, category: "Geral" },
-                    { id: Date.now()+1, name: "Barba", price: 25, duration: 30, category: "Geral" }
-                ]);
+                // Salva serviços reais informados no Step 3
+                const serviceRows = document.querySelectorAll('#serviceList > div');
+                const customServices = [];
+                serviceRows.forEach((row, idx) => {
+                    const inputs = row.querySelectorAll('input');
+                    const sName = inputs[0]?.value.trim();
+                    const sPrice = parseFloat(inputs[1]?.value.replace(',', '.')) || 0;
+                    if (sName) {
+                        customServices.push({
+                            id: Date.now() + idx,
+                            name: sName,
+                            price: sPrice,
+                            duration: 30,
+                            category: "Geral"
+                        });
+                    }
+                });
+
+                if (customServices.length > 0) {
+                    const servicesRef = ref(db, `tenants/${slug}/services`);
+                    await set(servicesRef, customServices);
+                }
 
                 // Salvar tenant ativo, limpar sessões residuais e redirecionar para a home da loja
                 localStorage.setItem('active_tenant_id', slug);
