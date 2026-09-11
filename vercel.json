@@ -13,11 +13,27 @@
   "redirects": [
     {
       "source": "/",
+      "missing": [
+        {
+          "type": "query",
+          "key": "loja"
+        }
+      ],
       "destination": "/AgendamentoFacil/index.html",
       "permanent": false
     }
   ],
   "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "loja"
+        }
+      ],
+      "destination": "/index.html"
+    },
     {
       "source": "/((?!AgendamentoFacil|master|assets|api|.*\\.).*)",
       "destination": "/index.html"

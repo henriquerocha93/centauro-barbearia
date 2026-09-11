@@ -10,10 +10,34 @@
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" id="app-manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="favicon.png">
-    <script src="app_v15.js?v=80.36" type="module"></script>
-    <script src="assinaturas_module.js?v=80.36"></script>
+    <script>
+        // Blindagem Imediata de Tenant e Manifest PWA
+        (function() {
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var loja = params.get('loja');
+                if (!loja) {
+                    var parts = window.location.pathname.split('/').filter(function(p) { return p && p !== 'index.html'; });
+                    var ignore = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt', 'api'];
+                    loja = parts.find(function(p) { return !ignore.includes(p); });
+                }
+                if (!loja) {
+                    loja = localStorage.getItem('active_tenant_id');
+                }
+                if (loja && loja !== 'totem') {
+                    localStorage.setItem('active_tenant_id', loja);
+                    var link = document.getElementById('app-manifest');
+                    if (link) {
+                        link.href = '/api/manifest?loja=' + encodeURIComponent(loja);
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <script src="app_v15.js?v=80.37" type="module"></script>
+    <script src="assinaturas_module.js?v=80.37"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>

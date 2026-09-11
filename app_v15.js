@@ -27,31 +27,8 @@ const app = {
                 }
             } // Configuração Dinâmica Semanal
         },
-        staff: [
-            { id: 1, name: 'Administrador Principal', commission: 0, role: 'admin', login: 'admin', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', showInAgenda: false },
-            { id: 2, name: 'Marcos Barbosa', commission: 50, role: 'barber', login: 'marcos', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png' },
-            { id: 3, name: 'Matheus Fernandes', commission: 40, role: 'barber', login: 'matheus', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140040.png' },
-            { id: 4, name: 'Miguel Macedo', commission: 45, role: 'barber', login: 'miguel', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/4140/4140042.png' },
-            { id: 5, name: 'Recepção (Totem)', commission: 0, role: 'totem', login: 'totem', password: '123', photo: 'https://cdn-icons-png.flaticon.com/512/10002/10002598.png', showInAgenda: false }
-        ],
-        services: [
-            { id: 1, name: 'Corte Brigada Militar (exclusivo p/ forças de segurança)', price: 30, duration: 40 },
-            { id: 2, name: 'Acabamento', price: 15, duration: 30 },
-            { id: 3, name: 'Barba', price: 35, duration: 30 },
-            { id: 4, name: 'Barba só maquina', price: 20, duration: 15 },
-            { id: 5, name: 'Corte', price: 35, duration: 30 },
-            { id: 6, name: 'Corte, Barba e sobrancelha', price: 85, duration: 55 },
-            { id: 7, name: 'Corte máquina', price: 25, duration: 40 },
-            { id: 8, name: 'Corte + Platinado', price: 180, duration: 60 },
-            { id: 9, name: 'Corte + sobrancelha', price: 50, duration: 40 },
-            { id: 10, name: 'Depilação ouvido', price: 25, duration: 20 },
-            { id: 11, name: 'Depilação nariz', price: 25, duration: 20 },
-            { id: 12, name: 'Luzes', price: 100, duration: 40 },
-            { id: 13, name: 'Luzes + Corte', price: 135, duration: 60 },
-            { id: 14, name: 'Pigmentação', price: 25, duration: 40 },
-            { id: 15, name: 'Relaxamento capilar', price: 65, duration: 20 },
-            { id: 16, name: 'Sobrancelha', price: 15, duration: 20 }
-        ],
+        staff: [],
+        services: [],
         products: [],
         appointments: [],
         customers: [],
@@ -301,18 +278,48 @@ const app = {
 
         if (!tenantId) {
             const paths = window.location.pathname.split('/').filter(p => p && p !== 'index.html');
-            const ignoreList = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt'];
+            const ignoreList = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt', 'api'];
             // Encontra o primeiro segmento de caminho que não esteja na lista de ignorados
             tenantId = paths.find(p => !ignoreList.includes(p));
         }
         if (tenantId === 'totem') {
             tenantId = 'centauro';
         }
-        return tenantId || 'centauro';
+
+        // Se identificou na URL, salva imediatamente no localStorage para sobrevivência do PWA e navegação
+        if (tenantId) {
+            try {
+                localStorage.setItem('active_tenant_id', tenantId);
+            } catch (e) {}
+            return tenantId;
+        }
+
+        // Se NÃO há indicação na URL (ex: PWA standalone aberto do atalho da tela inicial), recupera do localStorage
+        try {
+            const savedTenant = localStorage.getItem('active_tenant_id');
+            if (savedTenant && savedTenant !== 'totem') {
+                return savedTenant;
+            }
+        } catch (e) {}
+
+        // [SEGURANÇA MÁXIMA] NUNCA fazer fallback para 'centauro' se nenhum inquilino foi especificado!
+        return null;
     },
 
     getStorageKey() {
         return `centauro_state_${this.getTenantId()}`;
+    },
+
+    updateDynamicManifest() {
+        try {
+            const tenantId = this.getTenantId();
+            if (!tenantId) return;
+            const shopName = this.state.settings?.shopInfo?.name || this.state.settings?.shopName || tenantId;
+            const link = document.getElementById('app-manifest') || document.querySelector('link[rel="manifest"]');
+            if (link) {
+                link.href = `/api/manifest?loja=${encodeURIComponent(tenantId)}&name=${encodeURIComponent(shopName)}`;
+            }
+        } catch(e) {}
     },
 
     // Retorna a data atual local no formato YYYY-MM-DD (sem distorção de fuso horário UTC)
@@ -406,7 +413,12 @@ const app = {
             const now = new Date().getTime();
             
             // Suporte a Multi-Tenant
-            const tenantId = this.getTenantId() || 'centauro';
+            const tenantId = this.getTenantId();
+            if (!tenantId) {
+                console.warn('⚠️ Sincronização cancelada: nenhum tenant identificado.');
+                this.state.isSyncing = false;
+                return;
+            }
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
             console.log(`📤 Caminho de Sincronização: ${dbPath}`);
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
@@ -536,7 +548,8 @@ const app = {
         if (!this.db || !this.state.isInitializedFromCloud) return;
         
         try {
-            const tenantId = this.getTenantId() || 'centauro';
+            const tenantId = this.getTenantId();
+            if (!tenantId) return;
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
             const backupPath = (tenantId === 'centauro') ? 'database_backup/' : `tenants_backup/${tenantId}/`;
             
@@ -709,8 +722,8 @@ const app = {
     },
 
     async loadFromCloudPublicSilence() {
-        const tenantId = this.getTenantId() || 'centauro';
-        if (tenantId !== 'centauro') return; // Apenas Centauro Barbearia por enquanto
+        const tenantId = this.getTenantId();
+        if (!tenantId || tenantId !== 'centauro') return; // Apenas Centauro Barbearia Matriz explicitamente
         
         try {
             console.log('☁️ [GITHUB FALLBACK] Buscando base pública mais recente do GitHub...');
@@ -1022,11 +1035,16 @@ const app = {
             
             // Suporte a Multi-Tenant dinâmico
             const tenantId = this.getTenantId();
-            if (tenantId) {
-                console.log(`🏢 Tenant detectado: ${tenantId}`);
-                this.state.isMultiTenant = true;
-                this.state.currentTenant = tenantId;
+            if (!tenantId) {
+                console.warn('⚠️ Nenhum tenant identificado na URL ou localmente. Redirecionando para Agendamento Fácil...');
+                window.location.replace('/AgendamentoFacil/index.html');
+                return;
             }
+
+            console.log(`🏢 Tenant ativo: ${tenantId}`);
+            this.state.isMultiTenant = true;
+            this.state.currentTenant = tenantId;
+            this.updateDynamicManifest();
             
             this.loadState();
 
@@ -1045,7 +1063,7 @@ const app = {
                         const diag = {
                             ua: navigator.userAgent,
                             url: window.location.href,
-                            tenantId: tenantId || 'centauro',
+                            tenantId: tenantId,
                             storageKey: this.getStorageKey(),
                             lastUpdateLocal: this.state.lastUpdate || 0,
                             aptsCount: (this.state.appointments || []).length,
@@ -1072,7 +1090,7 @@ const app = {
                     });
 
 
-                    const activeTenantId = tenantId || 'centauro';
+                    const activeTenantId = tenantId;
                     const dbPath = (activeTenantId === 'centauro') ? 'database/' : `tenants/${activeTenantId}/`;
 
                     // SaaS: Buscar dados da assinatura se for inquilino
@@ -3143,6 +3161,14 @@ const app = {
 
 
     installPWA() {
+        const tenantId = this.getTenantId();
+        if (tenantId) {
+            try {
+                localStorage.setItem('active_tenant_id', tenantId);
+                this.updateDynamicManifest();
+            } catch(e) {}
+        }
+
         if (window.deferredPrompt) {
             window.deferredPrompt.prompt();
             window.deferredPrompt.userChoice.then((choiceResult) => {
@@ -3154,7 +3180,8 @@ const app = {
                 window.deferredPrompt = null;
             });
         } else {
-            alert('Para criar o aplicativo no seu celular:\n\n📱 Android: Clique nos 3 pontinhos do navegador e escolha "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Clique no ícone de compartilhar (quadrado com seta para cima) e escolha "Adicionar à Tela de Início".');
+            const tenantInfo = tenantId ? ` (${tenantId})` : '';
+            alert(`Para criar o aplicativo${tenantInfo} no seu celular:\n\n📱 Android: Clique nos 3 pontinhos do navegador e escolha "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Clique no ícone de compartilhar (quadrado com seta para cima) e escolha "Adicionar à Tela de Início".`);
         }
     },
 
@@ -3848,14 +3875,16 @@ const app = {
     renderLogin(container) {
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_agendamento.png';
+        const tenantId = this.getTenantId();
+        const shopTitle = s.shopInfo?.name || s.shopName || (tenantId && tenantId !== 'centauro' ? tenantId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Barbearia Centauro');
 
         container.innerHTML = `
             <section id="login-view" class="fade-in" style="min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(circle at center, #151A21 0%, #0B0E14 100%);">
                 <div class="glass fade-in-up" style="width: 100%; max-width: 420px; padding: 45px 35px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
                     <div style="margin-bottom: 30px;">
                         <img src="${logo}" style="width: 140px; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));">
-                        <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px;">Acesso Restrito</h2>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Área administrativa</p>
+                        <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; letter-spacing: -0.5px;">${shopTitle}</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">Área Administrativa</p>
                     </div>
 
                     <div style="text-align: left;">
@@ -3884,30 +3913,63 @@ const app = {
                         <button class="btn-secondary" style="width: 100%; padding: 14px; opacity: 0.8;" id="btn-back">Voltar ao Início</button>
                     </div>
 
+                    ${tenantId === 'centauro' ? `
                     <p style="margin-top: 30px; color: var(--text-secondary); font-size: 0.75rem; opacity: 0.6;">
                         Dica: Use 'admin' ou 'barbeiro' para demonstração.
-                    </p>
+                    </p>` : ''}
                 </div>
             </section>
         `;
         document.getElementById('btn-back').onclick = () => this.navigateTo('home');
-        document.getElementById('btn-do-login').onclick = () => {
+        document.getElementById('btn-do-login').onclick = async () => {
+            const btn = document.getElementById('btn-do-login');
+            const originalTxt = btn.innerText;
+            btn.innerText = 'Entrando...';
+            btn.disabled = true;
+
             const user = document.getElementById('username').value.trim().toLowerCase();
             const pass = document.getElementById('password').value.trim();
-            const tenantId = this.getTenantId();
+            const currentTenantId = this.getTenantId();
 
-            // [SEGURANÇA] Procura o usuário APENAS dentro do staff do tenant ativo
-            const matchedUser = this.state.staff.find(s =>
-                ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
+            if (!currentTenantId) {
+                alert('Erro: Loja não identificada. Por favor, acesse pelo link da sua loja.');
+                btn.innerText = originalTxt;
+                btn.disabled = false;
+                return;
+            }
+
+            // Normaliza o array de staff local
+            const staffList = Array.isArray(this.state.staff) ? this.state.staff : Object.values(this.state.staff || {});
+            let matchedUser = staffList.find(s =>
+                s && ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
                 (s.password && String(s.password).trim() === pass)
             );
 
+            // [RESILIÊNCIA CRÍTICA] Se não encontrou no estado local (ex: Firebase ainda carregando no mobile ou PWA recém-aberto), busca diretamente na nuvem!
+            if (!matchedUser && this.db) {
+                try {
+                    const dbPath = (currentTenantId === 'centauro') ? 'database/staff' : `tenants/${currentTenantId}/staff`;
+                    const snap = await get(ref(this.db, dbPath));
+                    if (snap.exists()) {
+                        const rawStaff = snap.val();
+                        const fetchedStaff = Array.isArray(rawStaff) ? rawStaff : Object.values(rawStaff || {});
+                        this.state.staff = fetchedStaff;
+                        matchedUser = fetchedStaff.find(s =>
+                            s && ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
+                            (s.password && String(s.password).trim() === pass)
+                        );
+                    }
+                } catch(e) {
+                    console.warn('Tentativa de busca direta de staff falhou:', e);
+                }
+            }
+
             if (matchedUser) {
                 // [SEGURANÇA] Salva o tenantId junto com a sessão para evitar reutilização entre lojas
-                const sessionData = { ...matchedUser, tenantId };
+                const sessionData = { ...matchedUser, tenantId: currentTenantId };
                 this.state.user = { id: matchedUser.id, name: matchedUser.name, role: matchedUser.role };
 
-                const sessionKey = `centauros_user_${tenantId}`;
+                const sessionKey = `centauros_user_${currentTenantId}`;
                 if (document.getElementById('keep-logged-in').checked) {
                     localStorage.setItem(sessionKey, JSON.stringify(sessionData));
                 } else {
@@ -6638,14 +6700,20 @@ const app = {
         const totalGross = serviceGross + productGross + planGross;
 
         // Montar HTML do comprovante
-        const businessName = this.state.settings?.businessName || 'Nossa Barbearia';
+        const s = this.state.settings || {};
+        const shopInfo = s.shopInfo || {};
+        const currentTenant = this.getTenantId();
+        const isCentauro = currentTenant === 'centauro';
+        const displayShopName = shopInfo.name || s.shopName || (isCentauro ? 'Centauros Barbearia' : (currentTenant ? currentTenant.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Barbearia'));
+        const displayCnpj = shopInfo.cnpj || (isCentauro ? '63.039.029/0001-05' : 'Não informado');
+        const displayOwner = shopInfo.owner || s.owner || (isCentauro ? 'Henrique Rocha Clavijo (CPF: 852.216.190-91)' : 'Responsável');
         const hoje = new Date().toLocaleDateString('pt-BR');
 
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = `
             <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; max-width: 100%;">
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
-                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">CENTAUROS BARBEARIA</h1>
+                    <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">${displayShopName}</h1>
                     <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprovação de Faturamento</p>
                 </div>
                 
@@ -6654,15 +6722,15 @@ const app = {
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Razão Social / Nome Fantasia</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">Centauros Barbearia</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${displayShopName}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">CNPJ</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">63.039.029/0001-05</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${displayCnpj}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Proprietário Responsável</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">Henrique Rocha Clavijo (CPF: 852.216.190-91)</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${displayOwner}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
@@ -6702,7 +6770,7 @@ const app = {
 
                 <div style="margin-top: 80px; text-align: center;">
                     <div style="border-top: 1px solid #000; width: 300px; margin: 0 auto; padding-top: 10px;">
-                        <p style="margin: 0; font-weight: bold;">Centauros Barbearia</p>
+                        <p style="margin: 0; font-weight: bold;">${displayShopName}</p>
                         <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Responsável</p>
                     </div>
                 </div>
@@ -10335,7 +10403,8 @@ const app = {
         }
 
         try {
-            const tenantId = this.getTenantId() || 'centauro';
+            const tenantId = this.getTenantId();
+            if (!tenantId) return;
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
             const staffId = this.state.user.id;
 
@@ -10367,7 +10436,8 @@ const app = {
         }
 
         try {
-            const tenantId = this.getTenantId() || 'centauro';
+            const tenantId = this.getTenantId();
+            if (!tenantId) return;
 
             const response = await fetch('/api/send-push', {
                 method: 'POST',

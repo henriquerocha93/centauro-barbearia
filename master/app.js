@@ -1128,7 +1128,7 @@ const app = {
 
             // Abrir a loja com o token
             const url = slug === 'centauro-legacy'
-                ? `../index.html?master_token=${token}`
+                ? `../index.html?loja=centauro&master_token=${token}`
                 : `../index.html?loja=${slug}&master_token=${token}`;
 
             window.open(url, '_blank');

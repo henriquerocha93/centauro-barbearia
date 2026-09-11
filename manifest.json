@@ -2,7 +2,7 @@
   "name": "Agendamento Fácil BR",
   "short_name": "Agenda Fácil",
   "description": "Sistema de Gestão para Barbearias e Clínicas",
-  "start_url": "./index.html",
+  "start_url": "./index.html?pwa=1",
   "display": "standalone",
   "background_color": "#0B0E14",
   "theme_color": "#0B0E14",

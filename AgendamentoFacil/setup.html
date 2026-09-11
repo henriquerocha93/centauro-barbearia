@@ -303,9 +303,12 @@
                     { id: Date.now()+1, name: "Barba", price: 25, duration: 30, category: "Geral" }
                 ]);
 
-                // Limpar sessão e redirecionar para a home da loja
+                // Salvar tenant ativo, limpar sessões residuais e redirecionar para a home da loja
+                localStorage.setItem('active_tenant_id', slug);
                 localStorage.removeItem('centauros_user');
-                window.location.href = `/${slug}#home`;
+                localStorage.removeItem(`centauros_user_${slug}`);
+                localStorage.removeItem('centauros_user_centauro');
+                window.location.href = `/?loja=${slug}#home`;
             } catch (e) {
                 console.error(e);
                 alert('Erro ao salvar configurações.');

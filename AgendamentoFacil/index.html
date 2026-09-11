@@ -1431,8 +1431,11 @@
 
                 alert(`🚀 Parabéns! Sua loja "${shopName}" foi criada com sucesso.\n\nVamos configurar seu layout agora!`);
                 
-                // Limpar sessão e redirecionar para o Setup Wizard
+                // Salvar tenant ativo, limpar sessões residuais e redirecionar para o Setup Wizard
+                localStorage.setItem('active_tenant_id', slug);
                 localStorage.removeItem('centauros_user');
+                localStorage.removeItem(`centauros_user_${slug}`);
+                localStorage.removeItem('centauros_user_centauro');
                 window.location.href = `setup.html?loja=${slug}`;
 
             } catch (e) {
