@@ -17,6 +17,10 @@
         {
           "type": "query",
           "key": "loja"
+        },
+        {
+          "type": "cookie",
+          "key": "active_tenant_id"
         }
       ],
       "destination": "/AgendamentoFacil/index.html",
@@ -25,11 +29,25 @@
   ],
   "rewrites": [
     {
+      "source": "/manifest.json",
+      "destination": "/api/manifest"
+    },
+    {
       "source": "/",
       "has": [
         {
           "type": "query",
           "key": "loja"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "active_tenant_id"
         }
       ],
       "destination": "/index.html"

@@ -473,6 +473,7 @@
 
                 // Salvar tenant ativo, limpar sessões residuais e redirecionar para a home da loja
                 localStorage.setItem('active_tenant_id', slug);
+                document.cookie = `active_tenant_id=${encodeURIComponent(slug)}; path=/; max-age=31536000; SameSite=Lax`;
                 localStorage.removeItem('centauros_user');
                 localStorage.removeItem(`centauros_user_${slug}`);
                 localStorage.removeItem('centauros_user_centauro');

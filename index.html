@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Agendamento Fácil BR | Gestão Inteligente v80.00 (Versão Final)</title>
 
-    <link rel="stylesheet" href="styles.css?v=104">
+    <link rel="stylesheet" href="styles.css?v=105">
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" id="app-manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="favicon.png">
     <script>
         // Blindagem Imediata de Tenant e Manifest PWA
@@ -26,18 +25,50 @@
                 if (!loja) {
                     loja = localStorage.getItem('active_tenant_id');
                 }
+                if (!loja && document.cookie) {
+                    var match = document.cookie.match(/(?:^|;\s*)active_tenant_id=([^;]+)/);
+                    if (match && match[1]) loja = decodeURIComponent(match[1].trim());
+                }
                 if (loja && loja !== 'totem') {
                     localStorage.setItem('active_tenant_id', loja);
-                    var link = document.getElementById('app-manifest');
-                    if (link) {
-                        link.href = '/api/manifest?loja=' + encodeURIComponent(loja);
-                    }
+                    document.cookie = 'active_tenant_id=' + encodeURIComponent(loja) + '; path=/; max-age=31536000; SameSite=Lax';
                 }
-            } catch(e) {}
+                
+                var shopName = (loja && loja !== 'centauro' && loja !== 'totem')
+                    ? loja.replace(/-/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); })
+                    : 'Centauro Barbearia';
+                
+                if (loja && loja !== 'centauro' && loja !== 'totem') {
+                    document.title = shopName + ' | Sistema de Gestão';
+                }
+
+                // Injetar manifest dinâmico da loja ANTES de qualquer requisição do navegador
+                var manifestUrl = (loja && loja !== 'totem')
+                    ? '/api/manifest?loja=' + encodeURIComponent(loja) + '&name=' + encodeURIComponent(shopName)
+                    : '/api/manifest';
+                
+                var link = document.createElement('link');
+                link.rel = 'manifest';
+                link.id = 'app-manifest';
+                link.href = manifestUrl;
+                document.head.appendChild(link);
+
+                // Configurar título do app no iOS Safari (apple-mobile-web-app-title)
+                var appleTitleMeta = document.createElement('meta');
+                appleTitleMeta.name = 'apple-mobile-web-app-title';
+                appleTitleMeta.content = shopName;
+                document.head.appendChild(appleTitleMeta);
+            } catch(e) {
+                var fbLink = document.createElement('link');
+                fbLink.rel = 'manifest';
+                fbLink.id = 'app-manifest';
+                fbLink.href = '/api/manifest';
+                document.head.appendChild(fbLink);
+            }
         })();
     </script>
-    <script src="app_v15.js?v=80.39" type="module"></script>
-    <script src="assinaturas_module.js?v=80.39"></script>
+    <script src="app_v15.js?v=80.40" type="module"></script>
+    <script src="assinaturas_module.js?v=80.40"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>

@@ -376,10 +376,11 @@ const app = {
             tenantId = 'centauro';
         }
 
-        // Se identificou na URL, salva imediatamente no localStorage para sobrevivência do PWA e navegação
+        // Se identificou na URL, salva imediatamente no localStorage e cookie para sobrevivência do PWA e navegação
         if (tenantId) {
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
+                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
             } catch (e) {}
             return tenantId;
         }
@@ -389,6 +390,18 @@ const app = {
             const savedTenant = localStorage.getItem('active_tenant_id');
             if (savedTenant && savedTenant !== 'totem') {
                 return savedTenant;
+            }
+        } catch (e) {}
+
+        // Fallback de segurança: recupera do cookie se disponível
+        try {
+            if (document.cookie) {
+                const match = document.cookie.match(/(?:^|;\s*)active_tenant_id=([^;]+)/);
+                if (match && match[1] && match[1] !== 'totem') {
+                    const cookieTenant = decodeURIComponent(match[1].trim());
+                    localStorage.setItem('active_tenant_id', cookieTenant);
+                    return cookieTenant;
+                }
             }
         } catch (e) {}
 
@@ -404,10 +417,25 @@ const app = {
         try {
             const tenantId = this.getTenantId();
             if (!tenantId) return;
-            const shopName = this.state.settings?.shopInfo?.name || this.state.settings?.shopName || tenantId;
-            const link = document.getElementById('app-manifest') || document.querySelector('link[rel="manifest"]');
+            const shopName = this.state.settings?.shopInfo?.name || this.state.settings?.shopName || (tenantId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            let link = document.getElementById('app-manifest') || document.querySelector('link[rel="manifest"]');
+            const manifestUrl = `/api/manifest?loja=${encodeURIComponent(tenantId)}&name=${encodeURIComponent(shopName)}`;
             if (link) {
-                link.href = `/api/manifest?loja=${encodeURIComponent(tenantId)}&name=${encodeURIComponent(shopName)}`;
+                link.href = manifestUrl;
+            } else {
+                link = document.createElement('link');
+                link.id = 'app-manifest';
+                link.rel = 'manifest';
+                link.href = manifestUrl;
+                document.head.appendChild(link);
+            }
+            try {
+                localStorage.setItem('active_tenant_id', tenantId);
+                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
+            } catch(e) {}
+            const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+            if (appleTitle) {
+                appleTitle.content = shopName;
             }
         } catch(e) {}
     },
@@ -3463,6 +3491,7 @@ const app = {
         if (tenantId) {
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
+                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
                 this.updateDynamicManifest();
             } catch(e) {}
         }
@@ -3478,8 +3507,9 @@ const app = {
                 window.deferredPrompt = null;
             });
         } else {
-            const tenantInfo = tenantId ? ` (${tenantId})` : '';
-            alert(`Para criar o aplicativo${tenantInfo} no seu celular:\n\n📱 Android: Clique nos 3 pontinhos do navegador e escolha "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Clique no ícone de compartilhar (quadrado com seta para cima) e escolha "Adicionar à Tela de Início".`);
+            const shopName = this.state.settings?.shopInfo?.name || this.state.settings?.shopName || (tenantId ? tenantId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '');
+            const tenantInfo = shopName ? ` "${shopName}"` : '';
+            alert(`Para criar e instalar o aplicativo${tenantInfo} no seu celular:\n\n📱 Android: Toque nos 3 pontinhos do navegador e selecione "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Toque no botão de Compartilhar (quadrado com seta para cima) no Safari e escolha "Adicionar à Tela de Início".`);
         }
     },
 
