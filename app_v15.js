@@ -1410,40 +1410,78 @@ const app = {
         // [SEGURANÇA] Carregamento inicial com verificação de sessão amarrada ao tenant ativo
         const tenantId = this.getTenantId();
         const sessionKey = `centauros_user_${tenantId}`;
-        const savedUserStr = localStorage.getItem(sessionKey);
         const hasMasterToken = new URLSearchParams(window.location.search).has('master_token');
 
         // [MIGRAÇÃO LEGADA] Limpa chave global antiga se existir, para não deixar resíduos
         if (localStorage.getItem('centauros_user')) {
             localStorage.removeItem('centauros_user');
         }
+        if (sessionStorage.getItem('centauros_user')) {
+            sessionStorage.removeItem('centauros_user');
+        }
+
+        // Buscar sessão ativa (sessionStorage tem prioridade para sessões temporárias/master, depois localStorage)
+        let savedUserStr = sessionStorage.getItem(sessionKey);
+        let isFromSessionStorage = true;
+        if (!savedUserStr) {
+            savedUserStr = localStorage.getItem(sessionKey);
+            isFromSessionStorage = false;
+        }
 
         // Se há master_token, pular restauração de sessão — será tratado após Firebase carregar
         if (!hasMasterToken && savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr);
+                const now = Date.now();
 
-                // [SEGURANÇA CRÍTICA] Verifica se a sessão pertence a esta loja
-                if (savedUser.tenantId && savedUser.tenantId !== tenantId) {
+                // [SEGURANÇA] Validação estrita de expiração:
+                // Qualquer sessão sem 'expiresAt' (formato legado) ou com tempo expirado é considerada expirada
+                const isExpired = !savedUser.expiresAt || now > savedUser.expiresAt;
+
+                // Sessão master que ficou presa no localStorage (legado) ou expirou deve ser purgada imediatamente
+                if (savedUser.isMasterSession && (!isFromSessionStorage || isExpired)) {
+                    console.warn("🔒 [SEGURANÇA] Sessão Master inválida ou expirada no localStorage. Purgando.");
+                    localStorage.removeItem(sessionKey);
+                    sessionStorage.removeItem(sessionKey);
+                } else if (isExpired) {
+                    console.warn("🔒 [SEGURANÇA] Sessão expirada por segurança. Purgando.");
+                    localStorage.removeItem(sessionKey);
+                    sessionStorage.removeItem(sessionKey);
+                } else if (savedUser.tenantId && savedUser.tenantId !== tenantId) {
                     console.warn(`⚠️ [SEGURANÇA] Sessão de outro tenant bloqueada. Sessão: '${savedUser.tenantId}', Tenant ativo: '${tenantId}'`);
                     localStorage.removeItem(sessionKey);
+                    sessionStorage.removeItem(sessionKey);
                 } else {
-                    this.state.user = { id: savedUser.id, name: savedUser.name, role: savedUser.role };
+                    this.state.user = { 
+                        id: savedUser.id, 
+                        name: savedUser.name, 
+                        role: savedUser.role,
+                        expiresAt: savedUser.expiresAt 
+                    };
                     if (savedUser.isMasterSession) this.state.user.isMasterSession = true;
 
                     // [PUSH NOTIFICATION] Re-registrar push ao auto-login
                     setTimeout(() => this.initPushNotifications(), 4000);
 
-                    // Se não houver hash, define a view padrão por cargo
+                    // Se não houver hash na URL:
+                    // Se for PWA instalado (app standalone), abre diretamente o painel de trabalho do usuário
+                    // Se for navegador comum na URL raiz da loja (ex: /centauro), SEMPRE abre 'home' (cliente)
+                    // Isso impede que donos ou clientes testando o link público caiam no painel adm
                     if (!hash) {
-                        if (this.state.user.role === 'admin') initialView = 'admin-dash';
-                        else if (this.state.user.role === 'totem') initialView = 'totem-dash';
-                        else initialView = 'barber-dash';
+                        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || new URLSearchParams(window.location.search).get('pwa') === '1';
+                        if (isPWA && !savedUser.isMasterSession) {
+                            if (this.state.user.role === 'admin') initialView = 'admin-dash';
+                            else if (this.state.user.role === 'totem') initialView = 'totem-dash';
+                            else initialView = 'barber-dash';
+                        } else {
+                            initialView = 'home';
+                        }
                     }
                 }
             } catch (e) {
                 console.error("Erro ao ler sessão salva:", e);
                 localStorage.removeItem(sessionKey);
+                sessionStorage.removeItem(sessionKey);
             }
         }
 
@@ -1491,6 +1529,31 @@ const app = {
                 }
             }
         });
+
+        // [SEGURANÇA] Verificação contínua de expiração de sessão ao reativar janela
+        window.addEventListener('focus', () => {
+            if (this.state.user && this.isSessionExpired()) {
+                console.warn("🔒 [SEGURANÇA] Sessão expirada detectada no retorno à janela.");
+                this.clearSession();
+                this.state.user = null;
+                if (this.state.view && (this.state.view.includes('-dash') || this.state.view.startsWith('admin-') || this.state.view === 'pdv')) {
+                    alert("Sua sessão expirou por segurança. Por favor, faça login novamente.");
+                    this.render('login');
+                }
+            }
+        });
+
+        // [SEGURANÇA] Verificação periódica a cada 60s
+        setInterval(() => {
+            if (this.state.user && this.isSessionExpired()) {
+                console.warn("🔒 [SEGURANÇA] Sessão expirada detectada em segundo plano.");
+                this.clearSession();
+                this.state.user = null;
+                if (this.state.view && (this.state.view.includes('-dash') || this.state.view.startsWith('admin-') || this.state.view === 'pdv')) {
+                    this.render('login');
+                }
+            }
+        }, 60000);
     },
 
     generateTimeSlots() {
@@ -2129,9 +2192,7 @@ const app = {
         if (confirm('⚠️ ATENÇÃO: Isso irá apagar TODOS os dados (clientes, agendamentos, transações, vales). Esta ação é irreversível.\n\nDeseja continuar?')) {
             if (confirm('Tem ABSOLUTA certeza? Todos os dados serão perdidos permanentemente.')) {
                 localStorage.removeItem('centauro_state');
-                localStorage.removeItem(`centauros_user_${this.getTenantId()}`);
-                // [MIGRAÇÃO LEGADA] Remove chave global antiga se ainda existir
-                localStorage.removeItem('centauros_user');
+                this.clearSession();
                 alert('Dados limpos. O sistema será reiniciado.');
                 location.reload();
             }
@@ -2183,10 +2244,14 @@ const app = {
             }
         }
 
-        // [Segurança] Bloqueio de acesso não autorizado ou deslogado
+        // [Segurança] Bloqueio de acesso não autorizado, deslogado ou com sessão expirada
         if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
-            if (!this.state.user) {
-                console.warn("Redirecionando: Tentativa de acesso restrito sem login.");
+            if (!this.state.user || this.isSessionExpired()) {
+                console.warn("Redirecionando: Tentativa de acesso restrito sem login ou com sessão expirada.");
+                if (this.state.user) {
+                    this.clearSession();
+                    this.state.user = null;
+                }
                 this.render('login');
                 return;
             }
@@ -3501,13 +3566,39 @@ const app = {
         }
     },
 
-    logout() {
-        if (confirm('Deseja realmente sair?')) {
-            this.state.user = null;
-            localStorage.removeItem(`centauros_user_${this.getTenantId()}`);
-            // [MIGRAÇÃO LEGADA] Remove chave global antiga se ainda existir
+    clearSession() {
+        const tenantId = this.getTenantId();
+        if (tenantId) {
+            const sessionKey = `centauros_user_${tenantId}`;
+            try {
+                localStorage.removeItem(sessionKey);
+                sessionStorage.removeItem(sessionKey);
+            } catch (e) {}
+        }
+        try {
             localStorage.removeItem('centauros_user');
+            sessionStorage.removeItem('centauros_user');
+        } catch (e) {}
+    },
+
+    isSessionExpired() {
+        if (!this.state.user) return true;
+        // Se a sessão não possui timestamp de expiração (formato legado), considera expirada por segurança
+        if (!this.state.user.expiresAt) return true;
+        return Date.now() > this.state.user.expiresAt;
+    },
+
+    logout(silent = false) {
+        const doLogout = () => {
+            this.state.user = null;
+            this.clearSession();
             this.navigateTo('home');
+        };
+
+        if (silent) {
+            doLogout();
+        } else if (confirm('Deseja realmente sair?')) {
+            doLogout();
         }
     },
 
@@ -4162,12 +4253,14 @@ const app = {
             await set(ref(this.db, `master/impersonate_tokens/${masterToken}`), null);
             console.log(`[Master Token] ✅ Acesso master autorizado para tenant "${currentTenant}"`);
 
-            // Criar sessão de admin master
+            // Criar sessão de admin master temporária (expira em 30 minutos)
+            const expiresAt = Date.now() + (30 * 60 * 1000);
             this.state.user = {
                 id: 0,
                 name: tokenData.name || 'Administrador Master',
                 role: 'admin',
-                isMasterSession: true
+                isMasterSession: true,
+                expiresAt: expiresAt
             };
 
             // [CRÍTICO] Forçar data da agenda para HOJE e zerar lastUpdate para carregar a nuvem ao vivo
@@ -4175,12 +4268,16 @@ const app = {
             this.state.lastUpdate = 0;
             this.state._lastDataHash = null;
 
-            // Salvar sessão para este tenant
+            // Salvar sessão temporária no sessionStorage (NÃO no localStorage permanente)
             const sessionKey = `centauros_user_${currentTenant}`;
-            localStorage.setItem(sessionKey, JSON.stringify({
+            sessionStorage.setItem(sessionKey, JSON.stringify({
                 ...this.state.user,
-                tenantId: currentTenant
+                tenantId: currentTenant,
+                loggedInAt: Date.now(),
+                expiresAt: expiresAt
             }));
+            // Purgar resíduo de localStorage para que a URL pública da loja nunca abra o painel acidentalmente
+            localStorage.removeItem(sessionKey);
 
             // Limpar token da URL
             this.cleanMasterTokenFromURL();
@@ -4202,6 +4299,13 @@ const app = {
     },
 
     renderLogin(container) {
+        // Se já está logado com sessão válida e não expirada, vai direto para o painel correspondente
+        if (this.state.user && !this.isSessionExpired()) {
+            if (this.state.user.role === 'admin') return this.navigateTo('admin-dash');
+            if (this.state.user.role === 'totem') return this.navigateTo('totem-dash');
+            return this.navigateTo('barber-dash');
+        }
+
         const s = this.state.settings || {};
         const logo = s.logoUrl || 'logo_agendamento.png';
         const tenantId = this.getTenantId();
@@ -4294,15 +4398,35 @@ const app = {
             }
 
             if (matchedUser) {
-                // [SEGURANÇA] Salva o tenantId junto com a sessão para evitar reutilização entre lojas
-                const sessionData = { ...matchedUser, tenantId: currentTenantId };
-                this.state.user = { id: matchedUser.id, name: matchedUser.name, role: matchedUser.role };
+                // [SEGURANÇA] Configuração de tempo de vida do token/sessão:
+                // 24 horas para "Mantenha-me logado", 4 horas para sessão padrão sem persistência permanente
+                const keepLoggedIn = !!document.getElementById('keep-logged-in')?.checked;
+                const sessionDurationMs = keepLoggedIn 
+                    ? 24 * 60 * 60 * 1000 
+                    : 4 * 60 * 60 * 1000;
+                const expiresAt = Date.now() + sessionDurationMs;
+
+                const sessionData = { 
+                    ...matchedUser, 
+                    tenantId: currentTenantId,
+                    loggedInAt: Date.now(),
+                    expiresAt: expiresAt,
+                    keepLoggedIn: keepLoggedIn
+                };
+
+                this.state.user = { 
+                    id: matchedUser.id, 
+                    name: matchedUser.name, 
+                    role: matchedUser.role,
+                    expiresAt: expiresAt 
+                };
 
                 const sessionKey = `centauros_user_${currentTenantId}`;
-                if (document.getElementById('keep-logged-in').checked) {
+                if (keepLoggedIn) {
                     localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+                    sessionStorage.removeItem(sessionKey);
                 } else {
-                    // Limpa sessão anterior se não quiser manter logado
+                    sessionStorage.setItem(sessionKey, JSON.stringify(sessionData));
                     localStorage.removeItem(sessionKey);
                 }
 
