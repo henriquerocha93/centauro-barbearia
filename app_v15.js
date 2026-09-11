@@ -1434,17 +1434,26 @@ const app = {
                 const savedUser = JSON.parse(savedUserStr);
                 const now = Date.now();
 
-                // [SEGURANÇA] Validação estrita de expiração:
-                // Qualquer sessão sem 'expiresAt' (formato legado) ou com tempo expirado é considerada expirada
-                const isExpired = !savedUser.expiresAt || now > savedUser.expiresAt;
+                // [SEGURANÇA] Validação de expiração:
+                // Se o usuário marcou "Mantenha-me logado", NÃO expira por tempo (sem limite de horas)
+                // O usuário permanece logado e só sai dessa página se clicar em 'Sair'
+                // Se for sessão temporária (sem "Mantenha-me logado" ou token master), valida o tempo de expiração
+                let isExpired = false;
+                if (savedUser.isMasterSession) {
+                    isExpired = !isFromSessionStorage || !savedUser.expiresAt || now > savedUser.expiresAt;
+                } else if (savedUser.keepLoggedIn) {
+                    isExpired = false; // Sem limite de horas
+                } else {
+                    isExpired = !savedUser.expiresAt || now > savedUser.expiresAt;
+                }
 
                 // Sessão master que ficou presa no localStorage (legado) ou expirou deve ser purgada imediatamente
-                if (savedUser.isMasterSession && (!isFromSessionStorage || isExpired)) {
+                if (savedUser.isMasterSession && isExpired) {
                     console.warn("🔒 [SEGURANÇA] Sessão Master inválida ou expirada no localStorage. Purgando.");
                     localStorage.removeItem(sessionKey);
                     sessionStorage.removeItem(sessionKey);
                 } else if (isExpired) {
-                    console.warn("🔒 [SEGURANÇA] Sessão expirada por segurança. Purgando.");
+                    console.warn("🔒 [SEGURANÇA] Sessão temporária expirada. Purgando.");
                     localStorage.removeItem(sessionKey);
                     sessionStorage.removeItem(sessionKey);
                 } else if (savedUser.tenantId && savedUser.tenantId !== tenantId) {
@@ -1456,7 +1465,8 @@ const app = {
                         id: savedUser.id, 
                         name: savedUser.name, 
                         role: savedUser.role,
-                        expiresAt: savedUser.expiresAt 
+                        keepLoggedIn: !!savedUser.keepLoggedIn,
+                        expiresAt: savedUser.expiresAt || null
                     };
                     if (savedUser.isMasterSession) this.state.user.isMasterSession = true;
 
@@ -1464,12 +1474,10 @@ const app = {
                     setTimeout(() => this.initPushNotifications(), 4000);
 
                     // Se não houver hash na URL:
-                    // Se for PWA instalado (app standalone), abre diretamente o painel de trabalho do usuário
-                    // Se for navegador comum na URL raiz da loja (ex: /centauro), SEMPRE abre 'home' (cliente)
-                    // Isso impede que donos ou clientes testando o link público caiam no painel adm
+                    // Se o usuário está logado (e não for sessão master temporária), permanece no painel!
+                    // O usuário só sairá dessa página caso clique em 'Sair'.
                     if (!hash) {
-                        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || new URLSearchParams(window.location.search).get('pwa') === '1';
-                        if (isPWA && !savedUser.isMasterSession) {
+                        if (!savedUser.isMasterSession) {
                             if (this.state.user.role === 'admin') initialView = 'admin-dash';
                             else if (this.state.user.role === 'totem') initialView = 'totem-dash';
                             else initialView = 'barber-dash';
@@ -3583,9 +3591,11 @@ const app = {
 
     isSessionExpired() {
         if (!this.state.user) return true;
-        // Se a sessão não possui timestamp de expiração (formato legado), considera expirada por segurança
-        if (!this.state.user.expiresAt) return true;
-        return Date.now() > this.state.user.expiresAt;
+        // Se o usuário marcou "Mantenha-me logado", nunca expira por tempo (permanece sem limite de horas, só sai se clicar em 'Sair')
+        if (this.state.user.keepLoggedIn) return false;
+        // Se for sessão temporária e tem expiresAt definido, verifica se expirou
+        if (this.state.user.expiresAt && Date.now() > this.state.user.expiresAt) return true;
+        return false;
     },
 
     logout(silent = false) {
@@ -4398,13 +4408,11 @@ const app = {
             }
 
             if (matchedUser) {
-                // [SEGURANÇA] Configuração de tempo de vida do token/sessão:
-                // 24 horas para "Mantenha-me logado", 4 horas para sessão padrão sem persistência permanente
+                // [SESSÃO] Configuração de tempo de vida:
+                // Se o usuário selecionou "Mantenha-me logado", permanece logado sem limite de horas (expira apenas ao clicar em 'Sair')
+                // Se NÃO marcou, é uma sessão temporária que expira em 4 horas
                 const keepLoggedIn = !!document.getElementById('keep-logged-in')?.checked;
-                const sessionDurationMs = keepLoggedIn 
-                    ? 24 * 60 * 60 * 1000 
-                    : 4 * 60 * 60 * 1000;
-                const expiresAt = Date.now() + sessionDurationMs;
+                const expiresAt = keepLoggedIn ? null : (Date.now() + 4 * 60 * 60 * 1000);
 
                 const sessionData = { 
                     ...matchedUser, 
@@ -4418,6 +4426,7 @@ const app = {
                     id: matchedUser.id, 
                     name: matchedUser.name, 
                     role: matchedUser.role,
+                    keepLoggedIn: keepLoggedIn,
                     expiresAt: expiresAt 
                 };
 
