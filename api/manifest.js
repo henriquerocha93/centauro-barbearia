@@ -45,12 +45,12 @@ module.exports = (req, res) => {
     }
 
     const shortName = name.length > 20 ? name.substring(0, 20) : name;
-    const isTenant = !!loja && loja !== 'centauro';
+    const isTenant = !!loja;
     
     // start_url com path E query parameter para blindar qualquer roteador
     const startUrl = isTenant
         ? `/${encodeURIComponent(loja)}?loja=${encodeURIComponent(loja)}&pwa=1`
-        : (loja ? `/?loja=${encodeURIComponent(loja)}&pwa=1` : `/?pwa=1`);
+        : `/?pwa=1`;
     
     const appId = isTenant ? `/${encodeURIComponent(loja)}` : `/`;
 

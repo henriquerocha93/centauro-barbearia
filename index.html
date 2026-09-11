@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Agendamento Fácil BR | Gestão Inteligente v80.00 (Versão Final)</title>
 
-    <link rel="stylesheet" href="styles.css?v=105">
+    <link rel="stylesheet" href="styles.css?v=106">
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,6 +15,11 @@
         // Blindagem Imediata de Tenant e Manifest PWA
         (function() {
             try {
+                // Remove qualquer resquício de cookie que possa interferir no roteamento da raiz
+                document.cookie = 'active_tenant_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0';
+            } catch(e) {}
+
+            try {
                 var params = new URLSearchParams(window.location.search);
                 var loja = params.get('loja');
                 if (!loja) {
@@ -22,16 +27,25 @@
                     var ignore = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt', 'api'];
                     loja = parts.find(function(p) { return !ignore.includes(p); });
                 }
+
+                var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || params.get('pwa') === '1';
+
+                // Se não há loja na URL:
+                // Em navegador comum na raiz, SEMPRE redireciona para a página de vendas
                 if (!loja) {
+                    if (!isPWA) {
+                        window.location.replace('/AgendamentoFacil/index.html');
+                        return;
+                    }
                     loja = localStorage.getItem('active_tenant_id');
+                    if (!loja) {
+                        window.location.replace('/AgendamentoFacil/index.html');
+                        return;
+                    }
                 }
-                if (!loja && document.cookie) {
-                    var match = document.cookie.match(/(?:^|;\s*)active_tenant_id=([^;]+)/);
-                    if (match && match[1]) loja = decodeURIComponent(match[1].trim());
-                }
+
                 if (loja && loja !== 'totem') {
                     localStorage.setItem('active_tenant_id', loja);
-                    document.cookie = 'active_tenant_id=' + encodeURIComponent(loja) + '; path=/; max-age=31536000; SameSite=Lax';
                 }
                 
                 var shopName = (loja && loja !== 'centauro' && loja !== 'totem')
@@ -45,7 +59,7 @@
                 // Injetar manifest dinâmico da loja ANTES de qualquer requisição do navegador
                 var manifestUrl = (loja && loja !== 'totem')
                     ? '/api/manifest?loja=' + encodeURIComponent(loja) + '&name=' + encodeURIComponent(shopName)
-                    : '/api/manifest';
+                    : '/api/manifest?loja=centauro&name=Centauro+Barbearia';
                 
                 var link = document.createElement('link');
                 link.rel = 'manifest';
@@ -62,13 +76,13 @@
                 var fbLink = document.createElement('link');
                 fbLink.rel = 'manifest';
                 fbLink.id = 'app-manifest';
-                fbLink.href = '/api/manifest';
+                fbLink.href = '/api/manifest?loja=centauro';
                 document.head.appendChild(fbLink);
             }
         })();
     </script>
-    <script src="app_v15.js?v=80.40" type="module"></script>
-    <script src="assinaturas_module.js?v=80.40"></script>
+    <script src="app_v15.js?v=80.41" type="module"></script>
+    <script src="assinaturas_module.js?v=80.41"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>

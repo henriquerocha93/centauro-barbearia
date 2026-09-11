@@ -376,31 +376,21 @@ const app = {
             tenantId = 'centauro';
         }
 
-        // Se identificou na URL, salva imediatamente no localStorage e cookie para sobrevivência do PWA e navegação
+        // Se identificou na URL, salva imediatamente no localStorage para sobrevivência do PWA e navegação
         if (tenantId) {
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
-                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
             } catch (e) {}
             return tenantId;
         }
 
-        // Se NÃO há indicação na URL (ex: PWA standalone aberto do atalho da tela inicial), recupera do localStorage
+        // Se NÃO há indicação na URL, recupera do localStorage SOMENTE se estiver em modo PWA standalone (app instalado)
         try {
-            const savedTenant = localStorage.getItem('active_tenant_id');
-            if (savedTenant && savedTenant !== 'totem') {
-                return savedTenant;
-            }
-        } catch (e) {}
-
-        // Fallback de segurança: recupera do cookie se disponível
-        try {
-            if (document.cookie) {
-                const match = document.cookie.match(/(?:^|;\s*)active_tenant_id=([^;]+)/);
-                if (match && match[1] && match[1] !== 'totem') {
-                    const cookieTenant = decodeURIComponent(match[1].trim());
-                    localStorage.setItem('active_tenant_id', cookieTenant);
-                    return cookieTenant;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || urlParams.get('pwa') === '1';
+            if (isStandalone) {
+                const savedTenant = localStorage.getItem('active_tenant_id');
+                if (savedTenant && savedTenant !== 'totem') {
+                    return savedTenant;
                 }
             }
         } catch (e) {}
@@ -431,7 +421,6 @@ const app = {
             }
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
-                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
             } catch(e) {}
             const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
             if (appleTitle) {
@@ -3491,7 +3480,6 @@ const app = {
         if (tenantId) {
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
-                document.cookie = `active_tenant_id=${encodeURIComponent(tenantId)}; path=/; max-age=31536000; SameSite=Lax`;
                 this.updateDynamicManifest();
             } catch(e) {}
         }
