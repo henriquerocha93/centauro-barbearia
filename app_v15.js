@@ -3763,6 +3763,25 @@ const app = {
     addTransaction(type, description, amount, category, method = 'dinheiro') {
         const transId = Date.now() + Math.floor(Math.random() * 1000);
         const cleanAmount = parseFloat(amount) || 0;
+
+        // ── PROTEÇÃO ANTI-DUPLICAÇÃO ──
+        // Verifica se uma transação idêntica foi registrada nos últimos 60 segundos
+        const now = Date.now();
+        const recentDuplicate = (this.state.transactions || []).find(t => {
+            const tTime = t.timestamp ? new Date(t.timestamp).getTime() : t.id;
+            return t.description === description &&
+                   Math.abs(t.amount - cleanAmount) < 0.01 &&
+                   t.category === (category || 'outros').toLowerCase() &&
+                   t.method === (method || 'dinheiro').toLowerCase() &&
+                   t.type === type &&
+                   (now - tTime) < 60000; // Menos de 60 segundos
+        });
+
+        if (recentDuplicate) {
+            console.warn('⚠️ Transação duplicada bloqueada:', description, cleanAmount);
+            return recentDuplicate.id; // Retorna o ID da transação existente sem criar nova
+        }
+
         const transaction = {
             id: transId,
             date: new Date().toLocaleDateString('en-CA'), // Usamos YYYY-MM-DD local para consistência no filtro
@@ -6288,6 +6307,14 @@ const app = {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
         if (!apt) return;
+
+        // ── PROTEÇÃO CONTRA DUPLICAÇÃO ──
+        // Se a OS já foi finalizada, bloqueia a abertura do modal
+        if (apt.status === 'finalizado') {
+            alert('⚠️ Esta OS já foi finalizada! Não é possível finalizar novamente.');
+            return;
+        }
+
         if (!apt.products) apt.products = [];
 
         // Garante que sempre usamos o preço e serviço original (não o já alterado por desconto)
@@ -6655,6 +6682,33 @@ const app = {
     doFinalizeOS(aptId) {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
+
+        // ── PROTEÇÃO 1: Verifica se a OS já foi finalizada ──
+        if (!apt || apt.status === 'finalizado') {
+            alert('⚠️ Esta OS já foi finalizada! Operação cancelada para evitar duplicação no caixa.');
+            this.closeModal();
+            return;
+        }
+
+        // ── PROTEÇÃO 2: Verifica se já existe transação vinculada (segurança extra) ──
+        if (apt.transactionId) {
+            alert('⚠️ Já existe uma transação registrada para esta OS. Operação cancelada.');
+            this.closeModal();
+            return;
+        }
+
+        // ── PROTEÇÃO 3: Desabilita botão para evitar duplo clique ──
+        const btnFinalizar = document.querySelector('[onclick*="doFinalizeOS"]');
+        if (btnFinalizar) {
+            if (btnFinalizar.disabled) return; // Já está processando
+            btnFinalizar.disabled = true;
+            btnFinalizar.style.opacity = '0.5';
+            btnFinalizar.textContent = '⏳ Processando...';
+        }
+
+        // ── PROTEÇÃO 4: Marca a OS como "em processamento" imediatamente ──
+        apt.status = 'processando';
+
         const payment = document.getElementById('final-payment').value;
         const tip = parseFloat(document.getElementById('final-tip').value) || 0;
         const customerName = document.getElementById('final-cust-name').value;
@@ -6770,6 +6824,8 @@ const app = {
             alert('Venda registrada e estoque atualizado!');
         } catch (error) {
             console.error('Erro fatal ao finalizar OS:', error);
+            // ── Reverte o status para permitir nova tentativa ──
+            if (apt) apt.status = 'em atendimento';
             alert('Ocorreu um erro inesperado: ' + error.message);
         }
     },
