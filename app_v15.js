@@ -5541,7 +5541,7 @@ const app = {
                         <p style="color: var(--text-secondary); font-size: 0.9rem;">Sem expediente configurado para este dia.</p>
                     </div>
                 ` : `
-                    <div class="agenda-grid" style="grid-template-columns: 80px repeat(${barbersToShow.length}, 1fr);">
+                    <div class="agenda-grid" style="--barber-cols: ${barbersToShow.length}; grid-template-columns: 80px repeat(${barbersToShow.length}, minmax(0, 1fr));">
                         <!-- Header -->
                         <div class="agenda-header" style="z-index: 60; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; font-weight: 800;">
                             Horário
@@ -10428,7 +10428,8 @@ const app = {
 
         this.saveState();
         this.closeModal();
-        this.render('admin-settings');
+        const currentView = this.state.view || 'admin-services';
+        this.render(currentView);
     },
 
     renderHolidayList() {
@@ -10504,7 +10505,8 @@ const app = {
 
         this.saveState();
         this.closeModal();
-        this.render('admin-settings');
+        const currentView = this.state.view || 'admin-settings';
+        this.render(currentView);
         alert('📅 Data configurada com sucesso!');
     },
 
@@ -10512,7 +10514,8 @@ const app = {
         if (confirm('Deseja remover esta exceção de horário?')) {
             this.state.settings.holidays.splice(index, 1);
             this.saveState();
-            this.render('admin-settings');
+            const currentView = this.state.view || 'admin-settings';
+            this.render(currentView);
         }
     },
 

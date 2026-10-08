@@ -645,7 +645,7 @@ select.glass option {
     background: transparent !important;
 }
 
-/* UtilitÃ¡rios de Responsividade */
+/* Utilitários de Responsividade */
 @media (max-width: 600px) {
     .hero {
         height: 70vh;
@@ -658,6 +658,83 @@ select.glass option {
         right: 20px;
         width: 55px;
         height: 55px;
+    }
+
+    /* Agenda sem rolagem horizontal no celular */
+    .view-content {
+        padding: 8px 4px !important;
+    }
+
+    .agenda-grid {
+        grid-template-columns: 50px repeat(var(--barber-cols, 3), minmax(0, 1fr)) !important;
+        overflow-x: hidden !important;
+        width: 100% !important;
+        border-radius: 8px;
+    }
+
+    .agenda-header {
+        padding: 8px 2px !important;
+    }
+
+    .agenda-header .barber-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        margin-bottom: 4px !important;
+        border-width: 1.5px !important;
+    }
+
+    .agenda-header div {
+        font-size: 0.72rem !important;
+        letter-spacing: -0.3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .agenda-header button {
+        padding: 2px 4px !important;
+        font-size: 0.5rem !important;
+        margin-top: 4px !important;
+    }
+
+    .time-col {
+        font-size: 0.65rem !important;
+        padding: 0 2px !important;
+        height: 52px !important;
+    }
+
+    .agenda-cell {
+        height: 52px !important;
+        min-width: 0 !important;
+    }
+
+    .appointment-block {
+        inset: 2px !important;
+        padding: 3px 4px !important;
+        border-radius: 4px !important;
+    }
+
+    .appointment-block .customer-name {
+        font-size: 0.62rem !important;
+        line-height: 1.1 !important;
+    }
+
+    .appointment-block .service-name {
+        font-size: 0.52rem !important;
+        line-height: 1 !important;
+    }
+
+    .appointment-block .customer-name span:last-child {
+        font-size: 0.48rem !important;
+        padding: 0 2px !important;
+    }
+
+    .continuation-block {
+        padding: 1px 3px !important;
+    }
+
+    .continuation-block span {
+        font-size: 0.52rem !important;
     }
 }
 
