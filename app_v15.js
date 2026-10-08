@@ -429,6 +429,109 @@ const app = {
         } catch(e) {}
     },
 
+    // Converte horário HH:MM para minutos desde meia-noite
+    timeToMinutes(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string') return 0;
+        const [h, m] = timeStr.split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+    },
+
+    // Converte minutos desde meia-noite para HH:MM
+    minutesToTime(totalMinutes) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    },
+
+    // Soma a duração em minutos de uma lista ou string de serviços
+    calculateServicesDuration(servicesInput) {
+        const defaultDuration = (this.state.settings && this.state.settings.agenda && this.state.settings.agenda.intervalMin) || 30;
+        if (!servicesInput) return defaultDuration;
+
+        let names = [];
+        if (Array.isArray(servicesInput)) {
+            // Pode ser array de objetos serviço ou array de strings
+            names = servicesInput.map(s => typeof s === 'object' && s !== null ? (s.name || '') : String(s));
+        } else if (typeof servicesInput === 'string') {
+            // String separada por vírgula (ex: "Corte, Barba")
+            names = servicesInput.split(',').map(s => s.trim());
+        }
+
+        let totalDuration = 0;
+        const allServices = this.state.services || [];
+
+        names.forEach(name => {
+            if (!name) return;
+            // Limpa sufixos de anotação como " [Clube: ...]"
+            const cleanName = name.replace(/\s*\[.*\]\s*$/, '').trim().toLowerCase();
+            const matched = allServices.find(s => s.name && s.name.trim().toLowerCase() === cleanName);
+            if (matched && matched.duration && !isNaN(matched.duration)) {
+                totalDuration += parseInt(matched.duration, 10);
+            } else {
+                // Fallback: se não achar serviço exato, tenta match parcial ou 30 min padrão
+                const partial = allServices.find(s => s.name && (s.name.toLowerCase().includes(cleanName) || cleanName.includes(s.name.toLowerCase())));
+                totalDuration += (partial && partial.duration) ? parseInt(partial.duration, 10) : 30;
+            }
+        });
+
+        return totalDuration > 0 ? totalDuration : defaultDuration;
+    },
+
+    // Retorna a duração real de um agendamento já existente
+    getAppointmentDuration(apt) {
+        if (!apt) return 30;
+        if (apt.duration && !isNaN(apt.duration) && apt.duration > 0) {
+            return parseInt(apt.duration, 10);
+        }
+        return this.calculateServicesDuration(apt.service);
+    },
+
+    // Verifica se um barbeiro tem colisão de horário em um determinado intervalo [startMin, endMin)
+    isBarberBusyInRange(barberName, dateStr, startMin, endMin, excludeAptId = null) {
+        if (!barberName) return false;
+        const appointments = this.state.appointments || [];
+        const normBarber = this.normalizeString(barberName);
+
+        return appointments.some(a => {
+            if (excludeAptId && a.id === excludeAptId) return false;
+            if (a.status === 'cancelado') return false;
+
+            const aBarber = this.normalizeString(a.barber);
+            if (aBarber !== normBarber) return false;
+
+            const aDate = a.date || this.getTodayDate();
+            if (aDate !== dateStr) return false;
+
+            const aStart = this.timeToMinutes(a.time);
+            const aDuration = this.getAppointmentDuration(a);
+            const aEnd = aStart + aDuration;
+
+            // Dois intervalos [A, B) e [C, D) colidem se A < D && C < B
+            return startMin < aEnd && aStart < endMin;
+        });
+    },
+
+    // Retorna o agendamento ativo que cobre um determinado horário em minutos de um barbeiro
+    getAppointmentAtTime(barberName, dateStr, targetMinutes) {
+        const appointments = this.state.appointments || [];
+        const normBarber = this.normalizeString(barberName);
+
+        return appointments.find(a => {
+            if (a.status === 'cancelado') return false;
+            const aBarber = this.normalizeString(a.barber);
+            if (aBarber !== normBarber) return false;
+
+            const aDate = a.date || this.getTodayDate();
+            if (aDate !== dateStr) return false;
+
+            const aStart = this.timeToMinutes(a.time);
+            const aDuration = this.getAppointmentDuration(a);
+            const aEnd = aStart + aDuration;
+
+            return targetMinutes >= aStart && targetMinutes < aEnd;
+        });
+    },
+
     // Retorna a data atual local no formato YYYY-MM-DD (sem distorção de fuso horário UTC)
     getTodayDate() {
         const d = new Date();
@@ -5457,30 +5560,54 @@ const app = {
                         `).join('')}
 
                         <!-- Rows -->
-                        ${timeSlots.map(time => `
+                        ${timeSlots.map(time => {
+                            const timeMin = this.timeToMinutes(time);
+                            return `
                             <div class="time-col">${time}</div>
                             ${barbersToShow.map(b => {
-                                const key = `${this.normalizeString(b.name)}-${time}`;
-                                const apt = aptMap.get(key);
+                                const exactApt = aptMap.get(`${this.normalizeString(b.name)}-${time}`);
+                                const coveringApt = exactApt || this.getAppointmentAtTime(b.name, this.state.currentDate, timeMin);
+                                const isStartSlot = coveringApt && coveringApt.time === time;
+                                const effectiveApt = isStartSlot ? coveringApt : (coveringApt ? coveringApt : null);
+
                                 return `
                                     <div class="agenda-cell" 
                                          data-barber="${b.name}"
                                          data-time="${time}"
-                                         onclick="window.app.handleCellClick('${b.name}', '${time}', ${apt ? apt.id : 'null'})"
+                                         onclick="window.app.handleCellClick('${b.name}', '${time}', ${coveringApt ? coveringApt.id : 'null'})"
                                          ondragover="window.app.handleDragOver(event)"
                                          ondragleave="window.app.handleDragLeave(event)"
                                          ondrop="window.app.handleDrop(event, '${b.name}', '${time}')">
-                                         ${apt ? this.getAppointmentBlock(apt) : ''}
+                                         ${isStartSlot ? this.getAppointmentBlock(coveringApt) : (coveringApt ? this.getOccupiedContinuationBlock(coveringApt) : '')}
                                      </div>
                                 `;
                             }).join('')}
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 `}
             </div>
         `;
 
         if (window.lucide) lucide.createIcons();
+    },
+
+    getOccupiedContinuationBlock(apt) {
+        const colors = {
+            'agendado': '#38bdf8',
+            'confirmado': '#4ade80',
+            'finalizado': '#94a3b8',
+            'bloqueado': '#f87171'
+        };
+        const color = colors[apt.status] || 'var(--accent-color)';
+        return `
+            <div class="appointment-block continuation-block" 
+                 title="Atendimento de ${apt.customer} em andamento (iniciado às ${apt.time})"
+                 style="border-left: 2px dashed ${color}; background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: flex-start; padding: 2px 6px; cursor: pointer; opacity: 0.65;">
+                <span style="font-size: 0.6rem; color: #94a3b8; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">
+                    ↳ ${apt.customer} (continuação)
+                </span>
+            </div>
+        `;
     },
 
     getAppointmentBlock(apt) {
@@ -5502,6 +5629,8 @@ const app = {
         const statusBg = bgs[apt.status] || 'rgba(255,255,255,0.02)';
         const origin = apt.origin || 'Encaixe (Manual)';
         const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
+        const aptDuration = this.getAppointmentDuration(apt);
+
         let isSubscriber = false;
         if (this.state.subscribers && apt.customer) {
             const sub = this.state.subscribers.find(s => {
@@ -5515,7 +5644,7 @@ const app = {
 
         const priceStr = isSubscriber ? 'Assinatura' : parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nDuração: ${aptDuration} min\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             return `
@@ -5540,7 +5669,10 @@ const app = {
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
                  ` : ''}>
-                <div class="customer-name" style="pointer-events: none; font-size: 0.7rem; font-weight: 800; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${apt.customer || 'Cliente'}</div>
+                <div class="customer-name" style="pointer-events: none; font-size: 0.7rem; font-weight: 800; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <span>${apt.customer || 'Cliente'}</span>
+                    <span style="font-size: 0.55rem; color: var(--accent-readable); font-weight: 600; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; margin-left: 4px;">⏱️ ${aptDuration}m</span>
+                </div>
                 <div class="service-name" style="pointer-events: none; font-size: 0.6rem; opacity: 0.8; color: #cbd5e1; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${apt.service || 'Serviço'}</div>
                 ${apt.status === 'finalizado' ? `<div style="font-size: 0.5rem; color: #94a3b8; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">✅ FINALIZADO</div>` : ''}
                 ${apt.status === 'confirmado' ? `<div style="font-size: 0.5rem; color: #4ade80; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">🟢 CONFIRMADO</div>` : ''}
@@ -5679,24 +5811,23 @@ const app = {
         // Se soltar no mesmo lugar, não faz nada
         if (apt.barber === newBarber && apt.time === newTime) return;
 
-        // Verificar se o destino já está ocupado
-        const targetApt = this.state.appointments.find(a => 
-            a.barber === newBarber && 
-            a.time === newTime && 
-            a.date === this.state.currentDate
-        );
+        // Verificar se o intervalo completo do destino colide com outro agendamento
+        const aptDuration = this.getAppointmentDuration(apt);
+        const newStartMin = this.timeToMinutes(newTime);
+        const newEndMin = newStartMin + aptDuration;
 
-        if (targetApt) {
-            alert(`O horário ${newTime} com ${newBarber} já está ocupado por ${targetApt.customer}.`);
+        if (this.isBarberBusyInRange(newBarber, this.state.currentDate, newStartMin, newEndMin, apt.id)) {
+            alert(`⚠️ Conflito de agenda: O horário ${newTime} com duração de ${aptDuration} min colide com outro atendimento agendado para ${newBarber}.`);
             return;
         }
 
         // Confirmação para movimentação se for admin ou dono do horário
-        if (!confirm(`Deseja mover o agendamento de ${apt.customer} para ${newBarber} às ${newTime}?`)) return;
+        if (!confirm(`Deseja mover o agendamento de ${apt.customer} (${aptDuration} min) para ${newBarber} às ${newTime}?`)) return;
 
         // Atualizar
         apt.barber = newBarber;
         apt.time = newTime;
+        apt.duration = aptDuration;
 
         this.saveState();
         this.render(this.state.view);
@@ -5726,12 +5857,12 @@ const app = {
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => `
                             <label class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; border-radius: 8px;">
-                                <input type="checkbox" name="walkin-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" 
+                                <input type="checkbox" name="walkin-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" data-duration="${s.duration || 30}" 
                                        style="width: 20px; height: 20px; accent-color: var(--accent-readable);"
                                        onchange="app.updateWalkinCounter()">
                                 <div style="flex: 1;">
                                     <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">${s.name}</p>
-                                    <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)}</p>
+                                    <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} • ⏱️ ${s.duration || 30} min</p>
                                 </div>
                             </label>
                         `).join('')}
@@ -5781,10 +5912,11 @@ const app = {
         const checked = document.querySelectorAll('input[name="walkin-services"]:checked');
         const count = checked.length;
         const total = Array.from(checked).reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        const totalDur = Array.from(checked).reduce((acc, cb) => acc + (parseInt(cb.dataset.duration, 10) || 30), 0);
         const indicator = document.getElementById('walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} • ⏱️ ${totalDur} min</span>`
                 : 'Nada selecionado';
         }
 
@@ -5876,11 +6008,20 @@ const app = {
         const serviceNamesArr = checkedBoxes.map(cb => cb.dataset.name);
         let serviceNames = serviceNamesArr.join(', ');
         let totalPrice = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        const totalDuration = this.calculateServicesDuration(checkedBoxes.map(cb => ({ name: cb.dataset.name, duration: cb.dataset.duration })));
+
+        // Validar se o horário e sua duração colidem com outro agendamento
+        const startMin = this.timeToMinutes(time);
+        const endMin = startMin + totalDuration;
+        if (this.isBarberBusyInRange(barber, this.state.currentDate, startMin, endMin)) {
+            alert(`⚠️ Atenção: O horário ${time} com duração estimada de ${totalDuration} min ultrapassa ou colide com outro atendimento agendado para ${barber}. Por favor, escolha outro horário ou ajuste os serviços.`);
+            return;
+        }
 
         // Registrar cliente se for novo
         let customer = this.state.customers.find(c => c.name.toLowerCase() === name.toLowerCase());
         if (!customer) {
-            this.state.pendingWalkIn = { name, barber, time, service: serviceNames, price: totalPrice };
+            this.state.pendingWalkIn = { name, barber, time, service: serviceNames, price: totalPrice, duration: totalDuration };
             this.promptQuickRegistration();
             return;
         }
@@ -5921,6 +6062,7 @@ const app = {
             customer: customer.name,
             service: serviceNames,
             price: finalPrice,
+            duration: totalDuration, // DURAÇÃO TOTAL DOS SERVIÇOS
             status: 'agendado',
             origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
@@ -6025,7 +6167,7 @@ const app = {
     },
 
     finalizeQuickRegistration() {
-        const { name, barber, time, service, price } = this.state.pendingWalkIn;
+        const { name, barber, time, service, price, duration } = this.state.pendingWalkIn;
         const phone = document.getElementById('qr-phone').value;
         const gender = document.getElementById('qr-gender').value;
         const birthDate = document.getElementById('qr-birth').value;
@@ -6046,6 +6188,7 @@ const app = {
             customer: name,
             service,
             price,
+            duration: duration || this.calculateServicesDuration(service),
             status: 'agendado',
             origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
@@ -6170,13 +6313,13 @@ const app = {
                                 <label class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; border-radius: 8px; 
                                        border: 2px solid ${isSelected ? 'var(--accent-color)' : 'var(--glass-border)'};
                                        background: ${isSelected ? 'rgba(212, 175, 55, 0.15)' : 'var(--glass-bg)'};">
-                                    <input type="checkbox" name="edit-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" 
+                                    <input type="checkbox" name="edit-services" value="${s.id}" data-id="${s.id}" data-name="${s.name}" data-price="${s.price}" data-duration="${s.duration || 30}" 
                                            style="width: 20px; height: 20px; accent-color: var(--accent-readable);"
                                            ${isSelected ? 'checked' : ''}
                                            onchange="app.updateEditCounter()">
                                     <div style="flex: 1;">
                                         <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">${s.name}</p>
-                                        <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)}</p>
+                                        <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} • ⏱️ ${s.duration || 30} min</p>
                                     </div>
                                 </label>
                             `;
@@ -6196,10 +6339,11 @@ const app = {
         const checked = document.querySelectorAll('input[name="edit-services"]:checked');
         const count = checked.length;
         const total = Array.from(checked).reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        const totalDur = Array.from(checked).reduce((acc, cb) => acc + (parseInt(cb.dataset.duration, 10) || 30), 0);
         const indicator = document.getElementById('edit-walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)}</span>`
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} • ⏱️ ${totalDur} min</span>`
                 : 'Pelo menos um serviço deve ser selecionado';
         }
 
@@ -6221,23 +6365,19 @@ const app = {
         const newBarber = document.getElementById('edit-apt-barber').value;
         const newDate = document.getElementById('edit-apt-date').value;
         const newTime = document.getElementById('edit-apt-time').value;
+        const totalDuration = this.calculateServicesDuration(checkedBoxes.map(cb => ({ name: cb.dataset.name, duration: cb.dataset.duration })));
 
-        // Validar se o novo horário de destino já está ocupado por outro cliente (se mudou o horário/barbeiro/data)
-        if (newBarber !== apt.barber || newTime !== apt.time || newDate !== apt.date) {
-            const targetApt = this.state.appointments.find(a => 
-                a.id !== apt.id &&
-                a.barber === newBarber && 
-                a.time === newTime && 
-                a.date === newDate
-            );
-            if (targetApt) {
-                alert(`O horário ${newTime} no dia ${newDate} com ${newBarber} já está ocupado por ${targetApt.customer}.`);
-                return;
-            }
+        // Validar colisão considerando o intervalo completo [newStartMin, newEndMin)
+        const newStartMin = this.timeToMinutes(newTime);
+        const newEndMin = newStartMin + totalDuration;
+        if (this.isBarberBusyInRange(newBarber, newDate, newStartMin, newEndMin, apt.id)) {
+            alert(`⚠️ Conflito de agenda: O horário ${newTime} (duração: ${totalDuration} min) colide com outro agendamento de ${newBarber}. Por favor, escolha outro horário ou ajuste os serviços.`);
+            return;
         }
 
         apt.service = checkedBoxes.map(cb => cb.dataset.name).join(', ');
         apt.price = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
+        apt.duration = totalDuration; // ATUALIZA DURAÇÃO TOTAL
         apt.barber = newBarber;
         apt.date = newDate;
         apt.time = newTime;
@@ -6245,7 +6385,7 @@ const app = {
         this.saveState();
         this.openAppointmentManagement(aptId);
         this.render(this.state.view);
-        this.showToast(`Agendamento de ${apt.customer} atualizado com sucesso!`);
+        this.showToast(`Agendamento de ${apt.customer} atualizado com sucesso (${totalDuration} min)!`);
     },
 
     updateAptStatus(aptId, status) {
@@ -9636,22 +9776,26 @@ const app = {
 
         if (!dayConfig || !dayConfig.active) return [];
 
+        // Calcula a duração total somando todos os serviços selecionados
+        const totalDuration = this.calculateServicesDuration(bs.services);
+
         const slots = [];
         let [hour, min] = dayConfig.open.split(':').map(Number);
         const [endHour, endMin] = dayConfig.close.split(':').map(Number);
+        const dayCloseMin = endHour * 60 + endMin;
 
         while (hour < endHour || (hour === endHour && min < endMin)) {
             const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+            const slotStartMin = hour * 60 + min;
+            const slotEndMin = slotStartMin + totalDuration;
 
-            const isOccupied = this.state.appointments.some(a =>
-                a.barber === bs.barber.name &&
-                a.time === time &&
-                (a.date === bs.date || (!a.date && bs.date === new Date().toISOString().split('T')[0])) &&
-                a.status !== 'cancelado'
-            );
-
-            if (!isOccupied) {
-                slots.push(time);
+            // Só disponibiliza se o serviço couber antes do horário de fechamento
+            // e se o barbeiro não tiver nenhum agendamento colidindo dentro desse período
+            if (slotEndMin <= dayCloseMin) {
+                const isOccupied = this.isBarberBusyInRange(bs.barber.name, bs.date, slotStartMin, slotEndMin);
+                if (!isOccupied) {
+                    slots.push(time);
+                }
             }
 
             min += intervalMin;
@@ -9667,6 +9811,18 @@ const app = {
         const bs = this.state.bookingState;
         if (!bs.customerName || !bs.customerPhone || !bs.customerBirth) {
             alert('Por favor, preencha todos os campos para confirmar.');
+            return;
+        }
+
+        // Validação de colisão de horário no momento de salvar (evita race condition)
+        const totalDuration = this.calculateServicesDuration(bs.services);
+        const startMin = this.timeToMinutes(bs.time);
+        const endMin = startMin + totalDuration;
+
+        if (this.isBarberBusyInRange(bs.barber.name, bs.date, startMin, endMin)) {
+            alert(`⚠️ Desculpe, o horário ${bs.time} (duração: ${totalDuration} min) acabou de ser reservado ou conflita com outro agendamento. Por favor, selecione outro horário.`);
+            this.state.bookingState.step = 3;
+            this.render('booking');
             return;
         }
 
@@ -9710,6 +9866,7 @@ const app = {
             customer: bs.customerName,
             service: serviceNames,
             price: totalPrice,
+            duration: totalDuration, // DURAÇÃO TOTAL SOMADA
             status: 'agendado',
             date: bs.date,
             origin: 'App / Web'
@@ -9721,7 +9878,7 @@ const app = {
         // [PUSH NOTIFICATION] Notificar barbeiro do novo agendamento
         this.sendPushToBarber(bs.barber.name, appointment);
 
-        alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name}!`);
+        alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name} (Duração estimada: ${totalDuration} min)!`);
 
         this.state.bookingState = {
             step: 1, barber: null, services: [], time: null,
