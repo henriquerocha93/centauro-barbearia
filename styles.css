@@ -855,37 +855,39 @@ select.glass option {
         font-size: 0.75rem !important;
     }
 
+    #agenda-view .glass,
     #admin-settings .glass,
     #admin-payments .glass,
     #admin-services .glass {
-        padding: 12px 10px !important;
-    }
-
-    /* Auditoria de Pagamentos no mobile */
-    #admin-payments > div > div[style*="grid-template-columns: 1fr 1fr 2fr"],
-    #admin-payments div[style*="grid-template-columns: 1fr 1fr 2fr"] {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    #payment-results > div[style*="grid-template-columns: 2fr 1fr"],
-    #payment-results div[style*="grid-template-columns: 2fr 1fr"] {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-    }
-
-    #payment-results > div:first-child {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
+        padding: 10px 8px !important;
     }
 
     /* Evitar estouro lateral e centralizar containers dentro das views no mobile */
-    #admin-services, #admin-settings, #admin-payments, #agenda-view, #dash-agenda-wrapper {
+    .view-content > *,
+    #agenda-view,
+    #dash-agenda-wrapper,
+    #admin-settings,
+    #admin-services,
+    #admin-payments,
+    #admin-customers,
+    #admin-staff,
+    #admin-stock,
+    #admin-cashflow,
+    #admin-vouchers,
+    #admin-consumption,
+    #admin-os,
+    #admin-billing,
+    #barber-dash,
+    #barber-financial,
+    #faturamento-view,
+    #tips-view,
+    #booking-view {
         overflow-x: hidden !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
+        box-sizing: border-box !important;
     }
 }
 
@@ -1134,15 +1136,42 @@ select.glass option {
         padding: 10px !important;
     }
 
-    /* Fix Horizontal Scroll & Center Content */
-    .view-content, .container, #app, .pdv-layout, .pdv-mobile-tabs, .app-layout, .main-content {
+    /* Fix Horizontal Scroll & Full-Width Content no Mobile */
+    #app, .app-layout, .main-content {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .view-content, .container {
         overflow-x: hidden !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        box-sizing: border-box !important;
+    }
+
+    .view-content > * {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .pdv-layout {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
     }
     
     .pdv-mobile-tabs {
