@@ -217,20 +217,22 @@ select.glass option {
 }
 
 .view-content {
-    padding: 30px;
+    padding: 25px 30px;
     overflow-y: auto;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
 }
 
-/* Centered content wrappers for consistent alignment across all views */
+/* Centralizado e ocupando a largura total disponível sem sobras excessivas */
 .view-content > * {
     width: 100%;
-    max-width: 1200px;
+    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
+    box-sizing: border-box;
 }
 
 #agenda-view,
@@ -252,9 +254,10 @@ select.glass option {
 #tips-view,
 #booking-view {
     width: 100%;
-    max-width: 1200px;
+    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
+    box-sizing: border-box;
 }
 
 /* Mobile Header */
@@ -280,6 +283,8 @@ select.glass option {
     border: 1px solid var(--glass-border);
     overflow-x: auto;
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .agenda-header {
