@@ -4828,8 +4828,8 @@ const app = {
             }
 
             container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
-                <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
-                    <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer;" onclick="app.repairToday()">
+                <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px;">
+                    <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal;" onclick="app.repairToday()">
                         🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
                 </div>

@@ -219,6 +219,42 @@ select.glass option {
 .view-content {
     padding: 30px;
     overflow-y: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Centered content wrappers for consistent alignment across all views */
+.view-content > * {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#agenda-view,
+#dash-agenda-wrapper,
+#admin-settings,
+#admin-services,
+#admin-payments,
+#admin-customers,
+#admin-staff,
+#admin-stock,
+#admin-cashflow,
+#admin-vouchers,
+#admin-consumption,
+#admin-os,
+#admin-billing,
+#barber-dash,
+#barber-financial,
+#faturamento-view,
+#tips-view,
+#booking-view {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Mobile Header */
@@ -838,10 +874,13 @@ select.glass option {
         gap: 8px !important;
     }
 
-    /* Evitar estouro lateral em qualquer container dentro das views */
-    #admin-services, #admin-settings, #admin-payments {
+    /* Evitar estouro lateral e centralizar containers dentro das views no mobile */
+    #admin-services, #admin-settings, #admin-payments, #agenda-view, #dash-agenda-wrapper {
         overflow-x: hidden !important;
-        max-width: 100vw !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
 }
 
@@ -1090,23 +1129,26 @@ select.glass option {
         padding: 10px !important;
     }
 
-    /* Fix Horizontal Scroll - AGGRESSIVE */
+    /* Fix Horizontal Scroll & Center Content */
     .view-content, .container, #app, .pdv-layout, .pdv-mobile-tabs, .app-layout, .main-content {
         overflow-x: hidden !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 5px !important; /* Extremely minimal padding */
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
     
     .pdv-mobile-tabs {
-        width: calc(100vw - 10px) !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
     body {
         overflow-x: hidden !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
     .section-title {
