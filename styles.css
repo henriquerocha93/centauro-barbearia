@@ -736,6 +736,113 @@ select.glass option {
     .continuation-block span {
         font-size: 0.52rem !important;
     }
+
+    /* Tabelas e formulários de Serviços, Configurações e Auditoria sem rolagem horizontal no celular */
+    #admin-services table,
+    #admin-settings table,
+    #admin-payments table {
+        min-width: 0 !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+
+    #admin-services table th,
+    #admin-services table td {
+        padding: 8px 4px !important;
+        font-size: 0.75rem !important;
+        word-break: break-word;
+    }
+
+    #admin-services table th:nth-child(1),
+    #admin-services table td:nth-child(1) {
+        width: 44% !important;
+    }
+
+    #admin-services table th:nth-child(2),
+    #admin-services table td:nth-child(2) {
+        width: 22% !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+
+    #admin-services table th:nth-child(3),
+    #admin-services table td:nth-child(3) {
+        width: 16% !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+
+    #admin-services table th:nth-child(4),
+    #admin-services table td:nth-child(4) {
+        width: 18% !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+
+    #admin-services td button {
+        padding: 4px 6px !important;
+        font-size: 0.65rem !important;
+    }
+
+    /* Configurações (Horários da Agenda) no mobile */
+    #admin-settings table th,
+    #admin-settings table td {
+        padding: 8px 3px !important;
+        font-size: 0.72rem !important;
+    }
+
+    #admin-settings table th:nth-child(1),
+    #admin-settings table td:nth-child(1) {
+        width: 28% !important;
+        white-space: normal !important;
+    }
+
+    #admin-settings table th:nth-child(2),
+    #admin-settings table td:nth-child(2) {
+        width: 24% !important;
+    }
+
+    #admin-settings table th:nth-child(3),
+    #admin-settings table td:nth-child(3) {
+        width: 48% !important;
+    }
+
+    #admin-settings table td input[type="time"] {
+        min-width: 0 !important;
+        width: 68px !important;
+        padding: 4px 2px !important;
+        font-size: 0.75rem !important;
+    }
+
+    #admin-settings .glass,
+    #admin-payments .glass,
+    #admin-services .glass {
+        padding: 12px 10px !important;
+    }
+
+    /* Auditoria de Pagamentos no mobile */
+    #admin-payments > div > div[style*="grid-template-columns: 1fr 1fr 2fr"],
+    #admin-payments div[style*="grid-template-columns: 1fr 1fr 2fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    #payment-results > div[style*="grid-template-columns: 2fr 1fr"],
+    #payment-results div[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    #payment-results > div:first-child {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Evitar estouro lateral em qualquer container dentro das views */
+    #admin-services, #admin-settings, #admin-payments {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
 }
 
 /* Sync Status Indicator */

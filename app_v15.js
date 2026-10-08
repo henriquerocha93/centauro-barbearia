@@ -1818,8 +1818,8 @@ const app = {
                         </select>
                     </div>
 
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+                    <div>
+                        <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
                                     <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Dia</th>
@@ -10338,8 +10338,8 @@ const app = {
                     <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; box-shadow: none;" onclick="app.openServiceModal()">+ Novo Serviço</button>
                 </div>
                 
-                <div class="glass" style="padding: 10px; overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; min-width: 500px;">
+                <div class="glass" style="padding: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
                         <thead>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">
                                 <th style="padding: 15px;">Nome do Serviço</th>
