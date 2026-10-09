@@ -696,6 +696,11 @@ const app = {
                 });
                 
                 this.state.appointments = Array.from(mergedAptsMap.values()).filter(a => a && a.id && !deletedSet.has(String(a.id)));
+                this.state.staff = mergeMap(this.state.staff, cloudData.staff);
+                this.state.services = mergeMap(this.state.services, cloudData.services);
+                this.state.products = mergeMap(this.state.products, cloudData.products);
+                this.state.subscriptionPlans = mergeMap(this.state.subscriptionPlans || [], cloudData.subscriptionPlans);
+                this.state.subscribers = mergeMap(this.state.subscribers || [], cloudData.subscribers);
                 this.state.customers = mergeMap(this.state.customers, cloudData.customers);
                 this.state.vouchers = mergeMap(this.state.vouchers, cloudData.vouchers);
                 this.state.productSales = mergeMap(this.state.productSales, cloudData.productSales);
@@ -1418,13 +1423,13 @@ const app = {
                                 return mergedApt;
                             });
 
-                            this.state.services = toArray(data.services);
-                            this.state.staff = toArray(data.staff);
+                            this.state.staff = mergeArrays(this.state.staff, data.staff);
+                            this.state.services = mergeArrays(this.state.services, data.services);
+                            this.state.products = mergeArrays(this.state.products, data.products);
                             this.state.customers = mergeArrays(this.state.customers, data.customers);
                             this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
                             this.state.productSales = mergeArrays(this.state.productSales, data.productSales);
                             this.state.transactions = mergeArrays(this.state.transactions, data.transactions);
-                            this.state.products = toArray(data.products);
                             this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
                             this.state.tips = mergeArrays(this.state.tips, data.tips);
                             
@@ -1765,7 +1770,7 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.49',
+    CURRENT_SYSTEM_VERSION: '80.50',
 
     SYSTEM_CHANGELOG: [
         {
@@ -3362,7 +3367,7 @@ const app = {
                     ${this.state.user.role === 'admin' ? `
                         <a class="menu-item" onclick="window.app.openChangelogModal(true)" style="position: relative; cursor: pointer;">
                             <i data-lucide="sparkles" style="color: #38bdf8;"></i> Novidades & Versão
-                            <span style="margin-left: auto; font-size: 0.62rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 7px; border-radius: 10px; font-weight: 800;">v80.49</span>
+                            <span style="margin-left: auto; font-size: 0.62rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 7px; border-radius: 10px; font-weight: 800;">v80.50</span>
                         </a>
                         <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')" style="position: relative;">
                             <i data-lucide="book-open"></i> Guia / Primeiros Passos
