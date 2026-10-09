@@ -1854,8 +1854,52 @@ const app = {
                 actionView: 'admin-staff'
             },
             {
-                id: 'step_services',
+                id: 'step_admin_access',
                 num: '3',
+                category: 'setup',
+                icon: '👑',
+                title: 'Níveis de Acesso: Como Criar Novos Administradores',
+                time: '2 min',
+                summary: 'Adicione sócios, gerentes ou administradores com acesso completo para gerenciar relatórios, configurações e financeiro.',
+                instructions: [
+                    'Acesse o menu <strong>Profissionais</strong> (em Cadastros).',
+                    'Clique no botão <strong>+ Novo Profissional</strong>.',
+                    'Preencha o Nome do sócio/gerente e defina um <strong>Login</strong> e <strong>Senha</strong> de acesso exclusivos para ele.',
+                    'No campo <strong>Acesso ao Sistema</strong>, selecione a opção <strong>Administrativo Total</strong>.',
+                    'Caso o administrador não preste atendimentos na cadeira (apenas gerencie), marque o campo <strong>Exibir na Agenda / Site?</strong> como <strong>Não (Invisível na Agenda)</strong>.',
+                    'Clique em <strong>Salvar Perfil</strong>. Esse usuário agora tem login administrativo independente para gerenciar faturamento, estoque e configurações com segurança.'
+                ],
+                tip: 'Evite compartilhar a mesma senha entre administradores. Cadastrar cada um individualmente garante segurança e auditoria precisa das ações no sistema.',
+                actionText: 'Gerenciar Acessos ADM',
+                actionView: 'admin-staff'
+            },
+            {
+                id: 'step_totem',
+                num: '4',
+                category: 'totem',
+                icon: '🖥️',
+                title: 'Modo Totem / Terminal da Recepção (Agendamentos & Vendas)',
+                time: '3 min',
+                summary: 'Configure um terminal ou tablet exclusivo para a recepção fazer agendamentos rápidos (encaixes) e vendas no balcão sem acessar dados financeiros confidenciais.',
+                instructions: [
+                    '<strong>Para que serve o Totem?</strong> É uma tela cheia simplificada, ideal para deixar em um tablet, totem de autoatendimento ou no computador da recepção/balcão.',
+                    '<strong>Como Cadastrar o Usuário Totem:</strong> Vá em <strong>Profissionais</strong> (menu Cadastros) e clique em <strong>+ Novo Profissional</strong>.',
+                    'Coloque o nome (ex: <em>Recepção Balcão</em> ou <em>Totem Principal</em>), defina um Login e Senha.',
+                    'No campo <strong>Acesso ao Sistema</strong>, escolha a opção <strong>Totem de Atendimento</strong>.',
+                    'No campo <strong>Exibir na Agenda / Site?</strong>, marque <strong>Não (Invisível na Agenda)</strong> para ele não aparecer como barbeiro para os clientes.',
+                    '<strong>Como a Recepção Usa o Totem:</strong> Ao fazer login com o usuário Totem, o sistema abre direto no modo terminal com 3 abas limpas:',
+                    '• <strong>Aba Agenda:</strong> A recepção visualiza todos os profissionais e faz encaixes rápidos de clientes que chegam sem agendamento prévio.',
+                    '• <strong>Aba PDV:</strong> Realiza vendas rápidas de balcão (pomadas, cervejas, cafés) com código de barras ou busca e fecha a venda na hora.',
+                    '• <strong>Aba Estoque:</strong> Consulta rápida de produtos disponíveis no estoque.',
+                    '<strong>PIN da Recepção:</strong> Em <em>Configurações > Identidade Visual</em>, você pode cadastrar um PIN de 4 a 6 dígitos para o recepcionista autorizar operações especiais com segurança.'
+                ],
+                tip: 'No computador ou tablet da recepção, pressione F11 no navegador para deixar em tela cheia sem barra de endereços, parecendo um app nativo de balcão!',
+                actionText: 'Cadastrar Usuário Totem',
+                actionView: 'admin-staff'
+            },
+            {
+                id: 'step_services',
+                num: '5',
                 category: 'setup',
                 icon: '💈',
                 title: 'Catálogo de Serviços & Duração dos Procedimentos',
@@ -1874,7 +1918,7 @@ const app = {
             },
             {
                 id: 'step_agenda',
-                num: '4',
+                num: '6',
                 category: 'agenda',
                 icon: '🗓️',
                 title: 'Como Usar a Agenda, Encaixes & Agendamentos',
@@ -1893,7 +1937,7 @@ const app = {
             },
             {
                 id: 'step_os',
-                num: '5',
+                num: '7',
                 category: 'agenda',
                 icon: '🧾',
                 title: 'Finalização de Atendimento, O.S. & Pagamentos',
@@ -1913,7 +1957,7 @@ const app = {
             },
             {
                 id: 'step_stock',
-                num: '6',
+                num: '8',
                 category: 'stock',
                 icon: '📦',
                 title: 'Controle de Produtos & Estoque',
@@ -1932,7 +1976,7 @@ const app = {
             },
             {
                 id: 'step_pdv',
-                num: '7',
+                num: '9',
                 category: 'stock',
                 icon: '🛒',
                 title: 'Ponto de Venda (PDV - Vendas Rápidas de Balcão)',
@@ -1951,7 +1995,7 @@ const app = {
             },
             {
                 id: 'step_subscriptions',
-                num: '8',
+                num: '10',
                 category: 'club',
                 icon: '⭐',
                 title: 'Clube de Assinaturas (Planos Mensais Recorrentes)',
@@ -1971,7 +2015,7 @@ const app = {
             },
             {
                 id: 'step_finance',
-                num: '9',
+                num: '11',
                 category: 'finance',
                 icon: '💰',
                 title: 'Financeiro, Fluxo de Caixa, Comissões & Ranking',
@@ -1990,7 +2034,7 @@ const app = {
             },
             {
                 id: 'step_app',
-                num: '10',
+                num: '12',
                 category: 'app',
                 icon: '🚀',
                 title: 'Instalar Aplicativo (PWA) & Compartilhar com Clientes',
@@ -2012,10 +2056,10 @@ const app = {
         const percent = Math.round((completedCount / totalSteps) * 100);
 
         container.innerHTML = `
-            <section id="admin-guide-view" class="fade-in" style="max-width: 1000px; margin: 0 auto; padding-bottom: 50px;">
+            <section id="admin-guide-view" class="fade-in" style="width: 100%; padding-bottom: 50px;">
                 
                 <!-- HEADER DO GUIA -->
-                <div class="glass" style="padding: 30px; margin-bottom: 25px; border-radius: 20px; border-left: 5px solid var(--accent-color); position: relative; overflow: hidden;">
+                <div class="glass" style="padding: 26px; margin-bottom: 25px; border-radius: 20px; border-left: 5px solid var(--accent-color); position: relative;">
                     <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
                         <div style="flex: 1; min-width: 280px;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -2045,41 +2089,45 @@ const app = {
                     </div>
 
                     <!-- BARRA DE BUSCA EM TEMPO REAL -->
-                    <div style="margin-top: 25px;">
+                    <div style="margin-top: 22px;">
                         <input type="text" id="guide-search-input" class="glass" 
                                placeholder="🔍 Digite para pesquisar uma funcionalidade (ex: horários, comissão, estoque, O.S., etc.)..." 
                                oninput="app.filterGuideCards(null, this.value)" 
                                style="width: 100%; padding: 13px 18px; font-size: 0.92rem; border-radius: 12px; color: var(--text-primary); border: 1px solid var(--glass-border); box-sizing: border-box;">
                     </div>
 
-                    <!-- ABAS / CATEGORIAS -->
-                    <div style="display: flex; gap: 8px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+                    <!-- ABAS / CATEGORIAS (FLEX-WRAP PARA NUNCA CORTAR) -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;">
                         <button class="guide-cat-btn active" data-category="all" onclick="app.filterGuideCards('all', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--accent-color); color: #000; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--accent-color); color: #000; font-weight: 700; cursor: pointer; transition: all 0.2s;">
                             ⭐ Todos (${totalSteps})
                         </button>
                         <button class="guide-cat-btn" data-category="setup" onclick="app.filterGuideCards('setup', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
-                            ⚙️ Configuração Inicial (3)
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                            ⚙️ Configuração & Acessos (4)
+                        </button>
+                        <button class="guide-cat-btn" data-category="totem" onclick="app.filterGuideCards('totem', null)" 
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                            🖥️ Recepção & Totem (1)
                         </button>
                         <button class="guide-cat-btn" data-category="agenda" onclick="app.filterGuideCards('agenda', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
                             🗓️ Agenda & Atendimento (2)
                         </button>
                         <button class="guide-cat-btn" data-category="stock" onclick="app.filterGuideCards('stock', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
                             📦 Estoque & PDV (2)
                         </button>
                         <button class="guide-cat-btn" data-category="club" onclick="app.filterGuideCards('club', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
                             ⭐ Assinaturas (1)
                         </button>
                         <button class="guide-cat-btn" data-category="finance" onclick="app.filterGuideCards('finance', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
                             💰 Financeiro (1)
                         </button>
                         <button class="guide-cat-btn" data-category="app" onclick="app.filterGuideCards('app', null)" 
-                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                                style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
                             🚀 App & Divulgação (1)
                         </button>
                     </div>
@@ -2220,19 +2268,49 @@ const app = {
 
         container.innerHTML = `
             <section id="admin-settings" class="fade-in">
+                <style>
+                    @keyframes guide-pulse-glow {
+                        0% {
+                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+                            transform: scale(1);
+                        }
+                        50% {
+                            box-shadow: 0 0 18px 5px rgba(56, 189, 248, 0.4);
+                            transform: scale(1.03);
+                        }
+                        100% {
+                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+                            transform: scale(1);
+                        }
+                    }
+                    @keyframes guide-rocket-wiggle {
+                        0%, 100% { transform: rotate(0deg) scale(1); }
+                        25% { transform: rotate(-12deg) scale(1.15); }
+                        75% { transform: rotate(12deg) scale(1.15); }
+                    }
+                    .btn-guide-pulse {
+                        animation: guide-pulse-glow 2.4s infinite ease-in-out !important;
+                        transition: all 0.25s ease !important;
+                    }
+                    .btn-guide-pulse:hover {
+                        transform: scale(1.05) !important;
+                    }
+                </style>
+
                 <h2 class="section-title" style="margin-bottom: 20px;">⚙️ Configurações do Sistema</h2>
 
                 <!-- BANNER: Guia do Sistema & Passo a Passo -->
                 <div class="glass" style="padding: 18px 22px; margin-bottom: 25px; border-left: 4px solid #38bdf8; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; background: rgba(56, 189, 248, 0.08); border-radius: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 260px;">
-                        <span style="font-size: 2rem;">🚀</span>
+                        <span style="font-size: 2.2rem; animation: guide-rocket-wiggle 2s infinite ease-in-out; display: inline-block;">🚀</span>
                         <div>
-                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700;">Novo por aqui? Veja o Passo a Passo do Sistema</h4>
-                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4;">Aprenda a configurar seus horários, equipe, catálogo e usar cada função de forma simples e rápida.</p>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700;">Novo por aqui? Veja os Primeiros Passos do Sistema</h4>
+                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4;">Aprenda a configurar seus horários, equipe, modo totem, acessos ADM e usar cada função.</p>
                         </div>
                     </div>
-                    <button class="btn-primary" style="padding: 10px 20px; font-size: 0.82rem; background: #38bdf8; color: #000; font-weight: 800; border-radius: 8px; cursor: pointer; white-space: nowrap;" onclick="app.navigateTo('admin-guide')">
-                        📖 Abrir Guia do Sistema ➔
+                    <button class="btn-primary btn-guide-pulse" style="padding: 11px 22px; font-size: 0.84rem; background: #38bdf8; color: #000; font-weight: 800; border-radius: 10px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;" onclick="app.navigateTo('admin-guide')">
+                        <span>📖 Primeiros Passos & Guia</span>
+                        <span>➔</span>
                     </button>
                 </div>
 
@@ -3076,8 +3154,9 @@ const app = {
 
                     <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
-                        <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')">
-                            <i data-lucide="book-open"></i> Guia do Sistema
+                        <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')" style="position: relative;">
+                            <i data-lucide="book-open"></i> Guia / Primeiros Passos
+                            <span style="margin-left: auto; font-size: 0.62rem; background: #38bdf8; color: #000; padding: 2px 7px; border-radius: 10px; font-weight: 800; letter-spacing: 0.5px;">GUIA</span>
                         </a>
                         <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="window.app.navigateTo('admin-settings')">
                             <i data-lucide="settings"></i> Configurações
@@ -5311,9 +5390,47 @@ const app = {
             }
 
             container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
+                <style>
+                    @keyframes guide-pulse-glow {
+                        0% {
+                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+                            border-color: rgba(56, 189, 248, 0.5);
+                            transform: scale(1);
+                        }
+                        50% {
+                            box-shadow: 0 0 16px 4px rgba(56, 189, 248, 0.4);
+                            border-color: #38bdf8;
+                            transform: scale(1.03);
+                        }
+                        100% {
+                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+                            border-color: rgba(56, 189, 248, 0.5);
+                            transform: scale(1);
+                        }
+                    }
+                    @keyframes guide-rocket-wiggle {
+                        0%, 100% { transform: rotate(0deg) scale(1); }
+                        25% { transform: rotate(-12deg) scale(1.15); }
+                        75% { transform: rotate(12deg) scale(1.15); }
+                    }
+                    .btn-guide-pulse {
+                        animation: guide-pulse-glow 2.4s infinite ease-in-out !important;
+                        background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(14, 165, 233, 0.35) 100%) !important;
+                        color: #38bdf8 !important;
+                        border: 1px solid rgba(56, 189, 248, 0.7) !important;
+                        transition: all 0.25s ease !important;
+                    }
+                    .btn-guide-pulse:hover {
+                        background: #38bdf8 !important;
+                        color: #000 !important;
+                        box-shadow: 0 0 20px rgba(56, 189, 248, 0.8) !important;
+                        transform: scale(1.05) !important;
+                    }
+                </style>
                 <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <button class="glass" style="padding: 8px 16px; font-size: 0.78rem; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; border-radius: 8px;" onclick="app.navigateTo('admin-guide')">
-                        📖 Guia do Sistema & Passo a Passo
+                    <button class="btn-guide-pulse" style="padding: 9px 18px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 10px;" onclick="app.navigateTo('admin-guide')">
+                        <span style="font-size: 1.15rem; animation: guide-rocket-wiggle 1.8s infinite ease-in-out; display: inline-block;">🚀</span>
+                        <span>Primeiros Passos & Guia</span>
                     </button>
                     <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal; border-radius: 8px;" onclick="app.repairToday()">
                         🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
