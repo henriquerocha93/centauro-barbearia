@@ -6723,12 +6723,46 @@ const app = {
                        </div>`
                 ) : ''}
                 
-                <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 4px solid var(--accent-color);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
-                        <span style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
-                            ${finalAptPrice === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}`}
+                <!-- Bloco de Ajuste de Valor do Serviço (a partir de / variável) -->
+                <div style="margin-bottom: 15px; padding: 14px; background: var(--surface-light); border: 1px solid var(--glass-border); border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">
+                            ✂️ Valor do Serviço
+                        </label>
+                        <span style="font-size: 0.72rem; color: var(--accent-readable); font-weight: 700; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">
+                            ✏️ Editável (ex: a partir de)
                         </span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${apt.service}">
+                        ${apt.service}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1rem; font-weight: 800; color: var(--text-secondary);">R$</span>
+                        <input type="number" 
+                               id="final-service-price" 
+                               class="glass" 
+                               style="flex: 1; padding: 10px 14px; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); border: 1px solid var(--accent-color) !important; border-radius: 8px;" 
+                               value="${(parseFloat(finalAptPrice) || 0).toFixed(2)}" 
+                               step="0.50" 
+                               min="0"
+                               placeholder="0.00"
+                               oninput="app.updateFinalizeOSTotal(${apt.id})">
+                    </div>
+                    <small style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
+                        💡 Altere o valor acima caso o serviço seja variável ("a partir de") ou tenha cobrança adicional.
+                    </small>
+                </div>
+
+                <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-light); border: 1px solid var(--glass-border); border-radius: 10px; border-left: 4px solid var(--accent-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 600;">Total a Pagar (O.S.):</span>
+                        <span id="final-os-total-display" style="font-size: 1.5rem; color: var(--text-primary); font-weight: 800;">
+                            ${finalTotal === 0 && isActiveSubscriber ? '<span style="color:#10b981; font-size: 1.2rem;">Plano / Isento</span>' : `R$ ${(parseFloat(finalTotal) || 0).toFixed(2)}`}
+                        </span>
+                    </div>
+                    <div id="final-os-breakdown" style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--glass-border);">
+                        <span id="final-os-service-subtotal">Serviço: R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}</span>
+                        <span id="final-os-product-subtotal">+ Produtos: R$ ${totalProducts.toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -6802,9 +6836,60 @@ const app = {
         `);
     },
 
+    updateFinalizeOSTotal(aptId) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return;
+
+        const priceInput = document.getElementById('final-service-price');
+        const newServicePrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
+
+        const totalProducts = (apt.products || []).reduce((sum, p) => sum + ((parseFloat(p.price) || 0) * (p.qty || 1)), 0);
+        const newTotal = newServicePrice + totalProducts;
+
+        // Atualiza display do Total a Pagar
+        const totalDisplay = document.getElementById('final-os-total-display');
+        if (totalDisplay) {
+            totalDisplay.innerHTML = `R$ ${newTotal.toFixed(2)}`;
+        }
+
+        const serviceSubtotal = document.getElementById('final-os-service-subtotal');
+        if (serviceSubtotal) {
+            serviceSubtotal.innerHTML = `Serviço: R$ ${newServicePrice.toFixed(2)}`;
+        }
+
+        const productSubtotal = document.getElementById('final-os-product-subtotal');
+        if (productSubtotal) {
+            productSubtotal.innerHTML = `+ Produtos: R$ ${totalProducts.toFixed(2)}`;
+        }
+
+        // Atualiza texto do split payment (se visível)
+        const splitTotalText = document.querySelector('#split-payment-wrapper p strong');
+        if (splitTotalText) {
+            splitTotalText.innerHTML = `R$ ${newTotal.toFixed(2)}`;
+        }
+
+        // Atualiza select onchange e split remainder se aplicável
+        const selectPayment = document.getElementById('final-payment');
+        if (selectPayment) {
+            selectPayment.setAttribute('onchange', `document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${newTotal})`);
+            if (selectPayment.value === 'Misto') {
+                this.updateSplitRemainder(newTotal);
+            }
+        }
+    },
+
     addProductToOS(aptId) {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
+        const priceInput = document.getElementById('final-service-price');
+        if (priceInput && apt) {
+            const pVal = parseFloat(priceInput.value);
+            if (!isNaN(pVal) && pVal >= 0) {
+                apt.price = pVal;
+                apt._originalPrice = pVal;
+            }
+        }
         const productId = Number(document.getElementById('os-product-select').value);
         const qtyToAdd = Number(document.getElementById('os-product-qty').value) || 1;
         if (!productId || qtyToAdd < 1) return;
@@ -6838,6 +6923,14 @@ const app = {
     removeProductFromOS(aptId, index) {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
+        const priceInput = document.getElementById('final-service-price');
+        if (priceInput && apt) {
+            const pVal = parseFloat(priceInput.value);
+            if (!isNaN(pVal) && pVal >= 0) {
+                apt.price = pVal;
+                apt._originalPrice = pVal;
+            }
+        }
         apt.products.splice(index, 1);
         this.openFinalizeOS(aptId);
     },
@@ -6860,6 +6953,19 @@ const app = {
             return;
         }
 
+        // ── Lê o valor ajustado do serviço se fornecido ──
+        const servicePriceInput = document.getElementById('final-service-price');
+        if (servicePriceInput) {
+            const parsedPrice = parseFloat(servicePriceInput.value);
+            if (!isNaN(parsedPrice) && parsedPrice >= 0) {
+                apt.price = parsedPrice;
+                apt._originalPrice = parsedPrice;
+                if (!apt.commissionBase || apt.commissionBase === apt.price || apt.commissionBase === (parseFloat(apt._originalPrice) || 0)) {
+                    apt.commissionBase = parsedPrice;
+                }
+            }
+        }
+
         // ── PROTEÇÃO 3: Desabilita botão para evitar duplo clique ──
         const btnFinalizar = document.querySelector('[onclick*="doFinalizeOS"]');
         if (btnFinalizar) {
@@ -6875,9 +6981,18 @@ const app = {
         const payment = document.getElementById('final-payment').value;
         const tip = parseFloat(document.getElementById('final-tip').value) || 0;
         const customerName = document.getElementById('final-cust-name').value;
+        if (customerName) {
+            apt.customer = customerName;
+        }
 
         if (!payment) {
             alert('Por favor, selecione uma forma de pagamento.');
+            if (btnFinalizar) {
+                btnFinalizar.disabled = false;
+                btnFinalizar.style.opacity = '1';
+                btnFinalizar.textContent = 'Concluir e Receber';
+            }
+            apt.status = 'agendado';
             return;
         }
 
