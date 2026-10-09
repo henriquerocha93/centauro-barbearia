@@ -344,9 +344,14 @@ const app = {
         root.style.setProperty('--on-bg', this.getContrastColor(bgColor));
     },
 
-    openModal(title, contentHTML) {
+    openModal(title, contentHTML, customMaxWidth = null) {
         console.log('Abrindo modal:', title);
         const modal = document.getElementById('app-modal');
+        if (customMaxWidth) {
+            modal.style.maxWidth = customMaxWidth;
+        } else {
+            modal.style.maxWidth = '400px';
+        }
         modal.innerHTML = `
             <div class="modal-header">
                 <h3>${title}</h3>
@@ -359,7 +364,14 @@ const app = {
     },
 
     closeModal() {
-        document.getElementById('app-modal').close();
+        if (this._isChangelogModalOpen) {
+            this.markChangelogSeen(false);
+        }
+        const modal = document.getElementById('app-modal');
+        if (modal) {
+            modal.style.maxWidth = '400px';
+            modal.close();
+        }
     },
 
     getTenantId() {
@@ -1604,6 +1616,11 @@ const app = {
         
         this.render(initialView);
 
+        // [CHANGELOG] Verificar se há novidades e atualizações para o ADM
+        if (this.state.user && this.state.user.role === 'admin') {
+            setTimeout(() => this.checkAdminChangelog(), 900);
+        }
+
         // [MASTER IMPERSONATE] Se há master_token na URL, validar async após o Firebase estar pronto
         if (hasMasterToken) {
             // Aguardar um breve delay para o Firebase estar inicializado
@@ -1743,6 +1760,191 @@ const app = {
         this.saveState();
         this.closeModal();
         this.render(this.state.view);
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
+    // ══════════════════════════════════════════════════════════════
+    CURRENT_SYSTEM_VERSION: '80.49',
+
+    SYSTEM_CHANGELOG: [
+        {
+            version: '80.49',
+            date: '09/10/2026',
+            title: 'Central de Novidades & Melhorias de Usabilidade',
+            badge: 'Recente',
+            highlights: [
+                {
+                    icon: 'bell-ring',
+                    title: 'Aviso Automático de Novidades & Atualizações',
+                    desc: 'Balão automático exibido na abertura do app para administradores sempre que uma nova versão ou recurso for lançado no sistema.',
+                    badge: 'NOVO'
+                },
+                {
+                    icon: 'book-open',
+                    title: 'Guia Completo & Passo a Passo do Sistema',
+                    desc: 'Roteiro prático com 12 etapas estruturadas, tempo estimado, checklist interativo de progresso e barra de pesquisa dinâmica.',
+                    badge: 'NOVO'
+                },
+                {
+                    icon: 'monitor-smartphone',
+                    title: 'Modo Totem / Recepção Simplificada',
+                    desc: 'Guia detalhado para ativar o totem em tablets ou computadores de balcão para agendamentos rápidos e vendas diretas com segurança.',
+                    badge: 'GUIA'
+                },
+                {
+                    icon: 'user-plus',
+                    title: 'Criação de Novos Acessos Administrativos',
+                    desc: 'Instruções claras para adicionar sócios e gerentes com permissão de gestão total nas configurações.',
+                    badge: 'GUIA'
+                },
+                {
+                    icon: 'sliders-horizontal',
+                    title: 'Serviços "A partir de:" Configurável',
+                    desc: 'Opção em Configurações > Atendimento para habilitar ou desabilitar edição flexível de preço ao finalizar ordens de serviço.',
+                    badge: 'AJUSTE'
+                },
+                {
+                    icon: 'sparkles',
+                    title: 'Botão de Primeiros Passos Animado & Responsividade',
+                    desc: 'Destaque visual luminoso com efeito pulsar na tela inicial e prevenção de cortes em telas menores de celulares.',
+                    badge: 'VISUAL'
+                }
+            ]
+        },
+        {
+            version: '80.48',
+            date: '08/10/2026',
+            title: 'Melhorias de Visualização & Agenda',
+            badge: 'Anterior',
+            highlights: [
+                {
+                    icon: 'calendar',
+                    title: 'Contraste Aprimorado nas Linhas da Agenda',
+                    desc: 'Linhas divisórias cinzas e legibilidade das cores de agendamentos revisadas para desktop e mobile.'
+                },
+                {
+                    icon: 'layout',
+                    title: 'Ajuste de Largura & Centralização',
+                    desc: 'Preenchimento fluido de telas largas e centralização harmônica em monitores de alta resolução.'
+                }
+            ]
+        }
+    ],
+
+    checkAdminChangelog(force = false) {
+        if (!this.state.user || this.state.user.role !== 'admin') return;
+        if (this._hasCheckedChangelogSession && !force) return;
+        this._hasCheckedChangelogSession = true;
+
+        let lastSeen = null;
+        try {
+            lastSeen = localStorage.getItem('centauro_last_seen_changelog_version');
+        } catch (e) {
+            console.warn('Erro ao ler versão vista:', e);
+        }
+
+        if (force || !lastSeen || lastSeen !== this.CURRENT_SYSTEM_VERSION) {
+            setTimeout(() => {
+                if (this.state.user && this.state.user.role === 'admin') {
+                    this.openChangelogModal(force);
+                }
+            }, 600);
+        }
+    },
+
+    openChangelogModal(force = false) {
+        if (!this.state.user || this.state.user.role !== 'admin') return;
+        this._isChangelogModalOpen = true;
+
+        const currentChangelog = this.SYSTEM_CHANGELOG[0] || {};
+        const previousChangelogs = this.SYSTEM_CHANGELOG.slice(1);
+
+        const contentHTML = `
+            <div style="padding: 18px 20px 22px;">
+                <!-- Header Visual do Balão -->
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--glass-border);">
+                    <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.1)); border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15);">
+                        🚀
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: #38bdf8; color: #000; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; letter-spacing: 0.5px;">VERSÃO ${currentChangelog.version || this.CURRENT_SYSTEM_VERSION}</span>
+                            <span style="font-size: 0.72rem; color: var(--text-secondary);">${currentChangelog.date || ''}</span>
+                        </div>
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 4px 0 0; line-height: 1.3;">
+                            ${currentChangelog.title || 'Novidades & Atualizações do Sistema'}
+                        </h4>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.45;">
+                    Seu sistema foi atualizado! Confira abaixo as novas funcionalidades, integrações e melhorias disponíveis para seu acesso administrativo:
+                </p>
+
+                <!-- Cards com Destaques -->
+                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 330px; overflow-y: auto; padding-right: 4px; margin-bottom: 18px;">
+                    ${(currentChangelog.highlights || []).map(item => `
+                        <div style="display: flex; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 12px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                <i data-lucide="${item.icon || 'sparkles'}" style="width: 17px; height: 17px;"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px; flex-wrap: wrap;">
+                                    <strong style="font-size: 0.88rem; color: var(--text-primary);">${item.title}</strong>
+                                    ${item.badge ? `<span style="font-size: 0.6rem; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 1px 6px; border-radius: 6px; font-weight: 800;">${item.badge}</span>` : ''}
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">${item.desc}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                ${previousChangelogs.length > 0 ? `
+                    <details style="margin-bottom: 18px; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px dashed var(--glass-border); padding-top: 12px;">
+                        <summary style="cursor: pointer; font-weight: 600; color: #38bdf8; user-select: none;">
+                            📜 Ver atualizações anteriores (${previousChangelogs.map(p => 'v' + p.version).join(', ')})
+                        </summary>
+                        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                            ${previousChangelogs.map(prev => `
+                                <div style="padding: 10px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                                        v${prev.version} — <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal;">${prev.date}</span>
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 0.78rem; line-height: 1.4;">
+                                        ${(prev.highlights || []).map(h => `<li style="margin-bottom: 3px;"><strong>${h.title}:</strong> ${h.desc}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </details>
+                ` : ''}
+
+                <!-- Rodapé de Ações -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--glass-border); padding-top: 16px;">
+                    <button class="btn-secondary" style="flex: 1; min-width: 140px; font-size: 0.85rem; padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="app.closeModal(); app.navigateTo('admin-guide');">
+                        <i data-lucide="book-open" style="width: 16px; height: 16px;"></i> Guia Passo a Passo
+                    </button>
+                    <button class="btn-primary" style="flex: 1; min-width: 160px; font-size: 0.85rem; padding: 10px 18px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="app.markChangelogSeen();">
+                        <i data-lucide="check" style="width: 16px; height: 16px;"></i> Entendi, Continuar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.openModal('📢 Novidades do Sistema', contentHTML, '560px');
+    },
+
+    markChangelogSeen(shouldClose = true) {
+        try {
+            localStorage.setItem('centauro_last_seen_changelog_version', this.CURRENT_SYSTEM_VERSION);
+        } catch (e) {
+            console.warn('Erro ao salvar versão vista:', e);
+        }
+        this._isChangelogModalOpen = false;
+        if (shouldClose) {
+            this.closeModal();
+        }
     },
 
     toggleGuideCheck(stepId) {
@@ -2979,6 +3181,10 @@ const app = {
             return;
         }
 
+        if (this.state.user?.role === 'admin') {
+            this.checkAdminChangelog();
+        }
+
         const appContainer = document.getElementById('app');
         const s = this.state.settings || {};
         const shopName = s.shopName || 'Agendamento Fácil BR';
@@ -3154,6 +3360,10 @@ const app = {
 
                     <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item" onclick="window.app.openChangelogModal(true)" style="position: relative; cursor: pointer;">
+                            <i data-lucide="sparkles" style="color: #38bdf8;"></i> Novidades & Versão
+                            <span style="margin-left: auto; font-size: 0.62rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 7px; border-radius: 10px; font-weight: 800;">v80.49</span>
+                        </a>
                         <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')" style="position: relative;">
                             <i data-lucide="book-open"></i> Guia / Primeiros Passos
                             <span style="margin-left: auto; font-size: 0.62rem; background: #38bdf8; color: #000; padding: 2px 7px; border-radius: 10px; font-weight: 800; letter-spacing: 0.5px;">GUIA</span>
@@ -5125,6 +5335,7 @@ const app = {
 
                 if (matchedUser.role === 'admin') {
                     this.navigateTo('admin-dash');
+                    setTimeout(() => this.checkAdminChangelog(), 700);
                 } else if (matchedUser.role === 'totem') {
                     this.navigateTo('totem-dash');
                 } else {
@@ -5428,10 +5639,16 @@ const app = {
                     }
                 </style>
                 <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <button class="btn-guide-pulse" style="padding: 9px 18px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 10px;" onclick="app.navigateTo('admin-guide')">
-                        <span style="font-size: 1.15rem; animation: guide-rocket-wiggle 1.8s infinite ease-in-out; display: inline-block;">🚀</span>
-                        <span>Primeiros Passos & Guia</span>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-guide-pulse" style="padding: 9px 18px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 10px;" onclick="app.navigateTo('admin-guide')">
+                            <span style="font-size: 1.15rem; animation: guide-rocket-wiggle 1.8s infinite ease-in-out; display: inline-block;">🚀</span>
+                            <span>Primeiros Passos & Guia</span>
+                        </button>
+                        <button class="glass" style="padding: 9px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; border-radius: 10px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);" onclick="app.openChangelogModal(true)">
+                            <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+                            <span>Novidades (v80.49)</span>
+                        </button>
+                    </div>
                     <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal; border-radius: 8px;" onclick="app.repairToday()">
                         🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
