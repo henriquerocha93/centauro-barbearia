@@ -1745,6 +1745,431 @@ const app = {
         this.render(this.state.view);
     },
 
+    toggleGuideCheck(stepId) {
+        if (!this.state.guideChecklist) this.state.guideChecklist = {};
+        this.state.guideChecklist[stepId] = !this.state.guideChecklist[stepId];
+        this.saveState();
+        const main = document.getElementById('main-content');
+        if (main && (this.state.view === 'admin-guide' || document.getElementById('admin-guide-view'))) {
+            this.renderAdminGuide(main);
+        }
+    },
+
+    filterGuideCards(category = null, query = null) {
+        const cards = document.querySelectorAll('.guide-card');
+        const q = (query !== null && query !== undefined ? query : (document.getElementById('guide-search-input')?.value || '')).toLowerCase().trim();
+        const activeBtn = document.querySelector('.guide-cat-btn.active');
+        let currentCat = category !== null && category !== undefined ? category : (activeBtn ? activeBtn.dataset.category : 'all');
+
+        if (category !== null && category !== undefined) {
+            document.querySelectorAll('.guide-cat-btn').forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--accent-color)';
+                    btn.style.color = '#000';
+                    btn.style.fontWeight = '700';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.background = 'var(--surface-dark)';
+                    btn.style.color = 'var(--text-secondary)';
+                    btn.style.fontWeight = '500';
+                }
+            });
+        }
+
+        let visible = 0;
+        cards.forEach(card => {
+            const cardCat = card.dataset.category || 'all';
+            const cardText = card.textContent.toLowerCase();
+            const matchCat = currentCat === 'all' || cardCat === currentCat;
+            const matchQuery = !q || cardText.includes(q);
+
+            if (matchCat && matchQuery) {
+                card.style.display = 'block';
+                visible++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const empty = document.getElementById('guide-empty-state');
+        if (empty) {
+            empty.style.display = visible === 0 ? 'block' : 'none';
+        }
+    },
+
+    renderAdminGuide(container) {
+        if (!this.state.user || this.state.user.role !== 'admin') {
+            container.innerHTML = `
+                <div class="glass fade-in" style="padding: 40px 20px; text-align: center; max-width: 500px; margin: 40px auto; border-radius: 16px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 8px;">Acesso Exclusivo para Administrador</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Este guia prático e manual de configurações é restrito a administradores do sistema.</p>
+                    <button class="btn-primary" style="margin-top: 20px; padding: 10px 24px;" onclick="app.navigateTo('barber-dash')">Ir para Minha Agenda</button>
+                </div>
+            `;
+            return;
+        }
+
+        const checklist = this.state.guideChecklist || {};
+        const steps = [
+            {
+                id: 'step_settings',
+                num: '1',
+                category: 'setup',
+                icon: '⚙️',
+                title: 'Configurações da Loja, Horários & Preço Variável',
+                time: '2 min',
+                summary: 'Personalize horários de funcionamento, telefone/WhatsApp de contato, endereço, imagem de capa e regras de preços.',
+                instructions: [
+                    'Acesse o menu lateral em <strong>Configurações</strong>.',
+                    'Em <strong>Horários de Funcionamento</strong>, ative os dias que o estabelecimento abre e defina os horários de abertura e fechamento.',
+                    'Defina o <strong>Intervalo padrão da agenda</strong> (ex: a cada 30 min ou 60 min).',
+                    'Em <strong>Identidade Visual</strong>, preencha o Nome, WhatsApp comercial e Endereço com CEP.',
+                    'Escolha a cor principal da sua marca e a imagem de capa (Hero).',
+                    'Em <strong>Serviços com valor "A partir de:"</strong>: deixe <em>Habilitado</em> caso seus serviços tenham preço flexível para edição na O.S., ou <em>Desabilitado</em> se os preços forem rígidos.',
+                    'Role até o fim da página e clique no botão verde <strong>Salvar Alterações</strong>.'
+                ],
+                tip: 'O WhatsApp configurado aqui é utilizado como canal oficial de suporte e contato com os clientes da sua barbearia/salão.',
+                actionText: 'Ir para Configurações',
+                actionView: 'admin-settings'
+            },
+            {
+                id: 'step_staff',
+                num: '2',
+                category: 'setup',
+                icon: '👥',
+                title: 'Cadastro da Equipe de Profissionais & Comissões',
+                time: '2 min',
+                summary: 'Cadastre seus colaboradores, configure percentuais de comissão automáticos e crie logins protegidos por PIN.',
+                instructions: [
+                    'Acesse o menu <strong>Profissionais</strong> (dentro de Cadastros).',
+                    'Clique no botão <strong>+ Novo Profissional</strong>.',
+                    'Preencha o nome, telefone e foto/avatar do colaborador.',
+                    'Defina a <strong>Comissão sobre Serviços (%)</strong> (ex: 50%) e sobre <strong>Produtos (%)</strong> (ex: 10%). O sistema rateia e calcula tudo automaticamente a cada serviço concluído!',
+                    'Crie um <strong>PIN de Acesso (4 dígitos)</strong>: cada profissional usará esse PIN para fazer login no próprio celular e acompanhar a sua agenda individual e faturamento.'
+                ],
+                tip: 'Ao logar com o PIN individual, o profissional só tem acesso à sua própria agenda e seus próprios valores, garantindo privacidade e controle total à administração.',
+                actionText: 'Gerenciar Profissionais',
+                actionView: 'admin-staff'
+            },
+            {
+                id: 'step_services',
+                num: '3',
+                category: 'setup',
+                icon: '💈',
+                title: 'Catálogo de Serviços & Duração dos Procedimentos',
+                time: '2 min',
+                summary: 'Cadastre todos os procedimentos oferecidos, valores e tempos de duração para montagem automática da agenda.',
+                instructions: [
+                    'Acesse o menu <strong>Serviços</strong> (dentro de Cadastros).',
+                    'Clique no botão <strong>+ Novo Serviço</strong>.',
+                    'Informe o nome do procedimento (ex: <em>Corte Degradê, Barboterapia, Sobrancelha, Hidratação</em>).',
+                    'Informe o <strong>Preço (R$)</strong> e a <strong>Duração estimada em minutos</strong> (ex: 30 min, 45 min).',
+                    'A duração é fundamental: o sistema calcula os intervalos livres automaticamente na agenda online do cliente para evitar choques de horário.'
+                ],
+                tip: 'O cliente pode selecionar múltiplos serviços de uma vez pelo link de agendamento online (ex: Cabelo + Barba). O sistema soma o tempo e o valor automaticamente!',
+                actionText: 'Cadastrar Serviços',
+                actionView: 'admin-services'
+            },
+            {
+                id: 'step_agenda',
+                num: '4',
+                category: 'agenda',
+                icon: '🗓️',
+                title: 'Como Usar a Agenda, Encaixes & Agendamentos',
+                time: '3 min',
+                summary: 'Gerencie os agendamentos online dos clientes, faça encaixes rápidos presenciais e acompanhe o fluxo da recepção.',
+                instructions: [
+                    'Acesse o menu <strong>Agenda</strong> no menu lateral.',
+                    '<strong>Agendamentos Online:</strong> Quando o cliente marca pelo link do seu site, o horário aparece instantaneamente na coluna do profissional correspondente.',
+                    '<strong>Encaixe Presencial ("Walk-in"):</strong> Se o cliente chegou na hora sem agendar, clique no botão <strong>Encaixe</strong> no topo da agenda. Escolha o cliente, os procedimentos e o profissional.',
+                    '<strong>Navegação de Datas:</strong> Alterne as datas no calendário no topo da agenda para consultar os agendamentos de qualquer dia.',
+                    '<strong>Ações no Agendamento:</strong> Clique sobre qualquer card de agendamento para ver os detalhes, reagendar de horário ou cancelar.'
+                ],
+                tip: 'A visão da Agenda Geral exibe colunas simultâneas para cada profissional da equipe, permitindo saber quem está livre ou em atendimento em tempo real.',
+                actionText: 'Abrir Agenda Geral',
+                actionView: 'admin-dash'
+            },
+            {
+                id: 'step_os',
+                num: '5',
+                category: 'agenda',
+                icon: '🧾',
+                title: 'Finalização de Atendimento, O.S. & Pagamentos',
+                time: '3 min',
+                summary: 'Encerre o atendimento, lance produtos consumidos, aplique benefícios do Clube de Assinaturas e finalize a comanda.',
+                instructions: [
+                    'Quando o profissional terminar o atendimento, clique no botão <strong>Finalizar</strong> no card do agendamento (ou acesse o menu <strong>O.S.</strong>).',
+                    '<strong>Ajuste de Preço:</strong> Caso a opção "A partir de:" esteja ativa, você pode ajustar o valor final do serviço se houver cobrança extra.',
+                    '<strong>Consumo de Produtos:</strong> O cliente comprou uma bebida ou produto de beleza? Selecione o produto no campo de consumo e adicione na comanda.',
+                    '<strong>Clube de Assinaturas:</strong> Se o cliente for membro ativo do Clube, o sistema identifica e aplica a isenção dos serviços inclusos automaticamente!',
+                    '<strong>Forma de Pagamento:</strong> Selecione PIX, Dinheiro, Cartão de Crédito/Débito, Vale ou Pagamento Dividido.',
+                    'Ao confirmar, a comissão do colaborador é computada na hora e o valor alimenta o Fluxo de Caixa do dia.'
+                ],
+                tip: 'No menu Ordens de Serviço (O.S.), você pode pesquisar o histórico de atendimentos anteriores, reimprimir comprovantes e auditar comandas.',
+                actionText: 'Ver Ordens de Serviço',
+                actionView: 'admin-os'
+            },
+            {
+                id: 'step_stock',
+                num: '6',
+                category: 'stock',
+                icon: '📦',
+                title: 'Controle de Produtos & Estoque',
+                time: '2 min',
+                summary: 'Cadastre mercadorias de revenda (pomadas, óleos, bebidas) e produtos de consumo interno com baixa automática.',
+                instructions: [
+                    'Acesse o menu <strong>Estoque</strong> (em Cadastros).',
+                    'Clique no botão <strong>+ Novo Produto</strong>.',
+                    'Informe o nome do item, preço de custo, preço de venda e quantidade atual em estoque.',
+                    'Sempre que um produto for vendido no PDV ou na comanda de um cliente (O.S.), a quantidade em estoque é abatida automaticamente.',
+                    'Acompanhe o relatório para identificar produtos que precisam de reposição antes de acabarem.'
+                ],
+                tip: 'Você também pode usar a câmera do celular ou leitor de código de barras para dar baixa ou consultar produtos rapidamente.',
+                actionText: 'Gerenciar Estoque',
+                actionView: 'admin-stock'
+            },
+            {
+                id: 'step_pdv',
+                num: '7',
+                category: 'stock',
+                icon: '🛒',
+                title: 'Ponto de Venda (PDV - Vendas Rápidas de Balcão)',
+                time: '2 min',
+                summary: 'Realize vendas expressas no balcão de produtos ou serviços rápidos sem precisar criar um agendamento na agenda.',
+                instructions: [
+                    'Acesse o menu <strong>Vendas (PDV)</strong>.',
+                    'Clique sobre os produtos ou serviços na tela para adicioná-los à comanda de venda.',
+                    'Indique se houve venda/atendimento por algum profissional específico para ratear comissões.',
+                    'Escolha a forma de pagamento e finalize a venda em segundos.',
+                    'O caixa do dia e o estoque são atualizados imediatamente.'
+                ],
+                tip: 'O PDV é perfeito para atender clientes que entram na barbearia/salão apenas para comprar uma cera, um café ou um produto.',
+                actionText: 'Abrir PDV',
+                actionView: 'pdv'
+            },
+            {
+                id: 'step_subscriptions',
+                num: '8',
+                category: 'club',
+                icon: '⭐',
+                title: 'Clube de Assinaturas (Planos Mensais Recorrentes)',
+                time: '3 min',
+                summary: 'Crie planos de assinatura mensal para seus clientes fiéis, gerando receita fixa previsível no início de cada mês.',
+                instructions: [
+                    'Acesse o menu <strong>Assinaturas</strong> (em Cadastros).',
+                    'Clique em <strong>+ Novo Plano</strong>.',
+                    'Defina o nome do plano (ex: <em>Clube do Corte VIP - R$ 89,90/mês</em> ou <em>Cabelo + Barba 2x/mês</em>).',
+                    'Marque quais serviços do seu catálogo estão inclusos no pacote.',
+                    'Cadastre os clientes assinantes no menu e defina a data de vencimento da mensalidade.',
+                    'Ao atender um assinante, ao clicar em Finalizar o sistema já reconhece a assinatura e aplica a isenção dos serviços inclusos!'
+                ],
+                tip: 'Clubes de assinaturas chegam a triplicar a retenção de clientes e garantem dinheiro em caixa mesmo em semanas de menor movimento!',
+                actionText: 'Configurar Assinaturas',
+                actionView: 'admin-subscriptions'
+            },
+            {
+                id: 'step_finance',
+                num: '9',
+                category: 'finance',
+                icon: '💰',
+                title: 'Financeiro, Fluxo de Caixa, Comissões & Ranking',
+                time: '2 min',
+                summary: 'Acompanhe a saúde financeira da empresa: entradas diárias, fechamento de comissões, faturamento e desempenho da equipe.',
+                instructions: [
+                    '<strong>Fluxo de Caixa:</strong> Monitore as entradas do dia por forma de pagamento (PIX, Cartão, Dinheiro), faça sangrias ou lançamentos de despesas.',
+                    '<strong>Faturamento Global:</strong> Visualize o faturamento total acumulado, ticket médio por cliente e gráficos de evolução.',
+                    '<strong>Ranking da Equipe:</strong> Veja quais profissionais mais produziram e geraram receita no mês.',
+                    '<strong>Vales & Adiantamentos:</strong> Registre vales para os profissionais para desconto automático na hora do acerto.',
+                    '<strong>Auditoria de Pagamentos:</strong> Histórico de todas as transações finalizadas com detalhes de taxas e formas de pagamento.'
+                ],
+                tip: 'Use o botão de gerar PDF para exportar os relatórios financeiros de fechamento do mês com total transparência para a equipe.',
+                actionText: 'Ver Fluxo de Caixa',
+                actionView: 'admin-cashflow'
+            },
+            {
+                id: 'step_app',
+                num: '10',
+                category: 'app',
+                icon: '🚀',
+                title: 'Instalar Aplicativo (PWA) & Compartilhar com Clientes',
+                time: '1 min',
+                summary: 'Instale o sistema como aplicativo no seu celular ou tablet e divulgue o link de agendamento para os clientes.',
+                instructions: [
+                    '<strong>Instalar o App (PWA):</strong> No menu lateral, clique em <strong>Criar App</strong> ou, pelo navegador do celular (Chrome/Safari), toque em <em>Compartilhar > Adicionar à Tela de Início</em>. O sistema abre como um aplicativo nativo instalado!',
+                    '<strong>Divulgar seu Link de Agendamento:</strong> Copie o endereço do site do seu estabelecimento e coloque na Bio do Instagram da sua barbearia/salão e nas mensagens automáticas do WhatsApp.',
+                    '<strong>Sincronização em Nuvem:</strong> Todas as alterações feitas em um aparelho aparecem imediatamente nos celulares de toda a equipe sem necessidade de atualização manual!'
+                ],
+                tip: 'Imprima um display com QR Code no balcão da sua recepção com o link do seu site para que novos clientes agendem sozinhos!',
+                actionText: 'Ir para a Agenda',
+                actionView: 'admin-dash'
+            }
+        ];
+
+        const totalSteps = steps.length;
+        const completedCount = steps.filter(s => !!checklist[s.id]).length;
+        const percent = Math.round((completedCount / totalSteps) * 100);
+
+        container.innerHTML = `
+            <section id="admin-guide-view" class="fade-in" style="max-width: 1000px; margin: 0 auto; padding-bottom: 50px;">
+                
+                <!-- HEADER DO GUIA -->
+                <div class="glass" style="padding: 30px; margin-bottom: 25px; border-radius: 20px; border-left: 5px solid var(--accent-color); position: relative; overflow: hidden;">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="font-size: 1.8rem;">📖</span>
+                                <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">
+                                    Guia Completo & Passo a Passo do Sistema
+                                </h2>
+                            </div>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0; line-height: 1.6;">
+                                Bem-vindo ao painel administrativo! Siga este roteiro prático para configurar seu negócio e dominar cada função do sistema no seu dia a dia.
+                            </p>
+                        </div>
+                        
+                        <!-- CARD DE PROGRESSO -->
+                        <div class="glass" style="padding: 16px 20px; border-radius: 14px; min-width: 220px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Progresso</span>
+                                <span style="font-size: 0.95rem; font-weight: 800; color: ${percent === 100 ? '#4ade80' : 'var(--accent-readable)'};">${completedCount}/${totalSteps} (${percent}%)</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                                <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--accent-color), #4ade80); transition: width 0.3s ease;"></div>
+                            </div>
+                            <small style="display: block; font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px; text-align: center;">
+                                ${percent === 100 ? '🎉 Parabéns! Tudo configurado!' : 'Marque as etapas concluídas abaixo'}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE BUSCA EM TEMPO REAL -->
+                    <div style="margin-top: 25px;">
+                        <input type="text" id="guide-search-input" class="glass" 
+                               placeholder="🔍 Digite para pesquisar uma funcionalidade (ex: horários, comissão, estoque, O.S., etc.)..." 
+                               oninput="app.filterGuideCards(null, this.value)" 
+                               style="width: 100%; padding: 13px 18px; font-size: 0.92rem; border-radius: 12px; color: var(--text-primary); border: 1px solid var(--glass-border); box-sizing: border-box;">
+                    </div>
+
+                    <!-- ABAS / CATEGORIAS -->
+                    <div style="display: flex; gap: 8px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+                        <button class="guide-cat-btn active" data-category="all" onclick="app.filterGuideCards('all', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--accent-color); color: #000; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                            ⭐ Todos (${totalSteps})
+                        </button>
+                        <button class="guide-cat-btn" data-category="setup" onclick="app.filterGuideCards('setup', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            ⚙️ Configuração Inicial (3)
+                        </button>
+                        <button class="guide-cat-btn" data-category="agenda" onclick="app.filterGuideCards('agenda', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            🗓️ Agenda & Atendimento (2)
+                        </button>
+                        <button class="guide-cat-btn" data-category="stock" onclick="app.filterGuideCards('stock', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            📦 Estoque & PDV (2)
+                        </button>
+                        <button class="guide-cat-btn" data-category="club" onclick="app.filterGuideCards('club', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            ⭐ Assinaturas (1)
+                        </button>
+                        <button class="guide-cat-btn" data-category="finance" onclick="app.filterGuideCards('finance', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            💰 Financeiro (1)
+                        </button>
+                        <button class="guide-cat-btn" data-category="app" onclick="app.filterGuideCards('app', null)" 
+                                style="padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; white-space: nowrap;">
+                            🚀 App & Divulgação (1)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LISTA DE PASSOS -->
+                <div id="guide-cards-container">
+                    ${steps.map(s => {
+                        const isDone = !!checklist[s.id];
+                        return `
+                            <article class="glass guide-card" data-category="${s.category}" 
+                                     style="padding: 24px 26px; margin-bottom: 20px; border-radius: 18px; border: 1px solid ${isDone ? 'rgba(74, 222, 128, 0.3)' : 'var(--glass-border)'}; background: ${isDone ? 'rgba(74, 222, 128, 0.03)' : 'var(--glass-bg)'}; position: relative; transition: all 0.25s ease;">
+                                
+                                <!-- TOPO DO CARD -->
+                                <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 250px;">
+                                        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                                            ${s.icon}
+                                        </div>
+                                        <div>
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
+                                                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; color: var(--accent-readable);">
+                                                    Etapa ${s.num}
+                                                </span>
+                                                <span style="font-size: 0.72rem; color: var(--text-secondary);">
+                                                    ⏱️ ${s.time}
+                                                </span>
+                                            </div>
+                                            <h3 style="font-size: 1.15rem; color: var(--text-primary); margin: 0; font-weight: 700;">
+                                                ${s.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <!-- BOTÃO CHECK CONCLUÍDO -->
+                                    <button onclick="app.toggleGuideCheck('${s.id}')" 
+                                            class="glass" 
+                                            style="padding: 7px 14px; font-size: 0.78rem; font-weight: 700; border-radius: 20px; cursor: pointer; border: 1px solid ${isDone ? '#4ade80' : 'var(--glass-border)'}; background: ${isDone ? 'rgba(74, 222, 128, 0.15)' : 'rgba(0,0,0,0.15)'}; color: ${isDone ? '#4ade80' : 'var(--text-secondary)'}; transition: all 0.2s;">
+                                        ${isDone ? '✅ Concluído' : '⚪ Marcar como feito'}
+                                    </button>
+                                </div>
+
+                                <!-- RESUMO -->
+                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.5;">
+                                    ${s.summary}
+                                </p>
+
+                                <!-- INSTRUÇÕES PASSO A PASSO -->
+                                <div style="background: var(--surface-dark); padding: 18px 20px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--glass-border);">
+                                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 0 0 12px 0;">
+                                        📋 Passo a Passo:
+                                    </h4>
+                                    <ol style="margin: 0; padding-left: 20px; color: var(--text-primary); font-size: 0.86rem; line-height: 1.8;">
+                                        ${s.instructions.map(inst => `<li style="margin-bottom: 6px;">${inst}</li>`).join('')}
+                                    </ol>
+                                </div>
+
+                                <!-- DICA PRO -->
+                                <div style="padding: 12px 16px; background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; border-radius: 8px; margin-bottom: 18px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+                                    💡 <strong>Dica Pro:</strong> ${s.tip}
+                                </div>
+
+                                <!-- BOTÃO DE ATALHO DIRETO -->
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button class="btn-primary" 
+                                            onclick="app.navigateTo('${s.actionView}')" 
+                                            style="padding: 9px 20px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px;">
+                                        <span>${s.actionText}</span>
+                                        <span>➔</span>
+                                    </button>
+                                </div>
+
+                            </article>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- ESTADO VAZIO NA BUSCA -->
+                <div id="guide-empty-state" class="glass" style="display: none; padding: 40px; text-align: center; border-radius: 16px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+                    <h4 style="color: var(--text-primary); margin: 0 0 6px 0;">Nenhum tópico encontrado</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Tente buscar por outro termo ou selecione a categoria "Todos".</p>
+                </div>
+
+            </section>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+    },
+
     renderAdminSettings(container) {
         const s = this.state.settings.agenda;
         const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -1795,7 +2220,21 @@ const app = {
 
         container.innerHTML = `
             <section id="admin-settings" class="fade-in">
-                <h2 class="section-title" style="margin-bottom: 25px;">⚙️ Configurações do Sistema</h2>
+                <h2 class="section-title" style="margin-bottom: 20px;">⚙️ Configurações do Sistema</h2>
+
+                <!-- BANNER: Guia do Sistema & Passo a Passo -->
+                <div class="glass" style="padding: 18px 22px; margin-bottom: 25px; border-left: 4px solid #38bdf8; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; background: rgba(56, 189, 248, 0.08); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 260px;">
+                        <span style="font-size: 2rem;">🚀</span>
+                        <div>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700;">Novo por aqui? Veja o Passo a Passo do Sistema</h4>
+                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4;">Aprenda a configurar seus horários, equipe, catálogo e usar cada função de forma simples e rápida.</p>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="padding: 10px 20px; font-size: 0.82rem; background: #38bdf8; color: #000; font-weight: 800; border-radius: 8px; cursor: pointer; white-space: nowrap;" onclick="app.navigateTo('admin-guide')">
+                        📖 Abrir Guia do Sistema ➔
+                    </button>
+                </div>
 
                 <!-- BLOCO 1: Horários da Agenda -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
@@ -2457,6 +2896,11 @@ const app = {
     },
 
     renderLayout(view) {
+        if (view === 'admin-guide' && this.state.user?.role !== 'admin') {
+            this.navigateTo('barber-dash');
+            return;
+        }
+
         const appContainer = document.getElementById('app');
         const s = this.state.settings || {};
         const shopName = s.shopName || 'Agendamento Fácil BR';
@@ -2477,6 +2921,7 @@ const app = {
             'admin-faturamento': 'Faturamento Global',
             'admin-team-performance': 'Ranking da Equipe',
             'admin-tips': 'Gestão de Gorjetas',
+            'admin-guide': 'Guia do Sistema',
             'admin-settings': 'Configurações do Sistema',
             'admin-billing': 'Fatura do Sistema',
             'admin-os': 'Ordens de Serviço',
@@ -2631,6 +3076,9 @@ const app = {
 
                     <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
+                        <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')">
+                            <i data-lucide="book-open"></i> Guia do Sistema
+                        </a>
                         <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="window.app.navigateTo('admin-settings')">
                             <i data-lucide="settings"></i> Configurações
                         </a>
@@ -2698,6 +3146,7 @@ const app = {
                 case 'admin-team-performance': this.renderAdminTeamPerformance(container); break;
                 case 'admin-tips': this.renderAdminTips(container); break;
                 case 'admin-settings': this.renderAdminSettings(container); break;
+                case 'admin-guide': this.renderAdminGuide(container); break;
                 case 'admin-billing': this.renderAdminBilling(container); break;
                 case 'admin-os': this.renderAdminOS(container); break;
                 case 'pdv': this.renderPDV(container); break;
@@ -4862,8 +5311,11 @@ const app = {
             }
 
             container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
-                <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px;">
-                    <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal;" onclick="app.repairToday()">
+                <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <button class="glass" style="padding: 8px 16px; font-size: 0.78rem; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; border-radius: 8px;" onclick="app.navigateTo('admin-guide')">
+                        📖 Guia do Sistema & Passo a Passo
+                    </button>
+                    <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal; border-radius: 8px;" onclick="app.repairToday()">
                         🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
                 </div>
