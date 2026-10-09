@@ -5592,18 +5592,26 @@ const app = {
     },
 
     getOccupiedContinuationBlock(apt) {
-        const colors = {
+        const isDark = (this.state.settings && this.state.settings.themeMode === 'light') ? false :
+                       (this.state.settings && this.state.settings.bgColor && this.getLuminance(this.state.settings.bgColor) > 0.4) ? false : true;
+
+        const colors = isDark ? {
             'agendado': '#38bdf8',
             'confirmado': '#4ade80',
             'finalizado': '#94a3b8',
             'bloqueado': '#f87171'
+        } : {
+            'agendado': '#0284c7',
+            'confirmado': '#16a34a',
+            'finalizado': '#64748b',
+            'bloqueado': '#dc2626'
         };
         const color = colors[apt.status] || 'var(--accent-color)';
         return `
             <div class="appointment-block continuation-block" 
                  title="Atendimento de ${apt.customer} em andamento (iniciado às ${apt.time})"
-                 style="border-left: 2px dashed ${color}; background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: flex-start; padding: 2px 6px; cursor: pointer; opacity: 0.65;">
-                <span style="font-size: 0.6rem; color: #94a3b8; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">
+                 style="border: 1px solid var(--glass-border); border-left: 3px dashed ${color}; background: var(--surface-light); display: flex; align-items: center; justify-content: flex-start; padding: 2px 6px; cursor: pointer; opacity: 0.9;">
+                <span style="font-size: 0.62rem; color: var(--text-secondary); font-weight: 600; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">
                     ↳ ${apt.customer} (continuação)
                 </span>
             </div>
@@ -5611,22 +5619,35 @@ const app = {
     },
 
     getAppointmentBlock(apt) {
-        const colors = {
-            'agendado': '#38bdf8',   // Azul
-            'confirmado': '#4ade80', // Verde
-            'finalizado': '#94a3b8', // Cinza/Slate
-            'bloqueado': '#f87171'   // Vermelho
+        const isDark = (this.state.settings && this.state.settings.themeMode === 'light') ? false :
+                       (this.state.settings && this.state.settings.bgColor && this.getLuminance(this.state.settings.bgColor) > 0.4) ? false : true;
+
+        const colors = isDark ? {
+            'agendado': '#38bdf8',   // Azul claro
+            'confirmado': '#4ade80', // Verde claro
+            'finalizado': '#94a3b8', // Cinza claro
+            'bloqueado': '#f87171'   // Vermelho claro
+        } : {
+            'agendado': '#0284c7',   // Azul royal
+            'confirmado': '#16a34a', // Verde escuro
+            'finalizado': '#64748b', // Cinza médio
+            'bloqueado': '#dc2626'   // Vermelho escuro
         };
 
-        const bgs = {
-            'agendado': 'rgba(56, 189, 248, 0.05)',
-            'confirmado': 'rgba(74, 222, 128, 0.08)',
-            'finalizado': 'rgba(148, 163, 184, 0.15)',
-            'bloqueado': 'rgba(248, 113, 113, 0.05)'
+        const bgs = isDark ? {
+            'agendado': 'rgba(56, 189, 248, 0.12)',
+            'confirmado': 'rgba(74, 222, 128, 0.12)',
+            'finalizado': 'rgba(148, 163, 184, 0.12)',
+            'bloqueado': 'rgba(248, 113, 113, 0.12)'
+        } : {
+            'agendado': 'rgba(2, 132, 199, 0.08)',
+            'confirmado': 'rgba(22, 163, 74, 0.08)',
+            'finalizado': 'rgba(100, 116, 139, 0.08)',
+            'bloqueado': 'rgba(220, 38, 38, 0.08)'
         };
 
         const statusColor = colors[apt.status] || 'var(--accent-color)';
-        const statusBg = bgs[apt.status] || 'rgba(255,255,255,0.02)';
+        const statusBg = bgs[apt.status] || 'rgba(0,0,0,0.02)';
         const origin = apt.origin || 'Encaixe (Manual)';
         const payment = apt.status === 'finalizado' ? (apt.payment || 'Informado na Venda') : 'Pendente';
         const aptDuration = this.getAppointmentDuration(apt);
@@ -5647,10 +5668,12 @@ const app = {
         const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nDuração: ${aptDuration} min\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
+            const blockColor = isDark ? '#f87171' : '#dc2626';
+            const blockBg = isDark ? 'rgba(248, 113, 113, 0.12)' : 'rgba(220, 38, 38, 0.08)';
             return `
-                <div class="appointment-block" title="${apt.origin || 'Bloqueio Manual'}" style="border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); color: #fca5a5; border: 1px dashed rgba(239, 68, 68, 0.3);">
-                    <span class="customer-name" style="font-size: 0.65rem;">BLOQUEADO</span>
-                    <span class="service-name">${apt.origin || 'Manual'}</span>
+                <div class="appointment-block" title="${apt.origin || 'Bloqueio Manual'}" style="border: 1px dashed ${blockColor}; border-left: 4px solid ${blockColor}; background: linear-gradient(0deg, ${blockBg}, ${blockBg}), var(--surface-light); color: ${blockColor};">
+                    <span class="customer-name" style="font-size: 0.65rem; font-weight: 800; color: ${blockColor} !important;">BLOQUEADO</span>
+                    <span class="service-name" style="font-size: 0.58rem; color: var(--text-secondary) !important;">${apt.origin || 'Manual'}</span>
                 </div>
             `;
         }
@@ -5660,7 +5683,7 @@ const app = {
         return `
             <div class="appointment-block" 
                  title="${hoverInfo}" 
-                 style="border-left-color: ${statusColor}; background: ${statusBg}; display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; justify-content: flex-start; align-items: flex-start; overflow: hidden; height: auto; max-height: 100%;"
+                 style="border: 1px solid var(--glass-border); border-left: 4px solid ${statusColor}; background: linear-gradient(0deg, ${statusBg}, ${statusBg}), var(--surface-light); display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; justify-content: flex-start; align-items: flex-start; overflow: hidden; height: auto; max-height: 100%;"
                  ${isDraggable ? `
                     draggable="true" 
                     ondragstart="window.app.handleDragStart(event, ${apt.id})" 
@@ -5669,13 +5692,13 @@ const app = {
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
                  ` : ''}>
-                <div class="customer-name" style="pointer-events: none; font-size: 0.7rem; font-weight: 800; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; justify-content: space-between; align-items: center;">
-                    <span>${apt.customer || 'Cliente'}</span>
-                    <span style="font-size: 0.55rem; color: var(--accent-readable); font-weight: 600; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; margin-left: 4px;">⏱️ ${aptDuration}m</span>
+                <div class="customer-name" style="pointer-events: none; font-size: 0.72rem; font-weight: 800; color: var(--text-primary); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="overflow: hidden; text-overflow: ellipsis;">${apt.customer || 'Cliente'}</span>
+                    <span style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 700; background: var(--glass-border); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--glass-border); margin-left: 4px; flex-shrink: 0;">⏱️ ${aptDuration}m</span>
                 </div>
-                <div class="service-name" style="pointer-events: none; font-size: 0.6rem; opacity: 0.8; color: #cbd5e1; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${apt.service || 'Serviço'}</div>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.5rem; color: #94a3b8; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">✅ FINALIZADO</div>` : ''}
-                ${apt.status === 'confirmado' ? `<div style="font-size: 0.5rem; color: #4ade80; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px;">🟢 CONFIRMADO</div>` : ''}
+                <div class="service-name" style="pointer-events: none; font-size: 0.62rem; color: var(--text-secondary); font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 1px;">${apt.service || 'Serviço'}</div>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#94a3b8' : '#475569'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">✅ FINALIZADO</div>` : ''}
+                ${apt.status === 'confirmado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#4ade80' : '#16a34a'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">🟢 CONFIRMADO</div>` : ''}
             </div>
         `;
     },

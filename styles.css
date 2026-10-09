@@ -340,12 +340,13 @@ select.glass option {
     position: absolute;
     inset: 3px;
     background: var(--surface-light);
+    border: 1px solid var(--glass-border);
     border-left: 4px solid var(--accent-color);
-    padding: 8px;
+    padding: 6px 8px;
     border-radius: 6px;
     font-size: 0.75rem;
     color: var(--text-primary);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     z-index: 10;
     cursor: pointer;
     transition: all 0.2s;
@@ -367,8 +368,8 @@ select.glass option {
 
 .appointment-block:hover {
     transform: translateY(-2px);
-    background: var(--glass-bg);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.18);
+    filter: brightness(1.03);
 }
 
 .appointment-block .customer-name {
@@ -378,11 +379,22 @@ select.glass option {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-primary) !important;
 }
 
 .appointment-block .service-name {
     font-size: 0.65rem;
-    opacity: 0.7;
+    color: var(--text-secondary) !important;
+    opacity: 0.9;
+}
+
+.continuation-block {
+    background: var(--surface-light) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+.continuation-block span {
+    color: var(--text-secondary) !important;
 }
 
 /* Sidebar Overlay */
@@ -758,11 +770,13 @@ select.glass option {
     .appointment-block .customer-name {
         font-size: 0.62rem !important;
         line-height: 1.1 !important;
+        color: var(--text-primary) !important;
     }
 
     .appointment-block .service-name {
         font-size: 0.52rem !important;
         line-height: 1 !important;
+        color: var(--text-secondary) !important;
     }
 
     .appointment-block .customer-name span:last-child {
@@ -776,6 +790,7 @@ select.glass option {
 
     .continuation-block span {
         font-size: 0.52rem !important;
+        color: var(--text-secondary) !important;
     }
 
     /* Tabelas e formulários de Serviços, Configurações e Auditoria sem rolagem horizontal no celular */
