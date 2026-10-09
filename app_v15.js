@@ -5601,54 +5601,7 @@ const app = {
             }
 
             container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
-                <style>
-                    @keyframes guide-pulse-glow {
-                        0% {
-                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
-                            border-color: rgba(56, 189, 248, 0.5);
-                            transform: scale(1);
-                        }
-                        50% {
-                            box-shadow: 0 0 16px 4px rgba(56, 189, 248, 0.4);
-                            border-color: #38bdf8;
-                            transform: scale(1.03);
-                        }
-                        100% {
-                            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
-                            border-color: rgba(56, 189, 248, 0.5);
-                            transform: scale(1);
-                        }
-                    }
-                    @keyframes guide-rocket-wiggle {
-                        0%, 100% { transform: rotate(0deg) scale(1); }
-                        25% { transform: rotate(-12deg) scale(1.15); }
-                        75% { transform: rotate(12deg) scale(1.15); }
-                    }
-                    .btn-guide-pulse {
-                        animation: guide-pulse-glow 2.4s infinite ease-in-out !important;
-                        background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(14, 165, 233, 0.35) 100%) !important;
-                        color: #38bdf8 !important;
-                        border: 1px solid rgba(56, 189, 248, 0.7) !important;
-                        transition: all 0.25s ease !important;
-                    }
-                    .btn-guide-pulse:hover {
-                        background: #38bdf8 !important;
-                        color: #000 !important;
-                        box-shadow: 0 0 20px rgba(56, 189, 248, 0.8) !important;
-                        transform: scale(1.05) !important;
-                    }
-                </style>
-                <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-guide-pulse" style="padding: 9px 18px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 10px;" onclick="app.navigateTo('admin-guide')">
-                            <span style="font-size: 1.15rem; animation: guide-rocket-wiggle 1.8s infinite ease-in-out; display: inline-block;">🚀</span>
-                            <span>Primeiros Passos & Guia</span>
-                        </button>
-                        <button class="glass" style="padding: 9px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; border-radius: 10px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);" onclick="app.openChangelogModal(true)">
-                            <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
-                            <span>Novidades (v80.49)</span>
-                        </button>
-                    </div>
+                <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal; border-radius: 8px;" onclick="app.repairToday()">
                         🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
