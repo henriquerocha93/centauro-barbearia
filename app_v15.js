@@ -1770,14 +1770,40 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.50',
+    CURRENT_SYSTEM_VERSION: '80.51',
 
     SYSTEM_CHANGELOG: [
         {
-            version: '80.49',
+            version: '80.51',
+            date: '09/10/2026',
+            title: 'Correção de Pagamentos & Conferência Obrigatória de OS',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'credit-card',
+                    title: 'Alteração de Forma de Pagamento no Admin',
+                    desc: 'O administrador agora pode alterar a forma de pagamento de agendamentos já finalizados diretamente pelo card ou detalhes, sincronizando automaticamente o Fluxo de Caixa.',
+                    badge: 'NOVO'
+                },
+                {
+                    icon: 'check-circle-2',
+                    title: 'Conferência Obrigatória ao Finalizar Atendimento',
+                    desc: 'Grid visual com botões claros e tela de confirmação obrigatória para o profissional confirmar o método de pagamento antes de fechar a OS, evitando lançamentos incorretos.',
+                    badge: 'SEGURANÇA'
+                },
+                {
+                    icon: 'users',
+                    title: 'Padronização Universal: "Profissional"',
+                    desc: 'Alterado o termo no card de agendamento de Barbeiro(a) para Profissional para maior abrangência e consistência com diferentes modelos de negócio.',
+                    badge: 'AJUSTE'
+                }
+            ]
+        },
+        {
+            version: '80.50',
             date: '09/10/2026',
             title: 'Central de Novidades & Melhorias de Usabilidade',
-            badge: 'Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'bell-ring',
@@ -7037,7 +7063,16 @@ const app = {
                     <div style="font-weight: 600; font-size: 1.1rem; color: #48C17E; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">
                         ${apt.status}
                     </div>
-                    ${apt.payment ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Pago via: ${apt.payment}</div>` : ''}
+                    ${apt.payment ? `
+                        <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.12); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                            <span style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">💳 Pago via: ${apt.payment}</span>
+                            ${(this.state.user.role === 'admin') ? `
+                                <button style="background: none; border: none; color: #38bdf8; cursor: pointer; text-decoration: underline; font-size: 0.78rem; font-weight: 700; padding: 0;" onclick="app.openChangePaymentModal(${apt.id})">
+                                    (Alterar)
+                                </button>
+                            ` : ''}
+                        </div>
+                    ` : ''}
                 </div>
 
                 ${isReadOnly ? `
@@ -7054,6 +7089,9 @@ const app = {
                         ` : ''}
                         ${apt.status === 'agendado' ? `
                             <button class="btn-primary" style="background: #2E8B57; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.updateAptStatus(${apt.id}, 'confirmado')">CONFIRMAR PRESENÇA</button>
+                        ` : ''}
+                        ${(apt.status === 'finalizado' && this.state.user.role === 'admin') ? `
+                            <button class="btn-primary" style="background: #0284c7; width: 100%; border-radius: 8px; box-shadow: none; font-weight: 700;" onclick="app.openChangePaymentModal(${apt.id})">💳 ALTERAR FORMA DE PAGAMENTO</button>
                         ` : ''}
                         ${(apt.status !== 'finalizado' || this.state.user.role === 'admin') ? `
                             <button class="btn-primary" style="background: #7c3aed; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openEditApt(${apt.id})">✏️ ALTERAR SERVIÇOS / PROFISSIONAL / VALOR</button>
@@ -7127,6 +7165,28 @@ const app = {
         }).join('')}
                     </div>
                 </div>
+                <!-- 4. Campo Forma de Pagamento (se a OS já foi finalizada) -->
+                ${apt.status === 'finalizado' ? `
+                    <div style="margin-bottom: 20px; padding: 14px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.82rem; font-weight: 700; color: #38bdf8;">💳 Forma de Pagamento (Atendimento Finalizado)</span>
+                            <span style="font-size: 0.65rem; background: #38bdf8; color: #000; padding: 2px 6px; border-radius: 6px; font-weight: 800;">FINANCEIRO</span>
+                        </label>
+                        <select id="edit-apt-payment" class="glass" style="width: 100%; padding: 11px 12px; color: var(--text-primary); border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.4);">
+                            <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>💵 Dinheiro</option>
+                            <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>📱 PIX</option>
+                            <option value="Cartão de Débito" ${apt.payment === 'Cartão de Débito' ? 'selected' : ''}>💳 Cartão de Débito</option>
+                            <option value="Cartão de Crédito" ${apt.payment === 'Cartão de Crédito' ? 'selected' : ''}>💳 Cartão de Crédito</option>
+                            <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>🎁 Cortesia</option>
+                            <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>⭐ Clube de Assinatura</option>
+                            ${apt.payment === 'Misto' ? `<option value="Misto" selected>🔀 Pagamento Misto</option>` : ''}
+                        </select>
+                        <small style="display: block; font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
+                            ℹ️ Se o profissional finalizou com a opção errada, selecione a opção correta acima para corrigir automaticamente no caixa e nos relatórios.
+                        </small>
+                    </div>
+                ` : ''}
+
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-primary" style="flex: 1;" onclick="app.saveAptChanges(${apt.id})">Salvar Alterações</button>
                     <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement(${apt.id})">Voltar</button>
@@ -7183,10 +7243,157 @@ const app = {
         apt.date = newDate;
         apt.time = newTime;
 
+        // Se a OS já estava finalizada, verificar e atualizar a forma de pagamento e valores financeiros
+        const paymentSelect = document.getElementById('edit-apt-payment');
+        if (paymentSelect && apt.status === 'finalizado') {
+            const newPayment = paymentSelect.value;
+            this.updateAppointmentPayment(aptId, newPayment);
+            
+            const totalProducts = (apt.products || []).reduce((sum, p) => sum + ((parseFloat(p.price) || 0) * (p.qty || 1)), 0);
+            apt.finalPrice = apt.price + totalProducts;
+            if (this.state.transactions) {
+                let trans = null;
+                if (apt.transactionId) {
+                    trans = this.state.transactions.find(t => Number(t.id) === Number(apt.transactionId));
+                }
+                if (!trans && apt.customer && apt.date) {
+                    trans = this.state.transactions.find(t => t.date === apt.date && t.description && t.description.includes(apt.customer));
+                }
+                if (trans) {
+                    trans.amount = apt.finalPrice;
+                    trans.description = `Finalização OS: ${apt.customer} (${apt.service})${totalProducts > 0 ? ' + Consumo' : ''}`;
+                }
+            }
+        }
+
         this.saveState();
         this.openAppointmentManagement(aptId);
         this.render(this.state.view);
         this.showToast(`Agendamento de ${apt.customer} atualizado com sucesso (${totalDuration} min)!`);
+    },
+
+    updateAppointmentPayment(aptId, newPayment) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return false;
+
+        apt.payment = newPayment;
+
+        const getMappedMethod = (p) => {
+            const s = (p || '').toLowerCase();
+            if (s.includes('pix')) return 'pix';
+            if (s.includes('débito') || s.includes('debito')) return 'debito';
+            if (s.includes('crédito') || s.includes('credito')) return 'credito';
+            if (s.includes('cortesia')) return 'cortesia';
+            if (s.includes('assinatura')) return 'assinatura';
+            return 'dinheiro';
+        };
+        const mappedMethod = getMappedMethod(newPayment);
+
+        // 1. Atualizar transação no Fluxo de Caixa
+        if (this.state.transactions) {
+            let trans = null;
+            if (apt.transactionId) {
+                trans = this.state.transactions.find(t => Number(t.id) === Number(apt.transactionId));
+            }
+            if (!trans && apt.customer && apt.date) {
+                trans = this.state.transactions.find(t => t.date === apt.date && t.description && t.description.includes(apt.customer));
+            }
+            if (trans) {
+                trans.method = mappedMethod;
+                apt.transactionId = trans.id;
+            }
+        }
+
+        // 2. Atualizar Vendas de Produtos vinculadas
+        if (this.state.productSales) {
+            this.state.productSales.forEach(s => {
+                if (s.aptId === apt.id || (apt.transactionId && Number(s.transactionId) === Number(apt.transactionId))) {
+                    s.payment = newPayment;
+                }
+            });
+        }
+
+        // 3. Atualizar Gorjetas vinculadas
+        if (this.state.tips) {
+            this.state.tips.forEach(tp => {
+                if ((tp.transactionId && Number(tp.transactionId) === Number(apt.transactionId)) || (tp.aptDate === apt.date && tp.barber === apt.barber)) {
+                    tp.paymentMethod = mappedMethod;
+                }
+            });
+        }
+
+        return true;
+    },
+
+    openChangePaymentModal(aptId) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return;
+
+        this.openModal('Alterar Forma de Pagamento', `
+            <section class="fade-in" style="padding: 10px 5px;">
+                <div class="glass" style="padding: 16px; margin-bottom: 20px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Atendimento Finalizado:</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${apt.customer}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                        ${apt.service} • <strong>R$ ${(parseFloat(apt.finalPrice || apt.price) || 0).toFixed(2)}</strong>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 15px; flex-wrap: wrap;">
+                        <span>Profissional: <strong style="color: var(--text-primary);">${apt.barber}</strong></span>
+                        <span>Data: <strong style="color: var(--text-primary);">${apt.date}</strong></span>
+                        <span>Horário: <strong style="color: var(--text-primary);">${apt.time}</strong></span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 22px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 700; color: #38bdf8;">
+                        Selecione a Forma de Pagamento Correta:
+                    </label>
+                    <select id="quick-edit-payment" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary); border-radius: 10px; font-size: 0.95rem; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.4);">
+                        <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>💵 Dinheiro</option>
+                        <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>📱 PIX</option>
+                        <option value="Cartão de Débito" ${apt.payment === 'Cartão de Débito' ? 'selected' : ''}>💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito" ${apt.payment === 'Cartão de Crédito' ? 'selected' : ''}>💳 Cartão de Crédito</option>
+                        <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>🎁 Cortesia</option>
+                        <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>⭐ Clube de Assinatura</option>
+                        ${apt.payment === 'Misto' ? `<option value="Misto" selected>🔀 Pagamento Misto</option>` : ''}
+                    </select>
+                    <small style="display: block; font-size: 0.74rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
+                        ℹ️ Ao confirmar, o sistema atualizará o fluxo de caixa, o relatório de auditoria e o faturamento do profissional imediatamente.
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" style="flex: 1; padding: 12px; font-size: 0.9rem;" onclick="app.saveQuickPaymentChange(${apt.id})">
+                        Salvar Forma de Pagamento
+                    </button>
+                    <button class="btn-secondary" style="flex: 1; padding: 12px; font-size: 0.9rem;" onclick="app.openAppointmentManagement(${apt.id})">
+                        Voltar
+                    </button>
+                </div>
+            </section>
+        `, '480px');
+    },
+
+    saveQuickPaymentChange(aptId) {
+        const idToFind = Number(aptId);
+        const apt = this.state.appointments.find(a => a.id === idToFind);
+        if (!apt) return;
+
+        const newPayment = document.getElementById('quick-edit-payment').value;
+        const oldPayment = apt.payment;
+
+        if (newPayment === oldPayment) {
+            this.openAppointmentManagement(aptId);
+            return;
+        }
+
+        this.updateAppointmentPayment(aptId, newPayment);
+        this.saveState();
+        this.openAppointmentManagement(aptId);
+        this.render(this.state.view);
+        this.showToast(`Forma de pagamento de ${apt.customer} alterada para ${newPayment}!`);
     },
 
     updateAptStatus(aptId, status) {
@@ -7584,16 +7791,35 @@ const app = {
                     </div>
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px;">Forma de Pagamento *</label>
-                    <select id="final-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${finalTotal})">
-                        <option value="" ${finalTotal !== 0 && !isActiveSubscriber ? 'selected' : ''}>Selecione...</option>
-                        <option value="Assinatura / Cortesia" ${finalTotal === 0 || isActiveSubscriber ? 'selected' : ''}>Assinatura / Cortesia</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Misto">Pagamento Misto (Dividir)</option>
-                    </select>
+                    <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 700; color: #fbbf24; font-size: 0.85rem;">Forma de Pagamento * (Obrigatório Conferir)</span>
+                        <span id="final-payment-selected-badge" style="font-size: 0.72rem; color: ${isActiveSubscriber || finalTotal === 0 ? '#4ade80' : '#f87171'}; font-weight: 700;">
+                            ${isActiveSubscriber || finalTotal === 0 ? '✓ Assinatura / Cortesia' : '⚠️ Clique para escolher'}
+                        </span>
+                    </label>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                        <button type="button" class="btn-payment-option glass" data-method="Dinheiro" onclick="app.selectFinalPayment('Dinheiro', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>💵 Dinheiro</span>
+                        </button>
+                        <button type="button" class="btn-payment-option glass" data-method="PIX" onclick="app.selectFinalPayment('PIX', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>📱 PIX</span>
+                        </button>
+                        <button type="button" class="btn-payment-option glass" data-method="Cartão de Débito" onclick="app.selectFinalPayment('Cartão de Débito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>💳 Débito</span>
+                        </button>
+                        <button type="button" class="btn-payment-option glass" data-method="Cartão de Crédito" onclick="app.selectFinalPayment('Cartão de Crédito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>💳 Crédito</span>
+                        </button>
+                        <button type="button" class="btn-payment-option glass ${isActiveSubscriber || finalTotal === 0 ? 'active' : ''}" data-method="Assinatura / Cortesia" onclick="app.selectFinalPayment('Assinatura / Cortesia', ${finalTotal})" style="padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>⭐ Assinatura / Cortesia</span>
+                        </button>
+                        <button type="button" class="btn-payment-option glass" data-method="Misto" onclick="app.selectFinalPayment('Misto', ${finalTotal})" style="padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>🔀 Pagamento Misto</span>
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="final-payment" value="${isActiveSubscriber || finalTotal === 0 ? 'Assinatura / Cortesia' : ''}">
                 </div>
                 <div id="split-payment-wrapper" style="display: none; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
@@ -7631,6 +7857,50 @@ const app = {
                 </div>
             </section>
         `);
+    },
+
+    selectFinalPayment(method, total) {
+        const hiddenInput = document.getElementById('final-payment');
+        if (hiddenInput) {
+            hiddenInput.value = method;
+        }
+
+        // Highlight selected button
+        const buttons = document.querySelectorAll('.btn-payment-option');
+        buttons.forEach(btn => {
+            if (btn.getAttribute('data-method') === method) {
+                btn.style.borderColor = 'var(--accent-color, #38bdf8)';
+                btn.style.background = 'rgba(56, 189, 248, 0.18)';
+                btn.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.35)';
+            } else {
+                btn.style.borderColor = 'var(--glass-border)';
+                btn.style.background = 'rgba(255, 255, 255, 0.04)';
+                btn.style.boxShadow = 'none';
+            }
+        });
+
+        // Update badge
+        const badge = document.getElementById('final-payment-selected-badge');
+        if (badge) {
+            badge.style.color = '#38bdf8';
+            badge.innerHTML = `✓ Selecionado: <strong>${method}</strong>`;
+        }
+
+        // Toggle split wrapper
+        const splitWrapper = document.getElementById('split-payment-wrapper');
+        if (splitWrapper) {
+            if (method === 'Misto') {
+                splitWrapper.style.display = 'block';
+                const s1 = document.getElementById('split-amount-1');
+                const s2 = document.getElementById('split-amount-2');
+                if (s1 && s2 && (!s1.value || parseFloat(s1.value) === 0)) {
+                    s1.value = ((parseFloat(total) || 0) / 2).toFixed(2);
+                    s2.value = ((parseFloat(total) || 0) - parseFloat(s1.value)).toFixed(2);
+                }
+            } else {
+                splitWrapper.style.display = 'none';
+            }
+        }
     },
 
     updateFinalizeOSTotal(aptId) {
@@ -7783,13 +8053,13 @@ const app = {
         }
 
         if (!payment) {
-            alert('Por favor, selecione uma forma de pagamento.');
+            alert('⚠️ ATENÇÃO: É obrigatório selecionar a Forma de Pagamento antes de finalizar!');
             if (btnFinalizar) {
                 btnFinalizar.disabled = false;
                 btnFinalizar.style.opacity = '1';
                 btnFinalizar.textContent = 'Concluir e Receber';
             }
-            apt.status = 'agendado';
+            apt.status = 'em atendimento';
             return;
         }
 
@@ -7797,7 +8067,24 @@ const app = {
         const totalBase = apt.price + totalProducts;
         const finalTotal = totalBase + tip;
 
-        const mappedMethod = payment === 'PIX' ? 'pix' : (payment === 'Cartão de Débito' ? 'debito' : (payment === 'Cartão de Crédito' ? 'credito' : 'dinheiro'));
+        // ── VERIFICAÇÃO OBRIGATÓRIA DA FORMA DE PAGAMENTO ──
+        const confirmMsg = `⚠️ CONFERÊNCIA OBRIGATÓRIA DE PAGAMENTO:\n\n` +
+            `Cliente: ${apt.customer}\n` +
+            `Valor Total: R$ ${finalTotal.toFixed(2)}\n` +
+            `Forma de Pagamento Selecionada: [ ${payment.toUpperCase()} ]\n\n` +
+            `Você confirma que o cliente pagou via ${payment}?`;
+
+        if (!confirm(confirmMsg)) {
+            if (btnFinalizar) {
+                btnFinalizar.disabled = false;
+                btnFinalizar.style.opacity = '1';
+                btnFinalizar.textContent = 'Concluir e Receber';
+            }
+            apt.status = 'em atendimento';
+            return;
+        }
+
+        const mappedMethod = payment === 'PIX' ? 'pix' : (payment === 'Cartão de Débito' ? 'debito' : (payment === 'Cartão de Crédito' ? 'credito' : (payment === 'Assinatura / Cortesia' ? 'cortesia' : 'dinheiro')));
         const desc = `Finalização OS: ${apt.customer} (${apt.service})${(apt.products && apt.products.length > 0) ? ' + Consumo' : ''}`;
 
         try {
@@ -10521,7 +10808,7 @@ const app = {
                         <img src="${b.photo || 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png'}" 
                              style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent-color); image-rendering: -webkit-optimize-contrast;">
                         <h4 style="color: var(--text-primary); font-size: 0.9rem;">${b.name}</h4>
-                        <p style="color: var(--accent-readable); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Barbeiro(a)</p>
+                        <p style="color: var(--accent-readable); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Profissional</p>
                     </div>
                 `).join('')}
             </div>
