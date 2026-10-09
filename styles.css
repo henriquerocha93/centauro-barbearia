@@ -315,15 +315,15 @@ select.glass option {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--glass-border);
     border-right: 1px solid var(--glass-border);
     height: 60px;
 }
 
 .agenda-cell {
     height: 60px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    border-right: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--glass-border);
+    border-right: 1px solid var(--glass-border);
     position: relative;
     background: transparent;
     transition: background 0.2s;
