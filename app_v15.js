@@ -1791,6 +1791,7 @@ const app = {
         }
         const currentMode = this.state.settings?.themeMode || (this.state.settings?.bgColor && this.getLuminance(this.state.settings.bgColor) > 0.4 ? 'light' : 'dark');
         const isDark = currentMode !== 'light';
+        const allowPriceFrom = this.state.settings && this.state.settings.allowPriceFrom !== false;
 
         container.innerHTML = `
             <section id="admin-settings" class="fade-in">
@@ -1925,6 +1926,33 @@ const app = {
                                 </span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- BLOCO: Serviços com Valor "A partir de:" -->
+                <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #38bdf8;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 250px;">
+                            <div style="font-size: 1.5rem;">✂️</div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Serviços com Valor "A partir de:" (Preço Variável)</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">
+                                    Permite que serviços tenham valor variável ("a partir de") e que o preço final seja ajustado ao concluir o atendimento.
+                                </p>
+                            </div>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: var(--surface-dark); padding: 10px 18px; border-radius: 10px; border: 1px solid var(--glass-border); user-select: none;">
+                            <input type="checkbox" id="cfg-allow-price-from" ${allowPriceFrom ? 'checked' : ''} 
+                                   style="width: 20px; height: 20px; accent-color: var(--accent-readable); cursor: pointer;"
+                                   onchange="const st = document.getElementById('cfg-allow-price-from-status'); if(st) { st.textContent = this.checked ? 'Habilitado' : 'Desabilitado'; st.style.color = this.checked ? '#4ade80' : 'var(--text-secondary)'; }">
+                            <span id="cfg-allow-price-from-status" style="font-size: 0.9rem; font-weight: 700; color: ${allowPriceFrom ? '#4ade80' : 'var(--text-secondary)'};">
+                                ${allowPriceFrom ? 'Habilitado' : 'Desabilitado'}
+                            </span>
+                        </label>
+                    </div>
+                    <div style="margin-top: 15px; padding: 12px 14px; background: rgba(0,0,0,0.15); border-radius: 8px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+                        💡 <strong>Habilitado:</strong> Ao clicar em "Finalizar Atendimento", o campo do valor do serviço fica editável para que você possa alterar o valor final do procedimento.<br>
+                        🔒 <strong>Desabilitado:</strong> O valor do serviço será sempre fixo conforme a tabela cadastrada, impedindo alterações na finalização.
                     </div>
                 </div>
 
@@ -2256,6 +2284,12 @@ const app = {
         const heroEl = document.getElementById('shop-hero');
         if (heroEl) {
             this.state.settings.heroImg = heroEl.value;
+        }
+
+        // Salvar opção de serviços com valor "A partir de:"
+        const allowPriceFromEl = document.getElementById('cfg-allow-price-from');
+        if (allowPriceFromEl) {
+            this.state.settings.allowPriceFrom = allowPriceFromEl.checked;
         }
 
         // Salvar tema e cores
@@ -6524,6 +6558,7 @@ const app = {
         let planObj = null;
         let finalCommBase = parseFloat(apt.price) || 0;
         let finalAptPrice = parseFloat(apt.price) || 0;
+        const allowPriceFrom = this.state.settings && this.state.settings.allowPriceFrom !== false;
         
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
@@ -6723,34 +6758,52 @@ const app = {
                        </div>`
                 ) : ''}
                 
-                <!-- Bloco de Ajuste de Valor do Serviço (a partir de / variável) -->
+                <!-- Bloco de Valor do Serviço (Editável se a partir de estiver ativo, ou Fixo se desativado) -->
                 <div style="margin-bottom: 15px; padding: 14px; background: var(--surface-light); border: 1px solid var(--glass-border); border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">
                             ✂️ Valor do Serviço
                         </label>
-                        <span style="font-size: 0.72rem; color: var(--accent-readable); font-weight: 700; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">
-                            ✏️ Editável (ex: a partir de)
-                        </span>
+                        ${allowPriceFrom ? `
+                            <span style="font-size: 0.72rem; color: var(--accent-readable); font-weight: 700; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">
+                                ✏️ Editável (a partir de)
+                            </span>
+                        ` : `
+                            <span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 4px;">
+                                🔒 Valor Fixo
+                            </span>
+                        `}
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${apt.service}">
-                        ${apt.service}
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1rem; font-weight: 800; color: var(--text-secondary);">R$</span>
-                        <input type="number" 
-                               id="final-service-price" 
-                               class="glass" 
-                               style="flex: 1; padding: 10px 14px; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); border: 1px solid var(--accent-color) !important; border-radius: 8px;" 
-                               value="${(parseFloat(finalAptPrice) || 0).toFixed(2)}" 
-                               step="0.50" 
-                               min="0"
-                               placeholder="0.00"
-                               oninput="app.updateFinalizeOSTotal(${apt.id})">
-                    </div>
-                    <small style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
-                        💡 Altere o valor acima caso o serviço seja variável ("a partir de") ou tenha cobrança adicional.
-                    </small>
+                    ${allowPriceFrom ? `
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${apt.service}">
+                            ${apt.service}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1rem; font-weight: 800; color: var(--text-secondary);">R$</span>
+                            <input type="number" 
+                                   id="final-service-price" 
+                                   class="glass" 
+                                   style="flex: 1; padding: 10px 14px; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); border: 1px solid var(--accent-color) !important; border-radius: 8px;" 
+                                   value="${(parseFloat(finalAptPrice) || 0).toFixed(2)}" 
+                                   step="0.50" 
+                                   min="0"
+                                   placeholder="0.00"
+                                   oninput="app.updateFinalizeOSTotal(${apt.id})">
+                        </div>
+                        <small style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
+                            💡 Altere o valor acima caso o serviço seja variável ("a partir de") ou tenha cobrança adicional.
+                        </small>
+                    ` : `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;" title="${apt.service}">
+                                ${apt.service}
+                            </div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
+                                R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}
+                            </div>
+                        </div>
+                        <input type="hidden" id="final-service-price" value="${(parseFloat(finalAptPrice) || 0).toFixed(2)}">
+                    `}
                 </div>
 
                 <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-light); border: 1px solid var(--glass-border); border-radius: 10px; border-left: 4px solid var(--accent-color);">
