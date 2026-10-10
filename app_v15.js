@@ -1423,15 +1423,28 @@ const app = {
                                 return mergedApt;
                             });
 
-                            this.state.staff = mergeArrays(this.state.staff, data.staff);
-                            this.state.services = mergeArrays(this.state.services, data.services);
-                            this.state.products = mergeArrays(this.state.products, data.products);
-                            this.state.customers = mergeArrays(this.state.customers, data.customers);
-                            this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
-                            this.state.productSales = mergeArrays(this.state.productSales, data.productSales);
-                            this.state.transactions = mergeArrays(this.state.transactions, data.transactions);
-                            this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
-                            this.state.tips = mergeArrays(this.state.tips, data.tips);
+                            // Se temos alterações locais pendentes de envio, mescla; senão, a nuvem é a fonte da verdade absoluta (evita ressurreição de deletados)
+                            if (this.state.needsSync || this.state.isSyncing) {
+                                this.state.staff = mergeArrays(this.state.staff, data.staff);
+                                this.state.services = mergeArrays(this.state.services, data.services);
+                                this.state.products = mergeArrays(this.state.products, data.products);
+                                this.state.customers = mergeArrays(this.state.customers, data.customers);
+                                this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
+                                this.state.productSales = mergeArrays(this.state.productSales, data.productSales);
+                                this.state.transactions = mergeArrays(this.state.transactions, data.transactions);
+                                this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
+                                this.state.tips = mergeArrays(this.state.tips, data.tips);
+                            } else {
+                                this.state.staff = toArray(data.staff).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                this.state.services = toArray(data.services).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                this.state.products = toArray(data.products).filter(p => p && p.id && !deletedSet.has(String(p.id)));
+                                this.state.customers = toArray(data.customers).filter(c => c && c.id && !deletedSet.has(String(c.id)));
+                                this.state.vouchers = toArray(data.vouchers).filter(v => v && v.id && !deletedSet.has(String(v.id)));
+                                this.state.productSales = toArray(data.productSales).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                this.state.transactions = toArray(data.transactions).filter(t => t && t.id && !deletedSet.has(String(t.id)));
+                                this.state.serviceOrders = toArray(data.serviceOrders).filter(o => o && o.id && !deletedSet.has(String(o.id)));
+                                this.state.tips = toArray(data.tips).filter(t => t && t.id && !deletedSet.has(String(t.id)));
+                            }
                             
                             this.state.subscriptionPlans = data.subscriptionPlans ? toArray(data.subscriptionPlans) : (this.state.subscriptionPlans || []);
                             this.state.subscribers = data.subscribers ? toArray(data.subscribers) : (this.state.subscribers || []);
@@ -1770,14 +1783,28 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.52',
+    CURRENT_SYSTEM_VERSION: '80.53',
 
     SYSTEM_CHANGELOG: [
+        {
+            version: '80.53',
+            date: '10/10/2026',
+            title: 'Correção de Sincronismo & Blindagem de Exclusões',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'user-x',
+                    title: 'Blindagem contra Ressurreição de Cadastros',
+                    desc: 'Ajustada a mesclagem de sincronismo em tempo real para respeitar fielmente exclusões de profissionais e cadastros excluídos pelo administrador, impedindo retorno por cache local.',
+                    badge: 'CORREÇÃO'
+                }
+            ]
+        },
         {
             version: '80.52',
             date: '09/10/2026',
             title: 'Liberação Automática de Planos com Mercado Pago',
-            badge: 'Mais Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'zap',
