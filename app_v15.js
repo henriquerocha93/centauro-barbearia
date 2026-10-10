@@ -12062,19 +12062,6 @@ const app = {
                                 <span>⚡</span> GERAR PIX PARA LIBERAÇÃO AUTOMÁTICA
                             </button>
                         </div>
-
-                        <!-- Opção manual alternativa -->
-                        <details style="margin-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--glass-border);">
-                            <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600;">
-                                Preferir pagar manualmente e enviar comprovante?
-                            </summary>
-                            <div style="padding-top: 15px; text-align: center;">
-                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">Chave PIX (CNPJ): <strong>63.039.029/0001-05</strong></p>
-                                <a href="https://wa.me/5551981429980?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${encodeURIComponent(data.name)}).%20Segue%20o%20comprovante." target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.85rem; font-weight: 700;">
-                                    📲 Enviar comprovante no WhatsApp
-                                </a>
-                            </div>
-                        </details>
                     </div>
 
                     <div style="margin-top: 30px; padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.03); text-align: center; border: 1px solid var(--glass-border);">
@@ -12290,12 +12277,6 @@ const app = {
                         </button>
                     </div>
 
-                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">Precisa de atendimento ou enviar comprovante?</p>
-                        <a href="${waLink}" target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.85rem; font-weight: 700;">
-                            📲 Falar com Suporte (WhatsApp)
-                        </a>
-                    </div>
                     <p style="font-size: 0.75rem; color: var(--text-muted);">Unidade: ${tenantId || 'Matriz'}</p>
                 </div>
             </div>

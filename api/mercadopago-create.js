@@ -44,7 +44,16 @@ module.exports = async (req, res) => {
             mpToken = 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cbf4b2f1423-213948720';
         }
 
-        // 2. Buscar dados da unidade (tenant) no Firebase
+        // 2. Buscar preço padrão global e dados da unidade (tenant) no Firebase
+        let defaultPlanPrice = 109.99;
+        try {
+            const planConfigRes = await fetch(`${FIREBASE_DB_URL}/master/config/plan.json`);
+            const planConfigData = await planConfigRes.json();
+            if (planConfigData && planConfigData.price) {
+                defaultPlanPrice = parseFloat(planConfigData.price) || 109.99;
+            }
+        } catch (e) {}
+
         const tenantRes = await fetch(`${FIREBASE_DB_URL}/master/tenants/${tenantId}.json`);
         const tenantData = await tenantRes.json();
 
@@ -52,7 +61,7 @@ module.exports = async (req, res) => {
             return res.status(404).json({ error: `Unidade "${tenantId}" não encontrada.` });
         }
 
-        const price = parseFloat(tenantData.subscriptionPrice) || 59.90;
+        const price = parseFloat(tenantData.subscriptionPrice) || defaultPlanPrice;
         const shopName = tenantData.name || tenantId;
         const email = tenantData.email || `cobranca+${tenantId}@agendamentofacil.com.br`;
 

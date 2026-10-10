@@ -161,67 +161,105 @@ const app = {
             publicKey: 'APP_USR-12f5bf3-26b5-458c-a563-31c81ad6ed7b'
         };
 
+        // Busca configuração de Preço do Plano (Padrão)
+        const planRef = ref(this.db, 'master/config/plan');
+        const planSnap = await get(planRef);
+        const planData = planSnap.val() || { price: 109.99 };
+
         configView.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto;">
                 <!-- Card 1: Acesso Mestre -->
-                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 35px; border-radius: 24px; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <span style="font-size: 2.6rem;">🔐</span>
-                        <h2 style="margin: 10px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #fff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem;">Acesso Administrativo</h2>
-                        <p style="color: #94a3b8; font-size: 0.85rem;">Altere suas credenciais de login do Master.</p>
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span style="font-size: 2.2rem;">🔐</span>
+                        <h2 style="margin: 8px 0 4px 0; font-weight: 800; background: linear-gradient(to right, #fff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.25rem;">Acesso Administrativo</h2>
+                        <p style="color: #94a3b8; font-size: 0.8rem;">Credenciais de login do Master.</p>
                     </div>
                     
                     <form id="master-credentials-form">
-                        <div style="margin-bottom: 18px;">
-                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Usuário Master</label>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 0.72rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Usuário Master</label>
                             <input type="text" id="new-master-user" value="${adminData.user}" required 
-                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box;">
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 11px; border-radius: 10px; color: white; box-sizing: border-box;">
                         </div>
-                        <div style="margin-bottom: 25px;">
-                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Senha Master</label>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 0.72rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Senha Master</label>
                             <input type="text" id="new-master-pass" value="${adminData.pass}" required 
-                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box;">
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 11px; border-radius: 10px; color: white; box-sizing: border-box;">
                         </div>
                         
-                        <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center; padding: 14px; font-size: 0.9rem;">SALVAR ACESSO</button>
+                        <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.85rem;">SALVAR ACESSO</button>
                     </form>
                 </div>
 
-                <!-- Card 2: Mercado Pago (Liberação Automática) -->
-                <div style="background: var(--glass); border: 1px solid rgba(0, 158, 227, 0.3); padding: 35px; border-radius: 24px; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <span style="font-size: 2.6rem;">⚡</span>
-                        <h2 style="margin: 10px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #009ee3, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem;">Mercado Pago API</h2>
-                        <p style="color: #94a3b8; font-size: 0.85rem;">Liberação 100% Automática de Planos via PIX.</p>
+                <!-- Card 2: Valor do Plano SaaS (NOVO) -->
+                <div style="background: var(--glass); border: 1px solid rgba(16, 185, 129, 0.35); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span style="font-size: 2.2rem;">💰</span>
+                        <h2 style="margin: 8px 0 4px 0; font-weight: 800; background: linear-gradient(to right, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.25rem;">Valor da Mensalidade</h2>
+                        <p style="color: #94a3b8; font-size: 0.8rem;">Defina o valor cobrado dos lojistas.</p>
+                    </div>
+
+                    <form id="master-plan-price-form">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 0.72rem; color: #34d399; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Preço Padrão do Plano (R$)</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 11px; color: #10b981; font-weight: 800; font-size: 1rem;">R$</span>
+                                <input type="number" step="0.01" id="master-plan-price" value="${(parseFloat(planData.price) || 109.99).toFixed(2)}" required 
+                                    style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(16, 185, 129, 0.4); padding: 11px 11px 11px 42px; border-radius: 10px; color: white; box-sizing: border-box; font-size: 1.1rem; font-weight: 800;">
+                            </div>
+                            <small style="color: #94a3b8; font-size: 0.7rem; margin-top: 6px; display: block;">
+                                Este valor será cobrado no PIX e aplicado para novas unidades e renovações.
+                            </small>
+                        </div>
+
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #cbd5e1; font-size: 0.75rem;">
+                                <input type="checkbox" id="apply-price-to-all-tenants" checked style="accent-color: #10b981; width: 16px; height: 16px;">
+                                Atualizar também todas as barbearias existentes
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-action" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.85rem; background: #10b981; border-color: #10b981;">SALVAR NOVO VALOR</button>
+                    </form>
+                </div>
+
+                <!-- Card 3: Mercado Pago API -->
+                <div style="background: var(--glass); border: 1px solid rgba(0, 158, 227, 0.35); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span style="font-size: 2.2rem;">⚡</span>
+                        <h2 style="margin: 8px 0 4px 0; font-weight: 800; background: linear-gradient(to right, #009ee3, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.25rem;">Mercado Pago API</h2>
+                        <p style="color: #94a3b8; font-size: 0.8rem;">Liberação 100% Automática via PIX.</p>
                     </div>
 
                     <form id="master-mp-form">
-                        <div style="margin-bottom: 18px;">
-                            <label style="display: block; font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Access Token de Produção</label>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 0.72rem; color: #38bdf8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Access Token de Produção</label>
                             <input type="text" id="mp-access-token" value="${mpData.accessToken || ''}" required 
                                 placeholder="APP_USR-..."
-                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(0, 158, 227, 0.4); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.8rem;">
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(0, 158, 227, 0.4); padding: 11px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.75rem;">
                         </div>
-                        <div style="margin-bottom: 18px;">
-                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Public Key (Opcional)</label>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 0.72rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Public Key (Opcional)</label>
                             <input type="text" id="mp-public-key" value="${mpData.publicKey || ''}" 
                                 placeholder="APP_USR-..."
-                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.8rem;">
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 11px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.75rem;">
                         </div>
 
-                        <div style="background: rgba(0, 158, 227, 0.08); padding: 12px; border-radius: 10px; border: 1px dashed rgba(0, 158, 227, 0.3); margin-bottom: 20px;">
-                            <p style="margin: 0; font-size: 0.72rem; color: #94a3b8; line-height: 1.4;">
-                                📡 <strong>URL do Webhook:</strong><br>
+                        <div style="background: rgba(0, 158, 227, 0.08); padding: 10px; border-radius: 8px; border: 1px dashed rgba(0, 158, 227, 0.3); margin-bottom: 15px;">
+                            <p style="margin: 0; font-size: 0.68rem; color: #94a3b8; line-height: 1.3;">
+                                📡 <strong>Webhook:</strong><br>
                                 <code style="color: #38bdf8; word-break: break-all;">https://centauro-barbearia.vercel.app/api/mercadopago-webhook</code>
                             </p>
                         </div>
                         
-                        <button type="submit" class="btn-action" style="width: 100%; justify-content: center; padding: 14px; font-size: 0.9rem; background: #009ee3; border-color: #009ee3;">SALVAR MERCADO PAGO</button>
+                        <button type="submit" class="btn-action" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.85rem; background: #009ee3; border-color: #009ee3;">SALVAR MERCADO PAGO</button>
                     </form>
                 </div>
             </div>
         `;
 
+        // Evento: Salvar Credenciais Master
         document.getElementById('master-credentials-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -248,6 +286,51 @@ const app = {
             }
         };
 
+        // Evento: Salvar Preço do Plano SaaS
+        document.getElementById('master-plan-price-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const newPrice = parseFloat(document.getElementById('master-plan-price').value);
+            const applyAll = document.getElementById('apply-price-to-all-tenants').checked;
+
+            if (isNaN(newPrice) || newPrice <= 0) {
+                return alert('Por favor, informe um valor válido para o plano.');
+            }
+
+            btn.textContent = 'Atualizando Valor...';
+            btn.disabled = true;
+
+            try {
+                // 1. Salvar na configuração global do plano
+                await set(ref(this.db, 'master/config/plan'), {
+                    price: newPrice,
+                    updatedAt: new Date().toISOString()
+                });
+
+                // 2. Se marcado, atualizar todas as barbearias cadastradas
+                if (applyAll && this.tenants) {
+                    const updates = {};
+                    for (const key of Object.keys(this.tenants)) {
+                        if (key !== 'centauro-legacy') {
+                            updates[`master/tenants/${key}/subscriptionPrice`] = newPrice;
+                        }
+                    }
+                    if (Object.keys(updates).length > 0) {
+                        await update(ref(this.db), updates);
+                    }
+                }
+
+                alert(`✅ Sucesso! O valor do plano foi alterado para R$ ${newPrice.toFixed(2)}${applyAll ? ' em todas as unidades' : ''}.`);
+            } catch (err) {
+                console.error('Erro ao atualizar preço do plano:', err);
+                alert('Erro ao salvar novo valor: ' + err.message);
+            } finally {
+                btn.textContent = 'SALVAR NOVO VALOR';
+                btn.disabled = false;
+            }
+        };
+
+        // Evento: Salvar Mercado Pago
         document.getElementById('master-mp-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
