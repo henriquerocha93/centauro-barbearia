@@ -28,6 +28,7 @@ const app = {
             } // Configuração Dinâmica Semanal
         },
         staff: [],
+        deletedStaffIds: [3],
         services: [],
         products: [],
         appointments: [],
@@ -660,6 +661,12 @@ const app = {
             if (cloudData) {
                 const deletedSet = new Set(this.state._deletedIds || []);
 
+                // [BLINDAGEM DE EXCLUSÃO DE COLABORADORES]
+                // 1. Unifica IDs permanentemente excluídos (Firebase + Local)
+                const cloudDelStaff = Array.isArray(cloudData.deletedStaffIds) ? cloudData.deletedStaffIds : Object.values(cloudData.deletedStaffIds || {});
+                const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
+                this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
+
                 // Mesclar clientes e outros arrays secundários
                 const mergeMap = (localArr, cloudArr) => {
                     const map = new Map();
@@ -696,8 +703,42 @@ const app = {
                 });
                 
                 this.state.appointments = Array.from(mergedAptsMap.values()).filter(a => a && a.id && !deletedSet.has(String(a.id)));
-                this.state.staff = mergeMap(this.state.staff, cloudData.staff);
-                this.state.services = mergeMap(this.state.services, cloudData.services);
+
+                // [AUTORIDADE DA NUVEM PARA COLABORADORES]
+                // Cadastros estruturais não devem ser ressuscitados pelo cache local de outros navegadores.
+                // Apenas itens criados explicitamente nesta sessão (_isNew) são adicionados além dos que já existem na nuvem.
+                const cloudStaffList = toArray(cloudData.staff).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
+                const staffMap = new Map();
+                cloudStaffList.forEach(s => staffMap.set(String(s.id), { ...s }));
+                toArray(this.state.staff).forEach(localStaff => {
+                    if (!localStaff || !localStaff.id) return;
+                    if (allDeletedStaffIds.has(Number(localStaff.id)) || localStaff.name === 'Matheus Fernandes') return;
+                    const sId = String(localStaff.id);
+                    if (staffMap.has(sId)) {
+                        staffMap.set(sId, { ...staffMap.get(sId), ...localStaff });
+                    } else if (localStaff._isNew) {
+                        delete localStaff._isNew;
+                        staffMap.set(sId, localStaff);
+                    }
+                });
+                this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
+
+                // [AUTORIDADE DA NUVEM PARA SERVIÇOS]
+                const cloudServicesList = toArray(cloudData.services).filter(s => s && s.id);
+                const servicesMap = new Map();
+                cloudServicesList.forEach(s => servicesMap.set(String(s.id), { ...s }));
+                toArray(this.state.services).forEach(localServ => {
+                    if (!localServ || !localServ.id) return;
+                    const servId = String(localServ.id);
+                    if (servicesMap.has(servId)) {
+                        servicesMap.set(servId, { ...servicesMap.get(servId), ...localServ });
+                    } else if (localServ._isNew) {
+                        delete localServ._isNew;
+                        servicesMap.set(servId, localServ);
+                    }
+                });
+                this.state.services = Array.from(servicesMap.values()).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+
                 this.state.products = mergeMap(this.state.products, cloudData.products);
                 this.state.subscriptionPlans = mergeMap(this.state.subscriptionPlans || [], cloudData.subscriptionPlans);
                 this.state.subscribers = mergeMap(this.state.subscribers || [], cloudData.subscribers);
@@ -713,7 +754,7 @@ const app = {
             
             // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
             // Substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
-            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions'];
+            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions', 'deletedStaffIds'];
             
             await Promise.all([
                 ...pathsToSet.map(key => set(ref(this.db, dbPath + key), this.state[key] || [])),
@@ -975,7 +1016,7 @@ const app = {
                     console.log('☁️ [GITHUB FALLBACK] Nuvem possui dados mais recentes. Mesclando...');
                     
                     this.state.services = cloudState.services || this.state.services;
-                    this.state.staff = cloudState.staff || this.state.staff;
+                    this.state.staff = (cloudState.staff || this.state.staff || []).filter(s => s && s.id && s.id !== 3 && s.name !== 'Matheus Fernandes' && !(this.state.deletedStaffIds || []).includes(Number(s.id)));
                     this.state.customers = cloudState.customers || this.state.customers;
                     this.state.settings = cloudState.settings || this.state.settings;
                     this.state.vouchers = cloudState.vouchers || this.state.vouchers;
@@ -1067,6 +1108,12 @@ const app = {
                     if (loaded[field]) loaded[field] = toArray(loaded[field]);
                 });
 
+                // [BLINDAGEM] Remover permanentemente colaboradores excluídos (ex: Matheus Fernandes id 3)
+                const delStaffIds = new Set([3, ...(loaded.deletedStaffIds || []).map(Number), ...(this.state.deletedStaffIds || []).map(Number)]);
+                if (loaded.staff) {
+                    loaded.staff = loaded.staff.filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
+                }
+
                 // Preservar configurações padrão se não existirem no localStorage
                 if (loaded.settings) {
                     const defaultSettings = this.state.settings;
@@ -1081,8 +1128,27 @@ const app = {
                 delete loaded.currentDate;
 
                 Object.assign(this.state, loaded);
+                this.state.deletedStaffIds = Array.from(delStaffIds);
+                this.state.staff = (this.state.staff || []).filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
                 this.state.currentDate = this.getTodayDate(); // SEMPRE hoje ao carregar o sistema
                 this.state.currentTenant = this.getTenantId(); // Vincula o estado ao tenant atual
+                
+                // Higieniza o localStorage para que nenhum refresh futuro ou aba traga o registro antigo
+                try {
+                    const rawStorage = localStorage.getItem(key);
+                    if (rawStorage && (rawStorage.includes('Matheus Fernandes') || rawStorage.includes('"id":3'))) {
+                        const parsedObj = JSON.parse(rawStorage);
+                        if (parsedObj.staff) {
+                            parsedObj.staff = toArray(parsedObj.staff).filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
+                        }
+                        parsedObj.deletedStaffIds = Array.from(delStaffIds);
+                        localStorage.setItem(key, JSON.stringify(parsedObj));
+                        console.log('🧹 Limpeza forçada de colaborador excluído executada no localStorage.');
+                    }
+                } catch (cleanErr) {
+                    console.warn('Erro ao limpar cache local de colaboradores:', cleanErr);
+                }
+
                 console.log(`✅ Estado carregado e normalizado para loja: ${key} (Data da agenda: ${this.state.currentDate})`);
                 this.migrateProducts();
                 this.migrateVouchersFromTransactions();
@@ -1423,10 +1489,43 @@ const app = {
                                 return mergedApt;
                             });
 
-                            // Se temos alterações locais pendentes de envio, mescla; senão, a nuvem é a fonte da verdade absoluta (evita ressurreição de deletados)
+                            // [BLINDAGEM CONTRA RESSURREIÇÃO DE COLABORADORES EXCLUÍDOS]
+                            const cloudDelStaff = Array.isArray(data.deletedStaffIds) ? data.deletedStaffIds : Object.values(data.deletedStaffIds || {});
+                            const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
+                            this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
+
+                            const rawCloudStaff = toArray(data.staff).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
+
+                            // Se temos alterações locais pendentes de envio, mescla com autoridade da nuvem; senão, a nuvem é a fonte da verdade absoluta (evita ressurreição de deletados)
                             if (this.state.needsSync || this.state.isSyncing) {
-                                this.state.staff = mergeArrays(this.state.staff, data.staff);
-                                this.state.services = mergeArrays(this.state.services, data.services);
+                                const staffMap = new Map();
+                                rawCloudStaff.forEach(s => staffMap.set(String(s.id), { ...s }));
+                                toArray(this.state.staff).forEach(localStaff => {
+                                    if (!localStaff || !localStaff.id) return;
+                                    if (allDeletedStaffIds.has(Number(localStaff.id)) || localStaff.name === 'Matheus Fernandes') return;
+                                    const sId = String(localStaff.id);
+                                    if (staffMap.has(sId)) {
+                                        staffMap.set(sId, { ...staffMap.get(sId), ...localStaff });
+                                    } else if (localStaff._isNew) {
+                                        staffMap.set(sId, localStaff);
+                                    }
+                                });
+                                this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
+
+                                const rawCloudServices = toArray(data.services).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                const servMap = new Map();
+                                rawCloudServices.forEach(s => servMap.set(String(s.id), { ...s }));
+                                toArray(this.state.services).forEach(localServ => {
+                                    if (!localServ || !localServ.id) return;
+                                    const servId = String(localServ.id);
+                                    if (servMap.has(servId)) {
+                                        servMap.set(servId, { ...servMap.get(servId), ...localServ });
+                                    } else if (localServ._isNew) {
+                                        servMap.set(servId, localServ);
+                                    }
+                                });
+                                this.state.services = Array.from(servMap.values()).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+
                                 this.state.products = mergeArrays(this.state.products, data.products);
                                 this.state.customers = mergeArrays(this.state.customers, data.customers);
                                 this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
@@ -1435,7 +1534,7 @@ const app = {
                                 this.state.serviceOrders = mergeArrays(this.state.serviceOrders, data.serviceOrders);
                                 this.state.tips = mergeArrays(this.state.tips, data.tips);
                             } else {
-                                this.state.staff = toArray(data.staff).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                this.state.staff = rawCloudStaff;
                                 this.state.services = toArray(data.services).filter(s => s && s.id && !deletedSet.has(String(s.id)));
                                 this.state.products = toArray(data.products).filter(p => p && p.id && !deletedSet.has(String(p.id)));
                                 this.state.customers = toArray(data.customers).filter(c => c && c.id && !deletedSet.has(String(c.id)));
@@ -1783,14 +1882,34 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.53',
+    CURRENT_SYSTEM_VERSION: '80.54',
 
     SYSTEM_CHANGELOG: [
+        {
+            version: '80.54',
+            date: '10/10/2026',
+            title: 'Expurgo Permanente de Colaboradores & Autoridade da Nuvem',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'shield-alert',
+                    title: 'Eliminação Definitiva de Ressurreição por Cache',
+                    desc: 'Implementada autoridade máxima da nuvem para colaboradores e serviços, lista definitiva de exclusões sincronizada com Firebase e expurgo automático de cache local e localStorage antigo.',
+                    badge: 'BLINDAGEM'
+                },
+                {
+                    icon: 'user-minus',
+                    title: 'Remoção Permanente de Colaborador Desligado',
+                    desc: 'O perfil de Matheus Fernandes foi removido definitivamente do banco de dados e bloqueado contra qualquer reenvio acidental por aparelhos antigos.',
+                    badge: 'CORREÇÃO'
+                }
+            ]
+        },
         {
             version: '80.53',
             date: '10/10/2026',
             title: 'Correção de Sincronismo & Blindagem de Exclusões',
-            badge: 'Mais Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'user-x',
@@ -5373,7 +5492,7 @@ const app = {
                     const snap = await get(ref(this.db, dbPath));
                     if (snap.exists()) {
                         const rawStaff = snap.val();
-                        const fetchedStaff = Array.isArray(rawStaff) ? rawStaff : Object.values(rawStaff || {});
+                        const fetchedStaff = (Array.isArray(rawStaff) ? rawStaff : Object.values(rawStaff || {})).filter(s => s && s.id && s.id !== 3 && s.name !== 'Matheus Fernandes' && !(this.state.deletedStaffIds || []).includes(Number(s.id)));
                         this.state.staff = fetchedStaff;
                         matchedUser = fetchedStaff.find(s =>
                             s && ((s.login && String(s.login).trim().toLowerCase() === user) || (s.email && String(s.email).trim().toLowerCase() === user)) &&
@@ -6332,7 +6451,8 @@ const app = {
         const type = this.state.settings.businessType || 'barbershop';
         const theme = this.state.themes[type] || this.state.themes.barbershop;
 
-        const staff = Array.isArray(this.state.staff) ? this.state.staff : [];
+        const delStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number)]);
+        const staff = (Array.isArray(this.state.staff) ? this.state.staff : []).filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
         const barbersToShow = barberFilter
             ? staff.filter(s => s && s.name === barberFilter)
             : staff.filter(s => s && s.showInAgenda !== false);
@@ -10851,7 +10971,8 @@ const app = {
     },
 
     renderBookingStep1(container) {
-        const barbers = this.state.staff.filter(s => s.role === 'barber' && s.showInAgenda !== false);
+        const delStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number)]);
+        const barbers = (this.state.staff || []).filter(s => s && s.role === 'barber' && s.showInAgenda !== false && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
         container.innerHTML = `
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha seu profissional</p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
@@ -11561,7 +11682,7 @@ const app = {
             }
         } else {
             const newId = this.state.staff.length ? Math.max(...this.state.staff.map(s => s.id)) + 1 : 1;
-            this.state.staff.push({ id: newId, name, photo, login, password, role, commission, showInAgenda });
+            this.state.staff.push({ id: newId, name, photo, login, password, role, commission, showInAgenda, _isNew: true });
         }
 
         this.saveState();
@@ -11571,8 +11692,23 @@ const app = {
 
     deleteStaff(staffId) {
         if (confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
+            const numId = Number(staffId);
             this.registerDeletion(staffId);
-            this.state.staff = this.state.staff.filter(s => s.id !== staffId);
+            if (!this.state.deletedStaffIds) this.state.deletedStaffIds = [];
+            if (!this.state.deletedStaffIds.includes(numId)) this.state.deletedStaffIds.push(numId);
+            this.state.staff = (this.state.staff || []).filter(s => Number(s.id) !== numId && s.name !== 'Matheus Fernandes');
+
+            // Persistir imediatamente na nuvem se conectado
+            if (this.db) {
+                try {
+                    const dbPath = this.getDbPath();
+                    set(ref(this.db, dbPath + 'staff'), this.state.staff);
+                    set(ref(this.db, dbPath + 'deletedStaffIds'), this.state.deletedStaffIds);
+                } catch (err) {
+                    console.error('Erro ao deletar colaborador no Firebase:', err);
+                }
+            }
+
             this.saveState();
             this.closeModal();
             this.render('admin-staff');
@@ -11587,7 +11723,7 @@ const app = {
                     <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; box-shadow: none;" onclick="app.openStaffModal()">+ Novo Colaborador</button>
                 </div>
                 <div class="staff-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-                    ${this.state.staff.map(s => `
+                    ${(this.state.staff || []).filter(s => s && s.id && s.id !== 3 && s.name !== 'Matheus Fernandes' && !(this.state.deletedStaffIds || []).includes(Number(s.id))).map(s => `
                         <div class="glass" style="padding: 15px; display: flex; align-items: center; gap: 15px;">
                             <img src="${s.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: var(--surface-light); border: 2px solid var(--glass-border);">
                             <div style="flex: 1;">
@@ -11698,7 +11834,7 @@ const app = {
             }
         } else {
             const newId = this.state.services.length ? Math.max(...this.state.services.map(s => s.id)) + 1 : 1;
-            this.state.services.push({ id: newId, name, price, duration });
+            this.state.services.push({ id: newId, name, price, duration, _isNew: true });
         }
 
         this.saveState();
@@ -11796,8 +11932,17 @@ const app = {
 
     deleteService(serviceId) {
         if (confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
+            const numId = Number(serviceId);
             this.registerDeletion(serviceId);
-            this.state.services = this.state.services.filter(s => s.id !== serviceId);
+            this.state.services = this.state.services.filter(s => Number(s.id) !== numId);
+            if (this.db) {
+                try {
+                    const dbPath = this.getDbPath();
+                    set(ref(this.db, dbPath + 'services'), this.state.services);
+                } catch (err) {
+                    console.error('Erro ao deletar serviço no Firebase:', err);
+                }
+            }
             this.saveState();
             this.render('admin-services');
         }
