@@ -153,29 +153,72 @@ const app = {
         const snap = await get(adminRef);
         const adminData = snap.val() || { user: 'henrique', pass: '123' };
 
+        // Busca configuração do Mercado Pago
+        const mpRef = ref(this.db, 'master/config/mercadopago');
+        const mpSnap = await get(mpRef);
+        const mpData = mpSnap.val() || {
+            accessToken: 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cbf4b2f1423-213948720',
+            publicKey: 'APP_USR-12f5bf3-26b5-458c-a563-31c81ad6ed7b'
+        };
+
         configView.innerHTML = `
-            <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 40px; border-radius: 24px; backdrop-filter: blur(10px); max-width: 500px; margin: 0 auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <span style="font-size: 3rem;">🔐</span>
-                    <h2 style="margin: 15px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #fff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Acesso Administrativo</h2>
-                    <p style="color: #94a3b8; font-size: 0.9rem;">Altere suas credenciais de acesso ao Painel Master.</p>
-                </div>
-                
-                <form id="master-credentials-form">
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Novo Usuário</label>
-                        <input type="text" id="new-master-user" value="${adminData.user}" required 
-                            style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; box-sizing: border-box;">
-                    </div>
-                    <div style="margin-bottom: 30px;">
-                        <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Nova Senha</label>
-                        <input type="text" id="new-master-pass" value="${adminData.pass}" required 
-                            style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; box-sizing: border-box;">
-                        <small style="color: #64748b; margin-top: 10px; display: block; font-style: italic;">Guarde estas credenciais em local seguro.</small>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto;">
+                <!-- Card 1: Acesso Mestre -->
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); padding: 35px; border-radius: 24px; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <span style="font-size: 2.6rem;">🔐</span>
+                        <h2 style="margin: 10px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #fff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem;">Acesso Administrativo</h2>
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Altere suas credenciais de login do Master.</p>
                     </div>
                     
-                    <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center; padding: 16px; font-size: 1rem;">SALVAR NOVAS CREDENCIAIS</button>
-                </form>
+                    <form id="master-credentials-form">
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Usuário Master</label>
+                            <input type="text" id="new-master-user" value="${adminData.user}" required 
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box;">
+                        </div>
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Senha Master</label>
+                            <input type="text" id="new-master-pass" value="${adminData.pass}" required 
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box;">
+                        </div>
+                        
+                        <button type="submit" class="btn-action btn-main" style="width: 100%; justify-content: center; padding: 14px; font-size: 0.9rem;">SALVAR ACESSO</button>
+                    </form>
+                </div>
+
+                <!-- Card 2: Mercado Pago (Liberação Automática) -->
+                <div style="background: var(--glass); border: 1px solid rgba(0, 158, 227, 0.3); padding: 35px; border-radius: 24px; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <span style="font-size: 2.6rem;">⚡</span>
+                        <h2 style="margin: 10px 0 5px 0; font-weight: 800; background: linear-gradient(to right, #009ee3, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem;">Mercado Pago API</h2>
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Liberação 100% Automática de Planos via PIX.</p>
+                    </div>
+
+                    <form id="master-mp-form">
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: block; font-size: 0.75rem; color: #38bdf8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Access Token de Produção</label>
+                            <input type="text" id="mp-access-token" value="${mpData.accessToken || ''}" required 
+                                placeholder="APP_USR-..."
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(0, 158, 227, 0.4); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.8rem;">
+                        </div>
+                        <div style="margin-bottom: 18px;">
+                            <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Public Key (Opcional)</label>
+                            <input type="text" id="mp-public-key" value="${mpData.publicKey || ''}" 
+                                placeholder="APP_USR-..."
+                                style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: white; box-sizing: border-box; font-family: monospace; font-size: 0.8rem;">
+                        </div>
+
+                        <div style="background: rgba(0, 158, 227, 0.08); padding: 12px; border-radius: 10px; border: 1px dashed rgba(0, 158, 227, 0.3); margin-bottom: 20px;">
+                            <p style="margin: 0; font-size: 0.72rem; color: #94a3b8; line-height: 1.4;">
+                                📡 <strong>URL do Webhook:</strong><br>
+                                <code style="color: #38bdf8; word-break: break-all;">https://centauro-barbearia.vercel.app/api/mercadopago-webhook</code>
+                            </p>
+                        </div>
+                        
+                        <button type="submit" class="btn-action" style="width: 100%; justify-content: center; padding: 14px; font-size: 0.9rem; background: #009ee3; border-color: #009ee3;">SALVAR MERCADO PAGO</button>
+                    </form>
+                </div>
             </div>
         `;
 
@@ -200,13 +243,36 @@ const app = {
                 console.error(err);
                 alert('Erro ao salvar no banco de dados.');
             } finally {
-                btn.textContent = 'SALVAR NOVAS CREDENCIAIS';
+                btn.textContent = 'SALVAR ACESSO';
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('master-mp-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const token = document.getElementById('mp-access-token').value.trim();
+            const pubKey = document.getElementById('mp-public-key').value.trim();
+
+            btn.textContent = 'Gravando Token...';
+            btn.disabled = true;
+
+            try {
+                await set(ref(this.db, 'master/config/mercadopago'), {
+                    accessToken: token,
+                    publicKey: pubKey,
+                    updatedAt: new Date().toISOString()
+                });
+                alert('✅ Credenciais do Mercado Pago salvas com sucesso! A liberação automática de planos está ativa.');
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar credenciais do Mercado Pago.');
+            } finally {
+                btn.textContent = 'SALVAR MERCADO PAGO';
                 btn.disabled = false;
             }
         };
     },
-
-
 
     loadTenants() {
         const tenantsRef = ref(this.db, 'master/tenants/');

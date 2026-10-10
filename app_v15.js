@@ -1770,14 +1770,40 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.51',
+    CURRENT_SYSTEM_VERSION: '80.52',
 
     SYSTEM_CHANGELOG: [
+        {
+            version: '80.52',
+            date: '09/10/2026',
+            title: 'Liberação Automática de Planos com Mercado Pago',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'zap',
+                    title: 'Renovação Automática via PIX do Mercado Pago',
+                    desc: 'Lojistas agora podem gerar QR Code PIX dinâmico com liberação imediata do sistema no momento exato em que o pagamento for aprovado pelo banco.',
+                    badge: 'NOVO'
+                },
+                {
+                    icon: 'shield-check',
+                    title: 'Webhook & Desbloqueio Instantâneo',
+                    desc: 'Integração de Webhook com a API do Mercado Pago para adicionar +30 dias de acesso e remover bloqueios automaticamente sem intervenção manual.',
+                    badge: 'AUTOMAÇÃO'
+                },
+                {
+                    icon: 'key',
+                    title: 'Configurações de API no Painel Master',
+                    desc: 'Aba Perfil Master atualizada para gerenciar o Access Token de Produção e a URL de notificações do Mercado Pago com total segurança.',
+                    badge: 'PAINEL'
+                }
+            ]
+        },
         {
             version: '80.51',
             date: '09/10/2026',
             title: 'Correção de Pagamentos & Conferência Obrigatória de OS',
-            badge: 'Mais Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'credit-card',
@@ -12019,25 +12045,36 @@ const app = {
                     </div>
 
                     <div class="glass" style="padding: 30px; border-top: 1px solid var(--glass-border);">
-                        <h4 style="margin-bottom: 18px; color: var(--accent-readable); font-size: 1.1rem;">Como realizar a renovação?</h4>
+                        <h4 style="margin-bottom: 12px; color: var(--accent-readable); font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                            <span>⚡</span> Renovação Automática com Liberação Imediata
+                        </h4>
                         <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px;">
-                            O sistema de faturamento é pré-pago. Para renovar seu acesso por mais 30 dias, realize o pagamento via <strong>PIX</strong> e nosso suporte fará a liberação imediata.
+                            Pague via <strong>PIX</strong> e seu sistema será renovado e liberado <strong>instantaneamente</strong>, sem precisar enviar comprovante ou aguardar atendimento.
                         </p>
                         
-                        <div style="background: var(--surface-dark); padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 30px;">
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">CHAVE PIX (CNPJ)</p>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <h3 id="pix-key" style="font-family: 'JetBrains Mono', monospace; color: var(--accent-readable); font-size: 1.3rem; letter-spacing: 1px;">63.039.029/0001-05</h3>
-                                <button onclick="navigator.clipboard.writeText('63.039.029/0001-05'); alert('Chave PIX copiada!')" class="glass" style="padding: 5px 10px; font-size: 0.7rem; cursor: pointer;">Copiar</button>
-                            </div>
-                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Favorecido: <strong>Agendamento Fácil BR</strong></p>
+                        <div style="background: linear-gradient(135deg, rgba(0, 158, 227, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(0, 158, 227, 0.4); padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 25px;">
+                            <div style="font-size: 2.2rem; margin-bottom: 8px;">📱</div>
+                            <h3 style="color: #fff; font-size: 1.3rem; margin-bottom: 6px;">Pagar via PIX com Liberação Imediata</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
+                                Valor: <strong style="color: #4ade80; font-size: 1.2rem;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}</strong> (30 dias de acesso completo)
+                            </p>
+                            <button onclick="app.openAutoRenewalModal('${tenantId}')" class="btn-primary" style="background: #009ee3; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 0 10px 25px rgba(0, 158, 227, 0.4); display: inline-flex; align-items: center; gap: 10px;">
+                                <span>⚡</span> GERAR PIX PARA LIBERAÇÃO AUTOMÁTICA
+                            </button>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                            <a href="https://wa.me/5551981429980?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${encodeURIComponent(data.name)}).%20Segue%20o%20comprovante." target="_blank" class="btn-primary" style="text-align: center; background: #25D366; text-decoration: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <span style="font-size: 1.4rem;">📲</span> ENVIAR COMPROVANTE NO WHATSAPP
-                            </a>
-                        </div>
+                        <!-- Opção manual alternativa -->
+                        <details style="margin-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--glass-border);">
+                            <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600;">
+                                Preferir pagar manualmente e enviar comprovante?
+                            </summary>
+                            <div style="padding-top: 15px; text-align: center;">
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">Chave PIX (CNPJ): <strong>63.039.029/0001-05</strong></p>
+                                <a href="https://wa.me/5551981429980?text=Olá!%20Realizei%20o%20pagamento%20da%20mensalidade%20da%20minha%20barbearia%20(${encodeURIComponent(data.name)}).%20Segue%20o%20comprovante." target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.85rem; font-weight: 700;">
+                                    📲 Enviar comprovante no WhatsApp
+                                </a>
+                            </div>
+                        </details>
                     </div>
 
                     <div style="margin-top: 30px; padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.03); text-align: center; border: 1px solid var(--glass-border);">
@@ -12120,30 +12157,147 @@ const app = {
         return '';
     },
 
+    // ══════════════════════════════════════════════════════════════
+    //  MODAL DE PAGAMENTO PIX AUTOMÁTICO VIA MERCADO PAGO
+    // ══════════════════════════════════════════════════════════════
+    async openAutoRenewalModal(tenantId) {
+        if (!tenantId) tenantId = this.getTenantId();
+
+        this.openModal('⚡ Pagamento Automático PIX', `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 15px;">⏳</div>
+                <h3 style="color: #fff; margin-bottom: 10px;">Gerando cobrança PIX...</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Conectando com o Mercado Pago...</p>
+            </div>
+        `);
+
+        try {
+            const res = await fetch('/api/mercadopago-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tenantId })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || data.details || 'Falha ao gerar cobrança.');
+            }
+
+            const paymentId = data.paymentId;
+            const qrCodeBase64 = data.qrCodeBase64;
+            const qrCode = data.qrCode;
+            const amount = (data.amount || 0).toFixed(2);
+
+            this.openModal('⚡ Pagamento Automático PIX', `
+                <div style="text-align: center; padding: 15px;">
+                    <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(0, 158, 227, 0.15); color: #009ee3; font-weight: 700; font-size: 0.75rem; margin-bottom: 10px;">
+                        MERCADO PAGO • LIBERAÇÃO INSTANTÂNEA
+                    </div>
+                    <h3 style="margin-bottom: 5px; color: #fff;">Escaneie o QR Code ou Copie o Código</h3>
+                    <p style="color: #4ade80; font-size: 1.4rem; font-weight: 900; margin: 10px 0;">R$ ${amount}</p>
+
+                    ${qrCodeBase64 ? `
+                        <div style="background: white; padding: 15px; border-radius: 16px; display: inline-block; margin: 10px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                            <img src="data:image/png;base64,${qrCodeBase64}" alt="QR Code PIX" style="width: 200px; height: 200px; display: block;">
+                        </div>
+                    ` : ''}
+
+                    <div style="margin: 15px 0;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">Código PIX Copia e Cola:</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" readonly id="mp-pix-code-input" value="${qrCode || ''}" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: #94a3b8; font-family: monospace; font-size: 0.75rem;">
+                            <button class="btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('mp-pix-code-input').value); alert('✅ Código PIX copiado! Cole no seu aplicativo bancário.');" style="padding: 10px 15px; font-size: 0.8rem; background: #009ee3; border: none; white-space: nowrap;">
+                                Copiar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="mp-payment-status-box" style="margin-top: 15px; padding: 12px; border-radius: 10px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="pulse-indicator">⏳</span> Aguardando confirmação do banco...
+                    </div>
+                </div>
+            `);
+
+            // Iniciar checagem em tempo real (Polling de status)
+            if (this._mpPollingInterval) clearInterval(this._mpPollingInterval);
+            let pollAttempts = 0;
+
+            this._mpPollingInterval = setInterval(async () => {
+                pollAttempts++;
+                if (pollAttempts > 120) { // 10 minutos máx
+                    clearInterval(this._mpPollingInterval);
+                    return;
+                }
+
+                try {
+                    const statusRes = await fetch(`/api/mercadopago-status?paymentId=${paymentId}&tenantId=${encodeURIComponent(tenantId)}`);
+                    const statusData = await statusRes.json();
+
+                    if (statusData.approved) {
+                        clearInterval(this._mpPollingInterval);
+                        const box = document.getElementById('mp-payment-status-box');
+                        if (box) {
+                            box.style.background = 'rgba(74, 222, 128, 0.2)';
+                            box.style.borderColor = '#4ade80';
+                            box.style.color = '#4ade80';
+                            box.innerHTML = '🎉 <strong>PAGAMENTO APROVADO! SISTEMA LIBERADO!</strong>';
+                        }
+
+                        setTimeout(() => {
+                            alert('✅ Pagamento confirmado com sucesso! Seu plano foi renovado e o sistema está 100% liberado por mais 30 dias.');
+                            window.location.reload();
+                        }, 1800);
+                    }
+                } catch (pollErr) {
+                    console.warn('Erro ao consultar status:', pollErr);
+                }
+            }, 5000);
+
+        } catch (err) {
+            console.error('Erro ao abrir cobrança:', err);
+            this.openModal('Erro', `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: #ef4444; margin-bottom: 15px;">❌ ${err.message}</p>
+                    <button class="btn-primary" onclick="app.closeModal()">Fechar</button>
+                </div>
+            `);
+        }
+    },
+
     renderBlockedScreen(container) {
         const s = this.state.settings || {};
+        const tenantId = this.getTenantId();
         const shopName = s.shopName || 'Minha Loja';
         const waLink = `https://wa.me/5551981429980?text=Quero%20fazer%20o%20pagamento%20-%20${encodeURIComponent(shopName)}`;
 
         container.className = '';
         container.innerHTML = `
-            <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
-                <div class="glass fade-in" style="max-width: 500px; padding: 40px; border-top: 5px solid #ef4444;">
-                    <div style="font-size: 4rem; margin-bottom: 20px;">🚫</div>
-                    <h1 style="font-family: 'Playfair Display'; font-size: 2rem; margin-bottom: 15px;">ACESSO SUSPENSO</h1>
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 30px;">
-                        O período de uso desta unidade expirou ou o acesso foi suspenso pela administração. 
-                        Regularize sua situação para continuar utilizando o Agendamento Fácil BR.
+            <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
+                <div class="glass fade-in" style="max-width: 520px; width: 100%; padding: 40px; border-top: 5px solid #ef4444; border-radius: 20px;">
+                    <div style="font-size: 3.5rem; margin-bottom: 15px;">🚫</div>
+                    <h1 style="font-family: 'Playfair Display'; font-size: 1.8rem; margin-bottom: 12px;">ACESSO SUSPENSO</h1>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px; font-size: 0.9rem;">
+                        O período de uso desta unidade expirou. Realize o pagamento para <strong>liberar o sistema imediatamente</strong>.
                     </p>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Chave PIX (CNPJ):</p>
-                        <p style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 15px;">63.039.029/0001-05</p>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Após o pagamento, envie o comprovante:</p>
-                        <a href="${waLink}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">
-                            Enviar Comprovante (WhatsApp)
+                    
+                    <!-- Botão de Liberação Automática PIX Mercado Pago -->
+                    <div style="background: linear-gradient(135deg, rgba(0, 158, 227, 0.2), rgba(16, 185, 129, 0.15)); padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(0, 158, 227, 0.5);">
+                        <p style="font-size: 0.85rem; color: #38bdf8; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">⚡ Liberação Automática Instantânea</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">Pague via PIX e seu acesso será liberado no mesmo segundo.</p>
+                        <button onclick="app.openAutoRenewalModal('${tenantId}')" class="btn-primary" style="width: 100%; background: #009ee3; border: none; padding: 16px; font-size: 1rem; font-weight: 800; border-radius: 10px; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 158, 227, 0.4);">
+                            ⚡ PAGAR PIX E LIBERAR AGORA
+                        </button>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--glass-border);">
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">Precisa de atendimento ou enviar comprovante?</p>
+                        <a href="${waLink}" target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.85rem; font-weight: 700;">
+                            📲 Falar com Suporte (WhatsApp)
                         </a>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-muted);">Unidade: ${new URLSearchParams(window.location.search).get('loja') || 'Matriz'}</p>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Unidade: ${tenantId || 'Matriz'}</p>
+                </div>
             </div>
         `;
     },
