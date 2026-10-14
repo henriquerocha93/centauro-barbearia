@@ -1882,14 +1882,28 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.54',
+    CURRENT_SYSTEM_VERSION: '80.55',
 
     SYSTEM_CHANGELOG: [
+        {
+            version: '80.55',
+            date: '14/10/2026',
+            title: 'Correção das Credenciais de Produção do Mercado Pago',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'zap',
+                    title: 'Correção de Token & Geração de PIX Instantâneo',
+                    desc: 'Corrigida a chave de acesso (Access Token) do Mercado Pago gravada no Firebase e nas funções da API, restabelecendo a geração imediata do QR Code e código Copia e Cola para renovação de planos.',
+                    badge: 'CORREÇÃO'
+                }
+            ]
+        },
         {
             version: '80.54',
             date: '10/10/2026',
             title: 'Expurgo Permanente de Colaboradores & Autoridade da Nuvem',
-            badge: 'Mais Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'shield-alert',
@@ -12340,7 +12354,9 @@ const app = {
             const data = await res.json();
 
             if (!res.ok || !data.success) {
-                throw new Error(data.error || data.details || 'Falha ao gerar cobrança.');
+                const detailMsg = typeof data.details === 'string' ? data.details : (data.details?.message || '');
+                const fullMsg = data.error ? (detailMsg ? `${data.error} (${detailMsg})` : data.error) : 'Falha ao gerar cobrança.';
+                throw new Error(fullMsg);
             }
 
             const paymentId = data.paymentId;

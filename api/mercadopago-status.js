@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
         } catch (e) {}
 
         if (!mpToken) {
-            mpToken = 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cbf4b2f1423-213948720';
+            mpToken = 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cb1f4b2f1423-213948720';
         }
 
         const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {

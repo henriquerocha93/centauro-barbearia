@@ -157,8 +157,8 @@ const app = {
         const mpRef = ref(this.db, 'master/config/mercadopago');
         const mpSnap = await get(mpRef);
         const mpData = mpSnap.val() || {
-            accessToken: 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cbf4b2f1423-213948720',
-            publicKey: 'APP_USR-12f5bf3-26b5-458c-a563-31c81ad6ed7b'
+            accessToken: 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cb1f4b2f1423-213948720',
+            publicKey: 'APP_USR-12f5b1f3-26b5-458c-a563-31c81ad6ed7b'
         };
 
         // Busca configuração de Preço do Plano (Padrão)

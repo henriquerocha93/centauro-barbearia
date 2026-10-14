@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
 
         // Fallback para o token informado pelo cliente
         if (!mpToken) {
-            mpToken = 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cbf4b2f1423-213948720';
+            mpToken = 'APP_USR-4949139253547651-100921-77ed1d042ca5536af695cb1f4b2f1423-213948720';
         }
 
         // 2. Buscar preço padrão global e dados da unidade (tenant) no Firebase
@@ -54,16 +54,15 @@ module.exports = async (req, res) => {
             }
         } catch (e) {}
 
-        const tenantRes = await fetch(`${FIREBASE_DB_URL}/master/tenants/${tenantId}.json`);
-        const tenantData = await tenantRes.json();
+        let tenantData = null;
+        try {
+            const tenantRes = await fetch(`${FIREBASE_DB_URL}/master/tenants/${tenantId}.json`);
+            tenantData = await tenantRes.json();
+        } catch (e) {}
 
-        if (!tenantData) {
-            return res.status(404).json({ error: `Unidade "${tenantId}" não encontrada.` });
-        }
-
-        const price = parseFloat(tenantData.subscriptionPrice) || defaultPlanPrice;
-        const shopName = tenantData.name || tenantId;
-        const email = tenantData.email || `cobranca+${tenantId}@agendamentofacil.com.br`;
+        const price = (tenantData && parseFloat(tenantData.subscriptionPrice)) || defaultPlanPrice;
+        const shopName = (tenantData && tenantData.name) || tenantId;
+        const email = (tenantData && tenantData.email) || `cobranca+${tenantId}@agendamentofacil.com.br`;
 
         // 3. Montar payload do Mercado Pago (PIX)
         const mpPayload = {
