@@ -94,6 +94,12 @@ module.exports = async (req, res) => {
                 return res.status(200).json({ received: true, error: 'Tenant not found' });
             }
 
+            // [IDEMPOTÊNCIA] Evitar soma repetida de +30 dias se este mesmo pagamento já foi processado
+            if (tenantData.lastPaymentId && String(tenantData.lastPaymentId) === String(paymentId)) {
+                console.log(`⚠️ Pagamento ${paymentId} já foi processado anteriormente para "${tenantId}". Ignorando duplicação.`);
+                return res.status(200).json({ received: true, message: 'Payment already processed' });
+            }
+
             // Calcular nova data de vencimento (+30 dias)
             // Se já estava vencido, +30 dias a partir de hoje; se estava em dia, soma 30 dias na data atual de vencimento
             const currentExpiry = tenantData.nextPayment ? new Date(tenantData.nextPayment) : new Date();

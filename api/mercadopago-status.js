@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
                 const tenantRes = await fetch(`${FIREBASE_DB_URL}/master/tenants/${tenantId}.json`);
                 const tenantData = await tenantRes.json();
 
-                if (tenantData && tenantData.lastPaymentId !== paymentId) {
+                if (tenantData && String(tenantData.lastPaymentId || '') !== String(paymentId)) {
                     const currentExpiry = tenantData.nextPayment ? new Date(tenantData.nextPayment) : new Date();
                     const now = new Date();
                     const baseDate = currentExpiry > now ? currentExpiry : now;

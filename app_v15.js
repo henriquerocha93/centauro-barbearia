@@ -723,21 +723,8 @@ const app = {
                 });
                 this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
-                // [AUTORIDADE DA NUVEM PARA SERVIÇOS]
-                const cloudServicesList = toArray(cloudData.services).filter(s => s && s.id);
-                const servicesMap = new Map();
-                cloudServicesList.forEach(s => servicesMap.set(String(s.id), { ...s }));
-                toArray(this.state.services).forEach(localServ => {
-                    if (!localServ || !localServ.id) return;
-                    const servId = String(localServ.id);
-                    if (servicesMap.has(servId)) {
-                        servicesMap.set(servId, { ...servicesMap.get(servId), ...localServ });
-                    } else if (localServ._isNew) {
-                        delete localServ._isNew;
-                        servicesMap.set(servId, localServ);
-                    }
-                });
-                this.state.services = Array.from(servicesMap.values()).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                // [PERSISTÊNCIA SEGURA DE SERVIÇOS]
+                this.state.services = mergeMap(this.state.services, cloudData.services);
 
                 this.state.products = mergeMap(this.state.products, cloudData.products);
                 this.state.subscriptionPlans = mergeMap(this.state.subscriptionPlans || [], cloudData.subscriptionPlans);
@@ -1015,20 +1002,27 @@ const app = {
                 if (cloudLastUpdate > localLastUpdate) {
                     console.log('☁️ [GITHUB FALLBACK] Nuvem possui dados mais recentes. Mesclando...');
                     
-                    this.state.services = cloudState.services || this.state.services;
+                    const mergeFallback = (localArr, cloudArr) => {
+                        const map = new Map();
+                        (cloudArr || []).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                        (localArr || []).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
+                        return Array.from(map.values());
+                    };
+
+                    this.state.services = mergeFallback(this.state.services, cloudState.services);
                     this.state.staff = (cloudState.staff || this.state.staff || []).filter(s => s && s.id && s.id !== 3 && s.name !== 'Matheus Fernandes' && !(this.state.deletedStaffIds || []).includes(Number(s.id)));
-                    this.state.customers = cloudState.customers || this.state.customers;
+                    this.state.customers = mergeFallback(this.state.customers, cloudState.customers);
                     this.state.settings = cloudState.settings || this.state.settings;
-                    this.state.vouchers = cloudState.vouchers || this.state.vouchers;
-                    this.state.transactions = cloudState.transactions || this.state.transactions;
-                    this.state.products = cloudState.products || this.state.products;
-                    this.state.productSales = cloudState.productSales || [];
-                    this.state.appointments = cloudState.appointments || [];
-                    this.state.serviceOrders = cloudState.serviceOrders || [];
-                    this.state.tips = cloudState.tips || [];
-                    this.state.subscriptionPlans = cloudState.subscriptionPlans || this.state.subscriptionPlans || [];
-                    this.state.subscribers = cloudState.subscribers || this.state.subscribers || [];
-                    this.state.pendingSubscriptions = cloudState.pendingSubscriptions || this.state.pendingSubscriptions || [];
+                    this.state.vouchers = mergeFallback(this.state.vouchers, cloudState.vouchers);
+                    this.state.transactions = mergeFallback(this.state.transactions, cloudState.transactions);
+                    this.state.products = mergeFallback(this.state.products, cloudState.products);
+                    this.state.productSales = mergeFallback(this.state.productSales, cloudState.productSales);
+                    this.state.appointments = mergeFallback(this.state.appointments, cloudState.appointments);
+                    this.state.serviceOrders = mergeFallback(this.state.serviceOrders, cloudState.serviceOrders);
+                    this.state.tips = mergeFallback(this.state.tips, cloudState.tips);
+                    this.state.subscriptionPlans = mergeFallback(this.state.subscriptionPlans, cloudState.subscriptionPlans);
+                    this.state.subscribers = mergeFallback(this.state.subscribers, cloudState.subscribers);
+                    this.state.pendingSubscriptions = mergeFallback(this.state.pendingSubscriptions, cloudState.pendingSubscriptions);
                     this.state.lastUpdate = cloudLastUpdate;
 
                     localStorage.setItem(this.getStorageKey(), JSON.stringify(this.state));
@@ -1512,20 +1506,7 @@ const app = {
                                 });
                                 this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
-                                const rawCloudServices = toArray(data.services).filter(s => s && s.id && !deletedSet.has(String(s.id)));
-                                const servMap = new Map();
-                                rawCloudServices.forEach(s => servMap.set(String(s.id), { ...s }));
-                                toArray(this.state.services).forEach(localServ => {
-                                    if (!localServ || !localServ.id) return;
-                                    const servId = String(localServ.id);
-                                    if (servMap.has(servId)) {
-                                        servMap.set(servId, { ...servMap.get(servId), ...localServ });
-                                    } else if (localServ._isNew) {
-                                        servMap.set(servId, localServ);
-                                    }
-                                });
-                                this.state.services = Array.from(servMap.values()).filter(s => s && s.id && !deletedSet.has(String(s.id)));
-
+                                this.state.services = mergeArrays(this.state.services, data.services);
                                 this.state.products = mergeArrays(this.state.products, data.products);
                                 this.state.customers = mergeArrays(this.state.customers, data.customers);
                                 this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
@@ -1535,7 +1516,7 @@ const app = {
                                 this.state.tips = mergeArrays(this.state.tips, data.tips);
                             } else {
                                 this.state.staff = rawCloudStaff;
-                                this.state.services = toArray(data.services).filter(s => s && s.id && !deletedSet.has(String(s.id)));
+                                this.state.services = mergeArrays(this.state.services, data.services);
                                 this.state.products = toArray(data.products).filter(p => p && p.id && !deletedSet.has(String(p.id)));
                                 this.state.customers = toArray(data.customers).filter(c => c && c.id && !deletedSet.has(String(c.id)));
                                 this.state.vouchers = toArray(data.vouchers).filter(v => v && v.id && !deletedSet.has(String(v.id)));
@@ -1882,14 +1863,34 @@ const app = {
     // ══════════════════════════════════════════════════════════════
     //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
     // ══════════════════════════════════════════════════════════════
-    CURRENT_SYSTEM_VERSION: '80.55',
+    CURRENT_SYSTEM_VERSION: '80.56',
 
     SYSTEM_CHANGELOG: [
+        {
+            version: '80.56',
+            date: '19/10/2026',
+            title: 'Correção de Vencimento Mercado Pago & Persistência de Serviços',
+            badge: 'Mais Recente',
+            highlights: [
+                {
+                    icon: 'calendar-check',
+                    title: 'Idempotência no Webhook do Mercado Pago',
+                    desc: 'Corrigido o cálculo de vencimento para evitar que notificações duplicadas do Mercado Pago somassem 60 dias ao invés de 30 dias para uma única mensalidade.',
+                    badge: 'CORREÇÃO'
+                },
+                {
+                    icon: 'scissors',
+                    title: 'Persistência Blindada de Serviços & Agendamentos',
+                    desc: 'Corrigido o sincronismo de novos serviços cadastrados (como Corte Máquina) e seus agendamentos/serviços executados, garantindo gravação direta e imediata na nuvem sem perda por cache.',
+                    badge: 'ESTABILIDADE'
+                }
+            ]
+        },
         {
             version: '80.55',
             date: '14/10/2026',
             title: 'Correção das Credenciais de Produção do Mercado Pago',
-            badge: 'Mais Recente',
+            badge: 'Anterior',
             highlights: [
                 {
                     icon: 'zap',
@@ -11830,7 +11831,7 @@ const app = {
     },
 
     saveService(serviceId) {
-        const name = document.getElementById('svc-name').value;
+        const name = (document.getElementById('svc-name').value || '').trim();
         const price = parseFloat(document.getElementById('svc-price').value) || 0;
         const duration = parseInt(document.getElementById('svc-duration').value) || 0;
 
@@ -11840,15 +11841,25 @@ const app = {
         }
 
         if (serviceId) {
-            const service = this.state.services.find(s => s.id === serviceId);
+            const service = this.state.services.find(s => String(s.id) === String(serviceId));
             if (service) {
                 service.name = name;
                 service.price = price;
                 service.duration = duration;
             }
         } else {
-            const newId = this.state.services.length ? Math.max(...this.state.services.map(s => s.id)) + 1 : 1;
-            this.state.services.push({ id: newId, name, price, duration, _isNew: true });
+            const newId = Date.now();
+            this.state.services.push({ id: newId, name, price, duration });
+        }
+
+        // Persistência imediata na nuvem
+        if (this.db) {
+            try {
+                const dbPath = this.getDbPath();
+                set(ref(this.db, dbPath + 'services'), this.state.services);
+            } catch (err) {
+                console.error('Erro ao salvar serviço diretamente no Firebase:', err);
+            }
         }
 
         this.saveState();
@@ -11946,9 +11957,9 @@ const app = {
 
     deleteService(serviceId) {
         if (confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
-            const numId = Number(serviceId);
+            const strId = String(serviceId);
             this.registerDeletion(serviceId);
-            this.state.services = this.state.services.filter(s => Number(s.id) !== numId);
+            this.state.services = (this.state.services || []).filter(s => String(s.id) !== strId);
             if (this.db) {
                 try {
                     const dbPath = this.getDbPath();
