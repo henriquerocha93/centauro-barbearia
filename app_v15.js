@@ -11696,7 +11696,24 @@ const app = {
                 staff.showInAgenda = showInAgenda;
             }
         } else {
-            const newId = this.state.staff.length ? Math.max(...this.state.staff.map(s => s.id)) + 1 : 1;
+            // Evita login duplicado
+            const loginNorm = login.trim().toLowerCase();
+            if ((this.state.staff || []).some(s => s && String(s.login || '').trim().toLowerCase() === loginNorm)) {
+                alert('Já existe um colaborador com este login. Escolha outro.');
+                return;
+            }
+            // ID único: o antigo "max + 1" podia reutilizar IDs já excluídos (ex.: 3 ou de
+            // colaboradores removidos), que são filtrados na listagem e no sync com a nuvem,
+            // fazendo o novo colaborador "sumir" após salvar.
+            const blockedIds = new Set([
+                3,
+                ...(this.state.deletedStaffIds || []).map(Number),
+                ...(this.state._deletedIds || []).map(Number),
+                ...(this.state.staff || []).map(s => Number(s && s.id))
+            ]);
+            let newId = Date.now();
+            while (blockedIds.has(newId)) newId++;
+            if (!this.state.staff) this.state.staff = [];
             this.state.staff.push({ id: newId, name, photo, login, password, role, commission, showInAgenda, _isNew: true });
         }
 
