@@ -10,7 +10,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 const app = {
-    APP_VERSION: 80.59, // Manter igual ao ?v= do app_v15.js no index.html
+    APP_VERSION: 80.60, // Manter igual ao ?v= do app_v15.js no index.html
     state: {
         view: 'home',
         user: null, // { id: 1, name: 'Henri', role: 'admin' }
@@ -593,6 +593,12 @@ const app = {
             }
             return s;
         });
+    },
+
+    // Caminho base do tenant no Firebase (mesma regra usada em syncToFirebase)
+    getDbPath() {
+        const tenantId = this.getTenantId();
+        return (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
     },
 
     // Grava a correção do serviço em caminho próprio e exige que os outros aparelhos usem esta versão do app.
