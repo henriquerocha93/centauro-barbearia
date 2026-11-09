@@ -1,5 +1,5 @@
 // Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
-console.log("­ƒÜÇ CENTAURO APP V71.50 LOADED");
+console.log("🚀 CENTAURO APP V71.50 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -25,7 +25,7 @@ const app = {
                     5: { active: true, open: '09:00', close: '21:00' }, // Sex
                     6: { active: true, open: '09:00', close: '21:00' }  // Sab
                 }
-            } // Configura├º├úo Din├ómica Semanal
+            } // Configuração Dinâmica Semanal
         },
         staff: [],
         deletedStaffIds: [3],
@@ -49,17 +49,17 @@ const app = {
         openingBalances: {}, // Saldo inicial por data { 'YYYY-MM-DD': 100.00 }
         cart: [],           // Carrinho do PDV
         pdvSeller: null,    // Barbeiro vendedor selecionado no PDV
-        serviceOrders: [],   // Ordens de Servi├ºo
-        productSales: [],    // Hist├│rico de Vendas/Consumo
+        serviceOrders: [],   // Ordens de Serviço
+        productSales: [],    // Histórico de Vendas/Consumo
         tips: [],            // Registro de Gorjetas
         pdvTab: 'catalog',   // [NOVO] catalog | cart
         isDragging: false,    // [NOVO] Controle para evitar conflito com clique
         draggingAptId: null,  // [NOVO] Fallback para o dataTransfer
-        needsSync: false,     // [NOVO] Controla se h├í altera├º├Áes locais pendentes
-        isSyncing: false,     // [NOVO] Controla se h├í um sincronismo em andamento
-        syncPending: false,   // [NOVO] Controla se h├í um sincronismo pendente na fila
+        needsSync: false,     // [NOVO] Controla se há alterações locais pendentes
+        isSyncing: false,     // [NOVO] Controla se há um sincronismo em andamento
+        syncPending: false,   // [NOVO] Controla se há um sincronismo pendente na fila
         _lastDataHash: null,  // [NOVO] Evita re-render se os dados forem iguais
-        isInitializedFromCloud: false, // [NOVO] Trava de seguran├ºa contra sobrescrita de cache antigo
+        isInitializedFromCloud: false, // [NOVO] Trava de segurança contra sobrescrita de cache antigo
         firebaseConfig: {
             apiKey: "AIzaSyCFG_Q7IekAUNfTQZWRPHduuaFmLTSxVv4",
             authDomain: "centauro-barbearia.firebaseapp.com",
@@ -69,7 +69,7 @@ const app = {
             appId: "1:96712816127:web:8cc5dde933fbb09b2523ca",
             databaseURL: "https://centauro-barbearia-default-rtdb.firebaseio.com/"
         },
-        githubConfig: { // Configura├º├úo padr├úo
+        githubConfig: { // Configuração padrão
             token: '',
             owner: 'henriquerocha93',
             repo: 'centauro-barbearia',
@@ -78,7 +78,7 @@ const app = {
         },
         themes: {
             barbershop: {
-                subtitle: 'EXCEL├èNCIA & TRADI├ç├âO',
+                subtitle: 'EXCELÊNCIA & TRADIÇÃO',
                 hero: 'hero_vintage.png',
                 primary: '#10b981',
                 accent: '#D4AF37',
@@ -89,17 +89,17 @@ const app = {
                 shopTerm: 'Barbearia',
                 workerTerm: 'Barbeiro',
                 workersTerm: 'Colaboradores',
-                serviceIcon: '­ƒÆê',
-                workerIcon: 'Ô£é´©Å',
+                serviceIcon: '💈',
+                workerIcon: '✂️',
                 voucherTerm: 'Vales (Barbeiros)',
                 features: [
-                    { icon: '­ƒÆê', title: 'Profissionais de Elite', desc: 'Especialistas em cortes cl├íssicos e modernos, garantindo perfei├º├úo.' },
-                    { icon: '­ƒÑâ', title: 'Ambiente Premium', desc: 'Desfrute de uma experi├¬ncia ├║nica em um ambiente cl├íssico e climatizado.' },
-                    { icon: '­ƒôà', title: 'Agendamento Pr├ítico', desc: 'Reserve seu hor├írio em segundos atrav├®s do nosso sistema online.' }
+                    { icon: '💈', title: 'Profissionais de Elite', desc: 'Especialistas em cortes clássicos e modernos, garantindo perfeição.' },
+                    { icon: '🥃', title: 'Ambiente Premium', desc: 'Desfrute de uma experiência única em um ambiente clássico e climatizado.' },
+                    { icon: '📅', title: 'Agendamento Prático', desc: 'Reserve seu horário em segundos através do nosso sistema online.' }
                 ]
             },
             beauty_salon: {
-                subtitle: 'EST├ëTICA & BELEZA',
+                subtitle: 'ESTÉTICA & BELEZA',
                 hero: 'hero_beauty.png',
                 primary: '#ec4899',
                 accent: '#ec4899',
@@ -107,16 +107,16 @@ const app = {
                 surface: '#151A21',
                 text: '#F3F4F6',
                 textSecondary: '#9CA3AF',
-                shopTerm: 'Sal├úo de Beleza',
+                shopTerm: 'Salão de Beleza',
                 workerTerm: 'Profissional',
                 workersTerm: 'Colaboradores',
-                serviceIcon: '­ƒÆçÔÇìÔÖÇ´©Å',
-                workerIcon: '­ƒæ®ÔÇì­ƒÆ╝',
+                serviceIcon: '💇‍♀️',
+                workerIcon: '👩‍💼',
                 voucherTerm: 'Vales (Colaboradores)',
                 features: [
-                    { icon: '­ƒÆçÔÇìÔÖÇ´©Å', title: 'Cabelo e Est├®tica', desc: 'Transformamos sua autoestima com as melhores t├®cnicas de beleza.' },
-                    { icon: 'Ô£¿', title: 'Produtos Premium', desc: 'Utilizamos apenas produtos de alta linha para o seu cuidado.' },
-                    { icon: '­ƒÆåÔÇìÔÖÇ´©Å', title: 'Momento Relax', desc: 'Um ambiente preparado para voc├¬ relaxar enquanto cuidamos de voc├¬.' }
+                    { icon: '💇‍♀️', title: 'Cabelo e Estética', desc: 'Transformamos sua autoestima com as melhores técnicas de beleza.' },
+                    { icon: '✨', title: 'Produtos Premium', desc: 'Utilizamos apenas produtos de alta linha para o seu cuidado.' },
+                    { icon: '💆‍♀️', title: 'Momento Relax', desc: 'Um ambiente preparado para você relaxar enquanto cuidamos de você.' }
                 ]
             },
             manicure: {
@@ -131,17 +131,17 @@ const app = {
                 shopTerm: 'Esmalteria',
                 workerTerm: 'Manicure',
                 workersTerm: 'Manicures',
-                serviceIcon: '­ƒÆà',
-                workerIcon: 'Ô£¿',
+                serviceIcon: '💅',
+                workerIcon: '✨',
                 voucherTerm: 'Vales (Manicures)',
                 features: [
-                    { icon: '­ƒÆà', title: 'Nail Art Creative', desc: 'Designs exclusivos e acabamento impec├ível para suas unhas.' },
-                    { icon: '­ƒº╝', title: 'Biosseguran├ºa', desc: 'Materiais 100% esterilizados e descart├íveis para sua seguran├ºa.' },
-                    { icon: '­ƒÆÄ', title: 'Durabilidade', desc: 'T├®cnicas avan├ºadas que garantem unhas perfeitas por muito mais tempo.' }
+                    { icon: '💅', title: 'Nail Art Creative', desc: 'Designs exclusivos e acabamento impecável para suas unhas.' },
+                    { icon: '🧼', title: 'Biossegurança', desc: 'Materiais 100% esterilizados e descartáveis para sua segurança.' },
+                    { icon: '💎', title: 'Durabilidade', desc: 'Técnicas avançadas que garantem unhas perfeitas por muito mais tempo.' }
                 ]
             },
             clinic: {
-                subtitle: 'BEM-ESTAR & SA├ÜDE',
+                subtitle: 'BEM-ESTAR & SAÚDE',
                 hero: 'hero_clinic.png',
                 primary: '#0ea5e9',
                 accent: '#0ea5e9',
@@ -149,16 +149,16 @@ const app = {
                 surface: '#151A21',
                 text: '#F3F4F6',
                 textSecondary: '#9CA3AF',
-                shopTerm: 'Cl├¡nica de Est├®tica',
+                shopTerm: 'Clínica de Estética',
                 workerTerm: 'Especialista',
                 workersTerm: 'Especialistas',
-                serviceIcon: '­ƒ®║',
-                workerIcon: '­ƒæ®ÔÇìÔÜò´©Å',
+                serviceIcon: '🩺',
+                workerIcon: '👩‍⚕️',
                 voucherTerm: 'Vales (Especialistas)',
                 features: [
-                    { icon: '­ƒ®║', title: 'Equipe Especializada', desc: 'Profissionais da sa├║de dedicados ao seu bem-estar e est├®tica.' },
-                    { icon: '­ƒö¼', title: 'Tecnologia de Ponta', desc: 'Equipamentos modernos para resultados seguros e eficazes.' },
-                    { icon: '­ƒî▒', title: 'Cuidado Humanizado', desc: 'Atendimento personalizado focado na sua sa├║de e satisfa├º├úo.' }
+                    { icon: '🩺', title: 'Equipe Especializada', desc: 'Profissionais da saúde dedicados ao seu bem-estar e estética.' },
+                    { icon: '🔬', title: 'Tecnologia de Ponta', desc: 'Equipamentos modernos para resultados seguros e eficazes.' },
+                    { icon: '🌱', title: 'Cuidado Humanizado', desc: 'Atendimento personalizado focado na sua saúde e satisfação.' }
                 ]
             }
         }
@@ -181,18 +181,18 @@ const app = {
             return 'barbershop';
         }
 
-        // Se n├úo foi definido explicitamente nas settings, infere pelo nome da loja ou slug do tenant:
+        // Se não foi definido explicitamente nas settings, infere pelo nome da loja ou slug do tenant:
         const tenant = (this.getTenantId() || '').toLowerCase();
         const shopName = (s.shopName || s.shopInfo?.name || '').toLowerCase();
         const fullIdentifier = `${tenant} ${shopName}`;
 
-        if (fullIdentifier.includes('studio') || fullIdentifier.includes('sal├úo') || fullIdentifier.includes('salao') || fullIdentifier.includes('beauty') || fullIdentifier.includes('hair') || fullIdentifier.includes('beleza')) {
+        if (fullIdentifier.includes('studio') || fullIdentifier.includes('salão') || fullIdentifier.includes('salao') || fullIdentifier.includes('beauty') || fullIdentifier.includes('hair') || fullIdentifier.includes('beleza')) {
             return 'beauty_salon';
         }
         if (fullIdentifier.includes('esmalteria') || fullIdentifier.includes('unhas') || fullIdentifier.includes('nail') || fullIdentifier.includes('manicure')) {
             return 'manicure';
         }
-        if (fullIdentifier.includes('clinica') || fullIdentifier.includes('cl├¡nica') || fullIdentifier.includes('est├®tica') || fullIdentifier.includes('estetica')) {
+        if (fullIdentifier.includes('clinica') || fullIdentifier.includes('clínica') || fullIdentifier.includes('estética') || fullIdentifier.includes('estetica')) {
             return 'clinic';
         }
 
@@ -270,7 +270,7 @@ const app = {
             if (s.bgColor) {
                 themeMode = this.getLuminance(s.bgColor) > 0.4 ? 'light' : 'dark';
             } else {
-                themeMode = 'dark'; // Padr├úo
+                themeMode = 'dark'; // Padrão
             }
         }
         const isDark = (themeMode !== 'light');
@@ -318,7 +318,7 @@ const app = {
             inputBg = '#FFFFFF';
         }
 
-        // Sotaque leg├¡vel com contraste ideal
+        // Sotaque legível com contraste ideal
         let readableAccent = accentColor;
         if (isDark && this.getLuminance(accentColor) < 0.3) {
             readableAccent = '#fbbf24';
@@ -356,7 +356,7 @@ const app = {
         modal.innerHTML = `
             <div class="modal-header">
                 <h3>${title}</h3>
-                <button class="modal-close" onclick="app.closeModal()">Ô£ò</button>
+                <button class="modal-close" onclick="app.closeModal()">✕</button>
             </div>
             <section>${contentHTML}</section>
         `;
@@ -382,14 +382,14 @@ const app = {
         if (!tenantId) {
             const paths = window.location.pathname.split('/').filter(p => p && p !== 'index.html');
             const ignoreList = ['master', 'AgendamentoFacil', 'assets', 'sw.js', 'robots.txt', 'api'];
-            // Encontra o primeiro segmento de caminho que n├úo esteja na lista de ignorados
+            // Encontra o primeiro segmento de caminho que não esteja na lista de ignorados
             tenantId = paths.find(p => !ignoreList.includes(p));
         }
         if (tenantId === 'totem') {
             tenantId = 'centauro';
         }
 
-        // Se identificou na URL, salva imediatamente no localStorage para sobreviv├¬ncia do PWA e navega├º├úo
+        // Se identificou na URL, salva imediatamente no localStorage para sobrevivência do PWA e navegação
         if (tenantId) {
             try {
                 localStorage.setItem('active_tenant_id', tenantId);
@@ -397,7 +397,7 @@ const app = {
             return tenantId;
         }
 
-        // Se N├âO h├í indica├º├úo na URL, recupera do localStorage SOMENTE se estiver em modo PWA standalone (app instalado)
+        // Se NÃO há indicação na URL, recupera do localStorage SOMENTE se estiver em modo PWA standalone (app instalado)
         try {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || urlParams.get('pwa') === '1';
             if (isStandalone) {
@@ -408,7 +408,7 @@ const app = {
             }
         } catch (e) {}
 
-        // [SEGURAN├çA M├üXIMA] NUNCA fazer fallback para 'centauro' se nenhum inquilino foi especificado!
+        // [SEGURANÇA MÁXIMA] NUNCA fazer fallback para 'centauro' se nenhum inquilino foi especificado!
         return null;
     },
 
@@ -442,7 +442,7 @@ const app = {
         } catch(e) {}
     },
 
-    // Converte hor├írio HH:MM para minutos desde meia-noite
+    // Converte horário HH:MM para minutos desde meia-noite
     timeToMinutes(timeStr) {
         if (!timeStr || typeof timeStr !== 'string') return 0;
         const [h, m] = timeStr.split(':').map(Number);
@@ -456,17 +456,17 @@ const app = {
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     },
 
-    // Soma a dura├º├úo em minutos de uma lista ou string de servi├ºos
+    // Soma a duração em minutos de uma lista ou string de serviços
     calculateServicesDuration(servicesInput) {
         const defaultDuration = (this.state.settings && this.state.settings.agenda && this.state.settings.agenda.intervalMin) || 30;
         if (!servicesInput) return defaultDuration;
 
         let names = [];
         if (Array.isArray(servicesInput)) {
-            // Pode ser array de objetos servi├ºo ou array de strings
+            // Pode ser array de objetos serviço ou array de strings
             names = servicesInput.map(s => typeof s === 'object' && s !== null ? (s.name || '') : String(s));
         } else if (typeof servicesInput === 'string') {
-            // String separada por v├¡rgula (ex: "Corte, Barba")
+            // String separada por vírgula (ex: "Corte, Barba")
             names = servicesInput.split(',').map(s => s.trim());
         }
 
@@ -475,13 +475,13 @@ const app = {
 
         names.forEach(name => {
             if (!name) return;
-            // Limpa sufixos de anota├º├úo como " [Clube: ...]"
+            // Limpa sufixos de anotação como " [Clube: ...]"
             const cleanName = name.replace(/\s*\[.*\]\s*$/, '').trim().toLowerCase();
             const matched = allServices.find(s => s.name && s.name.trim().toLowerCase() === cleanName);
             if (matched && matched.duration && !isNaN(matched.duration)) {
                 totalDuration += parseInt(matched.duration, 10);
             } else {
-                // Fallback: se n├úo achar servi├ºo exato, tenta match parcial ou 30 min padr├úo
+                // Fallback: se não achar serviço exato, tenta match parcial ou 30 min padrão
                 const partial = allServices.find(s => s.name && (s.name.toLowerCase().includes(cleanName) || cleanName.includes(s.name.toLowerCase())));
                 totalDuration += (partial && partial.duration) ? parseInt(partial.duration, 10) : 30;
             }
@@ -490,7 +490,7 @@ const app = {
         return totalDuration > 0 ? totalDuration : defaultDuration;
     },
 
-    // Retorna a dura├º├úo real de um agendamento j├í existente
+    // Retorna a duração real de um agendamento já existente
     getAppointmentDuration(apt) {
         if (!apt) return 30;
         if (apt.duration && !isNaN(apt.duration) && apt.duration > 0) {
@@ -499,7 +499,7 @@ const app = {
         return this.calculateServicesDuration(apt.service);
     },
 
-    // Verifica se um barbeiro tem colis├úo de hor├írio em um determinado intervalo [startMin, endMin)
+    // Verifica se um barbeiro tem colisão de horário em um determinado intervalo [startMin, endMin)
     isBarberBusyInRange(barberName, dateStr, startMin, endMin, excludeAptId = null) {
         if (!barberName) return false;
         const appointments = this.state.appointments || [];
@@ -524,7 +524,7 @@ const app = {
         });
     },
 
-    // Retorna o agendamento ativo que cobre um determinado hor├írio em minutos de um barbeiro
+    // Retorna o agendamento ativo que cobre um determinado horário em minutos de um barbeiro
     getAppointmentAtTime(barberName, dateStr, targetMinutes) {
         const appointments = this.state.appointments || [];
         const normBarber = this.normalizeString(barberName);
@@ -545,7 +545,7 @@ const app = {
         });
     },
 
-    // Retorna a data atual local no formato YYYY-MM-DD (sem distor├º├úo de fuso hor├írio UTC)
+    // Retorna a data atual local no formato YYYY-MM-DD (sem distorção de fuso horário UTC)
     getTodayDate() {
         const d = new Date();
         const y = d.getFullYear();
@@ -554,7 +554,7 @@ const app = {
         return `${y}-${m}-${day}`;
     },
 
-    // Retorna o nome de exibi├º├úo do barbeiro na agenda (diferencia profissionais com o mesmo primeiro nome)
+    // Retorna o nome de exibição do barbeiro na agenda (diferencia profissionais com o mesmo primeiro nome)
     getBarberShortName(barber, allBarbers) {
         if (!barber || !barber.name) return 'Profissional';
         const cleanName = barber.name.trim();
@@ -598,7 +598,7 @@ const app = {
 
     saveState() {
         this.state.needsSync = true;
-        this.state.lastUpdate = Date.now(); // [CR├ìTICO] Atualiza o rel├│gio para esta mudan├ºa
+        this.state.lastUpdate = Date.now(); // [CRÍTICO] Atualiza o relógio para esta mudança
 
         try {
             const stateToSave = {
@@ -622,37 +622,37 @@ const app = {
                     _deletedIds: this.state._deletedIds || []
                 };
                 
-                // Dispara sincroniza├º├úo para a nuvem independentemente do armazenamento local falhar ou n├úo
+                // Dispara sincronização para a nuvem independentemente do armazenamento local falhar ou não
                 this.syncToFirebase();
                 
                 localStorage.setItem(this.getStorageKey(), JSON.stringify(stateToSave));
             } catch (e) {
-                console.error("Erro ao salvar estado (possivelmente estouro de mem├│ria):", e);
+                console.error("Erro ao salvar estado (possivelmente estouro de memória):", e);
             }
     },
 
     async syncToFirebase() {
         if (this.state.isSyncing) {
             this.state.syncPending = true;
-            console.log('ÔÅ│ Sincroniza├º├úo em andamento. Nova sincroniza├º├úo agendada na fila (syncPending = true).');
+            console.log('⏳ Sincronização em andamento. Nova sincronização agendada na fila (syncPending = true).');
             return;
         }
         if (!this.state.needsSync) return; 
 
-        // [SEGURAN├çA CR├ìTICA] N├úo permite subir dados se ainda n├úo recebemos a vers├úo da nuvem
+        // [SEGURANÇA CRÍTICA] Não permite subir dados se ainda não recebemos a versão da nuvem
         if (!this.state.isInitializedFromCloud) {
-            console.warn('ÔÜá´©Å Bloqueio de Sincronismo: Tentativa de subir cache local antes de receber dados da nuvem. Abortando para evitar perda de dados.');
+            console.warn('⚠️ Bloqueio de Sincronismo: Tentativa de subir cache local antes de receber dados da nuvem. Abortando para evitar perda de dados.');
             return;
         }
 
-        console.log('­ƒöä Tentando sincronizar com Firebase...');
+        console.log('🔄 Tentando sincronizar com Firebase...');
         if (!this.state.firebaseConfig) { console.error('Falta firebaseConfig'); return; }
         if (!this.db) { 
-            console.error('Banco de dados (this.db) n├úo inicializado!');
+            console.error('Banco de dados (this.db) não inicializado!');
             return; 
         }
 
-        // Marcar sincroniza├º├úo em andamento
+        // Marcar sincronização em andamento
         this.state.isSyncing = true;
         this.state.syncPending = false;
         const currentSyncTimestamp = this.state.lastUpdate;
@@ -663,22 +663,22 @@ const app = {
             // Suporte a Multi-Tenant
             const tenantId = this.getTenantId();
             if (!tenantId) {
-                console.warn('ÔÜá´©Å Sincroniza├º├úo cancelada: nenhum tenant identificado.');
+                console.warn('⚠️ Sincronização cancelada: nenhum tenant identificado.');
                 this.state.isSyncing = false;
                 return;
             }
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
-            console.log(`­ƒôñ Caminho de Sincroniza├º├úo: ${dbPath}`);
-            const dbRef = ref(this.db, dbPath); // [FIX] Refer├¬ncia restaurada
+            console.log(`📤 Caminho de Sincronização: ${dbPath}`);
+            const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
             // [ISOLAMENTO E MERGE INTELIGENTE]
-            // Antes de gravar na nuvem, fazemos um GET r├ípido para mesclar altera├º├Áes simult├óneas de outros aparelhos
+            // Antes de gravar na nuvem, fazemos um GET rápido para mesclar alterações simultâneas de outros aparelhos
             let cloudData = null;
             try {
                 const snapshot = await get(dbRef);
                 cloudData = snapshot.val();
             } catch (e) {
-                console.warn('ÔÜá´©Å N├úo foi poss├¡vel ler dados para merge, prosseguindo com grava├º├úo direta:', e);
+                console.warn('⚠️ Não foi possível ler dados para merge, prosseguindo com gravação direta:', e);
             }
 
             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
@@ -686,13 +686,13 @@ const app = {
             if (cloudData) {
                 const deletedSet = new Set(this.state._deletedIds || []);
 
-                // [BLINDAGEM DE EXCLUS├âO DE COLABORADORES]
-                // 1. Unifica IDs permanentemente exclu├¡dos (Firebase + Local)
+                // [BLINDAGEM DE EXCLUSÃO DE COLABORADORES]
+                // 1. Unifica IDs permanentemente excluídos (Firebase + Local)
                 const cloudDelStaff = Array.isArray(cloudData.deletedStaffIds) ? cloudData.deletedStaffIds : Object.values(cloudData.deletedStaffIds || {});
                 const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
                 this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
 
-                // Mesclar clientes e outros arrays secund├írios
+                // Mesclar clientes e outros arrays secundários
                 const mergeMap = (localArr, cloudArr) => {
                     const map = new Map();
                     toArray(cloudArr).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
@@ -719,7 +719,7 @@ const app = {
                         if (localRank >= cloudRank) {
                             mergedAptsMap.set(idStr, { ...cloudApt, ...localApt });
                         } else {
-                            // Se a nuvem tem status maior, mant├®m a nuvem
+                            // Se a nuvem tem status maior, mantém a nuvem
                             mergedAptsMap.set(idStr, { ...localApt, ...cloudApt });
                         }
                     } else {
@@ -730,8 +730,8 @@ const app = {
                 this.state.appointments = Array.from(mergedAptsMap.values()).filter(a => a && a.id && !deletedSet.has(String(a.id)));
 
                 // [AUTORIDADE DA NUVEM PARA COLABORADORES]
-                // Cadastros estruturais n├úo devem ser ressuscitados pelo cache local de outros navegadores.
-                // Apenas itens criados explicitamente nesta sess├úo (_isNew) s├úo adicionados al├®m dos que j├í existem na nuvem.
+                // Cadastros estruturais não devem ser ressuscitados pelo cache local de outros navegadores.
+                // Apenas itens criados explicitamente nesta sessão (_isNew) são adicionados além dos que já existem na nuvem.
                 const cloudStaffList = toArray(cloudData.staff).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
                 const staffMap = new Map();
                 cloudStaffList.forEach(s => staffMap.set(String(s.id), { ...s }));
@@ -748,7 +748,7 @@ const app = {
                 });
                 this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
-                // [PERSIST├èNCIA SEGURA DE SERVI├çOS]
+                // [PERSISTÊNCIA SEGURA DE SERVIÇOS]
                 // A nuvem é a fonte da verdade; só sobrescreve se a edição local for mais recente (updatedAt).
                 this.state.services = this.mergeServicesByFreshness(this.state.services, cloudData.services, {
                     cloudLastUpdate: cloudData.lastUpdate || 0,
@@ -766,10 +766,10 @@ const app = {
                 this.state.tips = mergeMap(this.state.tips, cloudData.tips);
             }
 
-            console.log('­ƒôñ Enviando atualiza├º├Áes modulares para o servidor...');
+            console.log('📤 Enviando atualizações modulares para o servidor...');
             
-            // [SEGURAN├çA CONTRA DUPLICADOS E RESSURREI├ç├âO]
-            // Substitu├¡das (truncadas) na nuvem, evitando duplica├º├Áes ou ressurrei├º├úo de itens no fim do array.
+            // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
+            // Substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
             const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions', 'deletedStaffIds'];
             
             await Promise.all([
@@ -781,47 +781,47 @@ const app = {
                 set(ref(this.db, dbPath + 'updatedBy'), this.state.user ? this.state.user.name : 'Sistema')
             ]);
             
-            console.log('Ô£à SUCESSO: Sincronizado com Firebase');
+            console.log('✅ SUCESSO: Sincronizado com Firebase');
             
-            // Feedback visual no bot├úo
+            // Feedback visual no botão
             const syncIndicator = document.getElementById('sync-status-indicator');
             if (syncIndicator) {
                 syncIndicator.style.color = '#4ade80';
                 syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span> Sincronizado';
             }
 
-            // [BACKUP AUTOM├üTICO] Executa a verifica├º├úo a cada sincronismo bem-sucedido
+            // [BACKUP AUTOMÁTICO] Executa a verificação a cada sincronismo bem-sucedido
             this.checkAndTriggerBackup();
 
-            // [SINCRONISMO SECUND├üRIO GITHUB] Sincroniza em segundo plano se configurado
+            // [SINCRONISMO SECUNDÁRIO GITHUB] Sincroniza em segundo plano se configurado
             this.syncToCloud();
 
         } catch (error) {
-            console.error('ÔØî Erro no Firebase Sync:', error);
+            console.error('❌ Erro no Firebase Sync:', error);
             // Feedback visual de erro
             const syncIndicator = document.getElementById('sync-status-indicator');
             if (syncIndicator) {
                 syncIndicator.style.color = '#ef4444';
                 syncIndicator.innerHTML = '<span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span> Erro ao Sincronizar';
             }
-            // Alerta discreto para o usu├írio
+            // Alerta discreto para o usuário
             if (this.state.user && this.state.user.role === 'admin') {
-                console.warn('Falha na sincroniza├º├úo. Verifique sua conex├úo.');
+                console.warn('Falha na sincronização. Verifique sua conexão.');
             }
         } finally {
             this.state.isSyncing = false;
             
-            // Se o timestamp local continua o mesmo de quando o sync come├ºou,
-            // significa que n├úo houve edi├º├Áes locais novas concorrentes. Podemos limpar o needsSync.
+            // Se o timestamp local continua o mesmo de quando o sync começou,
+            // significa que não houve edições locais novas concorrentes. Podemos limpar o needsSync.
             if (this.state.lastUpdate === currentSyncTimestamp) {
                 this.state.needsSync = false;
-                this.state._deletedIds = []; // [BLINDAGEM] Confirma remo├º├Áes locais e limpa cache de deletados
+                this.state._deletedIds = []; // [BLINDAGEM] Confirma remoções locais e limpa cache de deletados
             }
 
-            // Se houve edi├º├Áes locais concorrentes (syncPending ou needsSync ainda ativo),
-            // disparamos um novo ciclo de sincroniza├º├úo para garantir que tudo suba.
+            // Se houve edições locais concorrentes (syncPending ou needsSync ainda ativo),
+            // disparamos um novo ciclo de sincronização para garantir que tudo suba.
             if (this.state.syncPending || this.state.needsSync) {
-                console.log('­ƒöä Executando sincroniza├º├úo de itens da fila acumulados durante o processo anterior...');
+                console.log('🔄 Executando sincronização de itens da fila acumulados durante o processo anterior...');
                 this.state.syncPending = false;
                 setTimeout(() => this.syncToFirebase(), 50);
             }
@@ -837,7 +837,7 @@ const app = {
             const dbPath = (tenantId === 'centauro') ? 'database/' : `tenants/${tenantId}/`;
             const backupPath = (tenantId === 'centauro') ? 'database_backup/' : `tenants_backup/${tenantId}/`;
             
-            // Buscar o timestamp do ├║ltimo backup autom├ítico
+            // Buscar o timestamp do último backup automático
             const backupInfoRef = ref(this.db, dbPath + 'lastAutomaticBackup');
             const snapshot = await get(backupInfoRef);
             const lastBackupTime = snapshot.val() || 0;
@@ -845,7 +845,7 @@ const app = {
             
             // 6 horas = 21.600.000 ms
             if (now - lastBackupTime >= 21600000) {
-                console.log('­ƒÆ¥ [BACKUP AUTOM├üTICO] Mais de 6 horas se passaram. Iniciando backup silencioso...');
+                console.log('💾 [BACKUP AUTOMÁTICO] Mais de 6 horas se passaram. Iniciando backup silencioso...');
                 
                 // Preparar dados do backup
                 const stateToBackup = {
@@ -870,33 +870,33 @@ const app = {
                 // Gravar na pasta dedicada do backup (que substitui o anterior)
                 await set(ref(this.db, backupPath), stateToBackup);
                 
-                // Atualizar o timestamp do ├║ltimo backup na base principal
+                // Atualizar o timestamp do último backup na base principal
                 const updates = {};
                 updates['lastAutomaticBackup'] = now;
                 await update(ref(this.db, dbPath), updates);
                 
-                console.log('­ƒÆ¥ [BACKUP AUTOM├üTICO] Backup em nuvem realizado com sucesso em:', backupPath);
+                console.log('💾 [BACKUP AUTOMÁTICO] Backup em nuvem realizado com sucesso em:', backupPath);
             }
         } catch (e) {
-            console.error('­ƒÆ¥ [BACKUP AUTOM├üTICO] Erro ao executar backup autom├ítico:', e);
+            console.error('💾 [BACKUP AUTOMÁTICO] Erro ao executar backup automático:', e);
         }
     },
 
     async syncToCloud() {
         const config = this.state.githubConfig;
         if (!config || !config.token || !config.repo) {
-            console.log('Ôÿü´©Å Sincroniza├º├úo em nuvem n├úo configurada.');
+            console.log('☁️ Sincronização em nuvem não configurada.');
             return;
         }
 
         const statusEl = document.getElementById('sync-status-indicator');
         if (statusEl) {
-            statusEl.innerHTML = '­ƒƒí Sincronizando...';
+            statusEl.innerHTML = '🟡 Sincronizando...';
             statusEl.style.color = '#fbbf24';
         }
 
         try {
-            // Preparar conte├║do (UTF-8 safe base64)
+            // Preparar conteúdo (UTF-8 safe base64)
             const stateToSave = {
                 services: this.state.services,
                 staff: this.state.staff,
@@ -937,7 +937,7 @@ const app = {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    message: `Backup autom├ítico sistema: ${new Date().toLocaleString()}`,
+                    message: `Backup automático sistema: ${new Date().toLocaleString()}`,
                     content: content,
                     sha: sha,
                     branch: config.branch
@@ -946,16 +946,16 @@ const app = {
 
             if (!putRes.ok) throw new Error('Falha no upload para o GitHub');
 
-            console.log('Ô£à Dados sincronizados com GitHub!');
+            console.log('✅ Dados sincronizados com GitHub!');
             if (statusEl) {
-                statusEl.innerHTML = '­ƒƒó Nuvem Ativa';
+                statusEl.innerHTML = '🟢 Nuvem Ativa';
                 statusEl.style.color = '#4ade80';
-                statusEl.title = `├Ültimo backup: ${new Date().toLocaleString()}`;
+                statusEl.title = `Último backup: ${new Date().toLocaleString()}`;
             }
         } catch (error) {
-            console.error('ÔØî Erro na sincroniza├º├úo:', error);
+            console.error('❌ Erro na sincronização:', error);
             if (statusEl) {
-                statusEl.innerHTML = '­ƒö┤ Erro na Nuvem';
+                statusEl.innerHTML = '🔴 Erro na Nuvem';
                 statusEl.style.color = '#ff4444';
                 statusEl.title = error.message;
             }
@@ -967,7 +967,7 @@ const app = {
         if (!config || !config.token || !config.repo) return;
 
         try {
-            console.log('Ôÿü´©Å Buscando dados no GitHub...');
+            console.log('☁️ Buscando dados no GitHub...');
             const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`;
             const res = await fetch(url, {
                 headers: { 'Authorization': `token ${config.token}` }
@@ -979,7 +979,7 @@ const app = {
                 const cloudState = JSON.parse(content);
 
                 // Comparar timestamps para decidir se carrega (Opcional, aqui vamos priorizar nuvem no init)
-                if (confirm(`Ôÿü´©Å DADOS ENCONTRADOS NO GITHUB\n\nBackup de: ${new Date(cloudState.lastSync).toLocaleString()}\n\nDeseja carregar os dados da nuvem e substituir os locais?`)) {
+                if (confirm(`☁️ DADOS ENCONTRADOS NO GITHUB\n\nBackup de: ${new Date(cloudState.lastSync).toLocaleString()}\n\nDeseja carregar os dados da nuvem e substituir os locais?`)) {
                     this.state.services = cloudState.services || this.state.services;
                     this.state.staff = cloudState.staff || this.state.staff;
                     this.state.customers = cloudState.customers || this.state.customers;
@@ -996,12 +996,12 @@ const app = {
                     this.state.pendingSubscriptions = cloudState.pendingSubscriptions || this.state.pendingSubscriptions || [];
 
                     this.saveState();
-                    alert('Ô£à Dados da nuvem carregados com sucesso!');
+                    alert('✅ Dados da nuvem carregados com sucesso!');
                     this.render(this.state.view);
                 }
             }
         } catch (error) {
-            console.error('ÔØî Erro ao carregar da nuvem:', error);
+            console.error('❌ Erro ao carregar da nuvem:', error);
         }
     },
 
@@ -1010,10 +1010,10 @@ const app = {
         if (!tenantId || tenantId !== 'centauro') return; // Apenas Centauro Barbearia Matriz explicitamente
         
         try {
-            console.log('Ôÿü´©Å [GITHUB FALLBACK] Buscando base p├║blica mais recente do GitHub...');
+            console.log('☁️ [GITHUB FALLBACK] Buscando base pública mais recente do GitHub...');
             const url = `https://raw.githubusercontent.com/henriquerocha93/centauro-barbearia/master/database/db.json`;
             
-            // Evita buscar se j├í foi carregado na sess├úo atual para economizar banda
+            // Evita buscar se já foi carregado na sessão atual para economizar banda
             if (sessionStorage.getItem('github_fallback_loaded')) return;
 
             const res = await fetch(url);
@@ -1021,15 +1021,15 @@ const app = {
                 const cloudState = await res.json();
                 
                 let cloudLastUpdate = cloudState.lastUpdate || 0;
-                // [SEGURAN├çA CONTRA TIMESTAMP ENVENENADO] Se o rel├│gio da nuvem p├║blica estiver no futuro distante, reseta
+                // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem pública estiver no futuro distante, reseta
                 if (cloudLastUpdate > 2000000000000) {
                     cloudLastUpdate = 0;
                 }
                 const localLastUpdate = this.state.lastUpdate || 0;
 
-                // S├│ aplica se a nuvem tiver dados mais novos do que o cache local
+                // Só aplica se a nuvem tiver dados mais novos do que o cache local
                 if (cloudLastUpdate > localLastUpdate) {
-                    console.log('Ôÿü´©Å [GITHUB FALLBACK] Nuvem possui dados mais recentes. Mesclando...');
+                    console.log('☁️ [GITHUB FALLBACK] Nuvem possui dados mais recentes. Mesclando...');
                     
                     const mergeFallback = (localArr, cloudArr) => {
                         const map = new Map();
@@ -1063,7 +1063,7 @@ const app = {
                 sessionStorage.setItem('github_fallback_loaded', 'true');
             }
         } catch (e) {
-            console.warn('Ôÿü´©Å [GITHUB FALLBACK] N├úo foi poss├¡vel carregar base de seguran├ºa do GitHub:', e);
+            console.warn('☁️ [GITHUB FALLBACK] Não foi possível carregar base de segurança do GitHub:', e);
         }
     },
 
@@ -1075,7 +1075,7 @@ const app = {
         const branch = document.getElementById('gh-branch').value.trim();
 
         if (!token || !owner || !repo) {
-            return alert('ÔÜá´©Å Por favor, preencha o Token, Usu├írio e Reposit├│rio antes de testar.');
+            return alert('⚠️ Por favor, preencha o Token, Usuário e Repositório antes de testar.');
         }
 
         // Atualiza o estado temporariamente para o teste
@@ -1083,7 +1083,7 @@ const app = {
 
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
-        btn.innerHTML = 'ÔÅ│ Testando...';
+        btn.innerHTML = '⏳ Testando...';
         btn.disabled = true;
 
         await this.syncToCloud();
@@ -1092,10 +1092,10 @@ const app = {
         btn.innerHTML = originalText;
 
         const statusEl = document.getElementById('sync-status-indicator');
-        if (statusEl && statusEl.innerHTML.includes('­ƒƒó')) {
-            alert('Ô£à CONEX├âO ESTABELECIDA!\n\nSeu sistema agora est├í salvando dados no GitHub com sucesso.');
+        if (statusEl && statusEl.innerHTML.includes('🟢')) {
+            alert('✅ CONEXÃO ESTABELECIDA!\n\nSeu sistema agora está salvando dados no GitHub com sucesso.');
         } else {
-            alert('ÔØî FALHA NA CONEX├âO\n\nVerifique se o Token est├í correto e se o reposit├│rio existe e ├® p├║blico ou o token tem acesso a ele.');
+            alert('❌ FALHA NA CONEXÃO\n\nVerifique se o Token está correto e se o repositório existe e é público ou o token tem acesso a ele.');
         }
     },
 
@@ -1106,38 +1106,38 @@ const app = {
             try {
                 const loaded = JSON.parse(saved);
                 
-                // [SEGURAN├çA CONTRA CONFIGURA├ç├âO NULA] Evita que firebaseConfig seja nulo se persistido incorretamente
+                // [SEGURANÇA CONTRA CONFIGURAÇÃO NULA] Evita que firebaseConfig seja nulo se persistido incorretamente
                 if (loaded.hasOwnProperty('firebaseConfig') && (loaded.firebaseConfig === null || !loaded.firebaseConfig)) {
                     delete loaded.firebaseConfig;
                 }
                 
-                // [SEGURAN├çA CONTRA TIMESTAMP ENVENENADO] Se o rel├│gio local estiver no futuro distante (> ano 2033), reseta
+                // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio local estiver no futuro distante (> ano 2033), reseta
                 if (loaded.lastUpdate && loaded.lastUpdate > 2000000000000) {
-                    console.warn('ÔÜá´©Å Rel├│gio local envenenado detectado. Resetando lastUpdate local.');
+                    console.warn('⚠️ Relógio local envenenado detectado. Resetando lastUpdate local.');
                     loaded.lastUpdate = 0;
                 }
 
-                // [CR├ìTICO] Se o tenantId carregado for diferente do atual, ignoramos para evitar vazamento
+                // [CRÍTICO] Se o tenantId carregado for diferente do atual, ignoramos para evitar vazamento
                 if (loaded.currentTenant && loaded.currentTenant !== this.getTenantId()) {
-                    console.warn('ÔÜá´©Å Detectada troca de inquilino. Limpando estado local para seguran├ºa.');
+                    console.warn('⚠️ Detectada troca de inquilino. Limpando estado local para segurança.');
                     return;
                 }
 
                 const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                 
-                // Normalizar arrays para evitar erros de renderiza├º├úo iniciais
+                // Normalizar arrays para evitar erros de renderização iniciais
                 const arrayFields = ['services', 'staff', 'customers', 'appointments', 'transactions', 'products', 'serviceOrders', 'vouchers', 'productSales', 'tips'];
                 arrayFields.forEach(field => {
                     if (loaded[field]) loaded[field] = toArray(loaded[field]);
                 });
 
-                // [BLINDAGEM] Remover permanentemente colaboradores exclu├¡dos (ex: Matheus Fernandes id 3)
+                // [BLINDAGEM] Remover permanentemente colaboradores excluídos (ex: Matheus Fernandes id 3)
                 const delStaffIds = new Set([3, ...(loaded.deletedStaffIds || []).map(Number), ...(this.state.deletedStaffIds || []).map(Number)]);
                 if (loaded.staff) {
                     loaded.staff = loaded.staff.filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
                 }
 
-                // Preservar configura├º├Áes padr├úo se n├úo existirem no localStorage
+                // Preservar configurações padrão se não existirem no localStorage
                 if (loaded.settings) {
                     const defaultSettings = this.state.settings;
                     loaded.settings = { ...defaultSettings, ...loaded.settings };
@@ -1146,8 +1146,8 @@ const app = {
                     }
                 }
 
-                // [CR├ìTICO] A data da agenda SEMPRE deve ser a data de HOJE ao inicializar o app!
-                // Evita que navega├º├Áes passadas fiquem presas no cache local
+                // [CRÍTICO] A data da agenda SEMPRE deve ser a data de HOJE ao inicializar o app!
+                // Evita que navegações passadas fiquem presas no cache local
                 delete loaded.currentDate;
 
                 Object.assign(this.state, loaded);
@@ -1166,13 +1166,13 @@ const app = {
                         }
                         parsedObj.deletedStaffIds = Array.from(delStaffIds);
                         localStorage.setItem(key, JSON.stringify(parsedObj));
-                        console.log('­ƒº╣ Limpeza for├ºada de colaborador exclu├¡do executada no localStorage.');
+                        console.log('🧹 Limpeza forçada de colaborador excluído executada no localStorage.');
                     }
                 } catch (cleanErr) {
                     console.warn('Erro ao limpar cache local de colaboradores:', cleanErr);
                 }
 
-                console.log(`Ô£à Estado carregado e normalizado para loja: ${key} (Data da agenda: ${this.state.currentDate})`);
+                console.log(`✅ Estado carregado e normalizado para loja: ${key} (Data da agenda: ${this.state.currentDate})`);
                 this.migrateProducts();
                 this.migrateVouchersFromTransactions();
             } catch (e) {
@@ -1184,36 +1184,36 @@ const app = {
     },
 
     migrateProducts() {
-        console.log('­ƒöä Verificando integridade dos pre├ºos dos produtos...');
+        console.log('🔄 Verificando integridade dos preços dos produtos...');
         if (!this.state.products) this.state.products = [];
         
         let changed = false;
         this.state.products.forEach(p => {
-            // 1. Corrigir Pre├ºos e Estoque
+            // 1. Corrigir Preços e Estoque
             if (typeof p.price === 'string') {
                 p.price = parseFloat(String(p.price).replace(',', '.')) || 0;
             }
             p.stock = parseInt(p.stock) || 0;
 
-            // 2. Categoriza├º├úo Autom├ítica (Legacy migration)
+            // 2. Categorização Automática (Legacy migration)
             if (!p.category || p.category === 'Geral' || p.category === 'undefined' || p.category === '') {
                 const name = (p.name || '').toLowerCase();
                 if (name.includes('coca') || name.includes('heineken') || name.includes('cerveja') || 
-                    name.includes('├ígua') || name.includes('suco') || name.includes('soda') || 
+                    name.includes('água') || name.includes('suco') || name.includes('soda') || 
                     name.includes('fanta') || name.includes('bebida') || name.includes('lata') || 
                     name.includes('garrafa') || name.includes('budweiser') || name.includes('stella') ||
-                    name.includes('red bull') || name.includes('monster') || name.includes('caf├®') || name.includes('cafe')) {
+                    name.includes('red bull') || name.includes('monster') || name.includes('café') || name.includes('cafe')) {
                     p.category = 'Bebidas';
                     changed = true;
-                } else if (name.includes('barba') || name.includes('bigode') || name.includes('shave') || name.includes('balm') || name.includes('p├│s-barba') || name.includes('pos-barba')) {
+                } else if (name.includes('barba') || name.includes('bigode') || name.includes('shave') || name.includes('balm') || name.includes('pós-barba') || name.includes('pos-barba')) {
                     p.category = 'Barba';
                     changed = true;
                 } else if (name.includes('pomada') || name.includes('shampoo') || name.includes('cera') || 
-                    name.includes('condicionador') || name.includes('gel') || name.includes('├│leo') || 
+                    name.includes('condicionador') || name.includes('gel') || name.includes('óleo') || 
                     name.includes('serum') || name.includes('cabelo') || name.includes('fixador') || name.includes('laque')) {
                     p.category = 'Cabelo';
                     changed = true;
-                } else if (name.includes('perfume') || name.includes('ess├¬ncia') || name.includes('col├┤nia') || name.includes('minoxidil')) {
+                } else if (name.includes('perfume') || name.includes('essência') || name.includes('colônia') || name.includes('minoxidil')) {
                     p.category = 'Outros';
                     changed = true;
                 } else {
@@ -1222,7 +1222,7 @@ const app = {
             }
         });
         
-        // Garantir que agendamentos e transa├º├Áes tenham pre├ºos num├®ricos
+        // Garantir que agendamentos e transações tenham preços numéricos
         if (this.state.appointments) {
             this.state.appointments.forEach(a => a.price = parseFloat(a.price) || 0);
         }
@@ -1231,7 +1231,7 @@ const app = {
         }
 
         if (changed) {
-            console.log('­ƒôª Categorias autom├íticas aplicadas.');
+            console.log('📦 Categorias automáticas aplicadas.');
             this.saveState();
         }
     },
@@ -1249,7 +1249,7 @@ const app = {
         
         let addedCount = 0;
         vales.forEach(v => {
-            // Se a transa├º├úo n├úo est├í nos vales (pelo transactionId ou pelo pr├│prio ID)
+            // Se a transação não está nos vales (pelo transactionId ou pelo próprio ID)
             if (!existingTransactionIds.has(v.id) && !existingVoucherIds.has(v.id)) {
                 const barber = v.description.replace('Vale: ', '').split(' - ')[0];
                 this.state.vouchers.push({
@@ -1266,7 +1266,7 @@ const app = {
         });
 
         if (addedCount > 0) {
-            console.log(`­ƒöì Migrados ${addedCount} novos vales a partir das transa├º├Áes.`);
+            console.log(`🔍 Migrados ${addedCount} novos vales a partir das transações.`);
         }
     },
 
@@ -1289,14 +1289,14 @@ const app = {
         dl.remove();
         URL.revokeObjectURL(url);
 
-        // Registra data/hora do ├║ltimo backup
+        // Registra data/hora do último backup
         localStorage.setItem('centauro_last_backup', now.toISOString());
 
-        // Atualiza o card de backup se estiver vis├¡vel
+        // Atualiza o card de backup se estiver visível
         const el = document.getElementById('last-backup-info');
-        if (el) el.textContent = `Ô£à ├Ültimo backup: ${now.toLocaleString('pt-BR')}`;
+        if (el) el.textContent = `✅ Último backup: ${now.toLocaleString('pt-BR')}`;
 
-        alert(`Ô£à Backup salvo!\n­ƒôü Arquivo: ${filename}\n\nGuarde este arquivo em local seguro.`);
+        alert(`✅ Backup salvo!\n📁 Arquivo: ${filename}\n\nGuarde este arquivo em local seguro.`);
     },
 
     importDatabase() {
@@ -1310,19 +1310,19 @@ const app = {
             reader.onload = (evt) => {
                 try {
                     const data = JSON.parse(evt.target.result);
-                    // Valida├º├úo m├¡nima
+                    // Validação mínima
                     if (!data.customers && !data.services && !data.staff) {
-                        alert('ÔØî Arquivo inv├ílido. Este n├úo parece ser um backup do sistema Centauro.');
+                        alert('❌ Arquivo inválido. Este não parece ser um backup do sistema Centauro.');
                         return;
                     }
-                    if (!confirm(`ÔÜá´©Å RESTAURAR BACKUP\n\nArquivo: ${file.name}\n\nIsso substituir├í TODOS os dados atuais pelos dados do backup.\nClientes, agendamentos, transa├º├Áes e produtos ser├úo restaurados.\n\nDeseja continuar?`)) return;
+                    if (!confirm(`⚠️ RESTAURAR BACKUP\n\nArquivo: ${file.name}\n\nIsso substituirá TODOS os dados atuais pelos dados do backup.\nClientes, agendamentos, transações e produtos serão restaurados.\n\nDeseja continuar?`)) return;
 
                     localStorage.setItem('centauro_state', evt.target.result);
                     localStorage.setItem('centauro_last_backup', new Date().toISOString());
-                    alert('Ô£à Dados restaurados com sucesso!\nO sistema ser├í recarregado.');
+                    alert('✅ Dados restaurados com sucesso!\nO sistema será recarregado.');
                     window.location.reload();
                 } catch (err) {
-                    alert('ÔØî Erro ao ler o arquivo. Certifique-se de que ├® um backup .json v├ílido.');
+                    alert('❌ Erro ao ler o arquivo. Certifique-se de que é um backup .json válido.');
                 }
             };
             reader.readAsText(file);
@@ -1333,12 +1333,12 @@ const app = {
     },
 
     init() {
-        console.log('­ƒÜÇ Inicializando Centauro Barbearia Engine...');
+        console.log('🚀 Inicializando Centauro Barbearia Engine...');
         
-        // [BLINDAGEM] Sistema de recupera├º├úo de Crash
+        // [BLINDAGEM] Sistema de recuperação de Crash
         const crashCount = parseInt(localStorage.getItem('crash_count') || '0');
         if (crashCount > 3) {
-            if (confirm('O sistema detectou falhas consecutivas. Deseja iniciar em MODO DE SEGURAN├çA (Limpa cache tempor├írio)?')) {
+            if (confirm('O sistema detectou falhas consecutivas. Deseja iniciar em MODO DE SEGURANÇA (Limpa cache temporário)?')) {
                 localStorage.removeItem(this.getStorageKey());
                 localStorage.setItem('crash_count', '0');
                 location.reload();
@@ -1349,22 +1349,22 @@ const app = {
         try {
             localStorage.setItem('crash_count', (crashCount + 1).toString());
             
-            // Suporte a Multi-Tenant din├ómico
+            // Suporte a Multi-Tenant dinâmico
             const tenantId = this.getTenantId();
             if (!tenantId) {
-                console.warn('ÔÜá´©Å Nenhum tenant identificado na URL ou localmente. Redirecionando para Agendamento F├ícil...');
+                console.warn('⚠️ Nenhum tenant identificado na URL ou localmente. Redirecionando para Agendamento Fácil...');
                 window.location.replace('/AgendamentoFacil/index.html');
                 return;
             }
 
-            console.log(`­ƒÅó Tenant ativo: ${tenantId}`);
+            console.log(`🏢 Tenant ativo: ${tenantId}`);
             this.state.isMultiTenant = true;
             this.state.currentTenant = tenantId;
             this.updateDynamicManifest();
             
             this.loadState();
 
-            // [FALLBACK AUTOM├üTICO GITHUB] Busca a vers├úo p├║blica mais recente do GitHub para evitar tela em branco no celular/totem
+            // [FALLBACK AUTOMÁTICO GITHUB] Busca a versão pública mais recente do GitHub para evitar tela em branco no celular/totem
             this.loadFromCloudPublicSilence();
 
             // Inicializar Firebase
@@ -1372,7 +1372,7 @@ const app = {
                 try {
                     const fbApp = initializeApp(this.state.firebaseConfig);
                     this.db = getDatabase(fbApp);
-                    console.log('­ƒöÑ Firebase Initialized');
+                    console.log('🔥 Firebase Initialized');
 
                     // [DIAGNOSTICO REAL-TIME MOBILE]
                     try {
@@ -1384,19 +1384,19 @@ const app = {
                             lastUpdateLocal: this.state.lastUpdate || 0,
                             aptsCount: (this.state.appointments || []).length,
                             timestamp: Date.now(),
-                            version: "80.01" // Identifica se ├® a vers├úo nova!
+                            version: "80.01" // Identifica se é a versão nova!
                         };
                         set(ref(this.db, 'debug/mobile/' + (this.state.user ? this.state.user.name : 'anonimo') + '_' + Date.now()), diag);
                     } catch (e) {
-                        console.error('Erro no logger de diagn├│stico:', e);
+                        console.error('Erro no logger de diagnóstico:', e);
                     }
 
                     // Monitorar visibilidade (Mobile Sleep/Wake)
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'visible') {
-                            console.log('­ƒô▒ App em destaque, reativando sincroniza├º├úo...');
+                            console.log('📱 App em destaque, reativando sincronização...');
                             goOnline(this.db);
-                            // Pequeno delay para garantir reconex├úo antes de renderizar
+                            // Pequeno delay para garantir reconexão antes de renderizar
                             setTimeout(() => {
                                 if (this.state.view !== 'booking') {
                                     this.render(this.state.view);
@@ -1413,7 +1413,7 @@ const app = {
                     if (activeTenantId && activeTenantId !== 'centauro') {
                         get(ref(this.db, `master/tenants/${activeTenantId}`)).then(snapshot => {
                             this.state.subscription = snapshot.val();
-                            // Se houver aviso cr├¡tico, re-renderiza para mostrar o banner
+                            // Se houver aviso crítico, re-renderiza para mostrar o banner
                             if (this.state.subscription) {
                                 this.render(this.state.view);
                             }
@@ -1427,19 +1427,19 @@ const app = {
                         const data = snapshot.val();
                         if (data) {
                             let cloudLastUpdate = data.lastUpdate || 0;
-                            // [SEGURAN├çA CONTRA TIMESTAMP ENVENENADO] Se o rel├│gio da nuvem estiver no futuro distante, reseta
+                            // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem estiver no futuro distante, reseta
                             if (cloudLastUpdate > 2000000000000) {
                                 cloudLastUpdate = 0;
                             }
                             const localLastUpdate = this.state.lastUpdate || 0;
 
-                            // [INSTANT├éNEO] Se a nuvem tem dados novos (sess├Áes master SEMPRE processam os dados reais da nuvem)
+                            // [INSTANTÂNEO] Se a nuvem tem dados novos (sessões master SEMPRE processam os dados reais da nuvem)
                             if (!this.state.user?.isMasterSession && cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
                                 return;
                             }
 
-                            // [OTIMIZA├ç├âO ANTI-FLICKER] 
-                            // S├│ re-renderiza se os dados CR├ìTICOS mudarem de fato
+                            // [OTIMIZAÇÃO ANTI-FLICKER] 
+                            // Só re-renderiza se os dados CRÍTICOS mudarem de fato
                             const newDataHash = JSON.stringify({
                                 a: data.appointments,
                                 s: data.staff,
@@ -1455,18 +1455,18 @@ const app = {
                             }
                             this.state._lastDataHash = newDataHash;
 
-                            console.log('ÔÜí Novos dados detectados (Cloud). Atualizando UI...');
+                            console.log('⚡ Novos dados detectados (Cloud). Atualizando UI...');
                             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
                             const deletedSet = new Set(this.state._deletedIds || []);
                             
-                            // Fun├º├úo auxiliar para mesclar arrays sem duplicar e sem perder dados locais novos
+                            // Função auxiliar para mesclar arrays sem duplicar e sem perder dados locais novos
                             const mergeArrays = (local, cloud) => {
                                 const map = new Map();
                                 toArray(cloud).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
                                 toArray(local).forEach(item => { if (item && item.id) map.set(String(item.id), item); });
                                 return Array.from(map.values()).filter(item => item && item.id && !deletedSet.has(String(item.id)));
                             };
-                            // [PROTE├ç├âO DE HIERARQUIA DE STATUS] 
+                            // [PROTEÇÃO DE HIERARQUIA DE STATUS] 
                             const getRank = (s) => {
                                 if (s === 'finalizado') return 2;
                                 if (s === 'confirmado') return 1;
@@ -1479,7 +1479,7 @@ const app = {
                             this.state.appointments = cloudApts.map(cloudApt => {
                                 const localApt = this.state.appointments.find(a => String(a.id) === String(cloudApt.id));
                                 
-                                // [SEGURAN├çA FINANCEIRA] Se existe transa├º├úo para este agendamento, ele ├® FINALIZADO obrigatoriamente
+                                // [SEGURANÇA FINANCEIRA] Se existe transação para este agendamento, ele é FINALIZADO obrigatoriamente
                                 const hasTransaction = cloudTransactions.some(t => 
                                     t.id === cloudApt.transactionId || 
                                     (t.date === cloudApt.date && t.description.includes(cloudApt.customer) && t.amount === cloudApt.price)
@@ -1494,9 +1494,9 @@ const app = {
                                     const localRank = getRank(localApt.status);
                                     const cloudRank = getRank(cloudApt.status);
                                     
-                                    // [BLINDAGEM CONTRA EFEITO EL├üSTICO]
-                                    // Se temos altera├º├Áes locais pendentes de sincronismo (ou sincronismo em andamento),
-                                    // preservamos as coordenadas de Barbeiro, Data e Hor├írio locais para evitar revers├úo.
+                                    // [BLINDAGEM CONTRA EFEITO ELÁSTICO]
+                                    // Se temos alterações locais pendentes de sincronismo (ou sincronismo em andamento),
+                                    // preservamos as coordenadas de Barbeiro, Data e Horário locais para evitar reversão.
                                     if (this.state.needsSync || this.state.isSyncing) {
                                         mergedApt.barber = localApt.barber;
                                         mergedApt.date = localApt.date;
@@ -1512,14 +1512,14 @@ const app = {
                                 return mergedApt;
                             });
 
-                            // [BLINDAGEM CONTRA RESSURREI├ç├âO DE COLABORADORES EXCLU├ìDOS]
+                            // [BLINDAGEM CONTRA RESSURREIÇÃO DE COLABORADORES EXCLUÍDOS]
                             const cloudDelStaff = Array.isArray(data.deletedStaffIds) ? data.deletedStaffIds : Object.values(data.deletedStaffIds || {});
                             const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
                             this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
 
                             const rawCloudStaff = toArray(data.staff).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
-                            // Se temos altera├º├Áes locais pendentes de envio, mescla com autoridade da nuvem; sen├úo, a nuvem ├® a fonte da verdade absoluta (evita ressurrei├º├úo de deletados)
+                            // Se temos alterações locais pendentes de envio, mescla com autoridade da nuvem; senão, a nuvem é a fonte da verdade absoluta (evita ressurreição de deletados)
                             if (this.state.needsSync || this.state.isSyncing) {
                                 const staffMap = new Map();
                                 rawCloudStaff.forEach(s => staffMap.set(String(s.id), { ...s }));
@@ -1580,7 +1580,7 @@ const app = {
                                 }));
                             } catch (e) { }
 
-                            // Re-renderiza├º├úo da View Atual (Instant├ónea)
+                            // Re-renderização da View Atual (Instantânea)
                             if (this.state.view !== 'booking' && this.state.view !== 'login') {
                                 if (this.state.user && this.state.user.role === 'totem') {
                                     this.renderTotem();
@@ -1589,7 +1589,7 @@ const app = {
                                 }
                             }
 
-                            // [BACKUP AUTOM├üTICO] Verifica backup na inicializa├º├úo
+                            // [BACKUP AUTOMÁTICO] Verifica backup na inicialização
                             setTimeout(() => { this.checkAndTriggerBackup(); }, 3000);
 
                             // Feedback visual
@@ -1601,7 +1601,7 @@ const app = {
                         }
                     });
 
-                    // [HEARTBEAT] Sincroniza├º├úo For├ºada Peri├│dica (5s) apenas se houver altera├º├Áes locais
+                    // [HEARTBEAT] Sincronização Forçada Periódica (5s) apenas se houver alterações locais
                     setInterval(() => {
                         if (!this.state.isSyncing && this.state.needsSync) {
                             this.syncToFirebase();
@@ -1614,17 +1614,17 @@ const app = {
 
             // [BLINDAGEM] Se chegou aqui sem erro, reseta o contador de crash
             localStorage.setItem('crash_count', '0');
-            console.log('­ƒÅü Sistema inicializado com sucesso.');
+            console.log('🏁 Sistema inicializado com sucesso.');
 
         } catch (e) {
-            console.error('ÔØî ERRO CR├ìTICO NA INICIALIZA├ç├âO:', e);
-            this.handleGlobalError(e, 'Inicializa├º├úo');
+            console.error('❌ ERRO CRÍTICO NA INICIALIZAÇÃO:', e);
+            this.handleGlobalError(e, 'Inicialização');
         }
 
         // loadFromCloud removido para evitar sobrescrita de dados novos por antigos
         console.log('Centauro App Initialized (Real-time mode)');
         console.log('Centauro App Initialized');
-        // Adicionar listener para navega├º├úo
+        // Adicionar listener para navegação
         window.addEventListener('popstate', (e) => {
             const hash = window.location.hash.replace('#', '');
             if (hash) {
@@ -1638,7 +1638,7 @@ const app = {
             }
         });
 
-        // [NOVO] Priorizar HASH da URL para navega├º├úo persistente (F5) em todo o site
+        // [NOVO] Priorizar HASH da URL para navegação persistente (F5) em todo o site
         const hash = window.location.hash.replace('#', '');
         let initialView = 'home';
         let initialSubView = null;
@@ -1649,12 +1649,12 @@ const app = {
             initialSubView = parts[1] || null;
         }
 
-        // [SEGURAN├çA] Carregamento inicial com verifica├º├úo de sess├úo amarrada ao tenant ativo
+        // [SEGURANÇA] Carregamento inicial com verificação de sessão amarrada ao tenant ativo
         const tenantId = this.getTenantId();
         const sessionKey = `centauros_user_${tenantId}`;
         const hasMasterToken = new URLSearchParams(window.location.search).has('master_token');
 
-        // [MIGRA├ç├âO LEGADA] Limpa chave global antiga se existir, para n├úo deixar res├¡duos
+        // [MIGRAÇÃO LEGADA] Limpa chave global antiga se existir, para não deixar resíduos
         if (localStorage.getItem('centauros_user')) {
             localStorage.removeItem('centauros_user');
         }
@@ -1662,7 +1662,7 @@ const app = {
             sessionStorage.removeItem('centauros_user');
         }
 
-        // Buscar sess├úo ativa (sessionStorage tem prioridade para sess├Áes tempor├írias/master, depois localStorage)
+        // Buscar sessão ativa (sessionStorage tem prioridade para sessões temporárias/master, depois localStorage)
         let savedUserStr = sessionStorage.getItem(sessionKey);
         let isFromSessionStorage = true;
         if (!savedUserStr) {
@@ -1670,16 +1670,16 @@ const app = {
             isFromSessionStorage = false;
         }
 
-        // Se h├í master_token, pular restaura├º├úo de sess├úo ÔÇö ser├í tratado ap├│s Firebase carregar
+        // Se há master_token, pular restauração de sessão — será tratado após Firebase carregar
         if (!hasMasterToken && savedUserStr) {
             try {
                 const savedUser = JSON.parse(savedUserStr);
                 const now = Date.now();
 
-                // [SEGURAN├çA] Valida├º├úo de expira├º├úo:
-                // Se o usu├írio marcou "Mantenha-me logado", N├âO expira por tempo (sem limite de horas)
-                // O usu├írio permanece logado e s├│ sai dessa p├ígina se clicar em 'Sair'
-                // Se for sess├úo tempor├íria (sem "Mantenha-me logado" ou token master), valida o tempo de expira├º├úo
+                // [SEGURANÇA] Validação de expiração:
+                // Se o usuário marcou "Mantenha-me logado", NÃO expira por tempo (sem limite de horas)
+                // O usuário permanece logado e só sai dessa página se clicar em 'Sair'
+                // Se for sessão temporária (sem "Mantenha-me logado" ou token master), valida o tempo de expiração
                 let isExpired = false;
                 if (savedUser.isMasterSession) {
                     isExpired = !isFromSessionStorage || !savedUser.expiresAt || now > savedUser.expiresAt;
@@ -1689,17 +1689,17 @@ const app = {
                     isExpired = !savedUser.expiresAt || now > savedUser.expiresAt;
                 }
 
-                // Sess├úo master que ficou presa no localStorage (legado) ou expirou deve ser purgada imediatamente
+                // Sessão master que ficou presa no localStorage (legado) ou expirou deve ser purgada imediatamente
                 if (savedUser.isMasterSession && isExpired) {
-                    console.warn("­ƒöÆ [SEGURAN├çA] Sess├úo Master inv├ílida ou expirada no localStorage. Purgando.");
+                    console.warn("🔒 [SEGURANÇA] Sessão Master inválida ou expirada no localStorage. Purgando.");
                     localStorage.removeItem(sessionKey);
                     sessionStorage.removeItem(sessionKey);
                 } else if (isExpired) {
-                    console.warn("­ƒöÆ [SEGURAN├çA] Sess├úo tempor├íria expirada. Purgando.");
+                    console.warn("🔒 [SEGURANÇA] Sessão temporária expirada. Purgando.");
                     localStorage.removeItem(sessionKey);
                     sessionStorage.removeItem(sessionKey);
                 } else if (savedUser.tenantId && savedUser.tenantId !== tenantId) {
-                    console.warn(`ÔÜá´©Å [SEGURAN├çA] Sess├úo de outro tenant bloqueada. Sess├úo: '${savedUser.tenantId}', Tenant ativo: '${tenantId}'`);
+                    console.warn(`⚠️ [SEGURANÇA] Sessão de outro tenant bloqueada. Sessão: '${savedUser.tenantId}', Tenant ativo: '${tenantId}'`);
                     localStorage.removeItem(sessionKey);
                     sessionStorage.removeItem(sessionKey);
                 } else {
@@ -1715,9 +1715,9 @@ const app = {
                     // [PUSH NOTIFICATION] Re-registrar push ao auto-login
                     setTimeout(() => this.initPushNotifications(), 4000);
 
-                    // Se n├úo houver hash na URL:
-                    // Se o usu├írio est├í logado (e n├úo for sess├úo master tempor├íria), permanece no painel!
-                    // O usu├írio s├│ sair├í dessa p├ígina caso clique em 'Sair'.
+                    // Se não houver hash na URL:
+                    // Se o usuário está logado (e não for sessão master temporária), permanece no painel!
+                    // O usuário só sairá dessa página caso clique em 'Sair'.
                     if (!hash) {
                         if (!savedUser.isMasterSession) {
                             if (this.state.user.role === 'admin') initialView = 'admin-dash';
@@ -1729,7 +1729,7 @@ const app = {
                     }
                 }
             } catch (e) {
-                console.error("Erro ao ler sess├úo salva:", e);
+                console.error("Erro ao ler sessão salva:", e);
                 localStorage.removeItem(sessionKey);
                 sessionStorage.removeItem(sessionKey);
             }
@@ -1743,23 +1743,23 @@ const app = {
         
         this.render(initialView);
 
-        // [CHANGELOG] Verificar se h├í novidades e atualiza├º├Áes para o ADM
+        // [CHANGELOG] Verificar se há novidades e atualizações para o ADM
         if (this.state.user && this.state.user.role === 'admin') {
             setTimeout(() => this.checkAdminChangelog(), 900);
         }
 
-        // [MASTER IMPERSONATE] Se h├í master_token na URL, validar async ap├│s o Firebase estar pronto
+        // [MASTER IMPERSONATE] Se há master_token na URL, validar async após o Firebase estar pronto
         if (hasMasterToken) {
             // Aguardar um breve delay para o Firebase estar inicializado
             const attemptMasterLogin = async () => {
-                // Espera o this.db estar dispon├¡vel (m├íx 10s)
+                // Espera o this.db estar disponível (máx 10s)
                 let attempts = 0;
                 while (!this.db && attempts < 20) {
                     await new Promise(r => setTimeout(r, 500));
                     attempts++;
                 }
                 if (!this.db) {
-                    console.error('[Master Token] Firebase n├úo ficou dispon├¡vel a tempo.');
+                    console.error('[Master Token] Firebase não ficou disponível a tempo.');
                     this.cleanMasterTokenFromURL();
                     return;
                 }
@@ -1780,28 +1780,28 @@ const app = {
                 try {
                     e.target.showPicker();
                 } catch (err) {
-                    // Ignora erro se o navegador n├úo suportar ou se j├í estiver aberto
+                    // Ignora erro se o navegador não suportar ou se já estiver aberto
                 }
             }
         });
 
-        // [SEGURAN├çA] Verifica├º├úo cont├¡nua de expira├º├úo de sess├úo ao reativar janela
+        // [SEGURANÇA] Verificação contínua de expiração de sessão ao reativar janela
         window.addEventListener('focus', () => {
             if (this.state.user && this.isSessionExpired()) {
-                console.warn("­ƒöÆ [SEGURAN├çA] Sess├úo expirada detectada no retorno ├á janela.");
+                console.warn("🔒 [SEGURANÇA] Sessão expirada detectada no retorno à janela.");
                 this.clearSession();
                 this.state.user = null;
                 if (this.state.view && (this.state.view.includes('-dash') || this.state.view.startsWith('admin-') || this.state.view === 'pdv')) {
-                    alert("Sua sess├úo expirou por seguran├ºa. Por favor, fa├ºa login novamente.");
+                    alert("Sua sessão expirou por segurança. Por favor, faça login novamente.");
                     this.render('login');
                 }
             }
         });
 
-        // [SEGURAN├çA] Verifica├º├úo peri├│dica a cada 60s
+        // [SEGURANÇA] Verificação periódica a cada 60s
         setInterval(() => {
             if (this.state.user && this.isSessionExpired()) {
-                console.warn("­ƒöÆ [SEGURAN├çA] Sess├úo expirada detectada em segundo plano.");
+                console.warn("🔒 [SEGURANÇA] Sessão expirada detectada em segundo plano.");
                 this.clearSession();
                 this.state.user = null;
                 if (this.state.view && (this.state.view.includes('-dash') || this.state.view.startsWith('admin-') || this.state.view === 'pdv')) {
@@ -1838,7 +1838,7 @@ const app = {
     openAgendaConfig() {
         if (!this.state.user || this.state.user.role !== 'admin') return;
         const s = this.state.settings.agenda;
-        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'S├íb'];
+        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
         let daysHtml = days.map((d, i) => {
             const sc = s.schedule[i];
@@ -1849,20 +1849,20 @@ const app = {
                         <input type="checkbox" id="cfg-act-${i}" ${sc.active ? 'checked' : ''} style="accent-color: var(--accent-readable);"> Ativo
                     </label>
                     <input type="time" id="cfg-open-${i}" class="glass" style="padding: 5px; width: 100px; color: var(--text-primary);" value="${sc.open}">
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">├ás</span>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">às</span>
                     <input type="time" id="cfg-close-${i}" class="glass" style="padding: 5px; width: 100px; color: var(--text-primary);" value="${sc.close}">
                 </div>
             `;
         }).join('');
 
-        this.openModal('Configurar Hor├írios', `
+        this.openModal('Configurar Horários', `
             <section class="fade-in">
                 <div style="max-height: 350px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">Regras Semanais de Abertura:</p>
                     ${daysHtml}
                 </div>
                 <div style="margin-bottom: 25px;">
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Intervalo Padr├úo da Agenda</label>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Intervalo Padrão da Agenda</label>
                     <select id="set-inter" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                         <option value="5" ${s.intervalMin == 5 ? 'selected' : ''}>A cada 5 minutos</option>
                         <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
@@ -1872,7 +1872,7 @@ const app = {
                         <option value="60" ${s.intervalMin == 60 ? 'selected' : ''}>A cada 1 hora</option>
                     </select>
                 </div>
-                <button class="btn-primary" style="width: 100%;" onclick="app.saveAgendaConfig()">Salvar Configura├º├Áes</button>
+                <button class="btn-primary" style="width: 100%;" onclick="app.saveAgendaConfig()">Salvar Configurações</button>
             </section>
         `);
     },
@@ -1889,28 +1889,28 @@ const app = {
         this.render(this.state.view);
     },
 
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    //  CENTRAL DE ATUALIZA├ç├òES & CHANGELOG AUTOM├üTICO (ADMIN)
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+    // ══════════════════════════════════════════════════════════════
+    //  CENTRAL DE ATUALIZAÇÕES & CHANGELOG AUTOMÁTICO (ADMIN)
+    // ══════════════════════════════════════════════════════════════
     CURRENT_SYSTEM_VERSION: '80.56',
 
     SYSTEM_CHANGELOG: [
         {
             version: '80.56',
             date: '19/10/2026',
-            title: 'Corre├º├úo de Vencimento Mercado Pago & Persist├¬ncia de Servi├ºos',
+            title: 'Correção de Vencimento Mercado Pago & Persistência de Serviços',
             badge: 'Mais Recente',
             highlights: [
                 {
                     icon: 'calendar-check',
-                    title: 'Idempot├¬ncia no Webhook do Mercado Pago',
-                    desc: 'Corrigido o c├ílculo de vencimento para evitar que notifica├º├Áes duplicadas do Mercado Pago somassem 60 dias ao inv├®s de 30 dias para uma ├║nica mensalidade.',
-                    badge: 'CORRE├ç├âO'
+                    title: 'Idempotência no Webhook do Mercado Pago',
+                    desc: 'Corrigido o cálculo de vencimento para evitar que notificações duplicadas do Mercado Pago somassem 60 dias ao invés de 30 dias para uma única mensalidade.',
+                    badge: 'CORREÇÃO'
                 },
                 {
                     icon: 'scissors',
-                    title: 'Persist├¬ncia Blindada de Servi├ºos & Agendamentos',
-                    desc: 'Corrigido o sincronismo de novos servi├ºos cadastrados (como Corte M├íquina) e seus agendamentos/servi├ºos executados, garantindo grava├º├úo direta e imediata na nuvem sem perda por cache.',
+                    title: 'Persistência Blindada de Serviços & Agendamentos',
+                    desc: 'Corrigido o sincronismo de novos serviços cadastrados (como Corte Máquina) e seus agendamentos/serviços executados, garantindo gravação direta e imediata na nuvem sem perda por cache.',
                     badge: 'ESTABILIDADE'
                 }
             ]
@@ -1918,14 +1918,14 @@ const app = {
         {
             version: '80.55',
             date: '14/10/2026',
-            title: 'Corre├º├úo das Credenciais de Produ├º├úo do Mercado Pago',
+            title: 'Correção das Credenciais de Produção do Mercado Pago',
             badge: 'Anterior',
             highlights: [
                 {
                     icon: 'zap',
-                    title: 'Corre├º├úo de Token & Gera├º├úo de PIX Instant├óneo',
-                    desc: 'Corrigida a chave de acesso (Access Token) do Mercado Pago gravada no Firebase e nas fun├º├Áes da API, restabelecendo a gera├º├úo imediata do QR Code e c├│digo Copia e Cola para renova├º├úo de planos.',
-                    badge: 'CORRE├ç├âO'
+                    title: 'Correção de Token & Geração de PIX Instantâneo',
+                    desc: 'Corrigida a chave de acesso (Access Token) do Mercado Pago gravada no Firebase e nas funções da API, restabelecendo a geração imediata do QR Code e código Copia e Cola para renovação de planos.',
+                    badge: 'CORREÇÃO'
                 }
             ]
         },
@@ -1937,54 +1937,54 @@ const app = {
             highlights: [
                 {
                     icon: 'shield-alert',
-                    title: 'Elimina├º├úo Definitiva de Ressurrei├º├úo por Cache',
-                    desc: 'Implementada autoridade m├íxima da nuvem para colaboradores e servi├ºos, lista definitiva de exclus├Áes sincronizada com Firebase e expurgo autom├ítico de cache local e localStorage antigo.',
+                    title: 'Eliminação Definitiva de Ressurreição por Cache',
+                    desc: 'Implementada autoridade máxima da nuvem para colaboradores e serviços, lista definitiva de exclusões sincronizada com Firebase e expurgo automático de cache local e localStorage antigo.',
                     badge: 'BLINDAGEM'
                 },
                 {
                     icon: 'user-minus',
-                    title: 'Remo├º├úo Permanente de Colaborador Desligado',
+                    title: 'Remoção Permanente de Colaborador Desligado',
                     desc: 'O perfil de Matheus Fernandes foi removido definitivamente do banco de dados e bloqueado contra qualquer reenvio acidental por aparelhos antigos.',
-                    badge: 'CORRE├ç├âO'
+                    badge: 'CORREÇÃO'
                 }
             ]
         },
         {
             version: '80.53',
             date: '10/10/2026',
-            title: 'Corre├º├úo de Sincronismo & Blindagem de Exclus├Áes',
+            title: 'Correção de Sincronismo & Blindagem de Exclusões',
             badge: 'Anterior',
             highlights: [
                 {
                     icon: 'user-x',
-                    title: 'Blindagem contra Ressurrei├º├úo de Cadastros',
-                    desc: 'Ajustada a mesclagem de sincronismo em tempo real para respeitar fielmente exclus├Áes de profissionais e cadastros exclu├¡dos pelo administrador, impedindo retorno por cache local.',
-                    badge: 'CORRE├ç├âO'
+                    title: 'Blindagem contra Ressurreição de Cadastros',
+                    desc: 'Ajustada a mesclagem de sincronismo em tempo real para respeitar fielmente exclusões de profissionais e cadastros excluídos pelo administrador, impedindo retorno por cache local.',
+                    badge: 'CORREÇÃO'
                 }
             ]
         },
         {
             version: '80.52',
             date: '09/10/2026',
-            title: 'Libera├º├úo Autom├ítica de Planos com Mercado Pago',
+            title: 'Liberação Automática de Planos com Mercado Pago',
             badge: 'Anterior',
             highlights: [
                 {
                     icon: 'zap',
-                    title: 'Renova├º├úo Autom├ítica via PIX do Mercado Pago',
-                    desc: 'Lojistas agora podem gerar QR Code PIX din├ómico com libera├º├úo imediata do sistema no momento exato em que o pagamento for aprovado pelo banco.',
+                    title: 'Renovação Automática via PIX do Mercado Pago',
+                    desc: 'Lojistas agora podem gerar QR Code PIX dinâmico com liberação imediata do sistema no momento exato em que o pagamento for aprovado pelo banco.',
                     badge: 'NOVO'
                 },
                 {
                     icon: 'shield-check',
-                    title: 'Webhook & Desbloqueio Instant├óneo',
-                    desc: 'Integra├º├úo de Webhook com a API do Mercado Pago para adicionar +30 dias de acesso e remover bloqueios automaticamente sem interven├º├úo manual.',
-                    badge: 'AUTOMA├ç├âO'
+                    title: 'Webhook & Desbloqueio Instantâneo',
+                    desc: 'Integração de Webhook com a API do Mercado Pago para adicionar +30 dias de acesso e remover bloqueios automaticamente sem intervenção manual.',
+                    badge: 'AUTOMAÇÃO'
                 },
                 {
                     icon: 'key',
-                    title: 'Configura├º├Áes de API no Painel Master',
-                    desc: 'Aba Perfil Master atualizada para gerenciar o Access Token de Produ├º├úo e a URL de notifica├º├Áes do Mercado Pago com total seguran├ºa.',
+                    title: 'Configurações de API no Painel Master',
+                    desc: 'Aba Perfil Master atualizada para gerenciar o Access Token de Produção e a URL de notificações do Mercado Pago com total segurança.',
                     badge: 'PAINEL'
                 }
             ]
@@ -1992,25 +1992,25 @@ const app = {
         {
             version: '80.51',
             date: '09/10/2026',
-            title: 'Corre├º├úo de Pagamentos & Confer├¬ncia Obrigat├│ria de OS',
+            title: 'Correção de Pagamentos & Conferência Obrigatória de OS',
             badge: 'Anterior',
             highlights: [
                 {
                     icon: 'credit-card',
-                    title: 'Altera├º├úo de Forma de Pagamento no Admin',
-                    desc: 'O administrador agora pode alterar a forma de pagamento de agendamentos j├í finalizados diretamente pelo card ou detalhes, sincronizando automaticamente o Fluxo de Caixa.',
+                    title: 'Alteração de Forma de Pagamento no Admin',
+                    desc: 'O administrador agora pode alterar a forma de pagamento de agendamentos já finalizados diretamente pelo card ou detalhes, sincronizando automaticamente o Fluxo de Caixa.',
                     badge: 'NOVO'
                 },
                 {
                     icon: 'check-circle-2',
-                    title: 'Confer├¬ncia Obrigat├│ria ao Finalizar Atendimento',
-                    desc: 'Grid visual com bot├Áes claros e tela de confirma├º├úo obrigat├│ria para o profissional confirmar o m├®todo de pagamento antes de fechar a OS, evitando lan├ºamentos incorretos.',
-                    badge: 'SEGURAN├çA'
+                    title: 'Conferência Obrigatória ao Finalizar Atendimento',
+                    desc: 'Grid visual com botões claros e tela de confirmação obrigatória para o profissional confirmar o método de pagamento antes de fechar a OS, evitando lançamentos incorretos.',
+                    badge: 'SEGURANÇA'
                 },
                 {
                     icon: 'users',
-                    title: 'Padroniza├º├úo Universal: "Profissional"',
-                    desc: 'Alterado o termo no card de agendamento de Barbeiro(a) para Profissional para maior abrang├¬ncia e consist├¬ncia com diferentes modelos de neg├│cio.',
+                    title: 'Padronização Universal: "Profissional"',
+                    desc: 'Alterado o termo no card de agendamento de Barbeiro(a) para Profissional para maior abrangência e consistência com diferentes modelos de negócio.',
                     badge: 'AJUSTE'
                 }
             ]
@@ -2023,38 +2023,38 @@ const app = {
             highlights: [
                 {
                     icon: 'bell-ring',
-                    title: 'Aviso Autom├ítico de Novidades & Atualiza├º├Áes',
-                    desc: 'Bal├úo autom├ítico exibido na abertura do app para administradores sempre que uma nova vers├úo ou recurso for lan├ºado no sistema.',
+                    title: 'Aviso Automático de Novidades & Atualizações',
+                    desc: 'Balão automático exibido na abertura do app para administradores sempre que uma nova versão ou recurso for lançado no sistema.',
                     badge: 'NOVO'
                 },
                 {
                     icon: 'book-open',
                     title: 'Guia Completo & Passo a Passo do Sistema',
-                    desc: 'Roteiro pr├ítico com 12 etapas estruturadas, tempo estimado, checklist interativo de progresso e barra de pesquisa din├ómica.',
+                    desc: 'Roteiro prático com 12 etapas estruturadas, tempo estimado, checklist interativo de progresso e barra de pesquisa dinâmica.',
                     badge: 'NOVO'
                 },
                 {
                     icon: 'monitor-smartphone',
-                    title: 'Modo Totem / Recep├º├úo Simplificada',
-                    desc: 'Guia detalhado para ativar o totem em tablets ou computadores de balc├úo para agendamentos r├ípidos e vendas diretas com seguran├ºa.',
+                    title: 'Modo Totem / Recepção Simplificada',
+                    desc: 'Guia detalhado para ativar o totem em tablets ou computadores de balcão para agendamentos rápidos e vendas diretas com segurança.',
                     badge: 'GUIA'
                 },
                 {
                     icon: 'user-plus',
-                    title: 'Cria├º├úo de Novos Acessos Administrativos',
-                    desc: 'Instru├º├Áes claras para adicionar s├│cios e gerentes com permiss├úo de gest├úo total nas configura├º├Áes.',
+                    title: 'Criação de Novos Acessos Administrativos',
+                    desc: 'Instruções claras para adicionar sócios e gerentes com permissão de gestão total nas configurações.',
                     badge: 'GUIA'
                 },
                 {
                     icon: 'sliders-horizontal',
-                    title: 'Servi├ºos "A partir de:" Configur├ível',
-                    desc: 'Op├º├úo em Configura├º├Áes > Atendimento para habilitar ou desabilitar edi├º├úo flex├¡vel de pre├ºo ao finalizar ordens de servi├ºo.',
+                    title: 'Serviços "A partir de:" Configurável',
+                    desc: 'Opção em Configurações > Atendimento para habilitar ou desabilitar edição flexível de preço ao finalizar ordens de serviço.',
                     badge: 'AJUSTE'
                 },
                 {
                     icon: 'sparkles',
-                    title: 'Bot├úo de Primeiros Passos Animado & Responsividade',
-                    desc: 'Destaque visual luminoso com efeito pulsar na tela inicial e preven├º├úo de cortes em telas menores de celulares.',
+                    title: 'Botão de Primeiros Passos Animado & Responsividade',
+                    desc: 'Destaque visual luminoso com efeito pulsar na tela inicial e prevenção de cortes em telas menores de celulares.',
                     badge: 'VISUAL'
                 }
             ]
@@ -2062,18 +2062,18 @@ const app = {
         {
             version: '80.48',
             date: '08/10/2026',
-            title: 'Melhorias de Visualiza├º├úo & Agenda',
+            title: 'Melhorias de Visualização & Agenda',
             badge: 'Anterior',
             highlights: [
                 {
                     icon: 'calendar',
                     title: 'Contraste Aprimorado nas Linhas da Agenda',
-                    desc: 'Linhas divis├│rias cinzas e legibilidade das cores de agendamentos revisadas para desktop e mobile.'
+                    desc: 'Linhas divisórias cinzas e legibilidade das cores de agendamentos revisadas para desktop e mobile.'
                 },
                 {
                     icon: 'layout',
-                    title: 'Ajuste de Largura & Centraliza├º├úo',
-                    desc: 'Preenchimento fluido de telas largas e centraliza├º├úo harm├┤nica em monitores de alta resolu├º├úo.'
+                    title: 'Ajuste de Largura & Centralização',
+                    desc: 'Preenchimento fluido de telas largas e centralização harmônica em monitores de alta resolução.'
                 }
             ]
         }
@@ -2088,7 +2088,7 @@ const app = {
         try {
             lastSeen = localStorage.getItem('centauro_last_seen_changelog_version');
         } catch (e) {
-            console.warn('Erro ao ler vers├úo vista:', e);
+            console.warn('Erro ao ler versão vista:', e);
         }
 
         if (force || !lastSeen || lastSeen !== this.CURRENT_SYSTEM_VERSION) {
@@ -2109,24 +2109,24 @@ const app = {
 
         const contentHTML = `
             <div style="padding: 18px 20px 22px;">
-                <!-- Header Visual do Bal├úo -->
+                <!-- Header Visual do Balão -->
                 <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--glass-border);">
                     <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.1)); border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15);">
-                        ­ƒÜÇ
+                        🚀
                     </div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span style="background: #38bdf8; color: #000; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; letter-spacing: 0.5px;">VERS├âO ${currentChangelog.version || this.CURRENT_SYSTEM_VERSION}</span>
+                            <span style="background: #38bdf8; color: #000; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; letter-spacing: 0.5px;">VERSÃO ${currentChangelog.version || this.CURRENT_SYSTEM_VERSION}</span>
                             <span style="font-size: 0.72rem; color: var(--text-secondary);">${currentChangelog.date || ''}</span>
                         </div>
                         <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 4px 0 0; line-height: 1.3;">
-                            ${currentChangelog.title || 'Novidades & Atualiza├º├Áes do Sistema'}
+                            ${currentChangelog.title || 'Novidades & Atualizações do Sistema'}
                         </h4>
                     </div>
                 </div>
 
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.45;">
-                    Seu sistema foi atualizado! Confira abaixo as novas funcionalidades, integra├º├Áes e melhorias dispon├¡veis para seu acesso administrativo:
+                    Seu sistema foi atualizado! Confira abaixo as novas funcionalidades, integrações e melhorias disponíveis para seu acesso administrativo:
                 </p>
 
                 <!-- Cards com Destaques -->
@@ -2150,13 +2150,13 @@ const app = {
                 ${previousChangelogs.length > 0 ? `
                     <details style="margin-bottom: 18px; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px dashed var(--glass-border); padding-top: 12px;">
                         <summary style="cursor: pointer; font-weight: 600; color: #38bdf8; user-select: none;">
-                            ­ƒô£ Ver atualiza├º├Áes anteriores (${previousChangelogs.map(p => 'v' + p.version).join(', ')})
+                            📜 Ver atualizações anteriores (${previousChangelogs.map(p => 'v' + p.version).join(', ')})
                         </summary>
                         <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
                             ${previousChangelogs.map(prev => `
                                 <div style="padding: 10px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                                     <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
-                                        v${prev.version} ÔÇö <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal;">${prev.date}</span>
+                                        v${prev.version} — <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal;">${prev.date}</span>
                                     </div>
                                     <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 0.78rem; line-height: 1.4;">
                                         ${(prev.highlights || []).map(h => `<li style="margin-bottom: 3px;"><strong>${h.title}:</strong> ${h.desc}</li>`).join('')}
@@ -2167,7 +2167,7 @@ const app = {
                     </details>
                 ` : ''}
 
-                <!-- Rodap├® de A├º├Áes -->
+                <!-- Rodapé de Ações -->
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--glass-border); padding-top: 16px;">
                     <button class="btn-secondary" style="flex: 1; min-width: 140px; font-size: 0.85rem; padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="app.closeModal(); app.navigateTo('admin-guide');">
                         <i data-lucide="book-open" style="width: 16px; height: 16px;"></i> Guia Passo a Passo
@@ -2179,14 +2179,14 @@ const app = {
             </div>
         `;
 
-        this.openModal('­ƒôó Novidades do Sistema', contentHTML, '560px');
+        this.openModal('📢 Novidades do Sistema', contentHTML, '560px');
     },
 
     markChangelogSeen(shouldClose = true) {
         try {
             localStorage.setItem('centauro_last_seen_changelog_version', this.CURRENT_SYSTEM_VERSION);
         } catch (e) {
-            console.warn('Erro ao salvar vers├úo vista:', e);
+            console.warn('Erro ao salvar versão vista:', e);
         }
         this._isChangelogModalOpen = false;
         if (shouldClose) {
@@ -2251,9 +2251,9 @@ const app = {
         if (!this.state.user || this.state.user.role !== 'admin') {
             container.innerHTML = `
                 <div class="glass fade-in" style="padding: 40px 20px; text-align: center; max-width: 500px; margin: 40px auto; border-radius: 16px;">
-                    <div style="font-size: 2.5rem; margin-bottom: 12px;">­ƒöÆ</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
                     <h3 style="color: var(--text-primary); margin-bottom: 8px;">Acesso Exclusivo para Administrador</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Este guia pr├ítico e manual de configura├º├Áes ├® restrito a administradores do sistema.</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Este guia prático e manual de configurações é restrito a administradores do sistema.</p>
                     <button class="btn-primary" style="margin-top: 20px; padding: 10px 24px;" onclick="app.navigateTo('barber-dash')">Ir para Minha Agenda</button>
                 </div>
             `;
@@ -2266,39 +2266,39 @@ const app = {
                 id: 'step_settings',
                 num: '1',
                 category: 'setup',
-                icon: 'ÔÜÖ´©Å',
-                title: 'Configura├º├Áes da Loja, Hor├írios & Pre├ºo Vari├ível',
+                icon: '⚙️',
+                title: 'Configurações da Loja, Horários & Preço Variável',
                 time: '2 min',
-                summary: 'Personalize hor├írios de funcionamento, telefone/WhatsApp de contato, endere├ºo, imagem de capa e regras de pre├ºos.',
+                summary: 'Personalize horários de funcionamento, telefone/WhatsApp de contato, endereço, imagem de capa e regras de preços.',
                 instructions: [
-                    'Acesse o menu lateral em <strong>Configura├º├Áes</strong>.',
-                    'Em <strong>Hor├írios de Funcionamento</strong>, ative os dias que o estabelecimento abre e defina os hor├írios de abertura e fechamento.',
-                    'Defina o <strong>Intervalo padr├úo da agenda</strong> (ex: a cada 30 min ou 60 min).',
-                    'Em <strong>Identidade Visual</strong>, preencha o Nome, WhatsApp comercial e Endere├ºo com CEP.',
+                    'Acesse o menu lateral em <strong>Configurações</strong>.',
+                    'Em <strong>Horários de Funcionamento</strong>, ative os dias que o estabelecimento abre e defina os horários de abertura e fechamento.',
+                    'Defina o <strong>Intervalo padrão da agenda</strong> (ex: a cada 30 min ou 60 min).',
+                    'Em <strong>Identidade Visual</strong>, preencha o Nome, WhatsApp comercial e Endereço com CEP.',
                     'Escolha a cor principal da sua marca e a imagem de capa (Hero).',
-                    'Em <strong>Servi├ºos com valor "A partir de:"</strong>: deixe <em>Habilitado</em> caso seus servi├ºos tenham pre├ºo flex├¡vel para edi├º├úo na O.S., ou <em>Desabilitado</em> se os pre├ºos forem r├¡gidos.',
-                    'Role at├® o fim da p├ígina e clique no bot├úo verde <strong>Salvar Altera├º├Áes</strong>.'
+                    'Em <strong>Serviços com valor "A partir de:"</strong>: deixe <em>Habilitado</em> caso seus serviços tenham preço flexível para edição na O.S., ou <em>Desabilitado</em> se os preços forem rígidos.',
+                    'Role até o fim da página e clique no botão verde <strong>Salvar Alterações</strong>.'
                 ],
-                tip: 'O WhatsApp configurado aqui ├® utilizado como canal oficial de suporte e contato com os clientes da sua barbearia/sal├úo.',
-                actionText: 'Ir para Configura├º├Áes',
+                tip: 'O WhatsApp configurado aqui é utilizado como canal oficial de suporte e contato com os clientes da sua barbearia/salão.',
+                actionText: 'Ir para Configurações',
                 actionView: 'admin-settings'
             },
             {
                 id: 'step_staff',
                 num: '2',
                 category: 'setup',
-                icon: '­ƒæÑ',
-                title: 'Cadastro da Equipe de Profissionais & Comiss├Áes',
+                icon: '👥',
+                title: 'Cadastro da Equipe de Profissionais & Comissões',
                 time: '2 min',
-                summary: 'Cadastre seus colaboradores, configure percentuais de comiss├úo autom├íticos e crie logins protegidos por PIN.',
+                summary: 'Cadastre seus colaboradores, configure percentuais de comissão automáticos e crie logins protegidos por PIN.',
                 instructions: [
                     'Acesse o menu <strong>Profissionais</strong> (dentro de Cadastros).',
-                    'Clique no bot├úo <strong>+ Novo Profissional</strong>.',
+                    'Clique no botão <strong>+ Novo Profissional</strong>.',
                     'Preencha o nome, telefone e foto/avatar do colaborador.',
-                    'Defina a <strong>Comiss├úo sobre Servi├ºos (%)</strong> (ex: 50%) e sobre <strong>Produtos (%)</strong> (ex: 10%). O sistema rateia e calcula tudo automaticamente a cada servi├ºo conclu├¡do!',
-                    'Crie um <strong>PIN de Acesso (4 d├¡gitos)</strong>: cada profissional usar├í esse PIN para fazer login no pr├│prio celular e acompanhar a sua agenda individual e faturamento.'
+                    'Defina a <strong>Comissão sobre Serviços (%)</strong> (ex: 50%) e sobre <strong>Produtos (%)</strong> (ex: 10%). O sistema rateia e calcula tudo automaticamente a cada serviço concluído!',
+                    'Crie um <strong>PIN de Acesso (4 dígitos)</strong>: cada profissional usará esse PIN para fazer login no próprio celular e acompanhar a sua agenda individual e faturamento.'
                 ],
-                tip: 'Ao logar com o PIN individual, o profissional s├│ tem acesso ├á sua pr├│pria agenda e seus pr├│prios valores, garantindo privacidade e controle total ├á administra├º├úo.',
+                tip: 'Ao logar com o PIN individual, o profissional só tem acesso à sua própria agenda e seus próprios valores, garantindo privacidade e controle total à administração.',
                 actionText: 'Gerenciar Profissionais',
                 actionView: 'admin-staff'
             },
@@ -2306,19 +2306,19 @@ const app = {
                 id: 'step_admin_access',
                 num: '3',
                 category: 'setup',
-                icon: '­ƒææ',
-                title: 'N├¡veis de Acesso: Como Criar Novos Administradores',
+                icon: '👑',
+                title: 'Níveis de Acesso: Como Criar Novos Administradores',
                 time: '2 min',
-                summary: 'Adicione s├│cios, gerentes ou administradores com acesso completo para gerenciar relat├│rios, configura├º├Áes e financeiro.',
+                summary: 'Adicione sócios, gerentes ou administradores com acesso completo para gerenciar relatórios, configurações e financeiro.',
                 instructions: [
                     'Acesse o menu <strong>Profissionais</strong> (em Cadastros).',
-                    'Clique no bot├úo <strong>+ Novo Profissional</strong>.',
-                    'Preencha o Nome do s├│cio/gerente e defina um <strong>Login</strong> e <strong>Senha</strong> de acesso exclusivos para ele.',
-                    'No campo <strong>Acesso ao Sistema</strong>, selecione a op├º├úo <strong>Administrativo Total</strong>.',
-                    'Caso o administrador n├úo preste atendimentos na cadeira (apenas gerencie), marque o campo <strong>Exibir na Agenda / Site?</strong> como <strong>N├úo (Invis├¡vel na Agenda)</strong>.',
-                    'Clique em <strong>Salvar Perfil</strong>. Esse usu├írio agora tem login administrativo independente para gerenciar faturamento, estoque e configura├º├Áes com seguran├ºa.'
+                    'Clique no botão <strong>+ Novo Profissional</strong>.',
+                    'Preencha o Nome do sócio/gerente e defina um <strong>Login</strong> e <strong>Senha</strong> de acesso exclusivos para ele.',
+                    'No campo <strong>Acesso ao Sistema</strong>, selecione a opção <strong>Administrativo Total</strong>.',
+                    'Caso o administrador não preste atendimentos na cadeira (apenas gerencie), marque o campo <strong>Exibir na Agenda / Site?</strong> como <strong>Não (Invisível na Agenda)</strong>.',
+                    'Clique em <strong>Salvar Perfil</strong>. Esse usuário agora tem login administrativo independente para gerenciar faturamento, estoque e configurações com segurança.'
                 ],
-                tip: 'Evite compartilhar a mesma senha entre administradores. Cadastrar cada um individualmente garante seguran├ºa e auditoria precisa das a├º├Áes no sistema.',
+                tip: 'Evite compartilhar a mesma senha entre administradores. Cadastrar cada um individualmente garante segurança e auditoria precisa das ações no sistema.',
                 actionText: 'Gerenciar Acessos ADM',
                 actionView: 'admin-staff'
             },
@@ -2326,61 +2326,61 @@ const app = {
                 id: 'step_totem',
                 num: '4',
                 category: 'totem',
-                icon: '­ƒûÑ´©Å',
-                title: 'Modo Totem / Terminal da Recep├º├úo (Agendamentos & Vendas)',
+                icon: '🖥️',
+                title: 'Modo Totem / Terminal da Recepção (Agendamentos & Vendas)',
                 time: '3 min',
-                summary: 'Configure um terminal ou tablet exclusivo para a recep├º├úo fazer agendamentos r├ípidos (encaixes) e vendas no balc├úo sem acessar dados financeiros confidenciais.',
+                summary: 'Configure um terminal ou tablet exclusivo para a recepção fazer agendamentos rápidos (encaixes) e vendas no balcão sem acessar dados financeiros confidenciais.',
                 instructions: [
-                    '<strong>Para que serve o Totem?</strong> ├ë uma tela cheia simplificada, ideal para deixar em um tablet, totem de autoatendimento ou no computador da recep├º├úo/balc├úo.',
-                    '<strong>Como Cadastrar o Usu├írio Totem:</strong> V├í em <strong>Profissionais</strong> (menu Cadastros) e clique em <strong>+ Novo Profissional</strong>.',
-                    'Coloque o nome (ex: <em>Recep├º├úo Balc├úo</em> ou <em>Totem Principal</em>), defina um Login e Senha.',
-                    'No campo <strong>Acesso ao Sistema</strong>, escolha a op├º├úo <strong>Totem de Atendimento</strong>.',
-                    'No campo <strong>Exibir na Agenda / Site?</strong>, marque <strong>N├úo (Invis├¡vel na Agenda)</strong> para ele n├úo aparecer como barbeiro para os clientes.',
-                    '<strong>Como a Recep├º├úo Usa o Totem:</strong> Ao fazer login com o usu├írio Totem, o sistema abre direto no modo terminal com 3 abas limpas:',
-                    'ÔÇó <strong>Aba Agenda:</strong> A recep├º├úo visualiza todos os profissionais e faz encaixes r├ípidos de clientes que chegam sem agendamento pr├®vio.',
-                    'ÔÇó <strong>Aba PDV:</strong> Realiza vendas r├ípidas de balc├úo (pomadas, cervejas, caf├®s) com c├│digo de barras ou busca e fecha a venda na hora.',
-                    'ÔÇó <strong>Aba Estoque:</strong> Consulta r├ípida de produtos dispon├¡veis no estoque.',
-                    '<strong>PIN da Recep├º├úo:</strong> Em <em>Configura├º├Áes > Identidade Visual</em>, voc├¬ pode cadastrar um PIN de 4 a 6 d├¡gitos para o recepcionista autorizar opera├º├Áes especiais com seguran├ºa.'
+                    '<strong>Para que serve o Totem?</strong> É uma tela cheia simplificada, ideal para deixar em um tablet, totem de autoatendimento ou no computador da recepção/balcão.',
+                    '<strong>Como Cadastrar o Usuário Totem:</strong> Vá em <strong>Profissionais</strong> (menu Cadastros) e clique em <strong>+ Novo Profissional</strong>.',
+                    'Coloque o nome (ex: <em>Recepção Balcão</em> ou <em>Totem Principal</em>), defina um Login e Senha.',
+                    'No campo <strong>Acesso ao Sistema</strong>, escolha a opção <strong>Totem de Atendimento</strong>.',
+                    'No campo <strong>Exibir na Agenda / Site?</strong>, marque <strong>Não (Invisível na Agenda)</strong> para ele não aparecer como barbeiro para os clientes.',
+                    '<strong>Como a Recepção Usa o Totem:</strong> Ao fazer login com o usuário Totem, o sistema abre direto no modo terminal com 3 abas limpas:',
+                    '• <strong>Aba Agenda:</strong> A recepção visualiza todos os profissionais e faz encaixes rápidos de clientes que chegam sem agendamento prévio.',
+                    '• <strong>Aba PDV:</strong> Realiza vendas rápidas de balcão (pomadas, cervejas, cafés) com código de barras ou busca e fecha a venda na hora.',
+                    '• <strong>Aba Estoque:</strong> Consulta rápida de produtos disponíveis no estoque.',
+                    '<strong>PIN da Recepção:</strong> Em <em>Configurações > Identidade Visual</em>, você pode cadastrar um PIN de 4 a 6 dígitos para o recepcionista autorizar operações especiais com segurança.'
                 ],
-                tip: 'No computador ou tablet da recep├º├úo, pressione F11 no navegador para deixar em tela cheia sem barra de endere├ºos, parecendo um app nativo de balc├úo!',
-                actionText: 'Cadastrar Usu├írio Totem',
+                tip: 'No computador ou tablet da recepção, pressione F11 no navegador para deixar em tela cheia sem barra de endereços, parecendo um app nativo de balcão!',
+                actionText: 'Cadastrar Usuário Totem',
                 actionView: 'admin-staff'
             },
             {
                 id: 'step_services',
                 num: '5',
                 category: 'setup',
-                icon: '­ƒÆê',
-                title: 'Cat├ílogo de Servi├ºos & Dura├º├úo dos Procedimentos',
+                icon: '💈',
+                title: 'Catálogo de Serviços & Duração dos Procedimentos',
                 time: '2 min',
-                summary: 'Cadastre todos os procedimentos oferecidos, valores e tempos de dura├º├úo para montagem autom├ítica da agenda.',
+                summary: 'Cadastre todos os procedimentos oferecidos, valores e tempos de duração para montagem automática da agenda.',
                 instructions: [
-                    'Acesse o menu <strong>Servi├ºos</strong> (dentro de Cadastros).',
-                    'Clique no bot├úo <strong>+ Novo Servi├ºo</strong>.',
-                    'Informe o nome do procedimento (ex: <em>Corte Degrad├¬, Barboterapia, Sobrancelha, Hidrata├º├úo</em>).',
-                    'Informe o <strong>Pre├ºo (R$)</strong> e a <strong>Dura├º├úo estimada em minutos</strong> (ex: 30 min, 45 min).',
-                    'A dura├º├úo ├® fundamental: o sistema calcula os intervalos livres automaticamente na agenda online do cliente para evitar choques de hor├írio.'
+                    'Acesse o menu <strong>Serviços</strong> (dentro de Cadastros).',
+                    'Clique no botão <strong>+ Novo Serviço</strong>.',
+                    'Informe o nome do procedimento (ex: <em>Corte Degradê, Barboterapia, Sobrancelha, Hidratação</em>).',
+                    'Informe o <strong>Preço (R$)</strong> e a <strong>Duração estimada em minutos</strong> (ex: 30 min, 45 min).',
+                    'A duração é fundamental: o sistema calcula os intervalos livres automaticamente na agenda online do cliente para evitar choques de horário.'
                 ],
-                tip: 'O cliente pode selecionar m├║ltiplos servi├ºos de uma vez pelo link de agendamento online (ex: Cabelo + Barba). O sistema soma o tempo e o valor automaticamente!',
-                actionText: 'Cadastrar Servi├ºos',
+                tip: 'O cliente pode selecionar múltiplos serviços de uma vez pelo link de agendamento online (ex: Cabelo + Barba). O sistema soma o tempo e o valor automaticamente!',
+                actionText: 'Cadastrar Serviços',
                 actionView: 'admin-services'
             },
             {
                 id: 'step_agenda',
                 num: '6',
                 category: 'agenda',
-                icon: '­ƒùô´©Å',
+                icon: '🗓️',
                 title: 'Como Usar a Agenda, Encaixes & Agendamentos',
                 time: '3 min',
-                summary: 'Gerencie os agendamentos online dos clientes, fa├ºa encaixes r├ípidos presenciais e acompanhe o fluxo da recep├º├úo.',
+                summary: 'Gerencie os agendamentos online dos clientes, faça encaixes rápidos presenciais e acompanhe o fluxo da recepção.',
                 instructions: [
                     'Acesse o menu <strong>Agenda</strong> no menu lateral.',
-                    '<strong>Agendamentos Online:</strong> Quando o cliente marca pelo link do seu site, o hor├írio aparece instantaneamente na coluna do profissional correspondente.',
-                    '<strong>Encaixe Presencial ("Walk-in"):</strong> Se o cliente chegou na hora sem agendar, clique no bot├úo <strong>Encaixe</strong> no topo da agenda. Escolha o cliente, os procedimentos e o profissional.',
-                    '<strong>Navega├º├úo de Datas:</strong> Alterne as datas no calend├írio no topo da agenda para consultar os agendamentos de qualquer dia.',
-                    '<strong>A├º├Áes no Agendamento:</strong> Clique sobre qualquer card de agendamento para ver os detalhes, reagendar de hor├írio ou cancelar.'
+                    '<strong>Agendamentos Online:</strong> Quando o cliente marca pelo link do seu site, o horário aparece instantaneamente na coluna do profissional correspondente.',
+                    '<strong>Encaixe Presencial ("Walk-in"):</strong> Se o cliente chegou na hora sem agendar, clique no botão <strong>Encaixe</strong> no topo da agenda. Escolha o cliente, os procedimentos e o profissional.',
+                    '<strong>Navegação de Datas:</strong> Alterne as datas no calendário no topo da agenda para consultar os agendamentos de qualquer dia.',
+                    '<strong>Ações no Agendamento:</strong> Clique sobre qualquer card de agendamento para ver os detalhes, reagendar de horário ou cancelar.'
                 ],
-                tip: 'A vis├úo da Agenda Geral exibe colunas simult├óneas para cada profissional da equipe, permitindo saber quem est├í livre ou em atendimento em tempo real.',
+                tip: 'A visão da Agenda Geral exibe colunas simultâneas para cada profissional da equipe, permitindo saber quem está livre ou em atendimento em tempo real.',
                 actionText: 'Abrir Agenda Geral',
                 actionView: 'admin-dash'
             },
@@ -2388,38 +2388,38 @@ const app = {
                 id: 'step_os',
                 num: '7',
                 category: 'agenda',
-                icon: '­ƒº¥',
-                title: 'Finaliza├º├úo de Atendimento, O.S. & Pagamentos',
+                icon: '🧾',
+                title: 'Finalização de Atendimento, O.S. & Pagamentos',
                 time: '3 min',
-                summary: 'Encerre o atendimento, lance produtos consumidos, aplique benef├¡cios do Clube de Assinaturas e finalize a comanda.',
+                summary: 'Encerre o atendimento, lance produtos consumidos, aplique benefícios do Clube de Assinaturas e finalize a comanda.',
                 instructions: [
-                    'Quando o profissional terminar o atendimento, clique no bot├úo <strong>Finalizar</strong> no card do agendamento (ou acesse o menu <strong>O.S.</strong>).',
-                    '<strong>Ajuste de Pre├ºo:</strong> Caso a op├º├úo "A partir de:" esteja ativa, voc├¬ pode ajustar o valor final do servi├ºo se houver cobran├ºa extra.',
+                    'Quando o profissional terminar o atendimento, clique no botão <strong>Finalizar</strong> no card do agendamento (ou acesse o menu <strong>O.S.</strong>).',
+                    '<strong>Ajuste de Preço:</strong> Caso a opção "A partir de:" esteja ativa, você pode ajustar o valor final do serviço se houver cobrança extra.',
                     '<strong>Consumo de Produtos:</strong> O cliente comprou uma bebida ou produto de beleza? Selecione o produto no campo de consumo e adicione na comanda.',
-                    '<strong>Clube de Assinaturas:</strong> Se o cliente for membro ativo do Clube, o sistema identifica e aplica a isen├º├úo dos servi├ºos inclusos automaticamente!',
-                    '<strong>Forma de Pagamento:</strong> Selecione PIX, Dinheiro, Cart├úo de Cr├®dito/D├®bito, Vale ou Pagamento Dividido.',
-                    'Ao confirmar, a comiss├úo do colaborador ├® computada na hora e o valor alimenta o Fluxo de Caixa do dia.'
+                    '<strong>Clube de Assinaturas:</strong> Se o cliente for membro ativo do Clube, o sistema identifica e aplica a isenção dos serviços inclusos automaticamente!',
+                    '<strong>Forma de Pagamento:</strong> Selecione PIX, Dinheiro, Cartão de Crédito/Débito, Vale ou Pagamento Dividido.',
+                    'Ao confirmar, a comissão do colaborador é computada na hora e o valor alimenta o Fluxo de Caixa do dia.'
                 ],
-                tip: 'No menu Ordens de Servi├ºo (O.S.), voc├¬ pode pesquisar o hist├│rico de atendimentos anteriores, reimprimir comprovantes e auditar comandas.',
-                actionText: 'Ver Ordens de Servi├ºo',
+                tip: 'No menu Ordens de Serviço (O.S.), você pode pesquisar o histórico de atendimentos anteriores, reimprimir comprovantes e auditar comandas.',
+                actionText: 'Ver Ordens de Serviço',
                 actionView: 'admin-os'
             },
             {
                 id: 'step_stock',
                 num: '8',
                 category: 'stock',
-                icon: '­ƒôª',
+                icon: '📦',
                 title: 'Controle de Produtos & Estoque',
                 time: '2 min',
-                summary: 'Cadastre mercadorias de revenda (pomadas, ├│leos, bebidas) e produtos de consumo interno com baixa autom├ítica.',
+                summary: 'Cadastre mercadorias de revenda (pomadas, óleos, bebidas) e produtos de consumo interno com baixa automática.',
                 instructions: [
                     'Acesse o menu <strong>Estoque</strong> (em Cadastros).',
-                    'Clique no bot├úo <strong>+ Novo Produto</strong>.',
-                    'Informe o nome do item, pre├ºo de custo, pre├ºo de venda e quantidade atual em estoque.',
-                    'Sempre que um produto for vendido no PDV ou na comanda de um cliente (O.S.), a quantidade em estoque ├® abatida automaticamente.',
-                    'Acompanhe o relat├│rio para identificar produtos que precisam de reposi├º├úo antes de acabarem.'
+                    'Clique no botão <strong>+ Novo Produto</strong>.',
+                    'Informe o nome do item, preço de custo, preço de venda e quantidade atual em estoque.',
+                    'Sempre que um produto for vendido no PDV ou na comanda de um cliente (O.S.), a quantidade em estoque é abatida automaticamente.',
+                    'Acompanhe o relatório para identificar produtos que precisam de reposição antes de acabarem.'
                 ],
-                tip: 'Voc├¬ tamb├®m pode usar a c├ómera do celular ou leitor de c├│digo de barras para dar baixa ou consultar produtos rapidamente.',
+                tip: 'Você também pode usar a câmera do celular ou leitor de código de barras para dar baixa ou consultar produtos rapidamente.',
                 actionText: 'Gerenciar Estoque',
                 actionView: 'admin-stock'
             },
@@ -2427,18 +2427,18 @@ const app = {
                 id: 'step_pdv',
                 num: '9',
                 category: 'stock',
-                icon: '­ƒøÆ',
-                title: 'Ponto de Venda (PDV - Vendas R├ípidas de Balc├úo)',
+                icon: '🛒',
+                title: 'Ponto de Venda (PDV - Vendas Rápidas de Balcão)',
                 time: '2 min',
-                summary: 'Realize vendas expressas no balc├úo de produtos ou servi├ºos r├ípidos sem precisar criar um agendamento na agenda.',
+                summary: 'Realize vendas expressas no balcão de produtos ou serviços rápidos sem precisar criar um agendamento na agenda.',
                 instructions: [
                     'Acesse o menu <strong>Vendas (PDV)</strong>.',
-                    'Clique sobre os produtos ou servi├ºos na tela para adicion├í-los ├á comanda de venda.',
-                    'Indique se houve venda/atendimento por algum profissional espec├¡fico para ratear comiss├Áes.',
+                    'Clique sobre os produtos ou serviços na tela para adicioná-los à comanda de venda.',
+                    'Indique se houve venda/atendimento por algum profissional específico para ratear comissões.',
                     'Escolha a forma de pagamento e finalize a venda em segundos.',
-                    'O caixa do dia e o estoque s├úo atualizados imediatamente.'
+                    'O caixa do dia e o estoque são atualizados imediatamente.'
                 ],
-                tip: 'O PDV ├® perfeito para atender clientes que entram na barbearia/sal├úo apenas para comprar uma cera, um caf├® ou um produto.',
+                tip: 'O PDV é perfeito para atender clientes que entram na barbearia/salão apenas para comprar uma cera, um café ou um produto.',
                 actionText: 'Abrir PDV',
                 actionView: 'pdv'
             },
@@ -2446,19 +2446,19 @@ const app = {
                 id: 'step_subscriptions',
                 num: '10',
                 category: 'club',
-                icon: 'Ô¡É',
+                icon: '⭐',
                 title: 'Clube de Assinaturas (Planos Mensais Recorrentes)',
                 time: '3 min',
-                summary: 'Crie planos de assinatura mensal para seus clientes fi├®is, gerando receita fixa previs├¡vel no in├¡cio de cada m├¬s.',
+                summary: 'Crie planos de assinatura mensal para seus clientes fiéis, gerando receita fixa previsível no início de cada mês.',
                 instructions: [
                     'Acesse o menu <strong>Assinaturas</strong> (em Cadastros).',
                     'Clique em <strong>+ Novo Plano</strong>.',
-                    'Defina o nome do plano (ex: <em>Clube do Corte VIP - R$ 89,90/m├¬s</em> ou <em>Cabelo + Barba 2x/m├¬s</em>).',
-                    'Marque quais servi├ºos do seu cat├ílogo est├úo inclusos no pacote.',
+                    'Defina o nome do plano (ex: <em>Clube do Corte VIP - R$ 89,90/mês</em> ou <em>Cabelo + Barba 2x/mês</em>).',
+                    'Marque quais serviços do seu catálogo estão inclusos no pacote.',
                     'Cadastre os clientes assinantes no menu e defina a data de vencimento da mensalidade.',
-                    'Ao atender um assinante, ao clicar em Finalizar o sistema j├í reconhece a assinatura e aplica a isen├º├úo dos servi├ºos inclusos!'
+                    'Ao atender um assinante, ao clicar em Finalizar o sistema já reconhece a assinatura e aplica a isenção dos serviços inclusos!'
                 ],
-                tip: 'Clubes de assinaturas chegam a triplicar a reten├º├úo de clientes e garantem dinheiro em caixa mesmo em semanas de menor movimento!',
+                tip: 'Clubes de assinaturas chegam a triplicar a retenção de clientes e garantem dinheiro em caixa mesmo em semanas de menor movimento!',
                 actionText: 'Configurar Assinaturas',
                 actionView: 'admin-subscriptions'
             },
@@ -2466,18 +2466,18 @@ const app = {
                 id: 'step_finance',
                 num: '11',
                 category: 'finance',
-                icon: '­ƒÆ░',
-                title: 'Financeiro, Fluxo de Caixa, Comiss├Áes & Ranking',
+                icon: '💰',
+                title: 'Financeiro, Fluxo de Caixa, Comissões & Ranking',
                 time: '2 min',
-                summary: 'Acompanhe a sa├║de financeira da empresa: entradas di├írias, fechamento de comiss├Áes, faturamento e desempenho da equipe.',
+                summary: 'Acompanhe a saúde financeira da empresa: entradas diárias, fechamento de comissões, faturamento e desempenho da equipe.',
                 instructions: [
-                    '<strong>Fluxo de Caixa:</strong> Monitore as entradas do dia por forma de pagamento (PIX, Cart├úo, Dinheiro), fa├ºa sangrias ou lan├ºamentos de despesas.',
-                    '<strong>Faturamento Global:</strong> Visualize o faturamento total acumulado, ticket m├®dio por cliente e gr├íficos de evolu├º├úo.',
-                    '<strong>Ranking da Equipe:</strong> Veja quais profissionais mais produziram e geraram receita no m├¬s.',
-                    '<strong>Vales & Adiantamentos:</strong> Registre vales para os profissionais para desconto autom├ítico na hora do acerto.',
-                    '<strong>Auditoria de Pagamentos:</strong> Hist├│rico de todas as transa├º├Áes finalizadas com detalhes de taxas e formas de pagamento.'
+                    '<strong>Fluxo de Caixa:</strong> Monitore as entradas do dia por forma de pagamento (PIX, Cartão, Dinheiro), faça sangrias ou lançamentos de despesas.',
+                    '<strong>Faturamento Global:</strong> Visualize o faturamento total acumulado, ticket médio por cliente e gráficos de evolução.',
+                    '<strong>Ranking da Equipe:</strong> Veja quais profissionais mais produziram e geraram receita no mês.',
+                    '<strong>Vales & Adiantamentos:</strong> Registre vales para os profissionais para desconto automático na hora do acerto.',
+                    '<strong>Auditoria de Pagamentos:</strong> Histórico de todas as transações finalizadas com detalhes de taxas e formas de pagamento.'
                 ],
-                tip: 'Use o bot├úo de gerar PDF para exportar os relat├│rios financeiros de fechamento do m├¬s com total transpar├¬ncia para a equipe.',
+                tip: 'Use o botão de gerar PDF para exportar os relatórios financeiros de fechamento do mês com total transparência para a equipe.',
                 actionText: 'Ver Fluxo de Caixa',
                 actionView: 'admin-cashflow'
             },
@@ -2485,16 +2485,16 @@ const app = {
                 id: 'step_app',
                 num: '12',
                 category: 'app',
-                icon: '­ƒÜÇ',
+                icon: '🚀',
                 title: 'Instalar Aplicativo (PWA) & Compartilhar com Clientes',
                 time: '1 min',
                 summary: 'Instale o sistema como aplicativo no seu celular ou tablet e divulgue o link de agendamento para os clientes.',
                 instructions: [
-                    '<strong>Instalar o App (PWA):</strong> No menu lateral, clique em <strong>Criar App</strong> ou, pelo navegador do celular (Chrome/Safari), toque em <em>Compartilhar > Adicionar ├á Tela de In├¡cio</em>. O sistema abre como um aplicativo nativo instalado!',
-                    '<strong>Divulgar seu Link de Agendamento:</strong> Copie o endere├ºo do site do seu estabelecimento e coloque na Bio do Instagram da sua barbearia/sal├úo e nas mensagens autom├íticas do WhatsApp.',
-                    '<strong>Sincroniza├º├úo em Nuvem:</strong> Todas as altera├º├Áes feitas em um aparelho aparecem imediatamente nos celulares de toda a equipe sem necessidade de atualiza├º├úo manual!'
+                    '<strong>Instalar o App (PWA):</strong> No menu lateral, clique em <strong>Criar App</strong> ou, pelo navegador do celular (Chrome/Safari), toque em <em>Compartilhar > Adicionar à Tela de Início</em>. O sistema abre como um aplicativo nativo instalado!',
+                    '<strong>Divulgar seu Link de Agendamento:</strong> Copie o endereço do site do seu estabelecimento e coloque na Bio do Instagram da sua barbearia/salão e nas mensagens automáticas do WhatsApp.',
+                    '<strong>Sincronização em Nuvem:</strong> Todas as alterações feitas em um aparelho aparecem imediatamente nos celulares de toda a equipe sem necessidade de atualização manual!'
                 ],
-                tip: 'Imprima um display com QR Code no balc├úo da sua recep├º├úo com o link do seu site para que novos clientes agendem sozinhos!',
+                tip: 'Imprima um display com QR Code no balcão da sua recepção com o link do seu site para que novos clientes agendem sozinhos!',
                 actionText: 'Ir para a Agenda',
                 actionView: 'admin-dash'
             }
@@ -2512,13 +2512,13 @@ const app = {
                     <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
                         <div style="flex: 1; min-width: 280px;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <span style="font-size: 1.8rem;">­ƒôû</span>
+                                <span style="font-size: 1.8rem;">📖</span>
                                 <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">
                                     Guia Completo & Passo a Passo do Sistema
                                 </h2>
                             </div>
                             <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0; line-height: 1.6;">
-                                Bem-vindo ao painel administrativo! Siga este roteiro pr├ítico para configurar seu neg├│cio e dominar cada fun├º├úo do sistema no seu dia a dia.
+                                Bem-vindo ao painel administrativo! Siga este roteiro prático para configurar seu negócio e dominar cada função do sistema no seu dia a dia.
                             </p>
                         </div>
                         
@@ -2532,7 +2532,7 @@ const app = {
                                 <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--accent-color), #4ade80); transition: width 0.3s ease;"></div>
                             </div>
                             <small style="display: block; font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px; text-align: center;">
-                                ${percent === 100 ? '­ƒÄë Parab├®ns! Tudo configurado!' : 'Marque as etapas conclu├¡das abaixo'}
+                                ${percent === 100 ? '🎉 Parabéns! Tudo configurado!' : 'Marque as etapas concluídas abaixo'}
                             </small>
                         </div>
                     </div>
@@ -2540,7 +2540,7 @@ const app = {
                     <!-- BARRA DE BUSCA EM TEMPO REAL -->
                     <div style="margin-top: 22px;">
                         <input type="text" id="guide-search-input" class="glass" 
-                               placeholder="­ƒöì Digite para pesquisar uma funcionalidade (ex: hor├írios, comiss├úo, estoque, O.S., etc.)..." 
+                               placeholder="🔍 Digite para pesquisar uma funcionalidade (ex: horários, comissão, estoque, O.S., etc.)..." 
                                oninput="app.filterGuideCards(null, this.value)" 
                                style="width: 100%; padding: 13px 18px; font-size: 0.92rem; border-radius: 12px; color: var(--text-primary); border: 1px solid var(--glass-border); box-sizing: border-box;">
                     </div>
@@ -2549,35 +2549,35 @@ const app = {
                     <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;">
                         <button class="guide-cat-btn active" data-category="all" onclick="app.filterGuideCards('all', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--accent-color); color: #000; font-weight: 700; cursor: pointer; transition: all 0.2s;">
-                            Ô¡É Todos (${totalSteps})
+                            ⭐ Todos (${totalSteps})
                         </button>
                         <button class="guide-cat-btn" data-category="setup" onclick="app.filterGuideCards('setup', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ÔÜÖ´©Å Configura├º├úo & Acessos (4)
+                            ⚙️ Configuração & Acessos (4)
                         </button>
                         <button class="guide-cat-btn" data-category="totem" onclick="app.filterGuideCards('totem', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ­ƒûÑ´©Å Recep├º├úo & Totem (1)
+                            🖥️ Recepção & Totem (1)
                         </button>
                         <button class="guide-cat-btn" data-category="agenda" onclick="app.filterGuideCards('agenda', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ­ƒùô´©Å Agenda & Atendimento (2)
+                            🗓️ Agenda & Atendimento (2)
                         </button>
                         <button class="guide-cat-btn" data-category="stock" onclick="app.filterGuideCards('stock', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ­ƒôª Estoque & PDV (2)
+                            📦 Estoque & PDV (2)
                         </button>
                         <button class="guide-cat-btn" data-category="club" onclick="app.filterGuideCards('club', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            Ô¡É Assinaturas (1)
+                            ⭐ Assinaturas (1)
                         </button>
                         <button class="guide-cat-btn" data-category="finance" onclick="app.filterGuideCards('finance', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ­ƒÆ░ Financeiro (1)
+                            💰 Financeiro (1)
                         </button>
                         <button class="guide-cat-btn" data-category="app" onclick="app.filterGuideCards('app', null)" 
                                 style="padding: 8px 16px; font-size: 0.82rem; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--surface-dark); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">
-                            ­ƒÜÇ App & Divulga├º├úo (1)
+                            🚀 App & Divulgação (1)
                         </button>
                     </div>
                 </div>
@@ -2602,7 +2602,7 @@ const app = {
                                                     Etapa ${s.num}
                                                 </span>
                                                 <span style="font-size: 0.72rem; color: var(--text-secondary);">
-                                                    ÔÅ▒´©Å ${s.time}
+                                                    ⏱️ ${s.time}
                                                 </span>
                                             </div>
                                             <h3 style="font-size: 1.15rem; color: var(--text-primary); margin: 0; font-weight: 700;">
@@ -2611,11 +2611,11 @@ const app = {
                                         </div>
                                     </div>
 
-                                    <!-- BOT├âO CHECK CONCLU├ìDO -->
+                                    <!-- BOTÃO CHECK CONCLUÍDO -->
                                     <button onclick="app.toggleGuideCheck('${s.id}')" 
                                             class="glass" 
                                             style="padding: 7px 14px; font-size: 0.78rem; font-weight: 700; border-radius: 20px; cursor: pointer; border: 1px solid ${isDone ? '#4ade80' : 'var(--glass-border)'}; background: ${isDone ? 'rgba(74, 222, 128, 0.15)' : 'rgba(0,0,0,0.15)'}; color: ${isDone ? '#4ade80' : 'var(--text-secondary)'}; transition: all 0.2s;">
-                                        ${isDone ? 'Ô£à Conclu├¡do' : 'ÔÜ¬ Marcar como feito'}
+                                        ${isDone ? '✅ Concluído' : '⚪ Marcar como feito'}
                                     </button>
                                 </div>
 
@@ -2624,10 +2624,10 @@ const app = {
                                     ${s.summary}
                                 </p>
 
-                                <!-- INSTRU├ç├òES PASSO A PASSO -->
+                                <!-- INSTRUÇÕES PASSO A PASSO -->
                                 <div style="background: var(--surface-dark); padding: 18px 20px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--glass-border);">
                                     <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 0 0 12px 0;">
-                                        ­ƒôï Passo a Passo:
+                                        📋 Passo a Passo:
                                     </h4>
                                     <ol style="margin: 0; padding-left: 20px; color: var(--text-primary); font-size: 0.86rem; line-height: 1.8;">
                                         ${s.instructions.map(inst => `<li style="margin-bottom: 6px;">${inst}</li>`).join('')}
@@ -2636,16 +2636,16 @@ const app = {
 
                                 <!-- DICA PRO -->
                                 <div style="padding: 12px 16px; background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; border-radius: 8px; margin-bottom: 18px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
-                                    ­ƒÆí <strong>Dica Pro:</strong> ${s.tip}
+                                    💡 <strong>Dica Pro:</strong> ${s.tip}
                                 </div>
 
-                                <!-- BOT├âO DE ATALHO DIRETO -->
+                                <!-- BOTÃO DE ATALHO DIRETO -->
                                 <div style="display: flex; justify-content: flex-end;">
                                     <button class="btn-primary" 
                                             onclick="app.navigateTo('${s.actionView}')" 
                                             style="padding: 9px 20px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px;">
                                         <span>${s.actionText}</span>
-                                        <span>Ô×ö</span>
+                                        <span>➔</span>
                                     </button>
                                 </div>
 
@@ -2656,8 +2656,8 @@ const app = {
 
                 <!-- ESTADO VAZIO NA BUSCA -->
                 <div id="guide-empty-state" class="glass" style="display: none; padding: 40px; text-align: center; border-radius: 16px;">
-                    <div style="font-size: 2rem; margin-bottom: 10px;">­ƒöì</div>
-                    <h4 style="color: var(--text-primary); margin: 0 0 6px 0;">Nenhum t├│pico encontrado</h4>
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+                    <h4 style="color: var(--text-primary); margin: 0 0 6px 0;">Nenhum tópico encontrado</h4>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Tente buscar por outro termo ou selecione a categoria "Todos".</p>
                 </div>
 
@@ -2669,8 +2669,8 @@ const app = {
 
     renderAdminSettings(container) {
         const s = this.state.settings.agenda;
-        const days = ['Domingo', 'Segunda-feira', 'Ter├ºa-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'S├íbado'];
-        const dayShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'S├íb'];
+        const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const dayShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
         const scheduleRows = days.map((d, i) => {
             const sc = s.schedule[i];
@@ -2692,7 +2692,7 @@ const app = {
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <input type="time" id="cfg-open-${i}" value="${sc.open}"
                                    class="glass" style="padding: 8px 10px; color: var(--text-primary); font-size: 0.9rem; border-radius: 8px; min-width: 110px;">
-                            <span style="color: var(--text-secondary); font-size: 0.8rem;">at├®</span>
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;">até</span>
                             <input type="time" id="cfg-close-${i}" value="${sc.close}"
                                    class="glass" style="padding: 8px 10px; color: var(--text-primary); font-size: 0.9rem; border-radius: 8px; min-width: 110px;">
                         </div>
@@ -2746,35 +2746,35 @@ const app = {
                     }
                 </style>
 
-                <h2 class="section-title" style="margin-bottom: 20px;">ÔÜÖ´©Å Configura├º├Áes do Sistema</h2>
+                <h2 class="section-title" style="margin-bottom: 20px;">⚙️ Configurações do Sistema</h2>
 
                 <!-- BANNER: Guia do Sistema & Passo a Passo -->
                 <div class="glass" style="padding: 18px 22px; margin-bottom: 25px; border-left: 4px solid #38bdf8; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; background: rgba(56, 189, 248, 0.08); border-radius: 12px;">
                     <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 260px;">
-                        <span style="font-size: 2.2rem; animation: guide-rocket-wiggle 2s infinite ease-in-out; display: inline-block;">­ƒÜÇ</span>
+                        <span style="font-size: 2.2rem; animation: guide-rocket-wiggle 2s infinite ease-in-out; display: inline-block;">🚀</span>
                         <div>
                             <h4 style="margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700;">Novo por aqui? Veja os Primeiros Passos do Sistema</h4>
-                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4;">Aprenda a configurar seus hor├írios, equipe, modo totem, acessos ADM e usar cada fun├º├úo.</p>
+                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4;">Aprenda a configurar seus horários, equipe, modo totem, acessos ADM e usar cada função.</p>
                         </div>
                     </div>
                     <button class="btn-primary btn-guide-pulse" style="padding: 11px 22px; font-size: 0.84rem; background: #38bdf8; color: #000; font-weight: 800; border-radius: 10px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;" onclick="app.navigateTo('admin-guide')">
-                        <span>­ƒôû Primeiros Passos & Guia</span>
-                        <span>Ô×ö</span>
+                        <span>📖 Primeiros Passos & Guia</span>
+                        <span>➔</span>
                     </button>
                 </div>
 
-                <!-- BLOCO 1: Hor├írios da Agenda -->
+                <!-- BLOCO 1: Horários da Agenda -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">­ƒùô´©Å</div>
+                        <div style="font-size: 1.5rem;">🗓️</div>
                         <div>
-                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Hor├írios de Funcionamento</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Define os dias e hor├írios dispon├¡veis na agenda de agendamentos.</p>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Horários de Funcionamento</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Define os dias e horários disponíveis na agenda de agendamentos.</p>
                         </div>
                     </div>
 
                     <div style="margin-bottom: 20px; padding: 15px; background: var(--surface-dark); border-radius: 10px;">
-                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">ÔÅ▒ Intervalo padr├úo entre hor├írios</label>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">⏱ Intervalo padrão entre horários</label>
                         <select id="set-inter" class="glass" style="width: 100%; max-width: 300px; padding: 10px; color: var(--text-primary); font-size: 0.9rem;">
                             <option value="5"  ${s.intervalMin == 5 ? 'selected' : ''}>A cada 5 minutos</option>
                             <option value="10" ${s.intervalMin == 10 ? 'selected' : ''}>A cada 10 minutos</option>
@@ -2791,7 +2791,7 @@ const app = {
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
                                     <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Dia</th>
                                     <th style="padding: 10px 12px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 120px;">Status</th>
-                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Hor├írio (Abertura ÔÇö Fechamento)</th>
+                                    <th style="padding: 10px 12px; text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Horário (Abertura — Fechamento)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2801,14 +2801,14 @@ const app = {
                     </div>
                 </div>
 
-                <!-- BLOCO 1.1: Feriados e Exce├º├Áes -->
+                <!-- BLOCO 1.1: Feriados e Exceções -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #f87171;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="font-size: 1.5rem;">­ƒôà</div>
+                            <div style="font-size: 1.5rem;">📅</div>
                             <div>
-                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Feriados e Exce├º├Áes</h3>
-                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Configure dias espec├¡ficos onde o hor├írio ser├í diferente do padr├úo.</p>
+                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Feriados e Exceções</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Configure dias específicos onde o horário será diferente do padrão.</p>
                             </div>
                         </div>
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; background: #f87171;" onclick="app.openAddHolidayModal()">+ Adicionar Data</button>
@@ -2821,29 +2821,29 @@ const app = {
                 <!-- BLOCO 2: Dados do Estabelecimento -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #a78bfa;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">${this.getTerm('serviceIcon') || '­ƒÆê'}</div>
+                        <div style="font-size: 1.5rem;">${this.getTerm('serviceIcon') || '💈'}</div>
                         <div>
                             <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Dados do Estabelecimento (${this.getTerm('shopTerm')})</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Informa├º├Áes exibidas no site, na tela inicial e nos relat├│rios.</p>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Informações exibidas no site, na tela inicial e nos relatórios.</p>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Segmento do Neg├│cio</label>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Segmento do Negócio</label>
                             <select id="shop-segment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="app.onAdminSegmentChange(this.value)">
-                                <option value="beauty_salon" ${currentType === 'beauty_salon' ? 'selected' : ''}>­ƒÆçÔÇìÔÖÇ´©Å Sal├úo de Beleza / Studio</option>
-                                <option value="barbershop" ${currentType === 'barbershop' ? 'selected' : ''}>­ƒÆê Barbearia</option>
-                                <option value="manicure" ${currentType === 'manicure' ? 'selected' : ''}>­ƒÆà Manicure / Esmalteria</option>
-                                <option value="clinic" ${currentType === 'clinic' ? 'selected' : ''}>­ƒ®║ Cl├¡nica de Est├®tica</option>
+                                <option value="beauty_salon" ${currentType === 'beauty_salon' ? 'selected' : ''}>💇‍♀️ Salão de Beleza / Studio</option>
+                                <option value="barbershop" ${currentType === 'barbershop' ? 'selected' : ''}>💈 Barbearia</option>
+                                <option value="manicure" ${currentType === 'manicure' ? 'selected' : ''}>💅 Manicure / Esmalteria</option>
+                                <option value="clinic" ${currentType === 'clinic' ? 'selected' : ''}>🩺 Clínica de Estética</option>
                             </select>
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Foto de Fundo (Capa Principal)</label>
                             <select id="shop-hero" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
-                                <option value="hero_beauty.png" ${currentHero === 'hero_beauty.png' ? 'selected' : ''}>­ƒÆçÔÇìÔÖÇ´©Å Sal├úo de Beleza (Ambiente Moderno)</option>
-                                <option value="hero_vintage.png" ${currentHero === 'hero_vintage.png' ? 'selected' : ''}>­ƒÆê Barbearia Vintage Tradicional</option>
-                                <option value="hero_manicure.png" ${currentHero === 'hero_manicure.png' ? 'selected' : ''}>­ƒÆà Esmalteria & Nail Studio</option>
-                                <option value="hero_clinic.png" ${currentHero === 'hero_clinic.png' ? 'selected' : ''}>­ƒ®║ Cl├¡nica de Est├®tica & Spa</option>
+                                <option value="hero_beauty.png" ${currentHero === 'hero_beauty.png' ? 'selected' : ''}>💇‍♀️ Salão de Beleza (Ambiente Moderno)</option>
+                                <option value="hero_vintage.png" ${currentHero === 'hero_vintage.png' ? 'selected' : ''}>💈 Barbearia Vintage Tradicional</option>
+                                <option value="hero_manicure.png" ${currentHero === 'hero_manicure.png' ? 'selected' : ''}>💅 Esmalteria & Nail Studio</option>
+                                <option value="hero_clinic.png" ${currentHero === 'hero_clinic.png' ? 'selected' : ''}>🩺 Clínica de Estética & Spa</option>
                             </select>
                         </div>
                         <div>
@@ -2872,38 +2872,38 @@ const app = {
                             <p id="settings-cep-msg" style="font-size:0.75rem;margin-top:4px;min-height:16px;color:var(--text-secondary);"></p>
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endere├ºo
-                                <span style="font-weight:400;opacity:0.5;"> ÔÇö preenchido pelo CEP ou edite manualmente</span>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Endereço
+                                <span style="font-weight:400;opacity:0.5;"> — preenchido pelo CEP ou edite manualmente</span>
                             </label>
                             <input type="text" id="shop-address" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${shopInfo.address || ''}" placeholder="Ex: Rua Principal, 123 - Bairro - Cidade/UF">
                         </div>
                         <div style="border-top:1px solid var(--glass-border); padding-top:15px; margin-top:5px;">
                             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">
-                                ­ƒöÉ PIN do Recepcionista
-                                <span style="font-weight:400; opacity:0.5;"> ÔÇö exigido ao liberar planos no totem</span>
+                                🔐 PIN do Recepcionista
+                                <span style="font-weight:400; opacity:0.5;"> — exigido ao liberar planos no totem</span>
                             </label>
                             <div style="display:flex; gap:10px; align-items:center;">
                                 <input type="password" id="shop-recep-pin" class="glass"
                                     style="width:140px; padding:10px; color:var(--text-primary); letter-spacing:4px; text-align:center; font-size:1rem;"
-                                    maxlength="6" placeholder="ÔÇóÔÇóÔÇóÔÇó"
+                                    maxlength="6" placeholder="••••"
                                     value="${this.state.settings?.receptionistPin || ''}">
                                 <span style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
-                                    M├¡nimo 4 d├¡gitos.<br>Se deixado em branco, qualquer PIN de 4+ d├¡gitos ser├í aceito.
+                                    Mínimo 4 dígitos.<br>Se deixado em branco, qualquer PIN de 4+ dígitos será aceito.
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- BLOCO: Servi├ºos com Valor "A partir de:" -->
+                <!-- BLOCO: Serviços com Valor "A partir de:" -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid #38bdf8;">
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
                         <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 250px;">
-                            <div style="font-size: 1.5rem;">Ô£é´©Å</div>
+                            <div style="font-size: 1.5rem;">✂️</div>
                             <div>
-                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Servi├ºos com Valor "A partir de:" (Pre├ºo Vari├ível)</h3>
+                                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Serviços com Valor "A partir de:" (Preço Variável)</h3>
                                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">
-                                    Permite que servi├ºos tenham valor vari├ível ("a partir de") e que o pre├ºo final seja ajustado ao concluir o atendimento.
+                                    Permite que serviços tenham valor variável ("a partir de") e que o preço final seja ajustado ao concluir o atendimento.
                                 </p>
                             </div>
                         </div>
@@ -2917,18 +2917,18 @@ const app = {
                         </label>
                     </div>
                     <div style="margin-top: 15px; padding: 12px 14px; background: rgba(0,0,0,0.15); border-radius: 8px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
-                        ­ƒÆí <strong>Habilitado:</strong> Ao clicar em "Finalizar Atendimento", o campo do valor do servi├ºo fica edit├ível para que voc├¬ possa alterar o valor final do procedimento.<br>
-                        ­ƒöÆ <strong>Desabilitado:</strong> O valor do servi├ºo ser├í sempre fixo conforme a tabela cadastrada, impedindo altera├º├Áes na finaliza├º├úo.
+                        💡 <strong>Habilitado:</strong> Ao clicar em "Finalizar Atendimento", o campo do valor do serviço fica editável para que você possa alterar o valor final do procedimento.<br>
+                        🔒 <strong>Desabilitado:</strong> O valor do serviço será sempre fixo conforme a tabela cadastrada, impedindo alterações na finalização.
                     </div>
                 </div>
 
                 <!-- BLOCO 3: Identidade Visual & Cores do Sistema -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                        <div style="font-size: 1.5rem;">­ƒÄ¿</div>
+                        <div style="font-size: 1.5rem;">🎨</div>
                         <div>
                             <h3 style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">Identidade Visual & Cores do Sistema</h3>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Personalize as cores do painel, menu lateral e bot├Áes para ornar perfeitamente com sua marca.</p>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0;">Personalize as cores do painel, menu lateral e botões para ornar perfeitamente com sua marca.</p>
                         </div>
                     </div>
 
@@ -2942,7 +2942,7 @@ const app = {
                                  class="theme-mode-card" 
                                  onclick="app.setThemeMode('dark')"
                                  style="padding: 16px; border-radius: 12px; border: 2px solid ${isDark ? 'var(--accent-color)' : 'var(--glass-border)'}; background: #0B0E14; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s; box-shadow: ${isDark ? '0 0 15px rgba(0,0,0,0.5)' : 'none'};">
-                                <div style="font-size: 1.8rem;">­ƒîÖ</div>
+                                <div style="font-size: 1.8rem;">🌙</div>
                                 <div>
                                     <strong style="display: block; color: #F3F4F6; font-size: 0.95rem;">Modo Noturno (Dark Luxury)</strong>
                                     <span style="font-size: 0.75rem; color: #9CA3AF;">Fundo e menu escuros harmonizados</span>
@@ -2953,7 +2953,7 @@ const app = {
                                  class="theme-mode-card" 
                                  onclick="app.setThemeMode('light')"
                                  style="padding: 16px; border-radius: 12px; border: 2px solid ${!isDark ? 'var(--accent-color)' : 'var(--glass-border)'}; background: #FFFFFF; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s; box-shadow: ${!isDark ? '0 0 15px rgba(0,0,0,0.1)' : 'none'};">
-                                <div style="font-size: 1.8rem;">ÔÿÇ´©Å</div>
+                                <div style="font-size: 1.8rem;">☀️</div>
                                 <div>
                                     <strong style="display: block; color: #0F172A; font-size: 0.95rem;">Modo Claro (Clean Light)</strong>
                                     <span style="font-size: 0.75rem; color: #64748B;">Menu e fundo claros harmonizados</span>
@@ -2965,7 +2965,7 @@ const app = {
                     <!-- 2. Cor de Destaque da Marca -->
                     <div>
                         <label style="display: block; font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-bottom: 10px;">
-                            Cor de Destaque da Marca (Bot├Áes, Menus Ativos e ├ìcones)
+                            Cor de Destaque da Marca (Botões, Menus Ativos e Ícones)
                         </label>
                         
                         <!-- Presets de cores -->
@@ -2975,10 +2975,10 @@ const app = {
                                 { hex: '#ec4899', label: 'Rosa Pink' },
                                 { hex: '#8b5cf6', label: 'Roxo' },
                                 { hex: '#10b981', label: 'Esmeralda' },
-                                { hex: '#0ea5e9', label: 'Azul C├®u' },
+                                { hex: '#0ea5e9', label: 'Azul Céu' },
                                 { hex: '#e11d48', label: 'Rubi' },
                                 { hex: '#f97316', label: 'Laranja' },
-                                { hex: '#6366f1', label: '├ìndigo' }
+                                { hex: '#6366f1', label: 'Índigo' }
                             ].map(c => `
                                 <button type="button" 
                                         class="color-chip" 
@@ -2998,7 +2998,7 @@ const app = {
                                 <input type="text" id="shop-color-hex" value="${currentAccent}" onchange="app.setAccentColor(this.value)" class="glass" style="width: 100px; padding: 5px 8px; font-size: 0.85rem; font-family: monospace; text-transform: uppercase;">
                             </div>
                             <div id="shop-color-preview-pill" style="padding: 7px 16px; border-radius: 6px; background: ${currentAccent}; color: ${this.getContrastColor(currentAccent)}; font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                                Pr├®via
+                                Prévia
                             </div>
                         </div>
                     </div>
@@ -3007,34 +3007,34 @@ const app = {
                 <!-- BLOCO 4: Backup & Sistema -->
                 <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #4ade80;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
-                        <div style="font-size:1.5rem;">­ƒøí´©Å</div>
+                        <div style="font-size:1.5rem;">🛡️</div>
                         <div style="flex:1;">
-                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Backup & Restaura├º├úo de Dados</h3>
+                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Backup & Restauração de Dados</h3>
                             <p style="font-size:0.8rem; color:var(--text-secondary); margin:4px 0 0;">
-                                Salve e restaure todos os dados: clientes, agendamentos, transa├º├Áes, produtos e OS.
+                                Salve e restaure todos os dados: clientes, agendamentos, transações, produtos e OS.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Info do ├║ltimo backup -->
+                    <!-- Info do último backup -->
                     <div style="padding:12px 16px; background:var(--surface-dark); border-radius:8px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:1.2rem;">­ƒòÉ</span>
+                        <span style="font-size:1.2rem;">🕐</span>
                         <p id="last-backup-info" style="font-size:0.82rem; color:var(--text-secondary);">
                             ${(() => {
                 const lb = localStorage.getItem('centauro_last_backup');
                 return lb
-                    ? `Ô£à ├Ültimo backup: ${new Date(lb).toLocaleString('pt-BR')}`
-                    : 'ÔÜá´©Å Nenhum backup realizado ainda neste dispositivo.';
+                    ? `✅ Último backup: ${new Date(lb).toLocaleString('pt-BR')}`
+                    : '⚠️ Nenhum backup realizado ainda neste dispositivo.';
             })()}
                         </p>
                     </div>
 
-                    <!-- Bot├Áes principais -->
+                    <!-- Botões principais -->
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px;">
                         <button class="btn-primary"
                                 style="background:#2E8B57; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem;"
                                 onclick="app.exportDatabase()">
-                            <span style="font-size:1.3rem;">­ƒÆ¥</span>
+                            <span style="font-size:1.3rem;">💾</span>
                             <span style="text-align:left; line-height:1.3;">
                                 <strong style="display:block;">Exportar Backup</strong>
                                 <small style="font-weight:400; opacity:0.85;">Baixa arquivo .json com data/hora</small>
@@ -3044,7 +3044,7 @@ const app = {
                         <button class="btn-secondary"
                                 style="display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem; border-color:#a78bfa; color:#a78bfa;"
                                 onclick="app.importDatabase()">
-                            <span style="font-size:1.3rem;">­ƒôé</span>
+                            <span style="font-size:1.3rem;">📂</span>
                             <span style="text-align:left; line-height:1.3;">
                                 <strong style="display:block;">Restaurar Backup</strong>
                                 <small style="font-weight:400; opacity:0.85;">Importa um arquivo .json salvo</small>
@@ -3052,11 +3052,11 @@ const app = {
                         </button>
                     </div>
 
-                    <!-- Instru├º├úo -->
+                    <!-- Instrução -->
                     <div style="padding:10px 14px; background:rgba(74,222,128,0.06); border:1px solid rgba(74,222,128,0.2); border-radius:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.6;">
-                        ­ƒÆí <strong style="color:#4ade80;">Como usar:</strong>
-                        Antes de qualquer atualiza├º├úo, clique em <strong>Exportar Backup</strong> para salvar um arquivo com todos os seus dados.
-                        Caso algo d├¬ errado, use <strong>Restaurar Backup</strong> para voltar ao estado anterior.
+                        💡 <strong style="color:#4ade80;">Como usar:</strong>
+                        Antes de qualquer atualização, clique em <strong>Exportar Backup</strong> para salvar um arquivo com todos os seus dados.
+                        Caso algo dê errado, use <strong>Restaurar Backup</strong> para voltar ao estado anterior.
                     </div>
 
                     <hr style="border:none; border-top:1px solid var(--glass-border); margin:20px 0;">
@@ -3064,63 +3064,63 @@ const app = {
                     <!-- Zona de perigo -->
                     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                         <div>
-                            <p style="font-size:0.82rem; font-weight:600; color:#ff4444;">ÔÜá´©Å Zona de Perigo</p>
+                            <p style="font-size:0.82rem; font-weight:600; color:#ff4444;">⚠️ Zona de Perigo</p>
                             <p style="font-size:0.75rem; color:var(--text-secondary);">Apaga permanentemente todos os dados do sistema.</p>
                         </div>
                         <button class="btn-secondary"
                                 style="border-color:#ff4444; color:#ff4444; padding:9px 18px; font-size:0.82rem;"
                                 onclick="app.confirmResetData()">
-                            ­ƒùæ´©Å Limpar Todos os Dados
+                            🗑️ Limpar Todos os Dados
                         </button>
                     </div>
                 </div>
 
-                <!-- BLOCO 5: Notifica├º├Áes Push -->
+                <!-- BLOCO 5: Notificações Push -->
                 <div class="glass" style="padding:25px; margin-bottom:25px; border-left:4px solid #38bdf8;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
-                        <div style="font-size:1.5rem;">­ƒöö</div>
+                        <div style="font-size:1.5rem;">🔔</div>
                         <div style="flex:1;">
-                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Notifica├º├Áes Push</h3>
+                            <h3 style="font-size:1.1rem; color:var(--text-primary); margin:0;">Notificações Push</h3>
                             <p style="font-size:0.8rem; color:var(--text-secondary); margin:4px 0 0;">
-                                Receba alertas instant├óneos quando um cliente agendar um hor├írio.
+                                Receba alertas instantâneos quando um cliente agendar um horário.
                             </p>
                         </div>
                     </div>
 
                     <!-- Status atual -->
                     <div id="push-status-box" style="padding:12px 16px; background:var(--surface-dark); border-radius:8px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:1.2rem;" id="push-status-icon">ÔÅ│</span>
+                        <span style="font-size:1.2rem;" id="push-status-icon">⏳</span>
                         <p id="push-status-text" style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
                             Verificando status...
                         </p>
                     </div>
 
-                    <!-- Bot├úo ativar -->
+                    <!-- Botão ativar -->
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px;">
                         <button id="btn-activate-push" class="btn-primary"
                                 style="background:#38bdf8; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px; font-size:0.9rem;"
                                 onclick="app.activatePushFromSettings()">
-                            <span style="font-size:1.3rem;">­ƒöö</span>
+                            <span style="font-size:1.3rem;">🔔</span>
                             <span style="text-align:left; line-height:1.3;">
-                                <strong style="display:block;">Ativar Notifica├º├Áes</strong>
+                                <strong style="display:block;">Ativar Notificações</strong>
                                 <small style="font-weight:400; opacity:0.85;">Permite receber alertas de agendamentos</small>
                             </span>
                         </button>
                     </div>
 
-                    <!-- Instru├º├úo -->
+                    <!-- Instrução -->
                     <div style="padding:10px 14px; background:rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2); border-radius:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.6;">
-                        ­ƒÆí <strong style="color:#38bdf8;">Como funciona:</strong>
-                        Ao ativar, voc├¬ receber├í notifica├º├Áes no celular ou computador quando um cliente fizer um agendamento ÔÇö mesmo com a tela bloqueada.
-                        Se as notifica├º├Áes foram bloqueadas, ser├í necess├írio liberar nas configura├º├Áes do navegador.
+                        💡 <strong style="color:#38bdf8;">Como funciona:</strong>
+                        Ao ativar, você receberá notificações no celular ou computador quando um cliente fizer um agendamento — mesmo com a tela bloqueada.
+                        Se as notificações foram bloqueadas, será necessário liberar nas configurações do navegador.
                     </div>
                 </div>
 
-                <!-- Bot├úo Salvar -->
+                <!-- Botão Salvar -->
                 <div style="display: flex; gap: 12px; justify-content: flex-end; padding-bottom: 30px;">
                     <button class="btn-secondary" onclick="app.navigateTo('admin-dash')">Cancelar</button>
                     <button class="btn-primary" style="padding: 12px 40px; font-size: 1rem;" onclick="app.saveAdminSettings()">
-                        Ô£à Salvar Configura├º├Áes
+                        ✅ Salvar Configurações
                     </button>
                 </div>
             </section>
@@ -3144,7 +3144,7 @@ const app = {
             }
         });
 
-        // Atualizar status visual das notifica├º├Áes push
+        // Atualizar status visual das notificações push
         this.updatePushStatusUI();
     },
 
@@ -3220,7 +3220,7 @@ const app = {
     },
 
     saveAdminSettings() {
-        // Salvar hor├írios da agenda
+        // Salvar horários da agenda
         this.state.settings.agenda.intervalMin = parseInt(document.getElementById('set-inter').value);
         for (let i = 0; i < 7; i++) {
             this.state.settings.agenda.schedule[i].active = document.getElementById(`cfg-act-${i}`).checked;
@@ -3252,7 +3252,7 @@ const app = {
             this.state.settings.heroImg = heroEl.value;
         }
 
-        // Salvar op├º├úo de servi├ºos com valor "A partir de:"
+        // Salvar opção de serviços com valor "A partir de:"
         const allowPriceFromEl = document.getElementById('cfg-allow-price-from');
         if (allowPriceFromEl) {
             this.state.settings.allowPriceFrom = allowPriceFromEl.checked;
@@ -3271,7 +3271,7 @@ const app = {
         }
         this.applyTheme();
 
-        // Salvar configura├º├Áes do GitHub (Apenas se os campos existirem na UI)
+        // Salvar configurações do GitHub (Apenas se os campos existirem na UI)
         const ghToken = document.getElementById('gh-token');
         const ghOwner = document.getElementById('gh-owner');
         const ghRepo = document.getElementById('gh-repo');
@@ -3289,22 +3289,22 @@ const app = {
 
         this.saveState();
 
-        // Feedback visual no bot├úo
+        // Feedback visual no botão
         const btn = document.querySelector('[onclick="app.saveAdminSettings()"]');
         if (btn) {
             const original = btn.innerHTML;
-            btn.innerHTML = 'Ô£ö Salvo com sucesso!';
+            btn.innerHTML = '✔ Salvo com sucesso!';
             btn.style.background = '#2E8B57';
             setTimeout(() => { btn.innerHTML = original; btn.style.background = ''; }, 2500);
         }
     },
 
     confirmResetData() {
-        if (confirm('ÔÜá´©Å ATEN├ç├âO: Isso ir├í apagar TODOS os dados (clientes, agendamentos, transa├º├Áes, vales). Esta a├º├úo ├® irrevers├¡vel.\n\nDeseja continuar?')) {
-            if (confirm('Tem ABSOLUTA certeza? Todos os dados ser├úo perdidos permanentemente.')) {
+        if (confirm('⚠️ ATENÇÃO: Isso irá apagar TODOS os dados (clientes, agendamentos, transações, vales). Esta ação é irreversível.\n\nDeseja continuar?')) {
+            if (confirm('Tem ABSOLUTA certeza? Todos os dados serão perdidos permanentemente.')) {
                 localStorage.removeItem('centauro_state');
                 this.clearSession();
-                alert('Dados limpos. O sistema ser├í reiniciado.');
+                alert('Dados limpos. O sistema será reiniciado.');
                 location.reload();
             }
         }
@@ -3331,7 +3331,7 @@ const app = {
             this._renderWithSafety(view);
         } catch (e) {
             console.error(`Erro ao renderizar view ${view}:`, e);
-            this.handleGlobalError(e, `Renderiza├º├úo: ${view}`);
+            this.handleGlobalError(e, `Renderização: ${view}`);
         }
     },
 
@@ -3339,7 +3339,7 @@ const app = {
         this.applyTheme();
         const appContainer = document.getElementById('app');
 
-        // [SaaS] Bloqueio Manual ou Autom├ítico por Vencimento
+        // [SaaS] Bloqueio Manual ou Automático por Vencimento
         const sub = this.state.subscription;
         let isExpired = false;
         if (sub?.nextPayment) {
@@ -3347,18 +3347,18 @@ const app = {
         }
 
         if (sub?.isBlocked || isExpired) {
-            // O usu├írio solicitou: "O bloqueio ├® geral"
-            // Impedimos qualquer navega├º├úo para telas restritas ou operacionais se estiver vencido.
+            // O usuário solicitou: "O bloqueio é geral"
+            // Impedimos qualquer navegação para telas restritas ou operacionais se estiver vencido.
             if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
                 this.renderBlockedScreen(appContainer);
                 return;
             }
         }
 
-        // [Seguran├ºa] Bloqueio de acesso n├úo autorizado, deslogado ou com sess├úo expirada
+        // [Segurança] Bloqueio de acesso não autorizado, deslogado ou com sessão expirada
         if (view.includes('-dash') || view.startsWith('admin-') || view === 'pdv') {
             if (!this.state.user || this.isSessionExpired()) {
-                console.warn("Redirecionando: Tentativa de acesso restrito sem login ou com sess├úo expirada.");
+                console.warn("Redirecionando: Tentativa de acesso restrito sem login ou com sessão expirada.");
                 if (this.state.user) {
                     this.clearSession();
                     this.state.user = null;
@@ -3390,8 +3390,8 @@ const app = {
             return;
         }
 
-        // [x] Agenda Multi-Colunas (Vis├úo Admin Geral vs Vis├úo Barbeiro Privada)
-        // Se for uma vis├úo administrativa/barbeiro, usar o layout com sidebar
+        // [x] Agenda Multi-Colunas (Visão Admin Geral vs Visão Barbeiro Privada)
+        // Se for uma visão administrativa/barbeiro, usar o layout com sidebar
         if (view.includes('-dash') || view.includes('admin-') || view.includes('barber-') || view === 'pdv') {
             this.renderLayout(view);
             return;
@@ -3401,7 +3401,7 @@ const app = {
         const name = (s.shopName || 'NOSSO SISTEMA').toUpperCase();
 
 
-        // Se for view p├║blica, reconstruir o DOM da landing page e purgar o Layout
+        // Se for view pública, reconstruir o DOM da landing page e purgar o Layout
         appContainer.innerHTML = `
             <header class="fade-in" style="padding: 20px; position: absolute; top: 0; width: 100%; z-index: 100; display: flex; justify-content: center; align-items: center;">
                 <div class="logo-container" style="display: flex; align-items: center; gap: 12px;">
@@ -3410,7 +3410,7 @@ const app = {
                 ${view !== 'login' ? `<button onclick="app.navigateTo('login')" class="btn-secondary" style="position: absolute; right: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: rgba(255,255,255,0.15); color: var(--text-secondary);">Login</button>` : ''}
             </header>
             <main id="main-content"></main>
-            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">Ô£é´©Å</div>` : ''}
+            ${view === 'home' || view === 'services' ? `<div class="fab" onclick="app.navigateTo('booking')">✂️</div>` : ''}
         `;
         const newMain = document.getElementById('main-content');
 
@@ -3434,50 +3434,50 @@ const app = {
 
         const appContainer = document.getElementById('app');
         const s = this.state.settings || {};
-        const shopName = s.shopName || 'Agendamento F├ícil BR';
+        const shopName = s.shopName || 'Agendamento Fácil BR';
 
         const viewTitles = {
             'admin-dash': 'Agenda Geral',
             'barber-dash': 'Minha Agenda',
             'barber-financial': 'Meu Faturamento',
-            'admin-customers': 'Gest├úo de Clientes',
+            'admin-customers': 'Gestão de Clientes',
             'admin-subscriptions': 'Clube de Assinaturas',
             'admin-stock': 'Estoque de Produtos',
             'admin-cashflow': 'Fluxo de Caixa',
             'admin-vouchers': this.getTerm('voucherTerm'),
-            'admin-consumption': 'Relat├│rio de Consumo',
+            'admin-consumption': 'Relatório de Consumo',
             'admin-staff': this.getTerm('workersTerm'),
-            'admin-services': 'Servi├ºos',
+            'admin-services': 'Serviços',
             'admin-payments': 'Auditoria de Pagamentos',
             'admin-faturamento': 'Faturamento Global',
             'admin-team-performance': 'Ranking da Equipe',
-            'admin-tips': 'Gest├úo de Gorjetas',
+            'admin-tips': 'Gestão de Gorjetas',
             'admin-guide': 'Guia do Sistema',
-            'admin-settings': 'Configura├º├Áes do Sistema',
+            'admin-settings': 'Configurações do Sistema',
             'admin-billing': 'Fatura do Sistema',
-            'admin-os': 'Ordens de Servi├ºo',
+            'admin-os': 'Ordens de Serviço',
             'pdv': 'Ponto de Venda (PDV)'
         };
 
-        // Se o layout base j├í existe, apenas atualize o conte├║do e os links ativos
+        // Se o layout base já existe, apenas atualize o conteúdo e os links ativos
         if (document.querySelector('.app-layout') && document.getElementById('sidebar')) {
             // Atualizar classes 'active' no menu
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             const activeLink = document.querySelector(`.menu-item[onclick*="'${view}'"]`);
             if (activeLink) activeLink.classList.add('active');
 
-            // Atualizar T├¡tulo da Top Bar
+            // Atualizar Título da Top Bar
             const topBarTitle = document.querySelector('.top-bar h2');
             if (topBarTitle) topBarTitle.innerText = viewTitles[view] || 'Painel';
 
-            // Renderizar View espec├¡fica
+            // Renderizar View específica
             const main = document.getElementById('main-content');
             if (main) this.injectView(view, main);
             
             return;
         }
 
-        appContainer.className = 'container'; // Reseta para o padr├úo
+        appContainer.className = 'container'; // Reseta para o padrão
         appContainer.innerHTML = `
             ${this.getSubscriptionWarningHTML(view)}
             ${this.state.user?.isMasterSession ? `
@@ -3495,9 +3495,9 @@ const app = {
                 box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
             ">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.1rem;">­ƒææ</span>
-                    <span>Sess├úo Master Ativa</span>
-                    <span style="opacity: 0.7; font-weight: 400;">ÔÇö ${shopName}</span>
+                    <span style="font-size: 1.1rem;">👑</span>
+                    <span>Sessão Master Ativa</span>
+                    <span style="opacity: 0.7; font-weight: 400;">— ${shopName}</span>
                 </div>
                 <button onclick="window.close(); if(!window.closed) app.logout();" style="
                     background: rgba(255,255,255,0.2);
@@ -3508,7 +3508,7 @@ const app = {
                     font-size: 0.75rem;
                     cursor: pointer;
                     font-weight: 600;
-                ">Ô£ò Encerrar</button>
+                ">✕ Encerrar</button>
             </div>
             ` : ''}
             <div class="app-layout">
@@ -3560,7 +3560,7 @@ const app = {
                             <i data-lucide="users"></i> Clientes
                         </a>
                         <a class="menu-item ${view === 'admin-services' ? 'active' : ''}" onclick="window.app.navigateTo('admin-services')">
-                            <i data-lucide="scissors"></i> Servi├ºos
+                            <i data-lucide="scissors"></i> Serviços
                         </a>
                         <a class="menu-item ${view === 'admin-staff' ? 'active' : ''}" onclick="window.app.navigateTo('admin-staff')">
                             <i data-lucide="user-cog"></i> Profissionais
@@ -3608,7 +3608,7 @@ const app = {
                     <div class="menu-category">Sistema</div>
                     ${this.state.user.role === 'admin' ? `
                         <a class="menu-item" onclick="window.app.openChangelogModal(true)" style="position: relative; cursor: pointer;">
-                            <i data-lucide="sparkles" style="color: #38bdf8;"></i> Novidades & Vers├úo
+                            <i data-lucide="sparkles" style="color: #38bdf8;"></i> Novidades & Versão
                             <span style="margin-left: auto; font-size: 0.62rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 7px; border-radius: 10px; font-weight: 800;">v80.50</span>
                         </a>
                         <a class="menu-item ${view === 'admin-guide' ? 'active' : ''}" onclick="window.app.navigateTo('admin-guide')" style="position: relative;">
@@ -3616,7 +3616,7 @@ const app = {
                             <span style="margin-left: auto; font-size: 0.62rem; background: #38bdf8; color: #000; padding: 2px 7px; border-radius: 10px; font-weight: 800; letter-spacing: 0.5px;">GUIA</span>
                         </a>
                         <a class="menu-item ${view === 'admin-settings' ? 'active' : ''}" onclick="window.app.navigateTo('admin-settings')">
-                            <i data-lucide="settings"></i> Configura├º├Áes
+                            <i data-lucide="settings"></i> Configurações
                         </a>
                         <a class="menu-item ${view === 'admin-billing' ? 'active' : ''}" onclick="window.app.navigateTo('admin-billing')">
                             <i data-lucide="credit-card"></i> Pagamento App
@@ -3639,7 +3639,7 @@ const app = {
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div id="sync-status-indicator" style="font-size: 0.7rem; font-weight: 600; color: #4ade80; display: flex; align-items: center; gap: 6px;">
                             <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
-                            Sincroniza├º├úo Autom├ítica
+                            Sincronização Automática
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; padding-left: 20px; border-left: 1px solid var(--glass-border);">
                             <span style="font-size: 0.85rem; font-weight: 600;">${this.state.user.name}</span>
@@ -3692,13 +3692,13 @@ const app = {
             console.error(`Erro ao injetar a view ${view}:`, e);
             container.innerHTML = `
                 <div class="glass" style="padding: 40px; text-align: center; color: #ff4444;">
-                    <h3>ÔØî Erro Cr├¡tico de Renderiza├º├úo</h3>
+                    <h3>❌ Erro Crítico de Renderização</h3>
                     <p style="font-size: 0.9rem; margin: 15px 0;">Ocorreu uma falha ao tentar carregar esta tela.</p>
                     <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow: auto; max-width: 100%;">
                         <strong>Erro:</strong> ${e.message}<br>
                         <small>${e.stack ? e.stack.split('\n')[0] : ''}</small>
                     </div>
-                    <button class="btn-primary" onclick="app.navigateTo('admin-dash')">Voltar ao In├¡cio</button>
+                    <button class="btn-primary" onclick="app.navigateTo('admin-dash')">Voltar ao Início</button>
                 </div>
             `;
         }
@@ -3719,7 +3719,7 @@ const app = {
                     <img src="logo_agendamento.png" style="width: 180px; height: auto; filter: drop-shadow(0 0 10px var(--accent-color)); animation: logo-pulse 4s infinite ease-in-out;">
                     <div>
                         <h1 style="font-family: 'Playfair Display'; font-size: 1.1rem; color: var(--accent-readable); margin: 0;">MENU DO SISTEMA</h1>
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recep├º├úo / Totem</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Recepção / Totem</p>
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -3736,7 +3736,7 @@ const app = {
                            color: ${tab === 'agenda' ? 'var(--accent-color)' : 'var(--text-secondary)'};
                            border-bottom: 3px solid ${tab === 'agenda' ? 'var(--accent-color)' : 'transparent'};
                            margin-bottom: -2px; transition: all 0.2s;">
-                    ­ƒôà Agenda
+                    📅 Agenda
                 </button>
                 <button id="totem-tab-pdv"
                     onclick="app.setTotemTab('pdv')"
@@ -3744,7 +3744,7 @@ const app = {
                            color: ${tab === 'pdv' ? '#4ade80' : 'var(--text-secondary)'};
                            border-bottom: 3px solid ${tab === 'pdv' ? '#4ade80' : 'transparent'};
                            margin-bottom: -2px; transition: all 0.2s;">
-                    ­ƒÆÁ Vendas
+                    💵 Vendas
                 </button>
                 <button id="totem-tab-estoque"
                     onclick="app.setTotemTab('estoque')"
@@ -3752,7 +3752,7 @@ const app = {
                            color: ${tab === 'estoque' ? '#a78bfa' : 'var(--text-secondary)'};
                            border-bottom: 3px solid ${tab === 'estoque' ? '#a78bfa' : 'transparent'};
                            margin-bottom: -2px; transition: all 0.2s;">
-                    ­ƒôª Estoque
+                    📦 Estoque
                 </button>
                 <button id="totem-tab-planos"
                     onclick="app.setTotemTab('planos')"
@@ -3760,11 +3760,11 @@ const app = {
                            color: ${tab === 'planos' ? '#f59e0b' : 'var(--text-secondary)'};
                            border-bottom: 3px solid ${tab === 'planos' ? '#f59e0b' : 'transparent'};
                            margin-bottom: -2px; transition: all 0.2s;">
-                    ­ƒÆ│ Planos
+                    💳 Planos
                 </button>
             </nav>
 
-            <!-- CONTE├ÜDO DA ABA -->
+            <!-- CONTEÚDO DA ABA -->
             <main id="totem-content" style="padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box;">
                 ${this.getBirthdaysHTML()}
                 <div id="totem-tab-content"></div>
@@ -3801,7 +3801,7 @@ const app = {
     },
 
 
-    // ÔöÇÔöÇÔöÇ TOTEM: PLANOS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ─── TOTEM: PLANOS ────────────────────────────────────────────────────────
 
     _renderTotemPlanos(container) {
         const plans = this.state.subscriptionPlans || [];
@@ -3821,7 +3821,7 @@ const app = {
                 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:15px; margin-bottom:28px;">
                     <div class="glass" style="padding:20px; text-align:center; border-left:4px solid #f59e0b;">
                         <div style="font-size:2rem; font-weight:900; color:#f59e0b;">${plans.length}</div>
-                        <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">Planos Dispon├¡veis</div>
+                        <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:4px;">Planos Disponíveis</div>
                     </div>
                     <div class="glass" style="padding:20px; text-align:center; border-left:4px solid #10b981;">
                         <div style="font-size:2rem; font-weight:900; color:#10b981;">${ativos}</div>
@@ -3833,7 +3833,7 @@ const app = {
                     </div>
                 </div>
 
-                <!-- Bot├úo principal -->
+                <!-- Botão principal -->
                 <div style="display:flex; justify-content:center; margin-bottom:30px;">
                     <button onclick="app._totemAbrirModalPlano()"
                         style="padding:18px 40px; font-size:1.1rem; font-weight:800; border-radius:16px;
@@ -3842,12 +3842,12 @@ const app = {
                                transition:transform 0.2s,box-shadow 0.2s;"
                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 40px rgba(245,158,11,0.5)'"
                         onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 30px rgba(245,158,11,0.4)'">
-                        <span style="font-size:1.5rem;">­ƒÆ│</span>
+                        <span style="font-size:1.5rem;">💳</span>
                         LIBERAR / CONFIRMAR PLANO
                     </button>
                 </div>
 
-                <!-- Lista de planos dispon├¡veis (informativa) -->
+                <!-- Lista de planos disponíveis (informativa) -->
                 ${plans.length === 0
                     ? `<div class="glass" style="padding:20px; text-align:center; opacity:0.5;">
                            <p>Nenhum plano cadastrado.<br>Cadastre planos no painel administrativo.</p>
@@ -3858,7 +3858,7 @@ const app = {
                                ${plans.map(p => `
                                    <div style="padding:14px; background:rgba(255,255,255,0.04); border-radius:10px; border:1px solid var(--glass-border);">
                                        <div style="font-weight:700; color:var(--accent-readable); margin-bottom:4px;">${p.name}</div>
-                                       <div style="font-size:1.1rem; font-weight:900; color:#f59e0b;">R$ ${parseFloat(p.price).toFixed(2)}<span style="font-size:0.7rem; font-weight:400; color:var(--text-secondary);">/m├¬s</span></div>
+                                       <div style="font-size:1.1rem; font-weight:900; color:#f59e0b;">R$ ${parseFloat(p.price).toFixed(2)}<span style="font-size:0.7rem; font-weight:400; color:var(--text-secondary);">/mês</span></div>
                                        ${p.description ? `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">${p.description}</div>` : ''}
                                    </div>
                                `).join('')}
@@ -3866,7 +3866,7 @@ const app = {
                        </div>`
                 }
 
-                <!-- Log recente de libera├º├Áes (├║ltimas 5) -->
+                <!-- Log recente de liberações (últimas 5) -->
                 ${this._getTotemRecentReleasesHTML()}
             </div>
         `;
@@ -3883,7 +3883,7 @@ const app = {
         const rows = subs.map(s => {
             const customer = (this.state.customers || []).find(c => c.id == s.customerId) || { name: 'Desconhecido' };
             const dt = new Date(s.releasedAt);
-            const dtStr = dt.toLocaleDateString('pt-BR') + ' ├ás ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+            const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
             return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--glass-border); flex-wrap:wrap; gap:8px;">
                     <div>
@@ -3891,8 +3891,8 @@ const app = {
                         <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:8px;">${s.planName}</span>
                     </div>
                     <div style="text-align:right; font-size:0.78rem; color:var(--text-secondary);">
-                        <div>­ƒæñ <strong style="color:#f59e0b;">${s.releasedBy || 'ÔÇö'}</strong></div>
-                        <div>­ƒòÉ ${dtStr}</div>
+                        <div>👤 <strong style="color:#f59e0b;">${s.releasedBy || '—'}</strong></div>
+                        <div>🕐 ${dtStr}</div>
                     </div>
                 </div>
             `;
@@ -3900,21 +3900,21 @@ const app = {
 
         return `
             <div class="glass" style="padding:20px; margin-top:20px; border-left:4px solid #60a5fa;">
-                <h4 style="margin:0 0 12px; color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">ÔÅ▒´©Å ├Ültimas Libera├º├Áes (Nesta Recep├º├úo)</h4>
+                <h4 style="margin:0 0 12px; color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">⏱️ Últimas Liberações (Nesta Recepção)</h4>
                 ${rows}
             </div>
         `;
     },
 
     _totemAbrirModalPlano() {
-        // Etapa 1: Identifica├º├úo do recepcionista
-        this.openModal('­ƒÆ│ Liberar Plano ÔÇö Identifica├º├úo', `
+        // Etapa 1: Identificação do recepcionista
+        this.openModal('💳 Liberar Plano — Identificação', `
             <div class="fade-in">
                 <div style="text-align:center; margin-bottom:20px;">
-                    <div style="font-size:2.5rem; margin-bottom:8px;">­ƒöÉ</div>
+                    <div style="font-size:2.5rem; margin-bottom:8px;">🔐</div>
                     <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.5;">
-                        Para liberar um plano, o <strong>recepcionista respons├ível</strong> precisa se identificar.<br>
-                        Esse registro ficar├í vis├¡vel no relat├│rio do administrador.
+                        Para liberar um plano, o <strong>recepcionista responsável</strong> precisa se identificar.<br>
+                        Esse registro ficará visível no relatório do administrador.
                     </p>
                 </div>
 
@@ -3929,23 +3929,23 @@ const app = {
 
                 <div style="margin-bottom:25px;">
                     <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">
-                        C├│digo / PIN de Acesso * <span style="font-weight:400; opacity:0.6;">(definido pelo administrador)</span>
+                        Código / PIN de Acesso * <span style="font-weight:400; opacity:0.6;">(definido pelo administrador)</span>
                     </label>
                     <input type="password" id="recep-pin" class="glass"
                         style="width:100%; padding:13px; color:var(--text-primary); border-radius:10px; font-size:1.2rem; letter-spacing:4px; text-align:center;"
-                        placeholder="ÔÇó ÔÇó ÔÇó ÔÇó" maxlength="6">
+                        placeholder="• • • •" maxlength="6">
                     <p id="pin-erro" style="color:#f87171; font-size:0.78rem; margin-top:5px; min-height:18px;"></p>
                 </div>
 
                 <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px 15px; margin-bottom:20px;">
                     <p style="font-size:0.78rem; color:var(--text-secondary); margin:0; line-height:1.5;">
-                        ÔÜá´©Å <strong>Aten├º├úo:</strong> O nome digitado acima ser├í registrado no sistema junto com data e hor├írio desta libera├º├úo. O administrador poder├í visualizar esta informa├º├úo.
+                        ⚠️ <strong>Atenção:</strong> O nome digitado acima será registrado no sistema junto com data e horário desta liberação. O administrador poderá visualizar esta informação.
                     </p>
                 </div>
 
                 <button class="btn-primary" style="width:100%; padding:15px; font-size:1rem; font-weight:700; border-radius:12px;"
                     onclick="app._totemValidarIdentidade()">
-                    CONFIRMAR IDENTIDADE E CONTINUAR ÔåÆ
+                    CONFIRMAR IDENTIDADE E CONTINUAR →
                 </button>
             </div>
         `);
@@ -3962,12 +3962,12 @@ const app = {
             return;
         }
         if (!pin || pin.length < 4) {
-            if (errEl) errEl.textContent = 'Informe o PIN de acesso (m├¡nimo 4 d├¡gitos).';
+            if (errEl) errEl.textContent = 'Informe o PIN de acesso (mínimo 4 dígitos).';
             document.getElementById('recep-pin')?.focus();
             return;
         }
 
-        // Valida PIN: verifica contra o pin configurado nas settings, ou aceita o PIN padr├úo se n├úo configurado
+        // Valida PIN: verifica contra o pin configurado nas settings, ou aceita o PIN padrão se não configurado
         const configPin = (this.state.settings?.receptionistPin || '').toString();
         const pinValido = configPin ? pin === configPin : pin.length >= 4;
         if (!pinValido) {
@@ -3977,7 +3977,7 @@ const app = {
             return;
         }
 
-        // Armazena temporariamente para usar na finaliza├º├úo
+        // Armazena temporariamente para usar na finalização
         this._totemRecepNome = nome;
         this._totemRecepPin = pin;
 
@@ -3990,60 +3990,60 @@ const app = {
         const plans = this.state.subscriptionPlans || [];
 
         if (plans.length === 0) {
-            this.openModal('ÔÜá´©Å Aten├º├úo', `
+            this.openModal('⚠️ Atenção', `
                 <div style="text-align:center; padding:20px;">
-                    <div style="font-size:3rem; margin-bottom:12px;">ÔÜá´©Å</div>
+                    <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
                     <p>Nenhum plano cadastrado no sistema.</p>
-                    <p style="font-size:0.85rem; color:var(--text-secondary);">Pe├ºa ao administrador para cadastrar os planos dispon├¡veis.</p>
+                    <p style="font-size:0.85rem; color:var(--text-secondary);">Peça ao administrador para cadastrar os planos disponíveis.</p>
                 </div>
             `);
             return;
         }
 
         const custOptions = customers.map(c =>
-            `<option value="${c.id}">${c.name}${c.phone ? ' ÔÇö ' + c.phone : ''}</option>`
+            `<option value="${c.id}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`
         ).join('');
 
         const planOptions = plans.map(p =>
-            `<option value="${p.name}">­ƒÆ│ ${p.name} ÔÇö R$ ${parseFloat(p.price).toFixed(2)}/m├¬s</option>`
+            `<option value="${p.name}">💳 ${p.name} — R$ ${parseFloat(p.price).toFixed(2)}/mês</option>`
         ).join('');
 
-        // Data padr├úo: hoje + 30 dias
+        // Data padrão: hoje + 30 dias
         const d30 = new Date(); d30.setDate(d30.getDate() + 30);
         const d30str = d30.toISOString().split('T')[0];
 
-        this.openModal('­ƒÆ│ Liberar Plano ÔÇö Dados do Cliente', `
+        this.openModal('💳 Liberar Plano — Dados do Cliente', `
             <div class="fade-in" style="max-height:75vh; overflow-y:auto; padding-right:6px;">
 
-                <!-- Identifica├º├úo confirmada -->
+                <!-- Identificação confirmada -->
                 <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:10px 14px; margin-bottom:18px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.3rem;">Ô£à</span>
+                    <span style="font-size:1.3rem;">✅</span>
                     <div>
                         <div style="font-size:0.78rem; color:var(--text-secondary);">Recepcionista identificado(a):</div>
                         <div style="font-weight:700; color:#10b981;">${this._totemRecepNome}</div>
                     </div>
                 </div>
 
-                <!-- Sele├º├úo de cliente -->
+                <!-- Seleção de cliente -->
                 <div style="margin-bottom:14px;">
                     <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Cliente *</label>
                     <div style="display:flex; gap:8px;">
                         <select id="totem-plano-cliente" class="glass"
                             style="flex:1; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;">
-                            <option value="">ÔÇö Selecione um cliente existente ÔÇö</option>
+                            <option value="">— Selecione um cliente existente —</option>
                             ${custOptions}
                         </select>
                     </div>
-                    <div style="text-align:center; margin:10px 0; font-size:0.78rem; color:var(--text-secondary);">ÔÇö ou ÔÇö</div>
+                    <div style="text-align:center; margin:10px 0; font-size:0.78rem; color:var(--text-secondary);">— ou —</div>
                     <button onclick="app._totemToggleNovoCli()" id="btn-novo-cli"
                         style="width:100%; padding:10px; border-radius:10px; border:1.5px dashed var(--glass-border); background:transparent; color:var(--accent-readable); cursor:pointer; font-weight:600; font-size:0.85rem;">
                         + Cadastrar novo cliente
                     </button>
                 </div>
 
-                <!-- Formul├írio novo cliente (oculto) -->
+                <!-- Formulário novo cliente (oculto) -->
                 <div id="novo-cli-form" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px; padding:15px; margin-bottom:14px;">
-                    <p style="font-size:0.8rem; color:var(--accent-readable); font-weight:700; margin:0 0 12px;">­ƒôï Novo Cliente</p>
+                    <p style="font-size:0.8rem; color:var(--accent-readable); font-weight:700; margin:0 0 12px;">📋 Novo Cliente</p>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <input type="text" id="novo-cli-nome" class="glass"
                             style="padding:11px; color:var(--text-primary); border-radius:8px;" placeholder="Nome completo *">
@@ -4060,7 +4060,7 @@ const app = {
                     <select id="totem-plano-sel" class="glass"
                         style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;"
                         onchange="app._totemOnPlanoChange(this.value)">
-                        <option value="">ÔÇö Selecione o plano ÔÇö</option>
+                        <option value="">— Selecione o plano —</option>
                         ${planOptions}
                     </select>
                     <div id="totem-plano-price-badge" style="display:none; margin-top:6px; padding:6px 10px; background:rgba(245,158,11,0.1); border-radius:8px; border:1px solid rgba(245,158,11,0.3); font-size:0.85rem; color:#f59e0b; font-weight:700;">
@@ -4074,12 +4074,12 @@ const app = {
                     <select id="totem-plano-pgto" class="glass"
                         style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px; font-size:0.9rem;"
                         onchange="app._totemOnPaymentChange(this.value)">
-                        <option value="">ÔÇö Selecione a forma de pagamento ÔÇö</option>
-                        <option value="Dinheiro">­ƒÆÁ Dinheiro na Barbearia</option>
-                        <option value="PIX">­ƒô▒ PIX</option>
-                        <option value="Cart├úo de D├®bito">­ƒÆ│ Cart├úo de D├®bito</option>
-                        <option value="Cart├úo de Cr├®dito">­ƒÆ│ Cart├úo de Cr├®dito</option>
-                        <option value="Misto">­ƒöÇ Pagamento Misto (Dividir)</option>
+                        <option value="">— Selecione a forma de pagamento —</option>
+                        <option value="Dinheiro">💵 Dinheiro na Barbearia</option>
+                        <option value="PIX">📱 PIX</option>
+                        <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                        <option value="Misto">🔀 Pagamento Misto (Dividir)</option>
                     </select>
                 </div>
 
@@ -4091,8 +4091,8 @@ const app = {
                             <select id="totem-split-method-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
                                 <option value="Dinheiro">Dinheiro</option>
                                 <option value="PIX">PIX</option>
-                                <option value="Cart├úo de D├®bito">D├®bito</option>
-                                <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
                             </select>
                             <input type="number" id="totem-split-amount-1" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01" oninput="app._totemUpdateSplitRemainder()">
                         </div>
@@ -4101,8 +4101,8 @@ const app = {
                             <select id="totem-split-method-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius:8px;">
                                 <option value="PIX">PIX</option>
                                 <option value="Dinheiro">Dinheiro</option>
-                                <option value="Cart├úo de D├®bito">D├®bito</option>
-                                <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
                             </select>
                             <input type="number" id="totem-split-amount-2" class="glass" style="width:100%; padding:8px; color:var(--text-primary); margin-top:5px; border-radius:8px;" placeholder="Valor R$" step="0.01">
                         </div>
@@ -4112,26 +4112,26 @@ const app = {
 
                 <!-- Vencimento -->
                 <div style="margin-bottom:20px;">
-                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">V├ílido at├® *</label>
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Válido até *</label>
                     <input type="date" id="totem-plano-venc" class="glass"
                         style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px;"
                         value="${d30str}">
-                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Padr├úo: 30 dias a partir de hoje</p>
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Padrão: 30 dias a partir de hoje</p>
                 </div>
 
-                <!-- Observa├º├úo -->
+                <!-- Observação -->
                 <div style="margin-bottom:20px;">
-                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Observa├º├úo (opcional)</label>
+                    <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px; font-weight:600;">Observação (opcional)</label>
                     <input type="text" id="totem-plano-obs" class="glass"
                         style="width:100%; padding:12px; color:var(--text-primary); border-radius:10px;"
-                        placeholder="Ex: Renova├º├úo mensal, pago no balc├úo, etc.">
+                        placeholder="Ex: Renovação mensal, pago no balcão, etc.">
                 </div>
 
                 <p id="totem-plano-erro" style="color:#f87171; font-size:0.82rem; min-height:18px; margin-bottom:10px;"></p>
 
                 <button class="btn-primary" style="width:100%; padding:15px; font-size:1rem; font-weight:700; border-radius:12px; background:#f59e0b; color:#000;"
                     onclick="app._totemFinalizarPlano()">
-                    Ô£à CONFIRMAR E LIBERAR PLANO
+                    ✅ CONFIRMAR E LIBERAR PLANO
                 </button>
             </div>
         `);
@@ -4182,7 +4182,7 @@ const app = {
         const showing = form.style.display !== 'none';
         form.style.display = showing ? 'none' : 'block';
         sel.disabled = !showing;
-        btn.textContent = showing ? '+ Cadastrar novo cliente' : 'Ô£ò Usar cliente existente';
+        btn.textContent = showing ? '+ Cadastrar novo cliente' : '✕ Usar cliente existente';
         if (!showing) { sel.value = ''; }
     },
 
@@ -4244,12 +4244,12 @@ const app = {
             if (!m) return 'dinheiro';
             const s = m.toLowerCase();
             if (s.includes('pix')) return 'pix';
-            if (s.includes('debito') || s.includes('d├®bito')) return 'debito';
-            if (s.includes('credito') || s.includes('cr├®dito')) return 'credito';
+            if (s.includes('debito') || s.includes('débito')) return 'debito';
+            if (s.includes('credito') || s.includes('crédito')) return 'credito';
             return 'dinheiro';
         };
 
-        // Lan├ºar transa├º├úo no faturamento do dia / caixa
+        // Lançar transação no faturamento do dia / caixa
         if (payment === 'Misto') {
             const val1 = parseFloat(document.getElementById('totem-split-amount-1')?.value) || 0;
             const val2 = parseFloat(document.getElementById('totem-split-amount-2')?.value) || 0;
@@ -4257,18 +4257,18 @@ const app = {
             const m2 = document.getElementById('totem-split-method-2')?.value || 'PIX';
 
             if (planPrice > 0 && Math.abs((val1 + val2) - planPrice) > 0.01) {
-                if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) ├® diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
+                if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor do plano (R$ ${planPrice.toFixed(2)}). Deseja continuar?`)) return;
             }
 
             if (val1 > 0) {
-                this.addTransaction('in', `Plano/Conv├¬nio: ${planName} (${customerName}) [Parte 1/${m1}]`, val1, 'plano', getM(m1));
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName}) [Parte 1/${m1}]`, val1, 'plano', getM(m1));
             }
             if (val2 > 0) {
-                this.addTransaction('in', `Plano/Conv├¬nio: ${planName} (${customerName}) [Parte 2/${m2}]`, val2, 'plano', getM(m2));
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName}) [Parte 2/${m2}]`, val2, 'plano', getM(m2));
             }
         } else {
             if (planPrice > 0) {
-                this.addTransaction('in', `Plano/Conv├¬nio: ${planName} (${customerName})`, planPrice, 'plano', getM(payment));
+                this.addTransaction('in', `Plano/Convênio: ${planName} (${customerName})`, planPrice, 'plano', getM(payment));
             }
         }
 
@@ -4292,7 +4292,7 @@ const app = {
         this.saveState();
         this.closeModal();
 
-        // Limpa dados tempor├írios
+        // Limpa dados temporários
         delete this._totemRecepNome;
         delete this._totemRecepPin;
 
@@ -4300,10 +4300,10 @@ const app = {
         this._renderTotemPlanos(document.getElementById('totem-tab-content'));
 
         // Feedback visual
-        this.showToast(`Ô£à Plano liberado! R$ ${planPrice.toFixed(2)} somado ao faturamento do dia.`, 'success');
+        this.showToast(`✅ Plano liberado! R$ ${planPrice.toFixed(2)} somado ao faturamento do dia.`, 'success');
     },
 
-    // ÔöÇÔöÇÔöÇ TOTEM: PDV ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ─── TOTEM: PDV ───────────────────────────────────────────────────────────
     _renderTotemPDV(container) {
         const cart = this.state.cart || [];
         const seller = this.state.pdvSeller;
@@ -4322,7 +4322,7 @@ const app = {
 
                 <!-- Barra Scanner USB -->
                 <div class="glass" style="padding:12px 16px; margin-bottom:16px; border-left:4px solid #7c3aed; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.4rem; flex-shrink:0;">­ƒôÂ</span>
+                    <span style="font-size:1.4rem; flex-shrink:0;">📶</span>
                     <div style="flex:1; position:relative; min-width:0;">
                         <input type="text" id="totem-scanner-input" class="glass"
                                style="width:100%; padding:9px 40px 9px 12px; color:var(--text-primary); font-size:0.95rem; font-family:monospace;
@@ -4330,7 +4330,7 @@ const app = {
                                placeholder="Aponte o leitor para o produto..."
                                autocomplete="off"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ app.pdvAddToCartByCode(c); this.value=''; app.setTotemTab('pdv'); } }">
-                        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0.4;">ÔåÁ</span>
+                        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0.4;">↵</span>
                     </div>
                     <span style="font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;">Leitor USB</span>
                 </div>
@@ -4338,22 +4338,22 @@ const app = {
                 <!-- Abas Mobile [NOVO] -->
                 <div class="pdv-mobile-tabs">
                     <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="window.app.state.pdvTab='catalog'; window.app.setTotemTab('pdv')">
-                        ­ƒôª Cat├ílogo
+                        📦 Catálogo
                     </div>
                     <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="window.app.state.pdvTab='cart'; window.app.setTotemTab('pdv')">
-                        ­ƒøÆ Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.7rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
+                        🛒 Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.7rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
                     </div>
                 </div>
 
                 <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
-                    <!-- Cat├ílogo -->
+                    <!-- Catálogo -->
                     <div class="pdv-catalog-column glass-panel">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
                             <div style="position: relative; flex: 1;">
                                 <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
                                 <input type="text" id="totem-pdv-search" class="glass"
                                        style="width:100%; padding:12px 12px 12px 42px; color:var(--text-primary); font-size: 0.95rem; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);"
-                                       placeholder="O que voc├¬ procura?" oninput="app.renderTotemPDVGrid(this.value)">
+                                       placeholder="O que você procura?" oninput="app.renderTotemPDVGrid(this.value)">
                             </div>
                         </div>
 
@@ -4363,7 +4363,7 @@ const app = {
                                 <button class="category-tab ${this.state.totemCategory === cat || (!this.state.totemCategory && cat === 'Todos') ? 'active' : ''}"
                                         style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
                                         onclick="app.state.totemCategory='${cat}'; app.renderTotemPDVGrid()">
-                                    ${cat === 'Todos' ? '­ƒôé ' : cat === 'Cabelo' ? '­ƒº┤ ' : cat === 'Barba' ? '­ƒºö ' : cat === 'Bebidas' ? '­ƒÑñ ' : 'Ô£¿ '}${cat}
+                                    ${cat === 'Todos' ? '📂 ' : cat === 'Cabelo' ? '🧴 ' : cat === 'Barba' ? '🧔 ' : cat === 'Bebidas' ? '🥤 ' : '✨ '}${cat}
                                 </button>
                             `).join('')}
                         </div>
@@ -4387,7 +4387,7 @@ const app = {
                             ${cart.length === 0
                 ? `
                                 <div style="text-align:center; padding: 30px 15px; border: 2px dashed rgba(255,255,255,0.05); border-radius: 12px;">
-                                    <div style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;">­ƒøì´©Å</div>
+                                    <div style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;">🛍️</div>
                                     <p style="color: var(--text-secondary); font-size: 0.85rem;">Carrinho vazio</p>
                                 </div>
                                 `
@@ -4405,10 +4405,10 @@ const app = {
                                 <div>
                                     <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Pagamento</label>
                                     <select id="totem-pdv-payment" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;">
-                                        <option value="Dinheiro">Dinheiro ­ƒÆÁ</option>
-                                        <option value="PIX">PIX ÔÜí</option>
-                                        <option value="Cart├úo de D├®bito">D├®bito ­ƒÆ│</option>
-                                        <option value="Cart├úo de Cr├®dito">Cr├®dito ­ƒÆ│</option>
+                                        <option value="Dinheiro">Dinheiro 💵</option>
+                                        <option value="PIX">PIX ⚡</option>
+                                        <option value="Cartão de Débito">Débito 💳</option>
+                                        <option value="Cartão de Crédito">Crédito 💳</option>
                                     </select>
                                 </div>
                             </div>
@@ -4417,9 +4417,9 @@ const app = {
                                 <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Destino</label>
                                 <select id="totem-pdv-target" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;"
                                         onchange="document.getElementById('totem-pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('totem-pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
-                                    <option value="cliente">­ƒæñ Cliente</option>
-                                    <option value="barbeiro">Ô£é´©Å Uso Pr├│prio</option>
-                                    <option value="adm">ÔÜÖ´©Å Uso Interno</option>
+                                    <option value="cliente">👤 Cliente</option>
+                                    <option value="barbeiro">✂️ Uso Próprio</option>
+                                    <option value="adm">⚙️ Uso Interno</option>
                                 </select>
                             </div>
 
@@ -4434,7 +4434,7 @@ const app = {
                                 <label style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Vendedor</label>
                                 <select id="totem-pdv-seller" class="glass" style="width:100%; padding:8px; color:var(--text-primary); border-radius: 6px;"
                                         onchange="app.state.pdvSeller=this.value||null;">
-                                    <option value="">-- Sem comiss├úo --</option>
+                                    <option value="">-- Sem comissão --</option>
                                     ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
                                 </select>
                             </div>
@@ -4516,7 +4516,7 @@ const app = {
         let voucherId = null;
 
         if (target === 'barbeiro') {
-            // Lan├ºar Vale para o barbeiro consumidor
+            // Lançar Vale para o barbeiro consumidor
             voucherId = Date.now() + 2;
             if (!this.state.vouchers) this.state.vouchers = [];
             this.state.vouchers.push({
@@ -4526,23 +4526,23 @@ const app = {
                 date: now.toISOString(),
                 note: `Consumo PDV Totem: ${cart.length} item(ns)`
             });
-            // Transa├º├úo via faturamento
-            const desc = cart.length === 1 ? `PDV (Uso Pr├│prio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Pr├│prio): ${cart.length} itens - ${consumer}`;
+            // Transação via faturamento
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
             transactionId = this.addTransaction('in', desc, total, 'produto', 'faturamento');
         } else if (target === 'adm') {
-            // Apenas baixa de estoque, sem transa├º├úo financeira
+            // Apenas baixa de estoque, sem transação financeira
         } else {
             let method = 'dinheiro';
             if (payment === 'PIX') method = 'pix';
-            if (payment === 'Cart├úo de D├®bito') method = 'debito';
-            if (payment === 'Cart├úo de Cr├®dito') method = 'credito';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
             const desc = cart.length === 1
                 ? `PDV: ${cart[0].name} (x${cart[0].qty})`
                 : `PDV: ${cart.length} produtos`;
             transactionId = this.addTransaction('in', desc, total, 'produto', method);
         }
 
-        // Registrar hist├│rico individual e baixar estoque
+        // Registrar histórico individual e baixar estoque
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
             if (product) {
@@ -4579,26 +4579,26 @@ const app = {
 
         setTimeout(() => {
             if (target === 'barbeiro') {
-                alert(`Ô£à Consumo registrado!\nR$ ${total.toFixed(2)} ser├í descontado do faturamento de ${consumer.split(' ')[0]}.`);
+                alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
             } else if (target === 'adm') {
-                alert(`Ô£à Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
+                alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
             } else {
-                const msg = seller && totalComm > 0 ? `\n­ƒÆ╣ Comiss├úo de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
-                alert(`Ô£à Venda finalizada!\n­ƒÆ░ Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
+                const msg = seller && totalComm > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalComm.toFixed(2)}` : '';
+                alert(`✅ Venda finalizada!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${msg}`);
             }
             this.setTotemTab('pdv');
         }, 50);
     },
 
-    // ÔöÇÔöÇÔöÇ TOTEM: ESTOQUE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ─── TOTEM: ESTOQUE ───────────────────────────────────────────────────────
     _renderTotemEstoque(container) {
         container.innerHTML = `
             <div class="fade-in">
                 <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px;">
-                    <h2 style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">­ƒôª Estoque de Produtos</h2>
+                    <h2 style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">📦 Estoque de Produtos</h2>
                     <div style="display:flex; gap:8px;">
                         <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;background:#7c3aed;" onclick="app._totemScanEstoque()">
-                            ­ƒôÂ Leitor USB
+                            📶 Leitor USB
                         </button>
                         ${this.state.user.role === 'admin' ? `
                             <button class="btn-primary" style="padding:8px 14px;font-size:0.82rem;" onclick="app.openProductModal(null); app._afterProductSaveCallback=()=>app.setTotemTab('estoque');">
@@ -4611,7 +4611,7 @@ const app = {
                 <div style="margin-bottom:14px;">
                     <input type="text" id="totem-stock-search" class="glass"
                            style="width:100%;padding:9px 12px;color:var(--text-primary);"
-                           placeholder="­ƒöì Buscar por nome ou c├│digo..."
+                           placeholder="🔍 Buscar por nome ou código..."
                            oninput="app._totemStockSearch(this.value)">
                 </div>
 
@@ -4632,19 +4632,19 @@ const app = {
             <div class="glass" style="padding:13px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
                 <div style="flex:1;min-width:0;">
                     <p style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">${p.name}</p>
-                    ${p.barcode ? `<p style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary);">­ƒöû ${p.barcode}</p>` : ''}
+                    ${p.barcode ? `<p style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary);">🔖 ${p.barcode}</p>` : ''}
                     <p style="font-size:0.78rem;color:var(--text-secondary);">Venda: <strong style="color:var(--accent-color);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
-                    <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ÔÜá´©Å' : p.stock <= 0 ? ' ÔØî Esgotado' : ''}</p>
+                    <p style="font-size:0.78rem;">Estoque: <strong style="color:${sc};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
                     ${this.state.user.role === 'admin' ? `
                         <div style="display:flex;align-items:center;gap:4px;">
-                            <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},-1);app.saveState();app.setTotemTab('estoque')">ÔêÆ</button>
+                            <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},-1);app.saveState();app.setTotemTab('estoque')">−</button>
                             <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock}</span>
                             <button class="glass" style="padding:5px 10px;font-weight:700;" onclick="app.updateStock(${p.id},1);app.saveState();app.setTotemTab('estoque')">+</button>
                         </div>
                         <button class="glass" style="padding:5px 12px;font-size:0.75rem;color:var(--accent-color);border:1px solid var(--glass-border);"
-                                onclick="app.openProductModal(${p.id})">Ô£Å´©Å Editar</button>
+                                onclick="app.openProductModal(${p.id})">✏️ Editar</button>
                     ` : `
                         <span style="min-width:24px;text-align:center;font-weight:700;color:${sc};">${p.stock} un.</span>
                     `}
@@ -4683,16 +4683,16 @@ const app = {
             window.deferredPrompt.prompt();
             window.deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                    console.log('Usu├írio aceitou a instala├º├úo do PWA');
+                    console.log('Usuário aceitou a instalação do PWA');
                 } else {
-                    console.log('Usu├írio recusou a instala├º├úo do PWA');
+                    console.log('Usuário recusou a instalação do PWA');
                 }
                 window.deferredPrompt = null;
             });
         } else {
             const shopName = this.state.settings?.shopInfo?.name || this.state.settings?.shopName || (tenantId ? tenantId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '');
             const tenantInfo = shopName ? ` "${shopName}"` : '';
-            alert(`Para criar e instalar o aplicativo${tenantInfo} no seu celular:\n\n­ƒô▒ Android: Toque nos 3 pontinhos do navegador e selecione "Instalar Aplicativo" ou "Adicionar ├á Tela Inicial".\n\n­ƒìÄ iPhone (iOS): Toque no bot├úo de Compartilhar (quadrado com seta para cima) no Safari e escolha "Adicionar ├á Tela de In├¡cio".`);
+            alert(`Para criar e instalar o aplicativo${tenantInfo} no seu celular:\n\n📱 Android: Toque nos 3 pontinhos do navegador e selecione "Instalar Aplicativo" ou "Adicionar à Tela Inicial".\n\n🍎 iPhone (iOS): Toque no botão de Compartilhar (quadrado com seta para cima) no Safari e escolha "Adicionar à Tela de Início".`);
         }
     },
 
@@ -4713,9 +4713,9 @@ const app = {
 
     isSessionExpired() {
         if (!this.state.user) return true;
-        // Se o usu├írio marcou "Mantenha-me logado", nunca expira por tempo (permanece sem limite de horas, s├│ sai se clicar em 'Sair')
+        // Se o usuário marcou "Mantenha-me logado", nunca expira por tempo (permanece sem limite de horas, só sai se clicar em 'Sair')
         if (this.state.user.keepLoggedIn) return false;
-        // Se for sess├úo tempor├íria e tem expiresAt definido, verifica se expirou
+        // Se for sessão temporária e tem expiresAt definido, verifica se expirou
         if (this.state.user.expiresAt && Date.now() > this.state.user.expiresAt) return true;
         return false;
     },
@@ -4784,13 +4784,13 @@ const app = {
                 animation: birthdayPulse 3s ease-in-out infinite;
             ">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-                    <span style="font-size:1.8rem; animation: spin 4s linear infinite; display:inline-block;">­ƒÄé</span>
+                    <span style="font-size:1.8rem; animation: spin 4s linear infinite; display:inline-block;">🎂</span>
                     <div>
                         <h3 style="font-size:1rem; font-weight:800; color:#ff69b4; margin:0; letter-spacing:0.5px;">
-                            ­ƒÄë ANIVERSARIANTES DE HOJE!
+                            🎉 ANIVERSARIANTES DE HOJE!
                         </h3>
                         <p style="font-size:0.72rem; color:var(--text-secondary); margin:2px 0 0;">
-                            ${birthdays.length} cliente${birthdays.length > 1 ? 's fazem' : ' faz'} anivers├írio hoje
+                            ${birthdays.length} cliente${birthdays.length > 1 ? 's fazem' : ' faz'} aniversário hoje
                         </p>
                     </div>
                 </div>
@@ -4801,8 +4801,8 @@ const app = {
             const firstName = (c.name && typeof c.name === 'string') ? c.name.split(' ')[0] : 'Cliente';
             const fullName = c.name || 'Cliente';
             const age = getAge(c.birthDate);
-            const ageText = age ? ` ┬À ${age} anos` : '';
-            const link = `https://wa.me/55${phone}?text=Parab├®ns%20${firstName}!%20nossa%20equipe%20te%20deseja%20um%20feliz%20anivers├írio!%20­ƒÑ│­ƒÄé`;
+            const ageText = age ? ` · ${age} anos` : '';
+            const link = `https://wa.me/55${phone}?text=Parabéns%20${firstName}!%20nossa%20equipe%20te%20deseja%20um%20feliz%20aniversário!%20🥳🎂`;
             const hasPhone = phone.length >= 10;
 
             return `
@@ -4822,11 +4822,11 @@ const app = {
                                     display:flex; align-items:center; justify-content:center;
                                     font-size:1.2rem; flex-shrink:0;
                                     box-shadow:0 2px 8px rgba(255,20,147,0.4);
-                                ">­ƒÄë</div>
+                                ">🎉</div>
                                 <div>
                                     <p style="font-weight:700; font-size:0.92rem; color:var(--text-primary); margin:0;">${fullName}</p>
                                     <p style="font-size:0.72rem; color:var(--text-secondary); margin:2px 0 0;">
-                                        ${hasPhone ? `­ƒô▒ ${c.phone}` : 'Sem telefone cadastrado'}${ageText}
+                                        ${hasPhone ? `📱 ${c.phone}` : 'Sem telefone cadastrado'}${ageText}
                                     </p>
                                 </div>
                             </div>
@@ -4840,13 +4840,13 @@ const app = {
                                            flex-shrink:0;"
                                     onmouseover="this.style.transform='scale(1.04)'; this.style.boxShadow='0 5px 14px rgba(37,211,102,0.5)'"
                                     onmouseout="this.style.transform=''; this.style.boxShadow='0 3px 10px rgba(37,211,102,0.35)'">
-                                ­ƒô▒ Parabenizar no WhatsApp
+                                📱 Parabenizar no WhatsApp
                             </button>` : `
                             <button onclick="app.markBirthdayCongratulated(${c.id}, null)"
                                     style="padding:9px 16px; font-size:0.78rem; font-weight:700;
                                            background:rgba(255,255,255,0.08); color:var(--text-secondary); border:1px solid var(--glass-border);
                                            border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
-                                Ô£ô Marcar como parabenizado
+                                ✓ Marcar como parabenizado
                             </button>`}
                         </div>`;
         }).join('')}
@@ -4878,7 +4878,7 @@ const app = {
         const strId = String(id);
         if (!this.state._deletedIds.includes(strId)) {
             this.state._deletedIds.push(strId);
-            console.log(`­ƒùæ´©Å Registrado ID exclu├¡do localmente: ${strId}`);
+            console.log(`🗑️ Registrado ID excluído localmente: ${strId}`);
         }
     },
 
@@ -4886,8 +4886,8 @@ const app = {
         const transId = Date.now() + Math.floor(Math.random() * 1000);
         const cleanAmount = parseFloat(amount) || 0;
 
-        // ÔöÇÔöÇ PROTE├ç├âO ANTI-DUPLICA├ç├âO ÔöÇÔöÇ
-        // Verifica se uma transa├º├úo id├¬ntica foi registrada nos ├║ltimos 60 segundos
+        // ── PROTEÇÃO ANTI-DUPLICAÇÃO ──
+        // Verifica se uma transação idêntica foi registrada nos últimos 60 segundos
         const now = Date.now();
         const recentDuplicate = (this.state.transactions || []).find(t => {
             const tTime = t.timestamp ? new Date(t.timestamp).getTime() : t.id;
@@ -4900,13 +4900,13 @@ const app = {
         });
 
         if (recentDuplicate) {
-            console.warn('ÔÜá´©Å Transa├º├úo duplicada bloqueada:', description, cleanAmount);
-            return recentDuplicate.id; // Retorna o ID da transa├º├úo existente sem criar nova
+            console.warn('⚠️ Transação duplicada bloqueada:', description, cleanAmount);
+            return recentDuplicate.id; // Retorna o ID da transação existente sem criar nova
         }
 
         const transaction = {
             id: transId,
-            date: new Date().toLocaleDateString('en-CA'), // Usamos YYYY-MM-DD local para consist├¬ncia no filtro
+            date: new Date().toLocaleDateString('en-CA'), // Usamos YYYY-MM-DD local para consistência no filtro
             timestamp: new Date().toISOString(),
             type, // 'in' ou 'out'
             description,
@@ -4923,7 +4923,7 @@ const app = {
     saveOpeningBalance(date, amount) {
         if (!this.state.openingBalances) this.state.openingBalances = {};
 
-        // Parsing robusto para valores monet├írios (troca v├¡rgula por ponto)
+        // Parsing robusto para valores monetários (troca vírgula por ponto)
         let cleanAmount = String(amount).replace(',', '.');
         this.state.openingBalances[date] = parseFloat(cleanAmount) || 0;
 
@@ -4933,7 +4933,7 @@ const app = {
         const btn = document.querySelector('[onclick*="saveOpeningBalance"]');
         if (btn) {
             const original = btn.innerHTML;
-            btn.innerHTML = 'Ô£à Salvo';
+            btn.innerHTML = '✅ Salvo';
             btn.style.background = '#15803d';
             setTimeout(() => {
                 if (this.state.view === 'admin-cashflow') this.render('admin-cashflow');
@@ -4944,25 +4944,25 @@ const app = {
     },
 
     reconcileTransactions() {
-        console.log('­ƒöì Iniciando reconcilia├º├úo de transa├º├Áes...');
+        console.log('🔍 Iniciando reconciliação de transações...');
         const appointments = (this.state.appointments || []).filter(a => a.status === 'finalizado');
         const transactions = this.state.transactions || [];
         let count = 0;
 
         appointments.forEach(apt => {
-            // Se o agendamento n├úo tem transactionId, ou se a transa├º├úo referenciada n├úo existe mais
+            // Se o agendamento não tem transactionId, ou se a transação referenciada não existe mais
             const exists = transactions.find(t => t.id === apt.transactionId || (t.type === 'in' && t.description.includes(apt.customer) && t.amount === apt.price && t.date === apt.date));
 
             if (!exists && apt.price > 0) {
-                console.log('Ô×ò Recuperando transa├º├úo perdida para:', apt.customer);
+                console.log('➕ Recuperando transação perdida para:', apt.customer);
 
                 let mappedMethod = 'dinheiro';
                 const p = (apt.payment || '').toUpperCase();
                 if (p === 'PIX') mappedMethod = 'pix';
-                if (p.includes('D├ëBITO') || p.includes('DEBITO')) mappedMethod = 'debito';
-                if (p.includes('CR├ëDITO') || p.includes('CREDITO')) mappedMethod = 'credito';
+                if (p.includes('DÉBITO') || p.includes('DEBITO')) mappedMethod = 'debito';
+                if (p.includes('CRÉDITO') || p.includes('CREDITO')) mappedMethod = 'credito';
 
-                const desc = `Servi├ºo: ${apt.service || 'Geral'} (${apt.customer}) [Recuperado]`;
+                const desc = `Serviço: ${apt.service || 'Geral'} (${apt.customer}) [Recuperado]`;
                 const transId = Date.now() + Math.floor(Math.random() * 1000);
 
                 const transaction = {
@@ -4983,7 +4983,7 @@ const app = {
         });
 
         if (count > 0) {
-            console.log(`Ô£à Reconcilia├º├úo conclu├¡da: ${count} transa├º├Áes recuperadas.`);
+            console.log(`✅ Reconciliação concluída: ${count} transações recuperadas.`);
             this.saveState();
         }
 
@@ -4995,15 +4995,15 @@ const app = {
             const exists = transactions.find(t => t.id === sale.transactionId || (t.type === 'in' && t.description.includes(sale.productName) && t.amount === sale.total && t.date === sale.date));
 
             if (!exists && sale.total > 0) {
-                console.log('Ô×ò Recuperando transa├º├úo de produto perdida:', sale.productName);
+                console.log('➕ Recuperando transação de produto perdida:', sale.productName);
 
                 let method = 'dinheiro';
                 if (sale.target === 'barbeiro') method = 'faturamento';
                 else {
                     const p = (sale.payment || '').toUpperCase();
                     if (p === 'PIX') method = 'pix';
-                    if (p.includes('D├ëBITO') || p.includes('DEBITO')) method = 'debito';
-                    if (p.includes('CR├ëDITO') || p.includes('CREDITO')) method = 'credito';
+                    if (p.includes('DÉBITO') || p.includes('DEBITO')) method = 'debito';
+                    if (p.includes('CRÉDITO') || p.includes('CREDITO')) method = 'credito';
                 }
 
                 const desc = sale.target === 'barbeiro' ? `Consumo Barbeiro: ${sale.productName} (${sale.barberName})` : `Venda PDV: ${sale.productName}`;
@@ -5027,7 +5027,7 @@ const app = {
         });
 
         if (pCount > 0) {
-            console.log(`Ô£à Reconcilia├º├úo de PDV conclu├¡da: ${pCount} transa├º├Áes recuperadas.`);
+            console.log(`✅ Reconciliação de PDV concluída: ${pCount} transações recuperadas.`);
             this.saveState();
         }
     },
@@ -5043,13 +5043,13 @@ const app = {
         transactions.forEach(t => {
             const hasApt = appointments.some(a => a.transactionId === t.id);
             if (!hasApt) {
-                let service = 'Servi├ºo Recuperado';
+                let service = 'Serviço Recuperado';
                 let customer = 'Cliente Recuperado';
                 
                 try {
                     if (t.description.includes('(') && t.description.includes(')')) {
                         const parts = t.description.split('(');
-                        service = parts[0].replace('Servi├ºo:', '').trim();
+                        service = parts[0].replace('Serviço:', '').trim();
                         customer = parts[1].replace(')', '').trim();
                     }
                 } catch (e) { }
@@ -5075,9 +5075,9 @@ const app = {
         if (recovered > 0) {
             this.saveState();
             this.render(this.state.view);
-            alert(`Ô£à Sucesso! ${recovered} atendimentos foram recuperados do caixa e voltaram para a agenda hoje.\n\nEles foram colocados no hor├írio das 08:00. Voc├¬ pode arrast├í-los se precisar.`);
+            alert(`✅ Sucesso! ${recovered} atendimentos foram recuperados do caixa e voltaram para a agenda hoje.\n\nEles foram colocados no horário das 08:00. Você pode arrastá-los se precisar.`);
         } else {
-            alert('Nenhum agendamento ├│rf├úo encontrado. A agenda j├í bate com o caixa.');
+            alert('Nenhum agendamento órfão encontrado. A agenda já bate com o caixa.');
         }
     },
 
@@ -5095,7 +5095,7 @@ const app = {
 
         const subtitle = s.welcomeMessage || s.subtitle || theme.subtitle;
         const name = s.shopName || s.shopInfo?.name || ('Nossa ' + this.getTerm('shopTerm'));
-        const buttonText = s.buttonText || 'AGENDAR HOR├üRIO';
+        const buttonText = s.buttonText || 'AGENDAR HORÁRIO';
         const heroImg = s.heroImg || s.heroUrl || theme.hero;
 
         const plans = this.state.subscriptionPlans || [];
@@ -5141,7 +5141,7 @@ const app = {
                     <div style="text-align: center; margin-bottom: 60px;">
                         <div class="premium-badge">EXCLUSIVO</div>
                         <h2 style="font-size: 2.8rem; margin-bottom: 10px; color: var(--text-primary); text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);">Clube de Assinaturas</h2>
-                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Seja VIP e tenha benef├¡cios ilimitados o m├¬s inteiro.</p>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Seja VIP e tenha benefícios ilimitados o mês inteiro.</p>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
                         ${plans.map(p => `
@@ -5150,9 +5150,9 @@ const app = {
                                 <h3 style="font-size: 1.6rem; margin-bottom: 15px; color: var(--accent-readable);">${p.name}</h3>
                                 <div style="font-size: 2.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
                                     <span style="font-size: 1.2rem; vertical-align: top; color: var(--accent-readable);">R$</span>${Number(p.price).toFixed(2).replace('.', ',')}
-                                    <span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 400; text-shadow: none;">/m├¬s</span>
+                                    <span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 400; text-shadow: none;">/mês</span>
                                 </div>
-                                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; min-height: 40px; display: flex; align-items: center; justify-content: center;">${p.description || 'Benef├¡cios VIP inclusos'}</p>
+                                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; min-height: 40px; display: flex; align-items: center; justify-content: center;">${p.description || 'Benefícios VIP inclusos'}</p>
                                 <button class="btn-primary" style="width: 100%; padding: 15px; font-size: 1rem; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);" onclick="app.openSelfSubscriptionModal('${p.name}')">Quero Assinar</button>
                             </div>
                         `).join('')}
@@ -5164,13 +5164,13 @@ const app = {
         let heroDesc = s.heroDescription;
         if (!heroDesc) {
             if (type === 'beauty_salon') {
-                heroDesc = 'A melhor experi├¬ncia em sal├úo de beleza e est├®tica da regi├úo. Estilo, sofistica├º├úo e atendimento de excel├¬ncia em um s├│ lugar.';
+                heroDesc = 'A melhor experiência em salão de beleza e estética da região. Estilo, sofisticação e atendimento de excelência em um só lugar.';
             } else if (type === 'manicure') {
-                heroDesc = 'Cuidado impec├ível, estilo e sofistica├º├úo para suas unhas. T├®cnicas avan├ºadas e biosseguran├ºa em um s├│ lugar.';
+                heroDesc = 'Cuidado impecável, estilo e sofisticação para suas unhas. Técnicas avançadas e biossegurança em um só lugar.';
             } else if (type === 'clinic') {
-                heroDesc = 'Excel├¬ncia em procedimentos est├®ticos e sa├║de. Tecnologia avan├ºada, cuidado humanizado e resultados comprovados.';
+                heroDesc = 'Excelência em procedimentos estéticos e saúde. Tecnologia avançada, cuidado humanizado e resultados comprovados.';
             } else {
-                heroDesc = `A melhor experi├¬ncia em ${this.getTerm('shopTerm').toLowerCase()} da regi├úo. Estilo, tradi├º├úo e atendimento de excel├¬ncia em um s├│ lugar.`;
+                heroDesc = `A melhor experiência em ${this.getTerm('shopTerm').toLowerCase()} da região. Estilo, tradição e atendimento de excelência em um só lugar.`;
             }
         }
 
@@ -5209,8 +5209,8 @@ const app = {
             <section id="location" style="padding: 100px 20px; background: var(--surface-color);">
                 <div style="max-width: 1100px; margin: 0 auto;">
                     <div style="text-align: center; margin-bottom: 60px;">
-                        <h2 style="font-size: 2.2rem; margin-bottom: 15px;">Localiza├º├úo & Contato</h2>
-                        <p style="color: var(--text-secondary);">Venha nos visitar e conhecer nosso espa├ºo</p>
+                        <h2 style="font-size: 2.2rem; margin-bottom: 15px;">Localização & Contato</h2>
+                        <p style="color: var(--text-secondary);">Venha nos visitar e conhecer nosso espaço</p>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; align-items: stretch;">
                         <div class="glass fade-in-up" style="overflow: hidden; display: flex; flex-direction: column;">
@@ -5223,33 +5223,33 @@ const app = {
                                     allowfullscreen=""
                                     loading="lazy"
                                     referrerpolicy="no-referrer-when-downgrade"
-                                    title="Localiza├º├úo da loja no Google Maps">
+                                    title="Localização da loja no Google Maps">
                                   </iframe>`
                                 : `<div style="width:100%;height:300px;background:rgba(255,255,255,0.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-bottom:1px solid var(--glass-border);">
-                                     <span style="font-size:3rem;opacity:0.3;">­ƒôì</span>
-                                     <p style="font-size:0.85rem;opacity:0.4;text-align:center;padding:0 20px;">Mapa indispon├¡vel.<br>Cadastre o endere├ºo no painel administrativo.</p>
+                                     <span style="font-size:3rem;opacity:0.3;">📍</span>
+                                     <p style="font-size:0.85rem;opacity:0.4;text-align:center;padding:0 20px;">Mapa indisponível.<br>Cadastre o endereço no painel administrativo.</p>
                                    </div>`
                             }
                             <div style="padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-readable); margin-bottom: 10px;">${s.address || 'Endere├ºo n├úo cadastrado'}</p>
-                                 <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Por favor, atualize o endere├ºo no painel administrativo.'}</p>
-                                 ${s.phone ? `<p style="font-weight: bold; color: var(--accent-readable); margin-top: 15px; font-size: 1.1rem;">­ƒô× ${s.phone}</p>` : ''}
+                                 <p style="font-weight: 700; font-size: 1.2rem; color: var(--accent-readable); margin-bottom: 10px;">${s.address || 'Endereço não cadastrado'}</p>
+                                 <p style="font-size: 0.95rem; opacity: 0.8; color: var(--text-secondary);">${s.address ? '' : 'Por favor, atualize o endereço no painel administrativo.'}</p>
+                                 ${s.phone ? `<p style="font-weight: bold; color: var(--accent-readable); margin-top: 15px; font-size: 1.1rem;">📞 ${s.phone}</p>` : ''}
                                  ${s.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}" target="_blank" style="text-decoration:none;">
                                      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); color: var(--accent-readable); font-size: 0.85rem; font-weight: 600;">
-                                         ­ƒôì VER NO GOOGLE MAPS
+                                         📍 VER NO GOOGLE MAPS
                                      </div>
                                  </a>` : ''}
                             </div>
                         </div>
                         <div class="glass fade-in-up" style="padding: 40px; display: flex; flex-direction: column; justify-content: center;">
-                            <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-readable); text-align: center;">Hor├írios de Funcionamento</h3>
+                            <h3 style="margin-bottom: 30px; font-size: 1.4rem; color: var(--accent-readable); text-align: center;">Horários de Funcionamento</h3>
                             <div style="display: flex; flex-direction: column; gap: 20px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
                                     <span style="font-weight: 600;">Segunda a Quarta</span>
                                     <span style="color: var(--text-secondary);">${s.hours1 || '09:00 - 20:00'}</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
-                                    <span style="font-weight: 600;">Quinta a S├íbado</span>
+                                    <span style="font-weight: 600;">Quinta a Sábado</span>
                                     <span style="color: var(--text-secondary);">${s.hours2 || '09:00 - 21:00'}</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -5267,8 +5267,8 @@ const app = {
                 <div style="margin-bottom: 25px;">
                     <img src="${s.logoUrl || 'logo_agendamento.png'}" style="width: 120px; opacity: 0.8; filter: grayscale(1) brightness(2);">
                 </div>
-                <p style="opacity: 0.5; font-size: 0.85rem;">┬® 2026 ${name}. Todos os direitos reservados.</p>
-                <p style="opacity: 0.3; font-size: 0.7rem; margin-top: 10px;">Desenvolvido com excel├¬ncia tecnol├│gica.</p>
+                <p style="opacity: 0.5; font-size: 0.85rem;">© 2026 ${name}. Todos os direitos reservados.</p>
+                <p style="opacity: 0.3; font-size: 0.7rem; margin-top: 10px;">Desenvolvido com excelência tecnológica.</p>
             </footer>
         `;
     },
@@ -5277,14 +5277,14 @@ const app = {
         this.openModal('Clube de Assinaturas', `
             <section class="fade-in">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <span style="font-size: 2.5rem;">­ƒÆÄ</span>
+                    <span style="font-size: 2.5rem;">💎</span>
                     <h3 style="margin: 10px 0 5px; color: var(--accent-readable); font-size: 1.3rem;">Assinar Plano VIP</h3>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Plano escolhido: <strong style="color: var(--accent-color);">${planName}</strong></p>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; text-align: left;">Seu Nome Completo *</label>
-                    <input type="text" id="sub-client-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: Jo├úo da Silva">
+                    <input type="text" id="sub-client-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: João da Silva">
                 </div>
                 <div style="margin-bottom: 25px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; text-align: left;">Seu WhatsApp *</label>
@@ -5292,7 +5292,7 @@ const app = {
                 </div>
 
                 <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--accent-color); text-align: left;">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">Voc├¬ ser├í redirecionado para o nosso WhatsApp oficial para enviar o comprovante de pagamento via PIX. Ap├│s isso, nossa equipe ir├í liberar seu plano imediatamente no sistema!</p>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">Você será redirecionado para o nosso WhatsApp oficial para enviar o comprovante de pagamento via PIX. Após isso, nossa equipe irá liberar seu plano imediatamente no sistema!</p>
                 </div>
 
                 <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="app.processSelfSubscription('${planName}')">
@@ -5311,7 +5311,7 @@ const app = {
             return;
         }
 
-        // Pr├®-cadastra o cliente na base se ainda n├úo existir
+        // Pré-cadastra o cliente na base se ainda não existir
         let customer = this.state.customers.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
         if (!customer) {
             const newId = this.state.customers.length ? Math.max(...this.state.customers.map(c => c.id || 0)) + 1 : 1;
@@ -5344,18 +5344,18 @@ const app = {
         // Envia para o WhatsApp do ADMIN/Barbearia
         const shopPhone = (this.state.settings.shopInfo && this.state.settings.shopInfo.phone) ? this.state.settings.shopInfo.phone.replace(/\D/g, '') : ''; 
         if (!shopPhone) {
-            alert('Aten├º├úo: O telefone da barbearia n├úo est├í configurado no painel. Avise a recep├º├úo sobre a sua assinatura!');
+            alert('Atenção: O telefone da barbearia não está configurado no painel. Avise a recepção sobre a sua assinatura!');
             return;
         }
 
-        const message = `Ol├í, me chamo *${name}*! ­ƒæï\n\nGostaria de entrar para o Clube de Assinaturas no plano: *${planName}* ­ƒÆÄ\n\nJ├í fiz meu cadastro no app, qual ├® a chave PIX para eu enviar o comprovante?`;
+        const message = `Olá, me chamo *${name}*! 👋\n\nGostaria de entrar para o Clube de Assinaturas no plano: *${planName}* 💎\n\nJá fiz meu cadastro no app, qual é a chave PIX para eu enviar o comprovante?`;
         const encodedMsg = encodeURIComponent(message);
         const whatsappUrl = `https://wa.me/55${shopPhone}?text=${encodedMsg}`;
 
         window.open(whatsappUrl, '_blank');
     },
 
-    // [MASTER IMPERSONATE] Verifica se h├í um token de acesso master na URL
+    // [MASTER IMPERSONATE] Verifica se há um token de acesso master na URL
     async checkMasterToken() {
         const urlParams = new URLSearchParams(window.location.search);
         const masterToken = urlParams.get('master_token');
@@ -5365,7 +5365,7 @@ const app = {
         try {
             // Aguardar o Firebase estar pronto
             if (!this.db) {
-                console.warn('[Master Token] Firebase n├úo inicializado ainda.');
+                console.warn('[Master Token] Firebase não inicializado ainda.');
                 return false;
             }
 
@@ -5374,14 +5374,14 @@ const app = {
             const snapshot = await get(tokenRef);
 
             if (!snapshot.exists()) {
-                console.warn('[Master Token] Token n├úo encontrado ou j├í utilizado.');
+                console.warn('[Master Token] Token não encontrado ou já utilizado.');
                 this.cleanMasterTokenFromURL();
                 return false;
             }
 
             const tokenData = snapshot.val();
 
-            // Verificar expira├º├úo
+            // Verificar expiração
             if (Date.now() > tokenData.expiresAt) {
                 console.warn('[Master Token] Token expirado.');
                 // Deletar token expirado
@@ -5395,16 +5395,16 @@ const app = {
             const expectedTenant = tokenData.tenantId === 'centauro-legacy' ? 'centauro' : tokenData.tenantId;
 
             if (expectedTenant !== currentTenant) {
-                console.warn(`[Master Token] TenantId n├úo confere. Esperado: ${expectedTenant}, Atual: ${currentTenant}`);
+                console.warn(`[Master Token] TenantId não confere. Esperado: ${expectedTenant}, Atual: ${currentTenant}`);
                 this.cleanMasterTokenFromURL();
                 return false;
             }
 
-            // Token v├ílido! Deletar do Firebase (uso ├║nico)
+            // Token válido! Deletar do Firebase (uso único)
             await set(ref(this.db, `master/impersonate_tokens/${masterToken}`), null);
-            console.log(`[Master Token] Ô£à Acesso master autorizado para tenant "${currentTenant}"`);
+            console.log(`[Master Token] ✅ Acesso master autorizado para tenant "${currentTenant}"`);
 
-            // Criar sess├úo de admin master tempor├íria (expira em 30 minutos)
+            // Criar sessão de admin master temporária (expira em 30 minutos)
             const expiresAt = Date.now() + (30 * 60 * 1000);
             this.state.user = {
                 id: 0,
@@ -5414,12 +5414,12 @@ const app = {
                 expiresAt: expiresAt
             };
 
-            // [CR├ìTICO] For├ºar data da agenda para HOJE e zerar lastUpdate para carregar a nuvem ao vivo
+            // [CRÍTICO] Forçar data da agenda para HOJE e zerar lastUpdate para carregar a nuvem ao vivo
             this.state.currentDate = this.getTodayDate();
             this.state.lastUpdate = 0;
             this.state._lastDataHash = null;
 
-            // Salvar sess├úo tempor├íria no sessionStorage (N├âO no localStorage permanente)
+            // Salvar sessão temporária no sessionStorage (NÃO no localStorage permanente)
             const sessionKey = `centauros_user_${currentTenant}`;
             sessionStorage.setItem(sessionKey, JSON.stringify({
                 ...this.state.user,
@@ -5427,7 +5427,7 @@ const app = {
                 loggedInAt: Date.now(),
                 expiresAt: expiresAt
             }));
-            // Purgar res├¡duo de localStorage para que a URL p├║blica da loja nunca abra o painel acidentalmente
+            // Purgar resíduo de localStorage para que a URL pública da loja nunca abra o painel acidentalmente
             localStorage.removeItem(sessionKey);
 
             // Limpar token da URL
@@ -5442,7 +5442,7 @@ const app = {
         }
     },
 
-    // Remove o master_token da URL sem recarregar a p├ígina
+    // Remove o master_token da URL sem recarregar a página
     cleanMasterTokenFromURL() {
         const url = new URL(window.location.href);
         url.searchParams.delete('master_token');
@@ -5450,7 +5450,7 @@ const app = {
     },
 
     renderLogin(container) {
-        // Se j├í est├í logado com sess├úo v├ílida e n├úo expirada, vai direto para o painel correspondente
+        // Se já está logado com sessão válida e não expirada, vai direto para o painel correspondente
         if (this.state.user && !this.isSessionExpired()) {
             if (this.state.user.role === 'admin') return this.navigateTo('admin-dash');
             if (this.state.user.role === 'totem') return this.navigateTo('totem-dash');
@@ -5468,15 +5468,15 @@ const app = {
                     <div style="margin-bottom: 30px;">
                         <img src="${logo}" style="width: 140px; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));">
                         <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; letter-spacing: -0.5px;">${shopTitle}</h2>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem;">├ürea Administrativa</p>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">Área Administrativa</p>
                     </div>
 
                     <div style="text-align: left;">
                         <div style="margin-bottom: 25px;">
-                            <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Usu├írio</label>
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Usuário</label>
                             <input type="text" id="username" class="glass" 
                                    style="width: 100%; padding: 14px; border-radius: 12px; color: var(--text-primary); border: 1.5px solid var(--glass-border); transition: all 0.3s;"
-                                   placeholder="Seu usu├írio..."
+                                   placeholder="Seu usuário..."
                                    onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 15px rgba(212, 175, 55, 0.1)';"
                                    onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
                         </div>
@@ -5484,7 +5484,7 @@ const app = {
                             <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Senha</label>
                             <input type="password" id="password" class="glass" 
                                    style="width: 100%; padding: 14px; border-radius: 12px; color: var(--text-primary); border: 1.5px solid var(--glass-border); transition: all 0.3s;"
-                                   placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó"
+                                   placeholder="••••••••"
                                    onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 15px rgba(212, 175, 55, 0.1)';"
                                    onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';">
                         </div>
@@ -5494,12 +5494,12 @@ const app = {
                         </div>
                         
                         <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.1rem; margin-bottom: 15px;" id="btn-do-login">Entrar no Sistema</button>
-                        <button class="btn-secondary" style="width: 100%; padding: 14px; opacity: 0.8;" id="btn-back">Voltar ao In├¡cio</button>
+                        <button class="btn-secondary" style="width: 100%; padding: 14px; opacity: 0.8;" id="btn-back">Voltar ao Início</button>
                     </div>
 
                     ${tenantId === 'centauro' ? `
                     <p style="margin-top: 30px; color: var(--text-secondary); font-size: 0.75rem; opacity: 0.6;">
-                        Dica: Use 'admin' ou 'barbeiro' para demonstra├º├úo.
+                        Dica: Use 'admin' ou 'barbeiro' para demonstração.
                     </p>` : ''}
                 </div>
             </section>
@@ -5516,7 +5516,7 @@ const app = {
             const currentTenantId = this.getTenantId();
 
             if (!currentTenantId) {
-                alert('Erro: Loja n├úo identificada. Por favor, acesse pelo link da sua loja.');
+                alert('Erro: Loja não identificada. Por favor, acesse pelo link da sua loja.');
                 btn.innerText = originalTxt;
                 btn.disabled = false;
                 return;
@@ -5529,7 +5529,7 @@ const app = {
                 (s.password && String(s.password).trim() === pass)
             );
 
-            // [RESILI├èNCIA CR├ìTICA] Se n├úo encontrou no estado local (ex: Firebase ainda carregando no mobile ou PWA rec├®m-aberto), busca diretamente na nuvem!
+            // [RESILIÊNCIA CRÍTICA] Se não encontrou no estado local (ex: Firebase ainda carregando no mobile ou PWA recém-aberto), busca diretamente na nuvem!
             if (!matchedUser && this.db) {
                 try {
                     const dbPath = (currentTenantId === 'centauro') ? 'database/staff' : `tenants/${currentTenantId}/staff`;
@@ -5549,9 +5549,9 @@ const app = {
             }
 
             if (matchedUser) {
-                // [SESS├âO] Configura├º├úo de tempo de vida:
-                // Se o usu├írio selecionou "Mantenha-me logado", permanece logado sem limite de horas (expira apenas ao clicar em 'Sair')
-                // Se N├âO marcou, ├® uma sess├úo tempor├íria que expira em 4 horas
+                // [SESSÃO] Configuração de tempo de vida:
+                // Se o usuário selecionou "Mantenha-me logado", permanece logado sem limite de horas (expira apenas ao clicar em 'Sair')
+                // Se NÃO marcou, é uma sessão temporária que expira em 4 horas
                 const keepLoggedIn = !!document.getElementById('keep-logged-in')?.checked;
                 const expiresAt = keepLoggedIn ? null : (Date.now() + 4 * 60 * 60 * 1000);
 
@@ -5589,10 +5589,10 @@ const app = {
                     this.navigateTo('barber-dash');
                 }
 
-                // [PUSH NOTIFICATION] Inicializar push ap├│s login
+                // [PUSH NOTIFICATION] Inicializar push após login
                 setTimeout(() => this.initPushNotifications(), 2000);
             } else {
-                alert('Credenciais inv├ílidas: Verifique o nome de usu├írio (' + user + ') ou senha digitados.');
+                alert('Credenciais inválidas: Verifique o nome de usuário (' + user + ') ou senha digitados.');
             }
         };
     },
@@ -5603,9 +5603,9 @@ const app = {
             <section class="fade-in" style="max-width: 600px; margin: 40px auto; padding: 20px;">
                 <div class="glass" style="padding: 40px; border-top: 5px solid var(--accent-color); border-radius: 24px;">
                     <div style="text-align: center; margin-bottom: 30px;">
-                        <div style="font-size: 3.5rem; margin-bottom: 15px;">­ƒÜÇ</div>
+                        <div style="font-size: 3.5rem; margin-bottom: 15px;">🚀</div>
                         <h2 style="font-family: 'Playfair Display'; font-size: 2rem; color: var(--text-primary); margin-bottom: 10px;">Quase Pronto!</h2>
-                        <p style="color: var(--text-secondary); line-height: 1.6;">Para come├ºar a usar o sistema, precisamos de algumas informa├º├Áes b├ísicas da sua barbearia.</p>
+                        <p style="color: var(--text-secondary); line-height: 1.6;">Para começar a usar o sistema, precisamos de algumas informações básicas da sua barbearia.</p>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -5633,17 +5633,17 @@ const app = {
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Endere├ºo Completo *
-                                <span style="font-weight:400;opacity:0.6;font-size:0.78rem;"> ÔÇö preenchido automaticamente pelo CEP</span>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Endereço Completo *
+                                <span style="font-weight:400;opacity:0.6;font-size:0.78rem;"> — preenchido automaticamente pelo CEP</span>
                             </label>
                             <input type="text" id="setup-address" class="glass"
                                 style="width: 100%; padding: 14px; color: var(--text-primary); border-radius: 12px;"
-                                placeholder="Rua, N├║mero, Bairro - Cidade/UF">
+                                placeholder="Rua, Número, Bairro - Cidade/UF">
                         </div>
 
                         <div style="margin-top: 10px; padding: 15px; background: rgba(212, 175, 55, 0.05); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
                             <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
-                                ­ƒÆí <strong>Dica:</strong> Digite o CEP e o endere├ºo ser├í preenchido automaticamente. Depois adicione o n├║mero do estabelecimento.
+                                💡 <strong>Dica:</strong> Digite o CEP e o endereço será preenchido automaticamente. Depois adicione o número do estabelecimento.
                             </p>
                         </div>
 
@@ -5663,7 +5663,7 @@ const app = {
         const address = document.getElementById('setup-address').value.trim();
 
         if (!phone || !address) {
-            alert('Por favor, preencha o Telefone e o Endere├ºo para continuar.\n\n­ƒÆí Dica: Digite o CEP para preencher o endere├ºo automaticamente, depois adicione o n├║mero.');
+            alert('Por favor, preencha o Telefone e o Endereço para continuar.\n\n💡 Dica: Digite o CEP para preencher o endereço automaticamente, depois adicione o número.');
             return;
         }
 
@@ -5675,16 +5675,16 @@ const app = {
 
         this.saveState();
         this.render('admin-dash');
-        alert('Ô£à Perfil configurado com sucesso! Bem-vindo ao Agendamento F├ícil BR.');
+        alert('✅ Perfil configurado com sucesso! Bem-vindo ao Agendamento Fácil BR.');
     },
 
 
-    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ UTILS: CEP AUTO-PREENCHIMENTO ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ──────── UTILS: CEP AUTO-PREENCHIMENTO ────────
     formatCep(input) {
         let v = input.value.replace(/\D/g, '').slice(0, 8);
         if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
         input.value = v;
-        // Dispara busca autom├ítica ao completar 8 d├¡gitos
+        // Dispara busca automática ao completar 8 dígitos
         if (v.replace('-', '').length === 8) {
             const ctx = input.id.startsWith('setup') ? 'setup' : 'settings';
             this.buscarCep(v, ctx);
@@ -5700,8 +5700,8 @@ const app = {
         if (!statusEl || !msgEl || !addrEl) return;
         if (cep.length !== 8) { statusEl.textContent = ''; msgEl.textContent = ''; return; }
 
-        statusEl.textContent = 'ÔÅ│';
-        msgEl.textContent = 'Buscando endere├ºo...';
+        statusEl.textContent = '⏳';
+        msgEl.textContent = 'Buscando endereço...';
         msgEl.style.color = 'var(--text-secondary)';
 
         try {
@@ -5709,27 +5709,27 @@ const app = {
             const data = await res.json();
 
             if (data.erro) {
-                statusEl.textContent = 'ÔØî';
-                msgEl.textContent = 'CEP n├úo encontrado. Verifique e tente novamente.';
+                statusEl.textContent = '❌';
+                msgEl.textContent = 'CEP não encontrado. Verifique e tente novamente.';
                 msgEl.style.color = '#f87171';
                 return;
             }
 
-            // Monta endere├ºo base (sem n├║mero ÔÇö usu├írio adiciona)
+            // Monta endereço base (sem número — usuário adiciona)
             const parts = [data.logradouro, data.bairro, `${data.localidade}/${data.uf}`].filter(Boolean);
             const endereco = parts.join(', ');
             addrEl.value = endereco;
             addrEl.focus();
-            // Posiciona cursor no in├¡cio para o usu├írio adicionar o n├║mero
+            // Posiciona cursor no início para o usuário adicionar o número
             addrEl.setSelectionRange(data.logradouro ? data.logradouro.length : 0, data.logradouro ? data.logradouro.length : 0);
 
-            statusEl.textContent = 'Ô£à';
-            msgEl.textContent = `­ƒôì ${data.localidade} ÔÇö ${data.uf} ┬À Adicione o n├║mero ao endere├ºo`;
+            statusEl.textContent = '✅';
+            msgEl.textContent = `📍 ${data.localidade} — ${data.uf} · Adicione o número ao endereço`;
             msgEl.style.color = '#4ade80';
 
         } catch (e) {
-            statusEl.textContent = 'ÔÜá´©Å';
-            msgEl.textContent = 'Erro ao buscar CEP. Verifique sua conex├úo.';
+            statusEl.textContent = '⚠️';
+            msgEl.textContent = 'Erro ao buscar CEP. Verifique sua conexão.';
             msgEl.style.color = '#fbbf24';
         }
     },
@@ -5771,13 +5771,13 @@ const app = {
             <div class="glass" style="padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-color);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 0.95rem; display: flex; align-items: center; gap: 10px; margin: 0;">
-                        ­ƒÅå Ranking do M├¬s
+                        🏆 Ranking do Mês
                     </h3>
                     <button class="glass" style="padding: 4px 10px; font-size: 0.65rem; color: var(--accent-readable); border: 1px solid var(--glass-border); cursor: pointer;" onclick="app.navigateTo('admin-team-performance')">Ver Tudo</button>
                 </div>
                 <div style="display: flex; gap: 15px; overflow-x: auto; padding: 15px 5px; scrollbar-width: none; -ms-overflow-style: none;">
                     ${sorted.map((b, idx) => {
-                        const medal = idx === 0 ? '­ƒææ' : idx === 1 ? '­ƒÑê' : idx === 2 ? '­ƒÑë' : (idx + 1) + '┬║';
+                        const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + 'º';
                         const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#d97706' : 'var(--text-secondary)';
                         const name = b.name.split(' ')[0];
                         return `
@@ -5812,7 +5812,7 @@ const app = {
             const user = this.state.user || {};
             let billingBanner = '';
 
-            // Mostrar banner de fatura apenas para inquilinos (n├úo para centauro matriz) e apenas para ADMs
+            // Mostrar banner de fatura apenas para inquilinos (não para centauro matriz) e apenas para ADMs
             if (tenantId && tenantId !== 'centauro' && sub && sub.nextPayment && user.role === 'admin') {
                 const nextDate = new Date(sub.nextPayment);
                 const today = new Date();
@@ -5822,12 +5822,12 @@ const app = {
                 billingBanner = `
                     <div class="glass fade-in" style="padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isCritical ? '#ef4444' : 'var(--accent-color)'}; background: ${isCritical ? 'rgba(239, 68, 68, 0.05)' : 'transparent'};">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="font-size: 1.5rem;">${isCritical ? 'ÔÜá´©Å' : '­ƒÆ│'}</div>
+                            <div style="font-size: 1.5rem;">${isCritical ? '⚠️' : '💳'}</div>
                             <div>
                                 <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">Fatura do Sistema</h4>
                                 <p style="margin: 3px 0 0; font-size: 0.78rem; color: var(--text-secondary);">
                                     Seu plano expira em: <strong style="color: ${isCritical ? '#ef4444' : 'var(--accent-color)'};">${nextDate.toLocaleDateString('pt-BR')}</strong>
-                                    ${isCritical ? ' - <span style="color: #ef4444; font-weight: 700;">Renova├º├úo Pendente</span>' : ''}
+                                    ${isCritical ? ' - <span style="color: #ef4444; font-weight: 700;">Renovação Pendente</span>' : ''}
                                 </p>
                             </div>
                         </div>
@@ -5850,7 +5850,7 @@ const app = {
             container.innerHTML = (this.getBirthdaysHTML ? this.getBirthdaysHTML() : '') + billingBanner + `
                 <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <button class="glass" style="padding: 8px 16px; font-size: 0.75rem; color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-weight: 700; cursor: pointer; max-width: 100%; white-space: normal; border-radius: 8px;" onclick="app.repairToday()">
-                        ­ƒöº REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
+                        🔧 REPARAR AGENDA (RECUPERAR DADOS DO CAIXA)
                     </button>
                 </div>
                 <div id="dash-agenda-wrapper"></div>
@@ -5858,20 +5858,20 @@ const app = {
             this.renderAgenda(document.getElementById('dash-agenda-wrapper'));
         } catch (e) {
             console.error('Erro no renderAdminDash:', e);
-            throw e; // Lan├ºa para o injectView capturar
+            throw e; // Lança para o injectView capturar
         }
     },
 
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    //  ORDENS DE SERVI├çO
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+    // ══════════════════════════════════════════════════════════════
+    //  ORDENS DE SERVIÇO
+    // ══════════════════════════════════════════════════════════════
 
     renderAdminOS(container) {
         const isAdmin = this.state.user?.role === 'admin';
         const userName = this.state.user?.name;
         const allOrders = this.state.serviceOrders || [];
 
-        // Barbeiro v├¬ apenas os chamados que ele mesmo abriu
+        // Barbeiro vê apenas os chamados que ele mesmo abriu
         const orders = isAdmin
             ? allOrders
             : allOrders.filter(o => o.createdBy === userName);
@@ -5902,27 +5902,27 @@ const app = {
         };
 
         const problemIcon = (type) => ({
-            'corte': 'Ô£é´©Å', 'quimica': '­ƒº¬', 'coloracao': '­ƒÄ¿',
-            'barba': '­ƒÆê', 'produto': '­ƒº┤', 'lesao': 'ÔÜá´©Å',
-            'outro': '­ƒôï',
-        }[type] || '­ƒôï');
+            'corte': '✂️', 'quimica': '🧪', 'coloracao': '🎨',
+            'barba': '💈', 'produto': '🧴', 'lesao': '⚠️',
+            'outro': '📋',
+        }[type] || '📋');
 
         const solutionLabel = (type) => ({
-            'refazer': '­ƒöä Refazer o servi├ºo',
-            'desconto': '­ƒÅÀ´©Å Desconto na pr├│xima visita',
-            'reembolso_parcial': '­ƒÆ© Reembolso parcial',
-            'reembolso_total': '­ƒÆ© Reembolso total',
-            'encaminhamento': '­ƒô× Encaminhamento externo',
-            'outro': '­ƒôØ Outro',
-        }[type] || type || 'ÔÇö');
+            'refazer': '🔄 Refazer o serviço',
+            'desconto': '🏷️ Desconto na próxima visita',
+            'reembolso_parcial': '💸 Reembolso parcial',
+            'reembolso_total': '💸 Reembolso total',
+            'encaminhamento': '📞 Encaminhamento externo',
+            'outro': '📝 Outro',
+        }[type] || type || '—');
 
         container.innerHTML = `
             <section class="fade-in" style="padding-bottom:40px;">
-                <!-- Cabe├ºalho -->
+                <!-- Cabeçalho -->
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom:3px;">­ƒôØ Ordens de Servi├ºo</h2>
-                        <p style="font-size:0.78rem;color:var(--text-secondary);">Registre e acompanhe ocorr├¬ncias e solu├º├Áes para clientes</p>
+                        <h2 class="section-title" style="margin-bottom:3px;">📝 Ordens de Serviço</h2>
+                        <p style="font-size:0.78rem;color:var(--text-secondary);">Registre e acompanhe ocorrências e soluções para clientes</p>
                     </div>
                     <button class="btn-primary" style="padding:10px 20px;font-size:0.9rem;display:flex;align-items:center;gap:8px;"
                             onclick="app.openNewOSModal()">
@@ -5952,8 +5952,8 @@ const app = {
                 <!-- Lista de OS -->
                 ${sorted.length === 0 ? `
                     <div class="glass" style="padding:40px;text-align:center;">
-                        <div style="font-size:3rem;margin-bottom:12px;">­ƒôï</div>
-                        <p style="color:var(--text-secondary);">Nenhuma ordem de servi├ºo ${filter !== 'all' ? 'neste status' : 'registrada'}.</p>
+                        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                        <p style="color:var(--text-secondary);">Nenhuma ordem de serviço ${filter !== 'all' ? 'neste status' : 'registrada'}.</p>
                         <button class="btn-primary" style="margin-top:16px;" onclick="app.openNewOSModal()">Criar primeira OS</button>
                     </div>
                 ` : sorted.map(os => `
@@ -5967,31 +5967,31 @@ const app = {
                                     ${statusBadge(os.status)}
                                 </div>
                                 <p style="font-size:0.75rem;color:var(--text-secondary);">
-                                    OS #${os.id.toString().slice(-5)} ┬À ${new Date(os.createdAt).toLocaleDateString('pt-BR')}
-                                    ${os.barberName ? ` ┬À ${this.getTerm('workerTerm')}: ${os.barberName}` : ''}
+                                    OS #${os.id.toString().slice(-5)} · ${new Date(os.createdAt).toLocaleDateString('pt-BR')}
+                                    ${os.barberName ? ` · ${this.getTerm('workerTerm')}: ${os.barberName}` : ''}
                                 </p>
                             </div>
                             <div style="display:flex;gap:6px;flex-shrink:0;">
                                 ${isAdmin && os.status !== 'resolved' ? `
                                     <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:var(--accent-color);"
-                                            onclick="app.openResolveOSModal(${os.id})">Ô£ö Resolver</button>
+                                            onclick="app.openResolveOSModal(${os.id})">✔ Resolver</button>
                                 ` : ''}
                                 <button class="glass" style="padding:6px 10px;font-size:0.75rem;"
-                                        onclick="app.openViewOSModal(${os.id})">­ƒæü Detalhes</button>
+                                        onclick="app.openViewOSModal(${os.id})">👁 Detalhes</button>
                                 ${isAdmin ? `
                                 <button class="glass" style="padding:6px 10px;font-size:0.75rem;color:#ff4444;"
-                                        onclick="app.deleteOS(${os.id})">­ƒùæ</button>` : ''}
+                                        onclick="app.deleteOS(${os.id})">🗑</button>` : ''}
                             </div>
                         </div>
 
                         <div style="padding:10px;background:var(--surface-dark);border-radius:8px;margin-bottom:8px;">
                             <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:3px;">Problema:</p>
-                            <p style="font-size:0.85rem;color:var(--text-primary);">${os.problemDescription || 'ÔÇö'}</p>
+                            <p style="font-size:0.85rem;color:var(--text-primary);">${os.problemDescription || '—'}</p>
                         </div>
 
                         ${os.solution ? `
                         <div style="padding:10px;background:rgba(74,222,128,0.05);border-radius:8px;border:1px solid rgba(74,222,128,0.2);">
-                            <p style="font-size:0.8rem;color:#4ade80;margin-bottom:3px;">Solu├º├úo: ${solutionLabel(os.solutionType)}</p>
+                            <p style="font-size:0.8rem;color:#4ade80;margin-bottom:3px;">Solução: ${solutionLabel(os.solutionType)}</p>
                             <p style="font-size:0.85rem;color:var(--text-primary);">${os.solution}</p>
                         </div>` : ''}
                     </div>
@@ -6006,19 +6006,19 @@ const app = {
             (this.state.appointments || []).map(a => a.customerName).filter(Boolean)
         )].sort();
 
-        // Tamb├®m incluir clientes cadastrados
+        // Também incluir clientes cadastrados
         const registeredNames = (this.state.customers || []).map(c => c.name).filter(Boolean);
         const allNames = [...new Set([...apptNames, ...registeredNames])].sort();
 
         const barbers = this.state.staff.filter(s => s.role === 'barber' || s.role === 'admin');
 
-        this.openModal('­ƒôØ Nova Ordem de Servi├ºo', `
+        this.openModal('📝 Nova Ordem de Serviço', `
             <section class="fade-in" style="padding:5px;">
                 <div style="display:flex;flex-direction:column;gap:14px;">
 
                     <!-- Busca de cliente -->
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">­ƒæñ Cliente *</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">👤 Cliente *</label>
                         <input type="text" id="os-customer-search" class="glass"
                                style="width:100%;padding:10px;color:var(--text-primary);margin-bottom:6px;"
                                placeholder="Digite o nome do cliente..."
@@ -6030,27 +6030,27 @@ const app = {
                         <div id="os-customer-suggestions" style="max-height:120px;overflow-y:auto;"></div>
                     </div>
 
-                    <!-- Barbeiro respons├ível -->
+                    <!-- Barbeiro responsável -->
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Ô£é´©Å Barbeiro Respons├ível</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">✂️ Barbeiro Responsável</label>
                         <select id="os-barber" class="glass" style="width:100%;padding:10px;color:var(--text-primary);">
-                            <option value="">ÔÇö N├úo informado ÔÇö</option>
+                            <option value="">— Não informado —</option>
                             ${barbers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}
                         </select>
                     </div>
 
                     <!-- Tipo de problema -->
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">ÔÜá´©Å Tipo de Ocorr├¬ncia *</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">⚠️ Tipo de Ocorrência *</label>
                         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;" id="os-problem-type-grid">
                             ${[
-                { key: 'corte', label: 'Ô£é´©Å Corte Incorreto' },
-                { key: 'quimica', label: '­ƒº¬ Qu├¡mica / Relaxamento' },
-                { key: 'coloracao', label: '­ƒÄ¿ Colora├º├úo / Luzes' },
-                { key: 'barba', label: '­ƒÆê Barba Incorreta' },
-                { key: 'produto', label: '­ƒº┤ Rea├º├úo a Produto' },
-                { key: 'lesao', label: 'ÔÜá´©Å Les├úo / Ferimento' },
-                { key: 'outro', label: '­ƒôï Outro' },
+                { key: 'corte', label: '✂️ Corte Incorreto' },
+                { key: 'quimica', label: '🧪 Química / Relaxamento' },
+                { key: 'coloracao', label: '🎨 Coloração / Luzes' },
+                { key: 'barba', label: '💈 Barba Incorreta' },
+                { key: 'produto', label: '🧴 Reação a Produto' },
+                { key: 'lesao', label: '⚠️ Lesão / Ferimento' },
+                { key: 'outro', label: '📋 Outro' },
             ].map(p => `
                                 <button type="button" id="ospt-${p.key}"
                                         class="glass"
@@ -6063,34 +6063,34 @@ const app = {
                         <input type="hidden" id="os-problem-type" value="">
                     </div>
 
-                    <!-- Descri├º├úo do problema -->
+                    <!-- Descrição do problema -->
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">­ƒôï Descri├º├úo detalhada do problema *</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">📋 Descrição detalhada do problema *</label>
                         <textarea id="os-problem-desc" class="glass"
                                   style="width:100%;padding:10px;color:var(--text-primary);min-height:80px;resize:vertical;font-family:inherit;"
-                                  placeholder="Descreva o que aconteceu com o maior n├¡vel de detalhe poss├¡vel..."></textarea>
+                                  placeholder="Descreva o que aconteceu com o maior nível de detalhe possível..."></textarea>
                     </div>
 
-                    <!-- Solu├º├úo proposta -->
+                    <!-- Solução proposta -->
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">Ô£à Solu├º├úo Proposta</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">✅ Solução Proposta</label>
                         <select id="os-solution-type" class="glass" style="width:100%;padding:10px;color:var(--text-primary);margin-bottom:8px;">
-                            <option value="">ÔÇö Definir depois ÔÇö</option>
-                            <option value="refazer">­ƒöä Refazer o servi├ºo gratuitamente</option>
-                            <option value="desconto">­ƒÅÀ´©Å Desconto na pr├│xima visita</option>
-                            <option value="reembolso_parcial">­ƒÆ© Reembolso parcial</option>
-                            <option value="reembolso_total">­ƒÆ© Reembolso total</option>
-                            <option value="encaminhamento">­ƒô× Encaminhamento externo</option>
-                            <option value="outro">­ƒôØ Outro</option>
+                            <option value="">— Definir depois —</option>
+                            <option value="refazer">🔄 Refazer o serviço gratuitamente</option>
+                            <option value="desconto">🏷️ Desconto na próxima visita</option>
+                            <option value="reembolso_parcial">💸 Reembolso parcial</option>
+                            <option value="reembolso_total">💸 Reembolso total</option>
+                            <option value="encaminhamento">📞 Encaminhamento externo</option>
+                            <option value="outro">📝 Outro</option>
                         </select>
                         <textarea id="os-solution-desc" class="glass"
                                   style="width:100%;padding:10px;color:var(--text-primary);min-height:60px;resize:vertical;font-family:inherit;"
-                                  placeholder="Descreva a solu├º├úo acordada com o cliente (opcional)..."></textarea>
+                                  placeholder="Descreva a solução acordada com o cliente (opcional)..."></textarea>
                     </div>
 
                     <div style="display:flex;gap:10px;margin-top:5px;">
                         <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Cancelar</button>
-                        <button class="btn-primary" style="flex:2;" onclick="app.saveOS()">Criar Ordem de Servi├ºo</button>
+                        <button class="btn-primary" style="flex:2;" onclick="app.saveOS()">Criar Ordem de Serviço</button>
                     </div>
                 </div>
             </section>
@@ -6112,7 +6112,7 @@ const app = {
                  onmouseover="this.style.background='rgba(255,255,255,0.05)'"
                  onmouseout="this.style.background=''"
                  onclick="document.getElementById('os-customer-search').value='${name}'; document.getElementById('os-customer-suggestions').innerHTML='';">
-                ­ƒæñ ${name}
+                👤 ${name}
             </div>
         `).join('');
     },
@@ -6141,7 +6141,7 @@ const app = {
         const solutionDesc = document.getElementById('os-solution-desc').value.trim();
 
         if (!customerName) { alert('Informe o nome do cliente.'); return; }
-        if (!problemType) { alert('Selecione o tipo de ocorr├¬ncia.'); return; }
+        if (!problemType) { alert('Selecione o tipo de ocorrência.'); return; }
         if (!problemDesc) { alert('Descreva o problema.'); return; }
 
         if (!this.state.serviceOrders) this.state.serviceOrders = [];
@@ -6170,7 +6170,7 @@ const app = {
         const os = (this.state.serviceOrders || []).find(o => o.id === osId);
         if (!os) return;
 
-        this.openModal('Ô£ö Resolver Ordem de Servi├ºo', `
+        this.openModal('✔ Resolver Ordem de Serviço', `
             <section class="fade-in">
                 <div style="padding:12px;background:var(--surface-dark);border-radius:8px;margin-bottom:16px;">
                     <p style="font-weight:700;color:var(--text-primary);margin-bottom:3px;">${os.customerName}</p>
@@ -6178,18 +6178,18 @@ const app = {
                 </div>
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Solu├º├úo aplicada *</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Solução aplicada *</label>
                         <select id="resolve-solution-type" class="glass" style="width:100%;padding:10px;color:var(--text-primary);">
-                            <option value="refazer">­ƒöä Refazer o servi├ºo gratuitamente</option>
-                            <option value="desconto">­ƒÅÀ´©Å Desconto na pr├│xima visita</option>
-                            <option value="reembolso_parcial">­ƒÆ© Reembolso parcial</option>
-                            <option value="reembolso_total">­ƒÆ© Reembolso total</option>
-                            <option value="encaminhamento">­ƒô× Encaminhamento externo</option>
-                            <option value="outro">­ƒôØ Outro</option>
+                            <option value="refazer">🔄 Refazer o serviço gratuitamente</option>
+                            <option value="desconto">🏷️ Desconto na próxima visita</option>
+                            <option value="reembolso_parcial">💸 Reembolso parcial</option>
+                            <option value="reembolso_total">💸 Reembolso total</option>
+                            <option value="encaminhamento">📞 Encaminhamento externo</option>
+                            <option value="outro">📝 Outro</option>
                         </select>
                     </div>
                     <div>
-                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Observa├º├Áes da resolu├º├úo</label>
+                        <label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:5px;">Observações da resolução</label>
                         <textarea id="resolve-notes" class="glass"
                                   style="width:100%;padding:10px;color:var(--text-primary);min-height:80px;resize:vertical;font-family:inherit;"
                                   placeholder="Como o problema foi resolvido? Qual foi o acordo com o cliente?">${os.solution || ''}</textarea>
@@ -6225,17 +6225,17 @@ const app = {
         const isAdmin = this.state.user?.role === 'admin';
 
         const solutionLabel = (type) => ({
-            'refazer': '­ƒöä Refazer o servi├ºo',
-            'desconto': '­ƒÅÀ´©Å Desconto na pr├│xima visita',
-            'reembolso_parcial': '­ƒÆ© Reembolso parcial',
-            'reembolso_total': '­ƒÆ© Reembolso total',
-            'encaminhamento': '­ƒô× Encaminhamento externo',
-            'outro': '­ƒôØ Outro',
-        }[type] || type || 'ÔÇö');
+            'refazer': '🔄 Refazer o serviço',
+            'desconto': '🏷️ Desconto na próxima visita',
+            'reembolso_parcial': '💸 Reembolso parcial',
+            'reembolso_total': '💸 Reembolso total',
+            'encaminhamento': '📞 Encaminhamento externo',
+            'outro': '📝 Outro',
+        }[type] || type || '—');
 
-        const statusMap = { open: '­ƒö┤ Aberta', progress: '­ƒƒí Em andamento', resolved: '­ƒƒó Resolvida' };
+        const statusMap = { open: '🔴 Aberta', progress: '🟡 Em andamento', resolved: '🟢 Resolvida' };
 
-        this.openModal(`­ƒôï OS #${os.id.toString().slice(-5)}`, `
+        this.openModal(`📋 OS #${os.id.toString().slice(-5)}`, `
             <section class="fade-in">
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -6249,7 +6249,7 @@ const app = {
                         </div>
                         <div class="glass" style="padding:12px;">
                             <p style="font-size:0.72rem;color:var(--text-secondary);">Barbeiro</p>
-                            <p style="font-weight:700;color:var(--text-primary);">${os.barberName || 'ÔÇö'}</p>
+                            <p style="font-weight:700;color:var(--text-primary);">${os.barberName || '—'}</p>
                         </div>
                         <div class="glass" style="padding:12px;">
                             <p style="font-size:0.72rem;color:var(--text-secondary);">Aberta em</p>
@@ -6266,11 +6266,11 @@ const app = {
                     <div style="padding:14px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px;">
                         <p style="font-size:0.78rem;color:#4ade80;margin-bottom:5px;font-weight:600;">${solutionLabel(os.solutionType)}</p>
                         <p style="font-size:0.88rem;color:var(--text-primary);">${os.solution}</p>
-                        ${os.resolvedAt ? `<p style="font-size:0.7rem;color:var(--text-secondary);margin-top:6px;">Resolvida em ${new Date(os.resolvedAt).toLocaleDateString('pt-BR')} por ${os.resolvedBy || 'ÔÇö'}</p>` : ''}
+                        ${os.resolvedAt ? `<p style="font-size:0.7rem;color:var(--text-secondary);margin-top:6px;">Resolvida em ${new Date(os.resolvedAt).toLocaleDateString('pt-BR')} por ${os.resolvedBy || '—'}</p>` : ''}
                     </div>` : ''}
 
                     <div style="display:flex;gap:8px;margin-top:4px;">
-                        ${isAdmin && os.status !== 'resolved' ? `<button class="btn-primary" style="flex:1;background:#2E8B57;" onclick="app.closeModal();app.openResolveOSModal(${os.id})">Ô£ö Resolver</button>` : ''}
+                        ${isAdmin && os.status !== 'resolved' ? `<button class="btn-primary" style="flex:1;background:#2E8B57;" onclick="app.closeModal();app.openResolveOSModal(${os.id})">✔ Resolver</button>` : ''}
                         <button class="btn-secondary" style="flex:1;" onclick="app.closeModal()">Fechar</button>
                     </div>
                 </div>
@@ -6281,7 +6281,7 @@ const app = {
 
 
     deleteOS(osId) {
-        if (!confirm('Excluir esta ordem de servi├ºo?')) return;
+        if (!confirm('Excluir esta ordem de serviço?')) return;
         this.state.serviceOrders = (this.state.serviceOrders || []).filter(o => o.id !== osId);
         this.saveState();
         this.navigateTo('admin-os');
@@ -6317,7 +6317,7 @@ const app = {
                 aptDate <= endDate;
         });
 
-        // Comiss├Áes de Produtos (PDV)
+        // Comissões de Produtos (PDV)
         const myProductSales = (this.state.productSales || []).filter(s => {
             const sDate = s.date || today;
             const sSeller = (s.seller || '').trim().toLowerCase();
@@ -6365,14 +6365,14 @@ const app = {
                 
                 <div class="glass" style="padding: 15px; display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                     <button class="glass ${filter === 'dia' ? 'active' : ''}" style="padding: 8px 15px;" onclick="app.setBarberFilter('dia')">Hoje</button>
-                    <button class="glass ${filter === 'semana' ? 'active' : ''}" style="padding: 8px 15px;" onclick="app.setBarberFilter('semana')">├Ültimos 7 dias</button>
-                    <button class="glass ${filter === 'periodo' ? 'active' : ''}" style="padding: 8px 15px;" onclick="app.setBarberFilter('periodo')">Per├¡odo</button>
+                    <button class="glass ${filter === 'semana' ? 'active' : ''}" style="padding: 8px 15px;" onclick="app.setBarberFilter('semana')">Últimos 7 dias</button>
+                    <button class="glass ${filter === 'periodo' ? 'active' : ''}" style="padding: 8px 15px;" onclick="app.setBarberFilter('periodo')">Período</button>
                 </div>
 
                 ${filter === 'periodo' ? `
                     <div class="glass" style="padding: 15px; display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                         <input type="date" id="start-date" class="glass" style="padding: 5px; color: var(--text-primary);" value="${startDate}">
-                        <span>at├®</span>
+                        <span>até</span>
                         <input type="date" id="end-date" class="glass" style="padding: 5px; color: var(--text-primary);" value="${endDate}">
                         <button class="btn-primary" style="padding: 5px 15px;" onclick="app.applyCustomFilter()">Filtrar</button>
                     </div>
@@ -6380,7 +6380,7 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Servi├ºos</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Serviços</p>
                         <p style="font-size: 1.1rem; font-weight: 700; color: var(--accent-readable);">R$ ${myCommission.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
@@ -6396,14 +6396,14 @@ const app = {
                         <p style="font-size: 1.1rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #44ff44; background: rgba(68, 255, 68, 0.05);">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Total L├¡quido</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Total Líquido</p>
                         <p style="font-size: 1.3rem; font-weight: 800; color: #44ff44;">R$ ${netPay.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <h3 class="section-title" style="font-size: 1rem;">Detalhamento</h3>
                 <div class="transaction-list">
-                    ${filteredApts.length === 0 && myTips.length === 0 && myVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum registro neste per├¡odo.</p>' : ''}
+                    ${filteredApts.length === 0 && myTips.length === 0 && myVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum registro neste período.</p>' : ''}
                     
                     ${filteredApts.map(a => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem;">
@@ -6436,7 +6436,7 @@ const app = {
                             <div style="display: flex; justify-content: space-between;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="font-weight: 600; color: var(--text-primary);">Gorjeta ${t.status === 'pending' ? '(Pendente)' : t.status === 'rejected' ? '(Recusada)' : ''}</span>
-                                    ${t.status === 'pending' ? 'ÔÅ│' : t.status === 'approved' ? 'Ô£à' : 'ÔØî'}
+                                    ${t.status === 'pending' ? '⏳' : t.status === 'approved' ? '✅' : '❌'}
                                 </div>
                                 <span style="font-weight: 700; color: ${t.status === 'approved' ? '#fbbf24' : '#94a3b8'};">+ R$ ${t.amount.toFixed(2)}</span>
                             </div>
@@ -6454,7 +6454,7 @@ const app = {
                                 <span style="font-weight: 700; color: #ff4444;">- R$ ${v.amount.toFixed(2)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                                <span>Lan├ºamento Administrativo</span>
+                                <span>Lançamento Administrativo</span>
                                 <span>${new Date(v.date).toLocaleDateString()}</span>
                             </div>
                         </div>
@@ -6489,7 +6489,7 @@ const app = {
 
     renderAgenda(container, barberFilter = null) {
         if (!this.state.settings || !this.state.settings.agenda) {
-            container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;">ÔÜá´©Å Configura├º├Áes de agenda n├úo encontradas. Por favor, acesse as configura├º├Áes.</div>';
+            container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;">⚠️ Configurações de agenda não encontradas. Por favor, acesse as configurações.</div>';
             return;
         }
         const type = this.state.settings.businessType || 'barbershop';
@@ -6505,13 +6505,13 @@ const app = {
         const todayStr = this.getTodayDate();
         const isPastDate = this.state.currentDate < todayStr;
 
-        // [OTIMIZA├ç├âO] Indexar agendamentos do dia para busca O(1)
+        // [OTIMIZAÇÃO] Indexar agendamentos do dia para busca O(1)
         const currentDate = this.state.currentDate;
         const aptMap = new Map();
         (this.state.appointments || []).forEach(a => {
             const aDate = a.date || todayStr;
             if (aDate === currentDate) {
-                // Usar normaliza├º├úo na chave para evitar problemas com espa├ºos ou mai├║sculas
+                // Usar normalização na chave para evitar problemas com espaços ou maiúsculas
                 const key = `${this.normalizeString(a.barber)}-${a.time}`;
                 aptMap.set(key, a);
             }
@@ -6551,13 +6551,13 @@ const app = {
                 ${isPastDate ? `
                     <div class="glass" style="padding: 10px 15px; border-left: 4px solid #ef4444; margin-bottom: 20px; font-size: 0.75rem; color: #fca5a5; background: rgba(239, 68, 68, 0.05);">
                         <i data-lucide="history" style="width: 14px; vertical-align: middle; margin-right: 5px;"></i>
-                        Voc├¬ est├í visualizando o hist├│rico. Edi├º├Áes n├úo permitidas.
+                        Você está visualizando o histórico. Edições não permitidas.
                     </div>
                 ` : ''}
 
                 ${timeSlots.length === 0 ? `
                     <div class="glass" style="padding: 60px 20px; text-align: center; border: 2px dashed rgba(255,255,255,0.05); border-radius: 20px;">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">­ƒÿ┤</div>
+                        <div style="font-size: 3rem; margin-bottom: 15px;">😴</div>
                         <h3 style="color: var(--text-primary); margin-bottom: 10px;">${theme.shopTerm} Fechada</h3>
                         <p style="color: var(--text-secondary); font-size: 0.9rem;">Sem expediente configurado para este dia.</p>
                     </div>
@@ -6565,7 +6565,7 @@ const app = {
                     <div class="agenda-grid" style="--barber-cols: ${barbersToShow.length}; grid-template-columns: 80px repeat(${barbersToShow.length}, minmax(0, 1fr));">
                         <!-- Header -->
                         <div class="agenda-header" style="z-index: 60; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; font-weight: 800;">
-                            Hor├írio
+                            Horário
                         </div>
                         ${barbersToShow.map(b => `
                             <div class="agenda-header">
@@ -6630,10 +6630,10 @@ const app = {
         const color = colors[apt.status] || 'var(--accent-color)';
         return `
             <div class="appointment-block continuation-block" 
-                 title="Atendimento de ${apt.customer} em andamento (iniciado ├ás ${apt.time})"
+                 title="Atendimento de ${apt.customer} em andamento (iniciado às ${apt.time})"
                  style="border: 1px solid var(--glass-border); border-left: 3px dashed ${color}; background: var(--surface-light); display: flex; align-items: center; justify-content: flex-start; padding: 2px 6px; cursor: pointer; opacity: 0.9;">
                 <span style="font-size: 0.62rem; color: var(--text-secondary); font-weight: 600; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;">
-                    Ôå│ ${apt.customer} (continua├º├úo)
+                    ↳ ${apt.customer} (continuação)
                 </span>
             </div>
         `;
@@ -6651,7 +6651,7 @@ const app = {
         } : {
             'agendado': '#0284c7',   // Azul royal
             'confirmado': '#16a34a', // Verde escuro
-            'finalizado': '#64748b', // Cinza m├®dio
+            'finalizado': '#64748b', // Cinza médio
             'bloqueado': '#dc2626'   // Vermelho escuro
         };
 
@@ -6686,7 +6686,7 @@ const app = {
 
         const priceStr = isSubscriber ? 'Assinatura' : parseFloat(apt.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        const hoverInfo = `Cliente: ${apt.customer}\nServi├ºo: ${apt.service || 'N/A'}\nDura├º├úo: ${aptDuration} min\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
+        const hoverInfo = `Cliente: ${apt.customer}\nServiço: ${apt.service || 'N/A'}\nDuração: ${aptDuration} min\nValor: ${priceStr}\nStatus: ${apt.status.toUpperCase()}\nOrigem: ${origin}\nPagamento: ${payment}\n${apt.phone ? 'Tel: ' + apt.phone : ''}`;
 
         if (apt.status === 'bloqueado') {
             const blockColor = isDark ? '#f87171' : '#dc2626';
@@ -6715,11 +6715,11 @@ const app = {
                  ` : ''}>
                 <div class="customer-name" style="pointer-events: none; font-size: 0.72rem; font-weight: 800; color: var(--text-primary); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span style="overflow: hidden; text-overflow: ellipsis;">${apt.customer || 'Cliente'}</span>
-                    <span style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 700; background: var(--glass-border); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--glass-border); margin-left: 4px; flex-shrink: 0;">ÔÅ▒´©Å ${aptDuration}m</span>
+                    <span style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 700; background: var(--glass-border); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--glass-border); margin-left: 4px; flex-shrink: 0;">⏱️ ${aptDuration}m</span>
                 </div>
-                <div class="service-name" style="pointer-events: none; font-size: 0.62rem; color: var(--text-secondary); font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 1px;">${apt.service || 'Servi├ºo'}</div>
-                ${apt.status === 'finalizado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#94a3b8' : '#475569'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">Ô£à FINALIZADO</div>` : ''}
-                ${apt.status === 'confirmado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#4ade80' : '#16a34a'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">­ƒƒó CONFIRMADO</div>` : ''}
+                <div class="service-name" style="pointer-events: none; font-size: 0.62rem; color: var(--text-secondary); font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 1px;">${apt.service || 'Serviço'}</div>
+                ${apt.status === 'finalizado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#94a3b8' : '#475569'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">✅ FINALIZADO</div>` : ''}
+                ${apt.status === 'confirmado' ? `<div style="font-size: 0.52rem; color: ${isDark ? '#4ade80' : '#16a34a'}; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 2px; margin-top: 2px;">🟢 CONFIRMADO</div>` : ''}
             </div>
         `;
     },
@@ -6729,12 +6729,12 @@ const app = {
             console.log('Clique bloqueado por estar arrastando');
             return;
         }
-        console.log('Clique na c├®lula:', barber, time, aptId);
+        console.log('Clique na célula:', barber, time, aptId);
         const todayStr = new Date().toISOString().split('T')[0];
         const isPastDate = this.state.currentDate < todayStr;
 
         if (isPastDate && this.state.user.role !== 'admin') {
-            alert('Agendas passadas s├úo apenas para consulta.');
+            alert('Agendas passadas são apenas para consulta.');
             return;
         }
 
@@ -6766,14 +6766,14 @@ const app = {
 
     // Touch Support for Mobile
     handleTouchStart(e, aptId) {
-        // Inicia ap├│s um pequeno delay para n├úo interferir no scroll
+        // Inicia após um pequeno delay para não interferir no scroll
         this.touchTimer = setTimeout(() => {
             this.state.isDragging = true;
             this.state.draggingAptId = aptId;
             e.target.classList.add('dragging');
             document.body.classList.add('dragging-active');
             
-            // Criar um feedback visual (clone) se poss├¡vel, ou apenas destacar
+            // Criar um feedback visual (clone) se possível, ou apenas destacar
             this.touchTarget = e.target;
         }, 300);
     },
@@ -6803,10 +6803,10 @@ const app = {
         const cell = target ? target.closest('.agenda-cell') : null;
 
         if (cell) {
-            // Extrair dados da c├®lula (barbeiro e hor├írio)
-            // Isso requer que a c├®lula tenha atributos data ou que usemos o que foi passado no ondrop
-            // Como n├úo temos acesso f├ícil aos argumentos do ondrop aqui, vamos disparar o drop manualmente
-            // ou buscar os dados nos atributos da c├®lula (que precisamos adicionar)
+            // Extrair dados da célula (barbeiro e horário)
+            // Isso requer que a célula tenha atributos data ou que usemos o que foi passado no ondrop
+            // Como não temos acesso fácil aos argumentos do ondrop aqui, vamos disparar o drop manualmente
+            // ou buscar os dados nos atributos da célula (que precisamos adicionar)
             const barber = cell.getAttribute('data-barber');
             const time = cell.getAttribute('data-time');
             if (barber && time) {
@@ -6846,13 +6846,13 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (!apt) return;
 
-        // [SEGURAN├çA FINANCEIRA] Somente administradores podem mover agendamentos finalizados
+        // [SEGURANÇA FINANCEIRA] Somente administradores podem mover agendamentos finalizados
         if (apt.status === 'finalizado' && this.state.user.role !== 'admin') {
-            alert('ÔÜá´©Å Somente um administrador pode mover atendimentos finalizados.');
+            alert('⚠️ Somente um administrador pode mover atendimentos finalizados.');
             return;
         }
 
-        // Se soltar no mesmo lugar, n├úo faz nada
+        // Se soltar no mesmo lugar, não faz nada
         if (apt.barber === newBarber && apt.time === newTime) return;
 
         // Verificar se o intervalo completo do destino colide com outro agendamento
@@ -6861,12 +6861,12 @@ const app = {
         const newEndMin = newStartMin + aptDuration;
 
         if (this.isBarberBusyInRange(newBarber, this.state.currentDate, newStartMin, newEndMin, apt.id)) {
-            alert(`ÔÜá´©Å Conflito de agenda: O hor├írio ${newTime} com dura├º├úo de ${aptDuration} min colide com outro atendimento agendado para ${newBarber}.`);
+            alert(`⚠️ Conflito de agenda: O horário ${newTime} com duração de ${aptDuration} min colide com outro atendimento agendado para ${newBarber}.`);
             return;
         }
 
-        // Confirma├º├úo para movimenta├º├úo se for admin ou dono do hor├írio
-        if (!confirm(`Deseja mover o agendamento de ${apt.customer} (${aptDuration} min) para ${newBarber} ├ás ${newTime}?`)) return;
+        // Confirmação para movimentação se for admin ou dono do horário
+        if (!confirm(`Deseja mover o agendamento de ${apt.customer} (${aptDuration} min) para ${newBarber} às ${newTime}?`)) return;
 
         // Atualizar
         apt.barber = newBarber;
@@ -6882,7 +6882,7 @@ const app = {
         this.openModal('Novo Encaixe', `
             <section class="fade-in">
                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">
-                    ${barber} ├ás ${time}
+                    ${barber} às ${time}
                 </p>
                 <div style="position: relative; margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px;">Nome do Cliente *</label>
@@ -6893,10 +6893,10 @@ const app = {
                     </div>
                 </div>
                 <div id="cust-history-preview" style="display: none; margin-bottom: 15px; font-size: 0.75rem; padding: 10px; border-left: 3px solid var(--accent-color); background: var(--surface-light); color: var(--text-primary);">
-                    <!-- Hist├│rico aqui -->
+                    <!-- Histórico aqui -->
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-readable);">Selecione os Servi├ºos *</label>
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços *</label>
                     <div id="walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Nada selecionado</div>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => `
@@ -6906,7 +6906,7 @@ const app = {
                                        onchange="app.updateWalkinCounter()">
                                 <div style="flex: 1;">
                                     <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">${s.name}</p>
-                                    <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} ÔÇó ÔÅ▒´©Å ${s.duration || 30} min</p>
+                                    <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} • ⏱️ ${s.duration || 30} min</p>
                                 </div>
                             </label>
                         `).join('')}
@@ -6919,7 +6919,7 @@ const app = {
                 ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === barber) ? `
                     <div style="margin-top: 15px;">
                         <button class="btn-secondary" style="width: 100%; border: 1px solid #ff4444; color: #ff4444;" onclick="app.blockTimeSlot('${barber}', '${time}')">
-                            ­ƒÜ½ Bloquear Este Hor├írio
+                            🚫 Bloquear Este Horário
                         </button>
                     </div>
                 ` : ''}
@@ -6960,7 +6960,7 @@ const app = {
         const indicator = document.getElementById('walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} ÔÇó ÔÅ▒´©Å ${totalDur} min</span>`
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} • ⏱️ ${totalDur} min</span>`
                 : 'Nada selecionado';
         }
 
@@ -6989,9 +6989,9 @@ const app = {
                 const isActiveSubscriber = new Date(subscriberObj.validUntil + "T00:00:00") >= new Date(new Date().setHours(0,0,0,0));
                 preview.innerHTML += `
                     <div style="margin-bottom: 10px; padding: 10px; border-radius: 8px; border: 1px solid ${isActiveSubscriber ? '#10b981' : '#ff4444'}; background: ${isActiveSubscriber ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 68, 68, 0.1)'};">
-                        <strong style="color: ${isActiveSubscriber ? '#10b981' : '#ff4444'};">${isActiveSubscriber ? '­ƒÆÄ Assinante Ativo' : 'ÔÜá´©Å Assinatura Vencida'}</strong><br>
+                        <strong style="color: ${isActiveSubscriber ? '#10b981' : '#ff4444'};">${isActiveSubscriber ? '💎 Assinante Ativo' : '⚠️ Assinatura Vencida'}</strong><br>
                         Plano: ${subscriberObj.planName}<br>
-                        V├ílido at├®: ${new Date(subscriberObj.validUntil + "T00:00:00").toLocaleDateString('pt-BR')}
+                        Válido até: ${new Date(subscriberObj.validUntil + "T00:00:00").toLocaleDateString('pt-BR')}
                     </div>
                 `;
                 hasPreview = true;
@@ -7001,7 +7001,7 @@ const app = {
                 const last = customer.history[customer.history.length - 1];
                 preview.innerHTML += `
                     <strong>Cliente Fidelizado</strong><br>
-                    ├Ültima visita: ${new Date(last.date + 'T00:00:00').toLocaleDateString()}<br>
+                    Última visita: ${new Date(last.date + 'T00:00:00').toLocaleDateString()}<br>
                     Favorito: ${last.service} (Barbeiro: ${last.barber})
                 `;
                 hasPreview = true;
@@ -7013,7 +7013,7 @@ const app = {
                 preview.style.display = 'none';
             }
 
-            // Atualiza a lista de servi├ºos baseada no plano
+            // Atualiza a lista de serviços baseada no plano
             document.querySelectorAll('input[name="walkin-services"]').forEach(input => {
                 const sObj = this.state.services.find(s => s.id == input.dataset.id);
                 const label = input.closest('label');
@@ -7032,7 +7032,7 @@ const app = {
 
                 if (isIncluded) {
                     input.dataset.price = "0";
-                    if (priceP) priceP.innerHTML = `<span style="color: #10b981; font-weight: 700;">­ƒÆÄ Incluso no Plano</span>`;
+                    if (priceP) priceP.innerHTML = `<span style="color: #10b981; font-weight: 700;">💎 Incluso no Plano</span>`;
                 } else if (sObj) {
                     input.dataset.price = sObj.price;
                     if (priceP) priceP.innerHTML = `R$ ${parseFloat(sObj.price).toFixed(2)}`;
@@ -7047,18 +7047,18 @@ const app = {
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="walkin-services"]:checked'));
 
         if (!name) { alert('Por favor, informe o nome do cliente.'); return; }
-        if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um servi├ºo.'); return; }
+        if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
         const serviceNamesArr = checkedBoxes.map(cb => cb.dataset.name);
         let serviceNames = serviceNamesArr.join(', ');
         let totalPrice = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
         const totalDuration = this.calculateServicesDuration(checkedBoxes.map(cb => ({ name: cb.dataset.name, duration: cb.dataset.duration })));
 
-        // Validar se o hor├írio e sua dura├º├úo colidem com outro agendamento
+        // Validar se o horário e sua duração colidem com outro agendamento
         const startMin = this.timeToMinutes(time);
         const endMin = startMin + totalDuration;
         if (this.isBarberBusyInRange(barber, this.state.currentDate, startMin, endMin)) {
-            alert(`ÔÜá´©Å Aten├º├úo: O hor├írio ${time} com dura├º├úo estimada de ${totalDuration} min ultrapassa ou colide com outro atendimento agendado para ${barber}. Por favor, escolha outro hor├írio ou ajuste os servi├ºos.`);
+            alert(`⚠️ Atenção: O horário ${time} com duração estimada de ${totalDuration} min ultrapassa ou colide com outro atendimento agendado para ${barber}. Por favor, escolha outro horário ou ajuste os serviços.`);
             return;
         }
 
@@ -7070,7 +7070,7 @@ const app = {
             return;
         }
 
-        // L├│gica de Assinatura para o Agendamento Inicial
+        // Lógica de Assinatura para o Agendamento Inicial
         const subscriberObj = (this.state.subscribers || []).find(s => s.customerId == customer.id);
         let finalPrice = totalPrice;
         if (subscriberObj) {
@@ -7090,7 +7090,7 @@ const app = {
                     });
 
                     if (isIncludedService) {
-                        // N├úo validamos os limites semanais/mensais aqui (├® feito no Finalizar OS), mas j├í abatemos visualmente na agenda
+                        // Não validamos os limites semanais/mensais aqui (é feito no Finalizar OS), mas já abatemos visualmente na agenda
                         finalPrice = Math.max(0, finalPrice - sumIncludedCatalog);
                         serviceNames += ` [Clube: ${subscriberObj.planName}]`;
                     }
@@ -7106,12 +7106,12 @@ const app = {
             customer: customer.name,
             service: serviceNames,
             price: finalPrice,
-            duration: totalDuration, // DURA├ç├âO TOTAL DOS SERVI├çOS
+            duration: totalDuration, // DURAÇÃO TOTAL DOS SERVIÇOS
             status: 'agendado',
-            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recep├º├úo' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
+            origin: `Encaixe (${this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : 'Barbeiro')}: ${this.state.user.name})`
         };
         this.state.appointments.push(apt);
-        this.saveState(); // PERSIST├èNCIA ADICIONADA
+        this.saveState(); // PERSISTÊNCIA ADICIONADA
 
         // [PUSH NOTIFICATION] Notificar barbeiro do novo encaixe
         this.sendPushToBarber(barber, apt);
@@ -7121,7 +7121,7 @@ const app = {
     },
 
     blockTimeSlot(barber, time) {
-        if (!confirm(`Deseja bloquear a agenda de ${barber} ├ás ${time}?`)) return;
+        if (!confirm(`Deseja bloquear a agenda de ${barber} às ${time}?`)) return;
 
         const apt = {
             id: Date.now(),
@@ -7129,10 +7129,10 @@ const app = {
             time,
             date: this.state.currentDate,
             customer: 'BLOQUEADO',
-            service: 'Indispon├¡vel',
+            service: 'Indisponível',
             price: 0,
             status: 'bloqueado',
-            origin: this.state.user.role === 'admin' ? 'Recep├º├úo' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
 
         if (!this.state.appointments) this.state.appointments = [];
@@ -7143,13 +7143,13 @@ const app = {
     },
 
     blockFullDay(barber, date) {
-        if (!confirm(`ATEN├ç├âO: Deseja bloquear TODOS os hor├írios livres de ${barber} no dia ${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')}?`)) return;
+        if (!confirm(`ATENÇÃO: Deseja bloquear TODOS os horários livres de ${barber} no dia ${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')}?`)) return;
 
         const timeSlots = this.generateTimeSlots();
         let addedBlocks = 0;
 
         timeSlots.forEach(time => {
-            // Verifica se j├í existe um agendamento neste hor├írio
+            // Verifica se já existe um agendamento neste horário
             const exists = this.state.appointments.find(a =>
                 a.barber === barber &&
                 a.time === time &&
@@ -7163,10 +7163,10 @@ const app = {
                     time,
                     date,
                     customer: 'BLOQUEADO',
-                    service: 'Indispon├¡vel',
+                    service: 'Indisponível',
                     price: 0,
                     status: 'bloqueado',
-                    origin: this.state.user.role === 'admin' ? 'Recep├º├úo' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
+                    origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
                 });
                 addedBlocks++;
             }
@@ -7175,18 +7175,18 @@ const app = {
         if (addedBlocks > 0) {
             this.saveState();
             this.render(this.state.view);
-            alert(`${addedBlocks} hor├írios foram bloqueados com sucesso.`);
+            alert(`${addedBlocks} horários foram bloqueados com sucesso.`);
         } else {
-            alert('A agenda j├í estava totalmente ocupada ou bloqueada neste dia.');
+            alert('A agenda já estava totalmente ocupada ou bloqueada neste dia.');
         }
     },
 
     promptQuickRegistration() {
         const { name } = this.state.pendingWalkIn;
-        this.openModal('Detectado: Cliente Novo ­ƒÄë', `
+        this.openModal('Detectado: Cliente Novo 🎉', `
             <section class="fade-in">
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
-                    O nome <strong>${name}</strong> n├úo existe no nosso sistema e far├í parte dessa Barbearia de Elite!</br>Preencha os dados de contato.
+                    O nome <strong>${name}</strong> não existe no nosso sistema e fará parte dessa Barbearia de Elite!</br>Preencha os dados de contato.
                 </p>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; font-size: 0.85rem;">Telefone / WhatsApp *</label>
@@ -7217,7 +7217,7 @@ const app = {
         const birthDate = document.getElementById('qr-birth').value;
 
         if (!phone) {
-            alert('Por favor, colete pelo menos o n├║mero do WhatsApp desse cliente.');
+            alert('Por favor, colete pelo menos o número do WhatsApp desse cliente.');
             return;
         }
 
@@ -7234,7 +7234,7 @@ const app = {
             price,
             duration: duration || this.calculateServicesDuration(service),
             status: 'agendado',
-            origin: this.state.user.role === 'admin' ? 'Recep├º├úo' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
+            origin: this.state.user.role === 'admin' ? 'Recepção' : (this.state.user.role === 'totem' ? 'Totem' : `Barbeiro (${this.state.user.name})`)
         };
         this.state.appointments.push(apt);
         this.saveState();
@@ -7255,15 +7255,15 @@ const app = {
         const isReadOnly = apt.status === 'finalizado' && this.state.user.role !== 'admin';
 
         if (apt.status === 'bloqueado') {
-            this.openModal('Hor├írio Bloqueado', `
+            this.openModal('Horário Bloqueado', `
                 <section class="fade-in" style="padding-top: 10px; text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">­ƒÜ½</div>
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🚫</div>
                     <p style="color: var(--text-secondary); margin-bottom: 25px;">
-                        Este hor├írio est├í bloqueado para agendamentos.
+                        Este horário está bloqueado para agendamentos.
                     </p>
                     ${this.state.user && (this.state.user.role === 'admin' || this.state.user.role === 'totem' || this.state.user.name === apt.barber) ? `
                         <button class="btn-primary" style="background: #ff4444; width: 100%; border-radius: 8px; box-shadow: none; margin-bottom: 10px;" onclick="app.cancelApt(${apt.id})">
-                            Desbloquear Hor├írio
+                            Desbloquear Horário
                         </button>
                     ` : ''}
                     <button class="btn-secondary" style="width: 100%; border-radius: 8px;" onclick="app.closeModal()">Voltar</button>
@@ -7282,7 +7282,7 @@ const app = {
                     </div>
                     ${apt.payment ? `
                         <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.12); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                            <span style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">­ƒÆ│ Pago via: ${apt.payment}</span>
+                            <span style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">💳 Pago via: ${apt.payment}</span>
                             ${(this.state.user.role === 'admin') ? `
                                 <button style="background: none; border: none; color: #38bdf8; cursor: pointer; text-decoration: underline; font-size: 0.78rem; font-weight: 700; padding: 0;" onclick="app.openChangePaymentModal(${apt.id})">
                                     (Alterar)
@@ -7294,7 +7294,7 @@ const app = {
 
                 ${isReadOnly ? `
                     <div class="glass" style="padding: 10px; border-color: #ff4444; color: #ff4444; font-size: 0.8rem; margin-bottom: 15px;">
-                        ÔÜá´©Å Somente um administrador pode alterar uma OS finalizada.
+                        ⚠️ Somente um administrador pode alterar uma OS finalizada.
                     </div>
                 ` : `
                     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -7305,13 +7305,13 @@ const app = {
                             </button>
                         ` : ''}
                         ${apt.status === 'agendado' ? `
-                            <button class="btn-primary" style="background: #2E8B57; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.updateAptStatus(${apt.id}, 'confirmado')">CONFIRMAR PRESEN├çA</button>
+                            <button class="btn-primary" style="background: #2E8B57; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.updateAptStatus(${apt.id}, 'confirmado')">CONFIRMAR PRESENÇA</button>
                         ` : ''}
                         ${(apt.status === 'finalizado' && this.state.user.role === 'admin') ? `
-                            <button class="btn-primary" style="background: #0284c7; width: 100%; border-radius: 8px; box-shadow: none; font-weight: 700;" onclick="app.openChangePaymentModal(${apt.id})">­ƒÆ│ ALTERAR FORMA DE PAGAMENTO</button>
+                            <button class="btn-primary" style="background: #0284c7; width: 100%; border-radius: 8px; box-shadow: none; font-weight: 700;" onclick="app.openChangePaymentModal(${apt.id})">💳 ALTERAR FORMA DE PAGAMENTO</button>
                         ` : ''}
                         ${(apt.status !== 'finalizado' || this.state.user.role === 'admin') ? `
-                            <button class="btn-primary" style="background: #7c3aed; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openEditApt(${apt.id})">Ô£Å´©Å ALTERAR SERVI├çOS / PROFISSIONAL / VALOR</button>
+                            <button class="btn-primary" style="background: #7c3aed; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openEditApt(${apt.id})">✏️ ALTERAR SERVIÇOS / PROFISSIONAL / VALOR</button>
                         ` : ''}
                         ${apt.status !== 'finalizado' ? `
                             <button class="btn-primary" style="background: #48C17E; width: 100%; border-radius: 8px; box-shadow: none;" onclick="app.openFinalizeOS(${apt.id})">FINALIZAR ATENDIMENTO</button>
@@ -7328,7 +7328,7 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (!apt) return;
 
-        // Identificar servi├ºos j├í selecionados
+        // Identificar serviços já selecionados
         const currentServices = apt.service.split(', ').map(s => s.trim());
 
         this.openModal('Alterar Agendamento', `
@@ -7353,14 +7353,14 @@ const app = {
                     <input type="date" id="edit-apt-date" class="glass" value="${apt.date}" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
                 </div>
 
-                <!-- 3. Campo Hor├írio -->
+                <!-- 3. Campo Horário -->
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Hor├írio</label>
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Horário</label>
                     <input type="time" id="edit-apt-time" class="glass" value="${apt.time}" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;">
                 </div>
 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Selecione os Servi├ºos</label>
+                    <label style="display: block; margin-bottom: 10px; font-size: 0.8rem; font-weight: 700; color: var(--accent-readable);">Selecione os Serviços</label>
                     <div id="edit-walkin-service-count" style="font-size: 0.75rem; margin-bottom: 8px; color: var(--text-secondary);">Recalculando...</div>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
                         ${this.state.services.map(s => {
@@ -7375,37 +7375,37 @@ const app = {
                                            onchange="app.updateEditCounter()">
                                     <div style="flex: 1;">
                                         <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">${s.name}</p>
-                                        <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} ÔÇó ÔÅ▒´©Å ${s.duration || 30} min</p>
+                                        <p style="font-size: 0.75rem; color: var(--text-secondary);">R$ ${parseFloat(s.price).toFixed(2)} • ⏱️ ${s.duration || 30} min</p>
                                     </div>
                                 </label>
                             `;
         }).join('')}
                     </div>
                 </div>
-                <!-- 4. Campo Forma de Pagamento (se a OS j├í foi finalizada) -->
+                <!-- 4. Campo Forma de Pagamento (se a OS já foi finalizada) -->
                 ${apt.status === 'finalizado' ? `
                     <div style="margin-bottom: 20px; padding: 14px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px;">
                         <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-size: 0.82rem; font-weight: 700; color: #38bdf8;">­ƒÆ│ Forma de Pagamento (Atendimento Finalizado)</span>
+                            <span style="font-size: 0.82rem; font-weight: 700; color: #38bdf8;">💳 Forma de Pagamento (Atendimento Finalizado)</span>
                             <span style="font-size: 0.65rem; background: #38bdf8; color: #000; padding: 2px 6px; border-radius: 6px; font-weight: 800;">FINANCEIRO</span>
                         </label>
                         <select id="edit-apt-payment" class="glass" style="width: 100%; padding: 11px 12px; color: var(--text-primary); border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.4);">
-                            <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>­ƒÆÁ Dinheiro</option>
-                            <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>­ƒô▒ PIX</option>
-                            <option value="Cart├úo de D├®bito" ${apt.payment === 'Cart├úo de D├®bito' ? 'selected' : ''}>­ƒÆ│ Cart├úo de D├®bito</option>
-                            <option value="Cart├úo de Cr├®dito" ${apt.payment === 'Cart├úo de Cr├®dito' ? 'selected' : ''}>­ƒÆ│ Cart├úo de Cr├®dito</option>
-                            <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>­ƒÄü Cortesia</option>
-                            <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>Ô¡É Clube de Assinatura</option>
-                            ${apt.payment === 'Misto' ? `<option value="Misto" selected>­ƒöÇ Pagamento Misto</option>` : ''}
+                            <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>💵 Dinheiro</option>
+                            <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>📱 PIX</option>
+                            <option value="Cartão de Débito" ${apt.payment === 'Cartão de Débito' ? 'selected' : ''}>💳 Cartão de Débito</option>
+                            <option value="Cartão de Crédito" ${apt.payment === 'Cartão de Crédito' ? 'selected' : ''}>💳 Cartão de Crédito</option>
+                            <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>🎁 Cortesia</option>
+                            <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>⭐ Clube de Assinatura</option>
+                            ${apt.payment === 'Misto' ? `<option value="Misto" selected>🔀 Pagamento Misto</option>` : ''}
                         </select>
                         <small style="display: block; font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
-                            Ôä╣´©Å Se o profissional finalizou com a op├º├úo errada, selecione a op├º├úo correta acima para corrigir automaticamente no caixa e nos relat├│rios.
+                            ℹ️ Se o profissional finalizou com a opção errada, selecione a opção correta acima para corrigir automaticamente no caixa e nos relatórios.
                         </small>
                     </div>
                 ` : ''}
 
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1;" onclick="app.saveAptChanges(${apt.id})">Salvar Altera├º├Áes</button>
+                    <button class="btn-primary" style="flex: 1;" onclick="app.saveAptChanges(${apt.id})">Salvar Alterações</button>
                     <button class="btn-secondary" style="flex: 1;" onclick="app.openAppointmentManagement(${apt.id})">Voltar</button>
                 </div>
             </section>
@@ -7421,8 +7421,8 @@ const app = {
         const indicator = document.getElementById('edit-walkin-service-count');
         if (indicator) {
             indicator.innerHTML = count > 0
-                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} ÔÇó ÔÅ▒´©Å ${totalDur} min</span>`
-                : 'Pelo menos um servi├ºo deve ser selecionado';
+                ? `<span style="color: var(--accent-readable); font-weight: 700;">${count} selecionado(s) - Total: R$ ${total.toFixed(2)} • ⏱️ ${totalDur} min</span>`
+                : 'Pelo menos um serviço deve ser selecionado';
         }
 
         document.querySelectorAll('input[name="edit-services"]').forEach(input => {
@@ -7438,29 +7438,29 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="edit-services"]:checked'));
 
-        if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um servi├ºo.'); return; }
+        if (checkedBoxes.length === 0) { alert('Por favor, selecione pelo menos um serviço.'); return; }
 
         const newBarber = document.getElementById('edit-apt-barber').value;
         const newDate = document.getElementById('edit-apt-date').value;
         const newTime = document.getElementById('edit-apt-time').value;
         const totalDuration = this.calculateServicesDuration(checkedBoxes.map(cb => ({ name: cb.dataset.name, duration: cb.dataset.duration })));
 
-        // Validar colis├úo considerando o intervalo completo [newStartMin, newEndMin)
+        // Validar colisão considerando o intervalo completo [newStartMin, newEndMin)
         const newStartMin = this.timeToMinutes(newTime);
         const newEndMin = newStartMin + totalDuration;
         if (this.isBarberBusyInRange(newBarber, newDate, newStartMin, newEndMin, apt.id)) {
-            alert(`ÔÜá´©Å Conflito de agenda: O hor├írio ${newTime} (dura├º├úo: ${totalDuration} min) colide com outro agendamento de ${newBarber}. Por favor, escolha outro hor├írio ou ajuste os servi├ºos.`);
+            alert(`⚠️ Conflito de agenda: O horário ${newTime} (duração: ${totalDuration} min) colide com outro agendamento de ${newBarber}. Por favor, escolha outro horário ou ajuste os serviços.`);
             return;
         }
 
         apt.service = checkedBoxes.map(cb => cb.dataset.name).join(', ');
         apt.price = checkedBoxes.reduce((acc, cb) => acc + parseFloat(cb.dataset.price), 0);
-        apt.duration = totalDuration; // ATUALIZA DURA├ç├âO TOTAL
+        apt.duration = totalDuration; // ATUALIZA DURAÇÃO TOTAL
         apt.barber = newBarber;
         apt.date = newDate;
         apt.time = newTime;
 
-        // Se a OS j├í estava finalizada, verificar e atualizar a forma de pagamento e valores financeiros
+        // Se a OS já estava finalizada, verificar e atualizar a forma de pagamento e valores financeiros
         const paymentSelect = document.getElementById('edit-apt-payment');
         if (paymentSelect && apt.status === 'finalizado') {
             const newPayment = paymentSelect.value;
@@ -7478,7 +7478,7 @@ const app = {
                 }
                 if (trans) {
                     trans.amount = apt.finalPrice;
-                    trans.description = `Finaliza├º├úo OS: ${apt.customer} (${apt.service})${totalProducts > 0 ? ' + Consumo' : ''}`;
+                    trans.description = `Finalização OS: ${apt.customer} (${apt.service})${totalProducts > 0 ? ' + Consumo' : ''}`;
                 }
             }
         }
@@ -7499,15 +7499,15 @@ const app = {
         const getMappedMethod = (p) => {
             const s = (p || '').toLowerCase();
             if (s.includes('pix')) return 'pix';
-            if (s.includes('d├®bito') || s.includes('debito')) return 'debito';
-            if (s.includes('cr├®dito') || s.includes('credito')) return 'credito';
+            if (s.includes('débito') || s.includes('debito')) return 'debito';
+            if (s.includes('crédito') || s.includes('credito')) return 'credito';
             if (s.includes('cortesia')) return 'cortesia';
             if (s.includes('assinatura')) return 'assinatura';
             return 'dinheiro';
         };
         const mappedMethod = getMappedMethod(newPayment);
 
-        // 1. Atualizar transa├º├úo no Fluxo de Caixa
+        // 1. Atualizar transação no Fluxo de Caixa
         if (this.state.transactions) {
             let trans = null;
             if (apt.transactionId) {
@@ -7554,12 +7554,12 @@ const app = {
                     <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Atendimento Finalizado:</div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${apt.customer}</div>
                     <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                        ${apt.service} ÔÇó <strong>R$ ${(parseFloat(apt.finalPrice || apt.price) || 0).toFixed(2)}</strong>
+                        ${apt.service} • <strong>R$ ${(parseFloat(apt.finalPrice || apt.price) || 0).toFixed(2)}</strong>
                     </div>
                     <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 15px; flex-wrap: wrap;">
                         <span>Profissional: <strong style="color: var(--text-primary);">${apt.barber}</strong></span>
                         <span>Data: <strong style="color: var(--text-primary);">${apt.date}</strong></span>
-                        <span>Hor├írio: <strong style="color: var(--text-primary);">${apt.time}</strong></span>
+                        <span>Horário: <strong style="color: var(--text-primary);">${apt.time}</strong></span>
                     </div>
                 </div>
 
@@ -7568,16 +7568,16 @@ const app = {
                         Selecione a Forma de Pagamento Correta:
                     </label>
                     <select id="quick-edit-payment" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary); border-radius: 10px; font-size: 0.95rem; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.4);">
-                        <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>­ƒÆÁ Dinheiro</option>
-                        <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>­ƒô▒ PIX</option>
-                        <option value="Cart├úo de D├®bito" ${apt.payment === 'Cart├úo de D├®bito' ? 'selected' : ''}>­ƒÆ│ Cart├úo de D├®bito</option>
-                        <option value="Cart├úo de Cr├®dito" ${apt.payment === 'Cart├úo de Cr├®dito' ? 'selected' : ''}>­ƒÆ│ Cart├úo de Cr├®dito</option>
-                        <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>­ƒÄü Cortesia</option>
-                        <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>Ô¡É Clube de Assinatura</option>
-                        ${apt.payment === 'Misto' ? `<option value="Misto" selected>­ƒöÇ Pagamento Misto</option>` : ''}
+                        <option value="Dinheiro" ${apt.payment === 'Dinheiro' ? 'selected' : ''}>💵 Dinheiro</option>
+                        <option value="PIX" ${apt.payment === 'PIX' ? 'selected' : ''}>📱 PIX</option>
+                        <option value="Cartão de Débito" ${apt.payment === 'Cartão de Débito' ? 'selected' : ''}>💳 Cartão de Débito</option>
+                        <option value="Cartão de Crédito" ${apt.payment === 'Cartão de Crédito' ? 'selected' : ''}>💳 Cartão de Crédito</option>
+                        <option value="Cortesia" ${apt.payment === 'Cortesia' ? 'selected' : ''}>🎁 Cortesia</option>
+                        <option value="Assinatura" ${apt.payment === 'Assinatura' ? 'selected' : ''}>⭐ Clube de Assinatura</option>
+                        ${apt.payment === 'Misto' ? `<option value="Misto" selected>🔀 Pagamento Misto</option>` : ''}
                     </select>
                     <small style="display: block; font-size: 0.74rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
-                        Ôä╣´©Å Ao confirmar, o sistema atualizar├í o fluxo de caixa, o relat├│rio de auditoria e o faturamento do profissional imediatamente.
+                        ℹ️ Ao confirmar, o sistema atualizará o fluxo de caixa, o relatório de auditoria e o faturamento do profissional imediatamente.
                     </small>
                 </div>
 
@@ -7617,7 +7617,7 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === aptId);
         if (apt) {
             apt.status = status;
-            this.saveState(); // PERSIST├èNCIA ADICIONADA
+            this.saveState(); // PERSISTÊNCIA ADICIONADA
             this.openAppointmentManagement(aptId);
             this.render(this.state.view);
         }
@@ -7633,7 +7633,7 @@ const app = {
         // 1. Busca exata (normalizada)
         let customer = customers.find(c => this.normalizeString(c.name) === normalizedAptName);
 
-        // 2. Busca por "cont├®m" (se n├úo achou exato)
+        // 2. Busca por "contém" (se não achou exato)
         if (!customer) {
             customer = customers.find(c => {
                 const name = this.normalizeString(c.name);
@@ -7642,25 +7642,25 @@ const app = {
         }
 
         if (!customer) {
-            alert(`ÔÜá´©Å Cliente "${apt.customer}" n├úo encontrado na base de dados.\n\nVerifique se o nome na agenda coincide com o nome cadastrado no menu Clientes.`);
+            alert(`⚠️ Cliente "${apt.customer}" não encontrado na base de dados.\n\nVerifique se o nome na agenda coincide com o nome cadastrado no menu Clientes.`);
             return;
         }
 
         if (!customer.phone) {
-            alert(`ÔÜá´©Å O cliente "${customer.name}" foi encontrado, mas n├úo possui telefone cadastrado.\n\nPor favor, adicione o telefone no menu Clientes.`);
+            alert(`⚠️ O cliente "${customer.name}" foi encontrado, mas não possui telefone cadastrado.\n\nPor favor, adicione o telefone no menu Clientes.`);
             return;
         }
 
         const shopName = this.state.settings.shopName || 'Nossa Loja';
 
-        // Limpar n├║mero do telefone (apenas n├║meros)
+        // Limpar número do telefone (apenas números)
         const cleanPhone = customer.phone.replace(/\D/g, '');
 
         // Formatar data bonitinha
         const dateObj = new Date(apt.date + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
-        const message = `Ol├í, *${customer.name}*! ­ƒæï\n\nPassando para confirmar seu hor├írio na *${shopName}*:\n\n­ƒôà Data: *${formattedDate}*\nÔÅ░ Hora: *${apt.time}*\n­ƒøá´©Å Servi├ºo: *${apt.service}*\n\nNos vemos em breve! ­ƒÿè`;
+        const message = `Olá, *${customer.name}*! 👋\n\nPassando para confirmar seu horário na *${shopName}*:\n\n📅 Data: *${formattedDate}*\n⏰ Hora: *${apt.time}*\n🛠️ Serviço: *${apt.service}*\n\nNos vemos em breve! 😊`;
 
         const encodedMsg = encodeURIComponent(message);
         const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMsg}`;
@@ -7673,16 +7673,16 @@ const app = {
         const apt = this.state.appointments.find(a => a.id === idToFind);
         if (!apt) return;
 
-        // ÔöÇÔöÇ PROTE├ç├âO CONTRA DUPLICA├ç├âO ÔöÇÔöÇ
-        // Se a OS j├í foi finalizada, bloqueia a abertura do modal
+        // ── PROTEÇÃO CONTRA DUPLICAÇÃO ──
+        // Se a OS já foi finalizada, bloqueia a abertura do modal
         if (apt.status === 'finalizado') {
-            alert('ÔÜá´©Å Esta OS j├í foi finalizada! N├úo ├® poss├¡vel finalizar novamente.');
+            alert('⚠️ Esta OS já foi finalizada! Não é possível finalizar novamente.');
             return;
         }
 
         if (!apt.products) apt.products = [];
 
-        // Garante que sempre usamos o pre├ºo e servi├ºo original (n├úo o j├í alterado por desconto)
+        // Garante que sempre usamos o preço e serviço original (não o já alterado por desconto)
         const originalPrice = typeof apt._originalPrice !== 'undefined' ? apt._originalPrice : parseFloat(apt.price) || 0;
         const originalService = apt._originalService || apt.service;
         apt._originalPrice = originalPrice;
@@ -7695,7 +7695,7 @@ const app = {
             return apt.products.map((p, idx) => `
                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 5px;">
                     <span>${p.name} (x${p.qty})</span>
-                    <span>R$ ${((p.price || 0) * (p.qty || 1)).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">Ô£ò</button></span>
+                    <span>R$ ${((p.price || 0) * (p.qty || 1)).toFixed(2)} <button style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 5px;" onclick="app.removeProductFromOS('${apt.id}', ${idx})">✕</button></span>
                 </div>
             `).join('');
         };
@@ -7719,7 +7719,7 @@ const app = {
             }
         }
         
-        // L├│gica de Limites e Servi├ºos do Clube
+        // Lógica de Limites e Serviços do Clube
         let isIncludedService = false;
         let isPartiallyIncluded = false;
         let usageWarning = '';
@@ -7730,7 +7730,7 @@ const app = {
         
         let pureService = apt.service ? apt.service.replace(/ \[Clube:.*?\]/g, '').trim() : '';
 
-        // Declaradas aqui para ficarem acess├¡veis fora do bloco isActiveSubscriber
+        // Declaradas aqui para ficarem acessíveis fora do bloco isActiveSubscriber
         let includedList = [];
         let notIncludedList = [];
         let sumIncludedCatalog = 0;
@@ -7739,7 +7739,7 @@ const app = {
         if (isActiveSubscriber) {
             planObj = (this.state.subscriptionPlans || []).find(p => p && p.name && subscriberPlan && p.name.trim() === subscriberPlan.trim());
             
-            // Separa os servi├ºos se houver mais de um (ex: "Corte, Barba")
+            // Separa os serviços se houver mais de um (ex: "Corte, Barba")
             let allServices = (this.state.services || []).map(s => s.name || '').sort((a,b) => b.length - a.length);
             let individualServices = [];
             const chunks = pureService.split(', ');
@@ -7761,7 +7761,7 @@ const app = {
                 }
             }
 
-            // Checa quais est├úo inclusos
+            // Checa quais estão inclusos
             sumIncludedCatalog = 0;
             sumIncludedCommBase = 0;
 
@@ -7803,7 +7803,7 @@ const app = {
             });
 
             if (includedList.length > 0) {
-                // Pelo menos 1 servi├ºo est├í incluso
+                // Pelo menos 1 serviço está incluso
                 isIncludedService = true;
                 
                 // Checa limites de uso
@@ -7835,28 +7835,28 @@ const app = {
 
                 if (planObj.weeklyLimit && weekCount >= planObj.weeklyLimit) {
                     isIncludedService = false;
-                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit}). Nenhum servi├ºo ser├í isento.`;
+                    usageWarning = `Limite Semanal Atingido (${weekCount}/${planObj.weeklyLimit}). Nenhum serviço será isento.`;
                     notIncludedList = [...includedList, ...notIncludedList];
                     includedList = [];
                 } else if (planObj.monthlyLimit && monthCount >= planObj.monthlyLimit) {
                     isIncludedService = false;
-                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit}). Nenhum servi├ºo ser├í isento.`;
+                    usageWarning = `Limite Mensal Atingido (${monthCount}/${planObj.monthlyLimit}). Nenhum serviço será isento.`;
                     notIncludedList = [...includedList, ...notIncludedList];
                     includedList = [];
                 }
             } else {
                 usageWarning = (!planObj || !planObj.includedServices || planObj.includedServices.length === 0) 
-                    ? `O Plano n├úo possui nenhum servi├ºo configurado. Edite o plano no menu Assinaturas e marque os servi├ºos.` 
-                    : `Os servi├ºos selecionados n├úo est├úo inclusos neste plano.`;
+                    ? `O Plano não possui nenhum serviço configurado. Edite o plano no menu Assinaturas e marque os serviços.` 
+                    : `Os serviços selecionados não estão inclusos neste plano.`;
             }
 
             if (isIncludedService) {
                 if (notIncludedList.length > 0) {
-                    // Misto: Cobra a diferen├ºa
+                    // Misto: Cobra a diferença
                     isPartiallyIncluded = true;
                     finalAptPrice = Math.max(0, (parseFloat(apt.price) || 0) - sumIncludedCatalog);
                     finalCommBase = sumIncludedCommBase + finalAptPrice;
-                    usageWarning = `Aten├º├úo: A isen├º├úo cobriu apenas os servi├ºos do plano. O restante ser├í cobrado.`;
+                    usageWarning = `Atenção: A isenção cobriu apenas os serviços do plano. O restante será cobrado.`;
                 } else {
                     // 100% incluso
                     finalAptPrice = 0;
@@ -7884,13 +7884,13 @@ const app = {
                     <h5 style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Resumo do Atendimento</h5>
                     ${inc.length > 0 ? `
                         <div style="margin-bottom: 8px;">
-                            <strong style="color: #10b981; font-size: 0.8rem;">Ô£ö´©Å Cobertos pelo Plano:</strong>
+                            <strong style="color: #10b981; font-size: 0.8rem;">✔️ Cobertos pelo Plano:</strong>
                             <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${inc.join(', ')} <span style="float: right; color: #10b981;">Isento</span></div>
                         </div>
                     ` : ''}
                     ${nInc.length > 0 ? `
                         <div>
-                            <strong style="color: #ff4444; font-size: 0.8rem;">ÔØî A Pagar (Fora do Plano):</strong>
+                            <strong style="color: #ff4444; font-size: 0.8rem;">❌ A Pagar (Fora do Plano):</strong>
                             <div style="color: var(--text-primary); font-size: 0.85rem; padding-left: 5px;">${nInc.join(', ')} <span style="float: right; color: var(--text-primary);">Cobrado na O.S.</span></div>
                         </div>
                     ` : ''}
@@ -7908,37 +7908,37 @@ const app = {
                 ${isSubscriber ? (
                     isActiveSubscriber 
                     ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
-                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">­ƒÆÄ</span>
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">💎</span>
                         <h4 style="margin: 0; color: #10b981; font-size: 1.1rem; text-transform: uppercase;">Assinante Ativo</h4>
                         <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">Plano: <strong>${subscriberPlan}</strong></p>
-                        <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">V├ílido at├®: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
+                        <p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--text-secondary);">Válido até: ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}</p>
                         
                         ${isencaoHtml}
 
-                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">ÔÜá´©Å ${usageWarning}</div>` : ''}
-                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">Ôä╣´©Å ${usageWarning}</div>` : ''}
+                        ${usageWarning && !isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24; border-radius: 5px; color: #fbbf24; font-size: 0.85rem; font-weight: bold;">⚠️ ${usageWarning}</div>` : ''}
+                        ${isPartiallyIncluded ? `<div style="margin-top: 10px; padding: 8px; background: rgba(59, 130, 246, 0.2); border: 1px dashed #3b82f6; border-radius: 5px; color: #3b82f6; font-size: 0.85rem; font-weight: bold;">ℹ️ ${usageWarning}</div>` : ''}
                        </div>`
                     : `<div style="background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);">
-                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">ÔÜá´©Å</span>
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚠️</span>
                         <h4 style="margin: 0; color: #ff4444; font-size: 1.1rem; text-transform: uppercase;">Assinatura Vencida!</h4>
                         <p style="margin: 5px 0 0; font-size: 0.85rem; color: var(--text-primary);">O plano <strong>${subscriberPlan}</strong> venceu em ${new Date(subscriberValidUntil + "T00:00:00").toLocaleDateString('pt-BR')}.</p>
-                        <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renova├º├úo antes de finalizar a OS!</p>
+                        <p style="margin: 8px 0 0; font-size: 0.85rem; color: #ff4444; font-weight: bold;">Solicite a renovação antes de finalizar a OS!</p>
                        </div>`
                 ) : ''}
                 
-                <!-- Bloco de Valor do Servi├ºo (Edit├ível se a partir de estiver ativo, ou Fixo se desativado) -->
+                <!-- Bloco de Valor do Serviço (Editável se a partir de estiver ativo, ou Fixo se desativado) -->
                 <div style="margin-bottom: 15px; padding: 14px; background: var(--surface-light); border: 1px solid var(--glass-border); border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">
-                            Ô£é´©Å Valor do Servi├ºo
+                            ✂️ Valor do Serviço
                         </label>
                         ${allowPriceFrom ? `
                             <span style="font-size: 0.72rem; color: var(--accent-readable); font-weight: 700; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">
-                                Ô£Å´©Å Edit├ível (a partir de)
+                                ✏️ Editável (a partir de)
                             </span>
                         ` : `
                             <span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 4px;">
-                                ­ƒöÆ Valor Fixo
+                                🔒 Valor Fixo
                             </span>
                         `}
                     </div>
@@ -7959,7 +7959,7 @@ const app = {
                                    oninput="app.updateFinalizeOSTotal(${apt.id})">
                         </div>
                         <small style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
-                            ­ƒÆí Altere o valor acima caso o servi├ºo seja vari├ível ("a partir de") ou tenha cobran├ºa adicional.
+                            💡 Altere o valor acima caso o serviço seja variável ("a partir de") ou tenha cobrança adicional.
                         </small>
                     ` : `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -7982,7 +7982,7 @@ const app = {
                         </span>
                     </div>
                     <div id="final-os-breakdown" style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--glass-border);">
-                        <span id="final-os-service-subtotal">Servi├ºo: R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}</span>
+                        <span id="final-os-service-subtotal">Serviço: R$ ${(parseFloat(finalAptPrice) || 0).toFixed(2)}</span>
                         <span id="final-os-product-subtotal">+ Produtos: R$ ${totalProducts.toFixed(2)}</span>
                     </div>
                 </div>
@@ -8009,30 +8009,30 @@ const app = {
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-weight: 700; color: #fbbf24; font-size: 0.85rem;">Forma de Pagamento * (Obrigat├│rio Conferir)</span>
+                        <span style="font-weight: 700; color: #fbbf24; font-size: 0.85rem;">Forma de Pagamento * (Obrigatório Conferir)</span>
                         <span id="final-payment-selected-badge" style="font-size: 0.72rem; color: ${isActiveSubscriber || finalTotal === 0 ? '#4ade80' : '#f87171'}; font-weight: 700;">
-                            ${isActiveSubscriber || finalTotal === 0 ? 'Ô£ô Assinatura / Cortesia' : 'ÔÜá´©Å Clique para escolher'}
+                            ${isActiveSubscriber || finalTotal === 0 ? '✓ Assinatura / Cortesia' : '⚠️ Clique para escolher'}
                         </span>
                     </label>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
                         <button type="button" class="btn-payment-option glass" data-method="Dinheiro" onclick="app.selectFinalPayment('Dinheiro', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>­ƒÆÁ Dinheiro</span>
+                            <span>💵 Dinheiro</span>
                         </button>
                         <button type="button" class="btn-payment-option glass" data-method="PIX" onclick="app.selectFinalPayment('PIX', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>­ƒô▒ PIX</span>
+                            <span>📱 PIX</span>
                         </button>
-                        <button type="button" class="btn-payment-option glass" data-method="Cart├úo de D├®bito" onclick="app.selectFinalPayment('Cart├úo de D├®bito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>­ƒÆ│ D├®bito</span>
+                        <button type="button" class="btn-payment-option glass" data-method="Cartão de Débito" onclick="app.selectFinalPayment('Cartão de Débito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>💳 Débito</span>
                         </button>
-                        <button type="button" class="btn-payment-option glass" data-method="Cart├úo de Cr├®dito" onclick="app.selectFinalPayment('Cart├úo de Cr├®dito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>­ƒÆ│ Cr├®dito</span>
+                        <button type="button" class="btn-payment-option glass" data-method="Cartão de Crédito" onclick="app.selectFinalPayment('Cartão de Crédito', ${finalTotal})" style="padding: 12px 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.86rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
+                            <span>💳 Crédito</span>
                         </button>
                         <button type="button" class="btn-payment-option glass ${isActiveSubscriber || finalTotal === 0 ? 'active' : ''}" data-method="Assinatura / Cortesia" onclick="app.selectFinalPayment('Assinatura / Cortesia', ${finalTotal})" style="padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>Ô¡É Assinatura / Cortesia</span>
+                            <span>⭐ Assinatura / Cortesia</span>
                         </button>
                         <button type="button" class="btn-payment-option glass" data-method="Misto" onclick="app.selectFinalPayment('Misto', ${finalTotal})" style="padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; border: 1px solid var(--glass-border); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary);">
-                            <span>­ƒöÇ Pagamento Misto</span>
+                            <span>🔀 Pagamento Misto</span>
                         </button>
                     </div>
 
@@ -8045,8 +8045,8 @@ const app = {
                             <select id="split-method-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
                                 <option value="Dinheiro">Dinheiro</option>
                                 <option value="PIX">PIX</option>
-                                <option value="Cart├úo de D├®bito">D├®bito</option>
-                                <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
                             </select>
                             <input type="number" id="split-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01" oninput="app.updateSplitRemainder(${finalTotal})">
                         </div>
@@ -8055,8 +8055,8 @@ const app = {
                             <select id="split-method-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);">
                                 <option value="PIX">PIX</option>
                                 <option value="Dinheiro">Dinheiro</option>
-                                <option value="Cart├úo de D├®bito">D├®bito</option>
-                                <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                <option value="Cartão de Débito">Débito</option>
+                                <option value="Cartão de Crédito">Crédito</option>
                             </select>
                             <input type="number" id="split-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-top: 5px;" placeholder="Valor" step="0.01">
                         </div>
@@ -8100,7 +8100,7 @@ const app = {
         const badge = document.getElementById('final-payment-selected-badge');
         if (badge) {
             badge.style.color = '#38bdf8';
-            badge.innerHTML = `Ô£ô Selecionado: <strong>${method}</strong>`;
+            badge.innerHTML = `✓ Selecionado: <strong>${method}</strong>`;
         }
 
         // Toggle split wrapper
@@ -8139,7 +8139,7 @@ const app = {
 
         const serviceSubtotal = document.getElementById('final-os-service-subtotal');
         if (serviceSubtotal) {
-            serviceSubtotal.innerHTML = `Servi├ºo: R$ ${newServicePrice.toFixed(2)}`;
+            serviceSubtotal.innerHTML = `Serviço: R$ ${newServicePrice.toFixed(2)}`;
         }
 
         const productSubtotal = document.getElementById('final-os-product-subtotal');
@@ -8147,13 +8147,13 @@ const app = {
             productSubtotal.innerHTML = `+ Produtos: R$ ${totalProducts.toFixed(2)}`;
         }
 
-        // Atualiza texto do split payment (se vis├¡vel)
+        // Atualiza texto do split payment (se visível)
         const splitTotalText = document.querySelector('#split-payment-wrapper p strong');
         if (splitTotalText) {
             splitTotalText.innerHTML = `R$ ${newTotal.toFixed(2)}`;
         }
 
-        // Atualiza select onchange e split remainder se aplic├ível
+        // Atualiza select onchange e split remainder se aplicável
         const selectPayment = document.getElementById('final-payment');
         if (selectPayment) {
             selectPayment.setAttribute('onchange', `document.getElementById('split-payment-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; app.updateSplitRemainder(${newTotal})`);
@@ -8223,21 +8223,21 @@ const app = {
         const idToFind = Number(aptId);
         const apt = this.state.appointments.find(a => a.id === idToFind);
 
-        // ÔöÇÔöÇ PROTE├ç├âO 1: Verifica se a OS j├í foi finalizada ÔöÇÔöÇ
+        // ── PROTEÇÃO 1: Verifica se a OS já foi finalizada ──
         if (!apt || apt.status === 'finalizado') {
-            alert('ÔÜá´©Å Esta OS j├í foi finalizada! Opera├º├úo cancelada para evitar duplica├º├úo no caixa.');
+            alert('⚠️ Esta OS já foi finalizada! Operação cancelada para evitar duplicação no caixa.');
             this.closeModal();
             return;
         }
 
-        // ÔöÇÔöÇ PROTE├ç├âO 2: Verifica se j├í existe transa├º├úo vinculada (seguran├ºa extra) ÔöÇÔöÇ
+        // ── PROTEÇÃO 2: Verifica se já existe transação vinculada (segurança extra) ──
         if (apt.transactionId) {
-            alert('ÔÜá´©Å J├í existe uma transa├º├úo registrada para esta OS. Opera├º├úo cancelada.');
+            alert('⚠️ Já existe uma transação registrada para esta OS. Operação cancelada.');
             this.closeModal();
             return;
         }
 
-        // ÔöÇÔöÇ L├¬ o valor ajustado do servi├ºo se fornecido ÔöÇÔöÇ
+        // ── Lê o valor ajustado do serviço se fornecido ──
         const servicePriceInput = document.getElementById('final-service-price');
         if (servicePriceInput) {
             const parsedPrice = parseFloat(servicePriceInput.value);
@@ -8250,16 +8250,16 @@ const app = {
             }
         }
 
-        // ÔöÇÔöÇ PROTE├ç├âO 3: Desabilita bot├úo para evitar duplo clique ÔöÇÔöÇ
+        // ── PROTEÇÃO 3: Desabilita botão para evitar duplo clique ──
         const btnFinalizar = document.querySelector('[onclick*="doFinalizeOS"]');
         if (btnFinalizar) {
-            if (btnFinalizar.disabled) return; // J├í est├í processando
+            if (btnFinalizar.disabled) return; // Já está processando
             btnFinalizar.disabled = true;
             btnFinalizar.style.opacity = '0.5';
-            btnFinalizar.textContent = 'ÔÅ│ Processando...';
+            btnFinalizar.textContent = '⏳ Processando...';
         }
 
-        // ÔöÇÔöÇ PROTE├ç├âO 4: Marca a OS como "em processamento" imediatamente ÔöÇÔöÇ
+        // ── PROTEÇÃO 4: Marca a OS como "em processamento" imediatamente ──
         apt.status = 'processando';
 
         const payment = document.getElementById('final-payment').value;
@@ -8270,7 +8270,7 @@ const app = {
         }
 
         if (!payment) {
-            alert('ÔÜá´©Å ATEN├ç├âO: ├ë obrigat├│rio selecionar a Forma de Pagamento antes de finalizar!');
+            alert('⚠️ ATENÇÃO: É obrigatório selecionar a Forma de Pagamento antes de finalizar!');
             if (btnFinalizar) {
                 btnFinalizar.disabled = false;
                 btnFinalizar.style.opacity = '1';
@@ -8284,12 +8284,12 @@ const app = {
         const totalBase = apt.price + totalProducts;
         const finalTotal = totalBase + tip;
 
-        // ÔöÇÔöÇ VERIFICA├ç├âO OBRIGAT├ôRIA DA FORMA DE PAGAMENTO ÔöÇÔöÇ
-        const confirmMsg = `ÔÜá´©Å CONFER├èNCIA OBRIGAT├ôRIA DE PAGAMENTO:\n\n` +
+        // ── VERIFICAÇÃO OBRIGATÓRIA DA FORMA DE PAGAMENTO ──
+        const confirmMsg = `⚠️ CONFERÊNCIA OBRIGATÓRIA DE PAGAMENTO:\n\n` +
             `Cliente: ${apt.customer}\n` +
             `Valor Total: R$ ${finalTotal.toFixed(2)}\n` +
             `Forma de Pagamento Selecionada: [ ${payment.toUpperCase()} ]\n\n` +
-            `Voc├¬ confirma que o cliente pagou via ${payment}?`;
+            `Você confirma que o cliente pagou via ${payment}?`;
 
         if (!confirm(confirmMsg)) {
             if (btnFinalizar) {
@@ -8301,11 +8301,11 @@ const app = {
             return;
         }
 
-        const mappedMethod = payment === 'PIX' ? 'pix' : (payment === 'Cart├úo de D├®bito' ? 'debito' : (payment === 'Cart├úo de Cr├®dito' ? 'credito' : (payment === 'Assinatura / Cortesia' ? 'cortesia' : 'dinheiro')));
-        const desc = `Finaliza├º├úo OS: ${apt.customer} (${apt.service})${(apt.products && apt.products.length > 0) ? ' + Consumo' : ''}`;
+        const mappedMethod = payment === 'PIX' ? 'pix' : (payment === 'Cartão de Débito' ? 'debito' : (payment === 'Cartão de Crédito' ? 'credito' : (payment === 'Assinatura / Cortesia' ? 'cortesia' : 'dinheiro')));
+        const desc = `Finalização OS: ${apt.customer} (${apt.service})${(apt.products && apt.products.length > 0) ? ' + Consumo' : ''}`;
 
         try {
-            // Registrar transa├º├Áes
+            // Registrar transações
             if (payment === 'Misto') {
                 const val1 = parseFloat(document.getElementById('split-amount-1').value) || 0;
                 const val2 = parseFloat(document.getElementById('split-amount-2').value) || 0;
@@ -8313,13 +8313,13 @@ const app = {
                 const method2 = document.getElementById('split-method-2').value;
 
                 if (Math.abs((val1 + val2) - totalBase) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) ├® diferente do valor (R$ ${totalBase.toFixed(2)}). Deseja continuar?`)) return;
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor (R$ ${totalBase.toFixed(2)}). Deseja continuar?`)) return;
                 }
 
                 const getM = (m) => {
                     if (m === 'PIX') return 'pix';
-                    if (m === 'Cart├úo de D├®bito') return 'debito';
-                    if (m === 'Cart├úo de Cr├®dito') return 'credito';
+                    if (m === 'Cartão de Débito') return 'debito';
+                    if (m === 'Cartão de Crédito') return 'credito';
                     return 'dinheiro';
                 };
 
@@ -8352,7 +8352,7 @@ const app = {
                         date: tipDate,
                         aptDate: apt.date || tipDate,
                         timestamp: new Date().toISOString(),
-                        status: 'pending', // Novo sistema de aprova├º├úo
+                        status: 'pending', // Novo sistema de aprovação
                         paymentMethod: mappedMethod,
                         transactionId: tipTransactionId
                     });
@@ -8372,7 +8372,7 @@ const app = {
                         prod.stock -= p.qty;
                     }
 
-                    // 2. Registro Individual da Venda para Relat├│rios
+                    // 2. Registro Individual da Venda para Relatórios
                     this.state.productSales.push({
                         id: Date.now() + Math.random(),
                         productId: p.id,
@@ -8393,7 +8393,7 @@ const app = {
 
             apt.status = 'finalizado';
             apt.payment = payment;
-            apt.finalPrice = totalBase; // Guardar o pre├ºo total (Servi├ºo + Produtos)
+            apt.finalPrice = totalBase; // Guardar o preço total (Serviço + Produtos)
             delete apt._originalPrice;
             delete apt._originalService;
 
@@ -8403,7 +8403,7 @@ const app = {
             alert('Venda registrada e estoque atualizado!');
         } catch (error) {
             console.error('Erro fatal ao finalizar OS:', error);
-            // ÔöÇÔöÇ Reverte o status para permitir nova tentativa ÔöÇÔöÇ
+            // ── Reverte o status para permitir nova tentativa ──
             if (apt) apt.status = 'em atendimento';
             alert('Ocorreu um erro inesperado: ' + error.message);
         }
@@ -8414,22 +8414,22 @@ const app = {
             const idToCancel = Number(aptId);
             const apt = this.state.appointments.find(a => a.id === idToCancel);
 
-            // Registrar exclus├úo do agendamento
+            // Registrar exclusão do agendamento
             this.registerDeletion(idToCancel);
 
             if (apt && apt.transactionId) {
-                // Registrar e remover transa├º├úo financeira se existir
+                // Registrar e remover transação financeira se existir
                 this.registerDeletion(apt.transactionId);
                 this.state.transactions = this.state.transactions.filter(t => t.id !== apt.transactionId);
             } else if (apt) {
-                // Fallback para agendamentos antigos sem ID de transa├º├úo
-                const desc = `Servi├ºo: ${apt.service} (${apt.customer})`;
+                // Fallback para agendamentos antigos sem ID de transação
+                const desc = `Serviço: ${apt.service} (${apt.customer})`;
                 const transactionsToDelete = this.state.transactions.filter(t => t.description === desc && t.date === apt.date);
                 transactionsToDelete.forEach(t => this.registerDeletion(t.id));
                 this.state.transactions = this.state.transactions.filter(t => t.description !== desc || t.date !== apt.date);
             }
 
-            // Excluir tamb├®m vendas de produtos vinculadas a este agendamento (se houver)
+            // Excluir também vendas de produtos vinculadas a este agendamento (se houver)
             const salesToDelete = (this.state.productSales || []).filter(s => s.aptId === idToCancel || (apt && s.transactionId === apt.transactionId));
             salesToDelete.forEach(s => this.registerDeletion(s.id));
             this.state.productSales = (this.state.productSales || []).filter(s => s.aptId !== idToCancel && (!apt || s.transactionId !== apt.transactionId));
@@ -8458,7 +8458,7 @@ const app = {
             this.state.revenueEnd = end;
             this.renderAdminFaturamento(document.getElementById('main-content'));
         } else {
-            alert('Por favor, selecione as datas de in├¡cio e fim.');
+            alert('Por favor, selecione as datas de início e fim.');
         }
     },
 
@@ -8492,7 +8492,7 @@ const app = {
             return d >= startDate && d <= endDate;
         };
 
-        // 1. Calcular de Agendamentos Finalizados (Servi├ºos)
+        // 1. Calcular de Agendamentos Finalizados (Serviços)
         const appointments = (this.state.appointments || []).filter(a => a.status === 'finalizado' && a.date && dateFilter(a.date));
         let serviceGross = 0;
         let serviceCommissions = 0;
@@ -8517,7 +8517,7 @@ const app = {
             productCommissions += (s.sellerCommission || 0);
         });
 
-        // 3. Calcular de Planos e Conv├¬nios (Assinaturas)
+        // 3. Calcular de Planos e Convênios (Assinaturas)
         const planTransactions = (this.state.transactions || []).filter(t => t.type === 'in' && (t.category === 'plano' || t.category === 'assinatura' || t.category === 'convenio') && t.date && dateFilter(t.date));
         let planGross = planTransactions.reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
 
@@ -8525,18 +8525,18 @@ const app = {
         const totalCommissions = serviceCommissions + productCommissions;
         const netRevenue = totalGross - totalCommissions;
 
-        // 3. Calcular formas de pagamento (das transa├º├Áes do per├¡odo)
+        // 3. Calcular formas de pagamento (das transações do período)
         const periodTransactions = (this.state.transactions || []).filter(t => t.type === 'in' && t.date && dateFilter(t.date));
         const payMethods = { dinheiro: 0, pix: 0, cartao: 0 };
         periodTransactions.forEach(t => {
             const m = (t.method || 'dinheiro').toLowerCase();
             const val = parseFloat(t.amount) || 0;
             if (m.includes('pix')) payMethods.pix += val;
-            else if (m.includes('debito') || m.includes('d├®bito') || m.includes('credito') || m.includes('cr├®dito') || m.includes('cart├úo')) payMethods.cartao += val;
+            else if (m.includes('debito') || m.includes('débito') || m.includes('credito') || m.includes('crédito') || m.includes('cartão')) payMethods.cartao += val;
             else payMethods.dinheiro += val;
         });
 
-        // 4. [OTIMIZA├ç├âO] Agrupar dados por barbeiro antes do loop para evitar filtros repetitivos O(N^2)
+        // 4. [OTIMIZAÇÃO] Agrupar dados por barbeiro antes do loop para evitar filtros repetitivos O(N^2)
         const aptsByBarber = {};
         const productsByBarber = {};
         const vouchersByBarber = {};
@@ -8590,12 +8590,12 @@ const app = {
         container.innerHTML = `
             <section id="faturamento-view" class="fade-in" style="padding-bottom: 50px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2 class="section-title" style="margin:0;">­ƒôê Auditoria e Faturamento</h2>
+                    <h2 class="section-title" style="margin:0;">📈 Auditoria e Faturamento</h2>
                     <select class="glass" style="padding: 10px 15px; color: var(--text-primary); font-size: 0.85rem; border: 1px solid var(--glass-border);" 
                             onchange="app.state.revenuePeriod = this.value; app.renderAdminFaturamento(document.getElementById('main-content'))">
                         <option value="day" ${period === 'day' ? 'selected' : ''}>Hoje</option>
                         <option value="week" ${period === 'week' ? 'selected' : ''}>Esta Semana</option>
-                        <option value="month" ${period === 'month' ? 'selected' : ''}>Este M├¬s</option>
+                        <option value="month" ${period === 'month' ? 'selected' : ''}>Este Mês</option>
                         <option value="custom" ${period === 'custom' ? 'selected' : ''}>Personalizado</option>
                     </select>
                 </div>
@@ -8603,14 +8603,14 @@ const app = {
                 ${period === 'custom' ? `
                     <div class="glass" style="padding: 20px; margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-end; border: 1px dashed var(--glass-border);">
                         <div style="flex: 1;">
-                            <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block;">In├¡cio</label>
+                            <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block;">Início</label>
                             <input type="date" id="rev-start" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.revenueStart || ''}">
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block;">Fim</label>
                             <input type="date" id="rev-end" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${this.state.revenueEnd || ''}">
                         </div>
-                        <button class="btn-primary" style="padding: 12px 25px;" onclick="app.applyRevenueFilter()">Gerar Relat├│rio</button>
+                        <button class="btn-primary" style="padding: 12px 25px;" onclick="app.applyRevenueFilter()">Gerar Relatório</button>
                     </div>
                 ` : ''}
 
@@ -8621,11 +8621,11 @@ const app = {
                         <p style="font-size: 1.8rem; font-weight: 900; color: #4ade80; margin-top: 5px;">R$ ${totalGross.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid #f87171;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Comiss├Áes (Equipe)</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Comissões (Equipe)</p>
                         <p style="font-size: 1.8rem; font-weight: 900; color: #f87171; margin-top: 5px;">R$ ${totalCommissions.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 20px; text-align: center; border-bottom: 3px solid var(--accent-color);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">L├¡quido Empresa</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Líquido Empresa</p>
                         <p style="font-size: 1.8rem; font-weight: 900; color: var(--accent-readable); margin-top: 5px;">R$ ${netRevenue.toFixed(2)}</p>
                     </div>
                 </div>
@@ -8633,8 +8633,8 @@ const app = {
                 <!-- Detalhamento de Pagamentos por Profissional -->
                 <div class="glass" style="padding: 25px; margin-bottom: 25px;">
                     <h3 style="font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        ­ƒæÑ Pagamentos por Profissional
-                        <span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">(Resumo do Per├¡odo)</span>
+                        👥 Pagamentos por Profissional
+                        <span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">(Resumo do Período)</span>
                     </h3>
                     
                     <div style="overflow-x: auto;">
@@ -8643,10 +8643,10 @@ const app = {
                                 <tr style="border-bottom: 2px solid var(--glass-border);">
                                     <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Colaborador</th>
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Gerado (Bruto)</th>
-                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Comiss├úo</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Comissão</th>
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Gorjetas</th>
                                     <th style="padding: 12px; text-align: right; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">Vales</th>
-                                    <th style="padding: 12px; text-align: right; color: var(--accent-readable); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">A Pagar (L├¡q.)</th>
+                                    <th style="padding: 12px; text-align: right; color: var(--accent-readable); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">A Pagar (Líq.)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -8667,18 +8667,18 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     <div class="glass" style="padding: 20px;">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Composi├º├úo do Faturamento</p>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Composição do Faturamento</p>
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: var(--text-secondary);">­ƒÆê Servi├ºos</span>
+                                <span style="color: var(--text-secondary);">💈 Serviços</span>
                                 <span style="font-weight: 700; font-size: 1.1rem;">R$ ${serviceGross.toFixed(2)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: var(--text-secondary);">­ƒôª Venda de Produtos</span>
+                                <span style="color: var(--text-secondary);">📦 Venda de Produtos</span>
                                 <span style="font-weight: 700; font-size: 1.1rem;">R$ ${productGross.toFixed(2)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: var(--text-secondary);">­ƒÆ│ Planos e Conv├¬nios</span>
+                                <span style="color: var(--text-secondary);">💳 Planos e Convênios</span>
                                 <span style="font-weight: 700; font-size: 1.1rem; color: #f59e0b;">R$ ${planGross.toFixed(2)}</span>
                             </div>
                         </div>
@@ -8695,7 +8695,7 @@ const app = {
                                 <p style="font-weight: 700;">R$ ${payMethods.pix.toFixed(2)}</p>
                             </div>
                             <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                                <p style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">CART├âO</p>
+                                <p style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">CARTÃO</p>
                                 <p style="font-weight: 700;">R$ ${payMethods.cartao.toFixed(2)}</p>
                             </div>
                         </div>
@@ -8726,7 +8726,7 @@ const app = {
             <section>
                 <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Emitir Comprovante</h2>
                 <div style="margin-bottom: 20px;">
-                    <label style="display:block; margin-bottom: 5px; font-size: 0.85rem;">M├¬s</label>
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.85rem;">Mês</label>
                     <select id="comprovante-mes" class="glass" style="width: 100%; padding: 10px;">
                         ${mesesHtml}
                     </select>
@@ -8753,7 +8753,7 @@ const app = {
         const btn = document.getElementById('btn-gerar-pdf');
         if (btn) btn.innerText = "Gerando...";
 
-        // Filtra appointments do m├¬s
+        // Filtra appointments do mês
         const appointments = (this.state.appointments || []).filter(a => {
             if (a.status !== 'finalizado' || !a.date) return false;
             // a.date geralmente vem como YYYY-MM-DD
@@ -8764,7 +8764,7 @@ const app = {
             return false;
         });
 
-        // Filtra vendas de produtos do m├¬s
+        // Filtra vendas de produtos do mês
         const productSales = (this.state.productSales || []).filter(s => {
             if (s.target === 'adm' || !s.date) return false;
             const parts = s.date.split('-');
@@ -8802,8 +8802,8 @@ const app = {
         const currentTenant = this.getTenantId();
         const isCentauro = currentTenant === 'centauro';
         const displayShopName = shopInfo.name || s.shopName || (isCentauro ? 'Centauros Barbearia' : (currentTenant ? currentTenant.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Barbearia'));
-        const displayCnpj = shopInfo.cnpj || (isCentauro ? '63.039.029/0001-05' : 'N├úo informado');
-        const displayOwner = shopInfo.owner || s.owner || (isCentauro ? 'Henrique Rocha Clavijo (CPF: 852.216.190-91)' : 'Respons├ível');
+        const displayCnpj = shopInfo.cnpj || (isCentauro ? '63.039.029/0001-05' : 'Não informado');
+        const displayOwner = shopInfo.owner || s.owner || (isCentauro ? 'Henrique Rocha Clavijo (CPF: 852.216.190-91)' : 'Responsável');
         const hoje = new Date().toLocaleDateString('pt-BR');
 
         const tempDiv = document.createElement('div');
@@ -8811,14 +8811,14 @@ const app = {
             <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; max-width: 100%;">
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
                     <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">${displayShopName}</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprova├º├úo de Faturamento</p>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Documento Auxiliar de Comprovação de Faturamento</p>
                 </div>
                 
                 <div style="margin-bottom: 30px;">
-                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">1. Identifica├º├úo do Emissor e Per├¡odo</h2>
+                    <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">1. Identificação do Emissor e Período</h2>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Raz├úo Social / Nome Fantasia</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 30%; font-weight: bold; background: #f9f9f9;">Razão Social / Nome Fantasia</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${displayShopName}</td>
                         </tr>
                         <tr>
@@ -8826,15 +8826,15 @@ const app = {
                             <td style="padding: 8px; border: 1px solid #ddd;">${displayCnpj}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Propriet├írio Respons├ível</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Proprietário Responsável</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${displayOwner}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">M├¬s/Ano de Refer├¬ncia</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Mês/Ano de Referência</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${mes}/${ano}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Data de Emiss├úo</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Data de Emissão</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${hoje}</td>
                         </tr>
                     </table>
@@ -8844,7 +8844,7 @@ const app = {
                     <h2 style="font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">2. Demonstrativo de Faturamento Bruto</h2>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; width: 70%; background: #f9f9f9;">Faturamento com Servi├ºos Prestados</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; width: 70%; background: #f9f9f9;">Faturamento com Serviços Prestados</td>
                             <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${serviceGross.toFixed(2)}</td>
                         </tr>
                         <tr>
@@ -8852,7 +8852,7 @@ const app = {
                             <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${productGross.toFixed(2)}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Planos e Conv├¬nios (Assinaturas)</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;">Faturamento com Planos e Convênios (Assinaturas)</td>
                             <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${planGross.toFixed(2)}</td>
                         </tr>
                         <tr>
@@ -8861,14 +8861,14 @@ const app = {
                         </tr>
                     </table>
                     <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                        * Este documento tem car├íter declarat├│rio e reflete o faturamento bruto registrado no sistema interno de gest├úo no per├¡odo selecionado.
+                        * Este documento tem caráter declaratório e reflete o faturamento bruto registrado no sistema interno de gestão no período selecionado.
                     </p>
                 </div>
 
                 <div style="margin-top: 80px; text-align: center;">
                     <div style="border-top: 1px solid #000; width: 300px; margin: 0 auto; padding-top: 10px;">
                         <p style="margin: 0; font-weight: bold;">${displayShopName}</p>
-                        <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Respons├ível</p>
+                        <p style="margin: 0; font-size: 12px; color: #555;">Assinatura do Responsável</p>
                     </div>
                 </div>
             </div>
@@ -8885,7 +8885,7 @@ const app = {
             await html2pdf().set(opt).from(tempDiv).save();
         } catch (e) {
             console.error("Erro ao gerar PDF", e);
-            alert("N├úo foi poss├¡vel gerar o PDF. Verifique se o html2pdf foi carregado corretamente.");
+            alert("Não foi possível gerar o PDF. Verifique se o html2pdf foi carregado corretamente.");
         }
 
         document.getElementById('app-modal').close();
@@ -8913,8 +8913,8 @@ const app = {
         container.innerHTML = `
             <section id="tips-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title" style="margin:0;">­ƒ¬Ö Gest├úo de Gorjetas</h2>
-                    <button class="btn-primary" onclick="app.openTipModal()">+ Lan├ºar Direto</button>
+                    <h2 class="section-title" style="margin:0;">🪙 Gestão de Gorjetas</h2>
+                    <button class="btn-primary" onclick="app.openTipModal()">+ Lançar Direto</button>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
@@ -8929,18 +8929,18 @@ const app = {
                 </div>
 
                 ${pendingTips.length > 0 ? `
-                    <h3 class="section-title" style="font-size: 1rem; color: #fbbf24;">ÔÜá´©Å Aguardando Aprova├º├úo (${pendingTips.length})</h3>
+                    <h3 class="section-title" style="font-size: 1rem; color: #fbbf24;">⚠️ Aguardando Aprovação (${pendingTips.length})</h3>
                     <div class="transaction-list" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
                         ${pendingTips.map(t => `
                              <div class="glass" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #fbbf24; background: rgba(251, 191, 36, 0.05);">
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
                                     <span style="font-weight: 700; color: var(--text-primary);">${t.barber}</span>
                                     <span style="font-size: 0.72rem; color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
-                                    <span style="font-size: 0.65rem; color: #fbbf24; font-weight: 600; text-transform: uppercase;">­ƒÆ│ Pagamento: ${t.paymentMethod || 'N├úo informado'}</span>
+                                    <span style="font-size: 0.65rem; color: #fbbf24; font-weight: 600; text-transform: uppercase;">💳 Pagamento: ${t.paymentMethod || 'Não informado'}</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="font-weight: 800; color: #fbbf24; font-size: 1.1rem; margin-right: 10px;">R$ ${t.amount.toFixed(2)}</span>
-                                    <button onclick="app.editTip('${t.id}')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #fff; font-size: 0.7rem;">Ô£Å´©Å EDITAR</button>
+                                    <button onclick="app.editTip('${t.id}')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #fff; font-size: 0.7rem;">✏️ EDITAR</button>
                                     <button onclick="app.approveTip('${t.id}')" style="background: #4ade80; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">APROVAR</button>
                                     <button onclick="app.rejectTip('${t.id}')" style="background: #f87171; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem;">RECUSAR</button>
                                 </div>
@@ -8949,9 +8949,9 @@ const app = {
                     </div>
                 ` : ''}
 
-                <h3 class="section-title" style="font-size: 1rem;">Hist├│rico Recente</h3>
+                <h3 class="section-title" style="font-size: 1rem;">Histórico Recente</h3>
                 <div class="transaction-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                    ${recentApprovedTips.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum lan├ºamento aprovado.</p>' : ''}
+                    ${recentApprovedTips.length === 0 ? '<p style="text-align: center; color: var(--text-secondary);">Nenhum lançamento aprovado.</p>' : ''}
                     ${recentApprovedTips.map(t => `
                         <div class="glass" style="padding: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid ${t.status === 'approved' ? '#4ade80' : '#f87171'}; opacity: 0.8;">
                             <div style="display: flex; flex-direction: column;">
@@ -8960,7 +8960,7 @@ const app = {
                             </div>
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <span style="font-weight: 700; color: ${t.status === 'approved' ? '#4ade80' : '#f87171'};">R$ ${t.amount.toFixed(2)}</span>
-                                <button onclick="app.deleteTip('${t.id}')" style="background:none; border:none; cursor:pointer; opacity:0.4;">­ƒùæ´©Å</button>
+                                <button onclick="app.deleteTip('${t.id}')" style="background:none; border:none; cursor:pointer; opacity:0.4;">🗑️</button>
                             </div>
                         </div>
                     `).join('')}
@@ -8971,7 +8971,7 @@ const app = {
     },
 
     openTipModal() {
-        this.openModal('Lan├ºar Gorjeta ­ƒ¬Ö', `
+        this.openModal('Lançar Gorjeta 🪙', `
             <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Barbeiro</label>
@@ -8988,11 +8988,11 @@ const app = {
                     <select id="tip-payment" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);">
                         <option value="pix">PIX</option>
                         <option value="dinheiro">Dinheiro</option>
-                        <option value="debito">Cart├úo de D├®bito</option>
-                        <option value="credito">Cart├úo de Cr├®dito</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="credito">Cartão de Crédito</option>
                     </select>
                 </div>
-                <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;" onclick="app.saveTip()">Confirmar Lan├ºamento</button>
+                <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;" onclick="app.saveTip()">Confirmar Lançamento</button>
             </div>
         `);
     },
@@ -9003,7 +9003,7 @@ const app = {
         const paymentEl = document.getElementById('tip-payment');
 
         if (!barberEl || !amountEl || !paymentEl) {
-            console.error('Elementos do modal de gorjeta n├úo encontrados.');
+            console.error('Elementos do modal de gorjeta não encontrados.');
             return;
         }
 
@@ -9012,7 +9012,7 @@ const app = {
         const payment = paymentEl.value;
 
         if (!barber || isNaN(amount) || amount <= 0) {
-            alert('Por favor, preencha o barbeiro e um valor v├ílido.');
+            alert('Por favor, preencha o barbeiro e um valor válido.');
             return;
         }
 
@@ -9038,7 +9038,7 @@ const app = {
             this.saveState();
             this.closeModal();
             this.render('admin-tips');
-            alert('Ô£à Gorjeta lan├ºada com sucesso!');
+            alert('✅ Gorjeta lançada com sucesso!');
         } catch (e) {
             console.error('Erro ao salvar gorjeta:', e);
             alert('Ocorreu um erro ao salvar a gorjeta. Tente novamente.');
@@ -9051,7 +9051,7 @@ const app = {
             tip.status = 'approved';
             this.saveState();
             this.render('admin-tips');
-            alert('Ô£à Gorjeta aprovada!');
+            alert('✅ Gorjeta aprovada!');
         }
     },
 
@@ -9060,8 +9060,8 @@ const app = {
             const tip = (this.state.tips || []).find(t => t.id == id);
             if (tip) {
                 tip.status = 'rejected';
-                // Opcional: Remover do caixa se j├í tiver sido adicionada, 
-                // mas geralmente mantemos o registro da transa├º├úo de entrada do dinheiro.
+                // Opcional: Remover do caixa se já tiver sido adicionada, 
+                // mas geralmente mantemos o registro da transação de entrada do dinheiro.
                 this.saveState();
                 this.render('admin-tips');
             }
@@ -9091,7 +9091,7 @@ const app = {
         const tip = (this.state.tips || []).find(t => t.id == id);
         if (!tip) return;
 
-        this.openModal('Editar Valor da Gorjeta Ô£Å´©Å', `
+        this.openModal('Editar Valor da Gorjeta ✏️', `
             <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
                 <p style="font-size: 0.9rem; color: var(--text-secondary);">Ajuste o valor final para o ${this.getTerm('workerTerm')} <strong>${tip.barber}</strong>.</p>
                 <div>
@@ -9099,7 +9099,7 @@ const app = {
                     <input type="number" id="edit-tip-amount" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${tip.amount}" step="0.10">
                 </div>
                 <div style="font-size: 0.75rem; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 10px; border-radius: 8px;">
-                    ­ƒÆí Isso atualizar├í automaticamente o valor no fluxo de caixa tamb├®m.
+                    💡 Isso atualizará automaticamente o valor no fluxo de caixa também.
                 </div>
                 <button class="btn-primary" style="width: 100%; padding: 14px;" onclick="app.updateTipAmount('${id}')">Salvar e Voltar</button>
             </div>
@@ -9109,7 +9109,7 @@ const app = {
     updateTipAmount(id) {
         const newAmount = parseFloat(document.getElementById('edit-tip-amount').value);
         if (isNaN(newAmount) || newAmount <= 0) {
-            alert('Valor inv├ílido!');
+            alert('Valor inválido!');
             return;
         }
 
@@ -9117,7 +9117,7 @@ const app = {
         if (tip) {
             tip.amount = newAmount;
 
-            // Atualizar no fluxo de caixa se houver transa├º├úo vinculada
+            // Atualizar no fluxo de caixa se houver transação vinculada
             if (tip.transactionId) {
                 const trans = (this.state.transactions || []).find(tr => tr.id === tip.transactionId);
                 if (trans) trans.amount = newAmount;
@@ -9140,7 +9140,7 @@ const app = {
                     <h2 class="section-title">Estoque de Produtos</h2>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; background: #7c3aed; display: flex; align-items: center; gap: 6px;" id="btn-scan-barcode">
-                            ­ƒôÂ Leitor USB
+                            📶 Leitor USB
                         </button>
                         ${this.state.user.role === 'admin' ? `
                             <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="btn-add-stock">
@@ -9158,7 +9158,7 @@ const app = {
                         <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-readable);">R$ ${todayRevenue.toFixed(2)}</p>
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Transa├º├Áes</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Transações</p>
                         <p style="font-size: 1.1rem; font-weight: 700;">${todaySales.length} venda${todaySales.length > 1 ? 's' : ''}</p>
                     </div>
                 </div>` : ''}
@@ -9166,7 +9166,7 @@ const app = {
                 <!-- Barra de busca -->
                 <div style="margin-bottom: 15px; position: relative;">
                     <input type="text" id="stock-search" class="glass" style="width: 100%; padding: 10px 40px 10px 12px; color: var(--text-primary);" 
-                           placeholder="­ƒöì  Buscar produto por nome ou c├│digo..." oninput="app.filterStockList(this.value)">
+                           placeholder="🔍  Buscar produto por nome ou código..." oninput="app.filterStockList(this.value)">
                 </div>
 
                 <div class="stock-list" id="stock-list-container">
@@ -9189,23 +9189,23 @@ const app = {
             <div class="glass" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <div style="flex: 1; min-width: 0;">
                     <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${p.name}</p>
-                    ${p.barcode ? `<p style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px;">­ƒöû ${p.barcode}</p>` : ''}
+                    ${p.barcode ? `<p style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px;">🔖 ${p.barcode}</p>` : ''}
                     <p style="font-size: 0.8rem; color: var(--text-secondary);">Venda: <strong style="color: var(--accent-readable);">R$ ${parseFloat(p.price).toFixed(2)}</strong></p>
-                    <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ÔÜá´©Å Baixo' : p.stock <= 0 ? ' ÔØî Esgotado' : ''}</p>
+                    <p style="font-size: 0.8rem;">Estoque: <strong style="color: ${stockColor};">${p.stock} un.</strong>${p.stock <= 3 && p.stock > 0 ? ' ⚠️ Baixo' : p.stock <= 0 ? ' ❌ Esgotado' : ''}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; flex-shrink: 0;">
                     ${this.state.user.role === 'admin' ? `
                         <div style="display: flex; gap: 5px; align-items: center;">
-                            <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="ÔêÆ1" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">ÔêÆ</button>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="−1" onclick="app.updateStock(${p.id}, -1); app.saveState(); app.render('admin-stock')">−</button>
                             <span style="min-width: 26px; text-align: center; font-weight: 700; color: ${stockColor};">${p.stock}</span>
                             <button class="glass" style="padding: 5px 10px; font-size: 0.9rem; font-weight: 700;" title="+1" onclick="app.updateStock(${p.id}, 1); app.saveState(); app.render('admin-stock')">+</button>
                         </div>
                     ` : ''}
                     <div style="display: flex; gap: 5px;">
-                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #4ade80; border: 1px solid rgba(74,222,128,0.3);" onclick="app.openProductFoundModal(app.state.products.find(x=>x.id===${p.id}))">­ƒÆ░ Vender</button>
+                        <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #4ade80; border: 1px solid rgba(74,222,128,0.3);" onclick="app.openProductFoundModal(app.state.products.find(x=>x.id===${p.id}))">💰 Vender</button>
                         ${this.state.user.role === 'admin' ? `
-                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-readable); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">Ô£Å´©Å</button>
-                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">­ƒùæ´©Å</button>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: var(--accent-readable); border: 1px solid var(--glass-border);" onclick="app.openProductModal(${p.id})">✏️</button>
+                            <button class="glass" style="padding: 5px 10px; font-size: 0.75rem; color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" onclick="app.deleteProduct(${p.id})">🗑️</button>
                         ` : ''}
                     </div>
                 </div>
@@ -9225,25 +9225,25 @@ const app = {
         if (container) container.innerHTML = this.renderStockItems(filtered);
     },
 
-    // ÔöÇÔöÇÔöÇ Leitor de C├│digo de Barras USB ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    // Leitores USB 2D emulam teclado: digitam o c├│digo e enviam Enter automaticamente.
+    // ─── Leitor de Código de Barras USB ──────────────────────────────────────
+    // Leitores USB 2D emulam teclado: digitam o código e enviam Enter automaticamente.
 
     openBarcodeScanner(forPDV = false) {
         this._scannerForPDV = forPDV;
-        const title = forPDV ? '­ƒôÂ Scanner ÔÇö PDV' : '­ƒôÂ Escanear C├│digo de Barras';
+        const title = forPDV ? '📶 Scanner — PDV' : '📶 Escanear Código de Barras';
         const hint = forPDV
-            ? 'Aponte o leitor para o produto. Ele ser├í adicionado ao carrinho automaticamente.'
-            : 'Aponte o leitor para o produto ou digite o c├│digo abaixo.';
+            ? 'Aponte o leitor para o produto. Ele será adicionado ao carrinho automaticamente.'
+            : 'Aponte o leitor para o produto ou digite o código abaixo.';
 
         this.openModal(title, `
             <section class="fade-in" style="padding-top: 5px;">
-                <!-- ├ìcone do leitor -->
+                <!-- Ícone do leitor -->
                 <div style="text-align: center; margin-bottom: 18px;">
-                    <div style="font-size: 4rem; margin-bottom: 8px; animation: pulse 1.5s ease-in-out infinite;">­ƒôÂ</div>
+                    <div style="font-size: 4rem; margin-bottom: 8px; animation: pulse 1.5s ease-in-out infinite;">📶</div>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">${hint}</p>
                 </div>
 
-                <!-- Input principal ÔÇö recebe o c├│digo do leitor USB -->
+                <!-- Input principal — recebe o código do leitor USB -->
                 <div style="position: relative; margin-bottom: 14px;">
                     <input type="text" id="usb-barcode-input" class="glass"
                            style="width: 100%; padding: 14px 50px 14px 16px; color: var(--text-primary); font-size: 1.1rem; font-family: monospace; letter-spacing: 2px;
@@ -9253,11 +9253,11 @@ const app = {
                            autocomplete="off" autofocus
                            oninput="app._scanBuffer = this.value;"
                            onkeydown="if(event.key === 'Enter') { event.preventDefault(); app.handleBarcodeResult(this.value.trim()); }">
-                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; opacity: 0.5;">ÔåÁ</span>
+                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; opacity: 0.5;">↵</span>
                 </div>
 
                 <p style="font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin-bottom: 14px;">
-                    ÔåÁ O leitor envia <strong>Enter</strong> automaticamente ap├│s a leitura.
+                    ↵ O leitor envia <strong>Enter</strong> automaticamente após a leitura.
                 </p>
 
                 <button class="btn-secondary" style="width: 100%;" onclick="app.closeModal()">
@@ -9266,7 +9266,7 @@ const app = {
             </section>
         `);
 
-        // Garantir foco no input ap├│s o modal abrir
+        // Garantir foco no input após o modal abrir
         setTimeout(() => {
             const inp = document.getElementById('usb-barcode-input');
             if (inp) inp.focus();
@@ -9274,7 +9274,7 @@ const app = {
     },
 
     stopBarcodeScanner() {
-        // N├úo h├í mais recursos de c├ómera para liberar
+        // Não há mais recursos de câmera para liberar
         // Mantido por compatibilidade com chamadas existentes
     },
 
@@ -9296,7 +9296,7 @@ const app = {
         if (product) {
             this.openProductFoundModal(product, code);
         } else {
-            const cadastrar = confirm(`C├│digo "${code}" n├úo encontrado.\n\nDeseja cadastrar um novo produto com este c├│digo?`);
+            const cadastrar = confirm(`Código "${code}" não encontrado.\n\nDeseja cadastrar um novo produto com este código?`);
             if (cadastrar) this.openProductModal(null, code);
         }
     },
@@ -9304,11 +9304,11 @@ const app = {
     openProductFoundModal(product, scannedCode) {
         if (!product) return;
         const stockColor = product.stock <= 0 ? '#ff4444' : product.stock <= 3 ? '#fbbf24' : '#4ade80';
-        this.openModal('Produto Encontrado Ô£à', `
+        this.openModal('Produto Encontrado ✅', `
             <section class="fade-in">
                 <div class="glass" style="padding: 20px; margin-bottom: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
                     <p style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">${product.name}</p>
-                    ${product.barcode ? `<p style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">­ƒöû ${product.barcode}</p>` : ''}
+                    ${product.barcode ? `<p style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">🔖 ${product.barcode}</p>` : ''}
                     <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-readable); margin: 10px 0;">R$ ${parseFloat(product.price).toFixed(2)}</p>
                     <p style="font-size: 0.85rem;">Estoque: <strong style="color: ${stockColor};">${product.stock} un.</strong></p>
                 </div>
@@ -9317,14 +9317,14 @@ const app = {
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Venda para:</label>
                     <select id="sale-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" onchange="document.getElementById('sale-barber-select-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('sale-payment-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
-                        <option value="cliente">­ƒæñ Cliente</option>
-                        <option value="barbeiro">Ô£é´©Å Uso Pr├│prio (Barbeiro)</option>
-                        <option value="adm">ÔÜÖ´©Å Uso Interno (ADM)</option>
+                        <option value="cliente">👤 Cliente</option>
+                        <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                        <option value="adm">⚙️ Uso Interno (ADM)</option>
                     </select>
                 </div>
 
                 <div id="sale-barber-select-wrapper" style="margin-bottom: 15px; display: none;">
-                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quem est├í consumindo?</label>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quem está consumindo?</label>
                     <select id="sale-barber-name" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                         ${this.state.staff.filter(s => s.role === 'barber').map(s => `
                             <option value="${s.name}" ${this.state.user.name === s.name ? 'selected' : ''}>${s.name}</option>
@@ -9336,7 +9336,7 @@ const app = {
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Quantidade</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); if(i.value>1)i.value=parseInt(i.value)-1;">ÔêÆ</button>
+                        <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); if(i.value>1)i.value=parseInt(i.value)-1;">−</button>
                         <input type="number" id="sale-qty" class="glass" style="flex: 1; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" value="1" min="1" max="${product.stock}">
                         <button class="glass" style="padding: 8px 14px; font-size: 1.1rem; font-weight: 700;" onclick="const i=document.getElementById('sale-qty'); i.value=parseInt(i.value)+1;">+</button>
                     </div>
@@ -9347,17 +9347,17 @@ const app = {
                     <select id="sale-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                         <option value="Dinheiro">Dinheiro</option>
                         <option value="PIX">PIX</option>
-                        <option value="Cart├úo de D├®bito">Cart├úo de D├®bito</option>
-                        <option value="Cart├úo de Cr├®dito">Cart├úo de Cr├®dito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
                     </select>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <button class="btn-primary" style="background: #2E8B57; width: 100%; font-size: 1rem;" onclick="app.doQuickSale(${product.id})">
-                        ­ƒÆ░ Confirmar Venda
+                        💰 Confirmar Venda
                     </button>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal(); app.openProductModal(${product.id})">Ô£Å´©Å Editar</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal(); app.openProductModal(${product.id})">✏️ Editar</button>
                         <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Fechar</button>
                     </div>
                 </div>
@@ -9374,7 +9374,7 @@ const app = {
 
         if (!product) return;
         if (product.stock < qty) {
-            alert(`Estoque insuficiente! Dispon├¡vel: ${product.stock} un.`);
+            alert(`Estoque insuficiente! Disponível: ${product.stock} un.`);
             return;
         }
 
@@ -9385,7 +9385,7 @@ const app = {
         let voucherId = null;
 
         if (target === 'barbeiro') {
-            // Lan├ºar Vale para o barbeiro
+            // Lançar Vale para o barbeiro
             voucherId = Date.now() + 1;
             if (!this.state.vouchers) this.state.vouchers = [];
             this.state.vouchers.push({
@@ -9395,20 +9395,20 @@ const app = {
                 date: new Date().toISOString(),
                 note: `Consumo de Produto: ${product.name} (x${qty})`
             });
-            // Transa├º├úo de entrada via faturamento (n├úo entra no caixa f├¡sico)
-            transactionId = this.addTransaction('in', `Venda (Uso Pr├│prio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
+            // Transação de entrada via faturamento (não entra no caixa físico)
+            transactionId = this.addTransaction('in', `Venda (Uso Próprio): ${product.name} (x${qty}) - ${bName}`, total, 'produto', 'faturamento');
         } else if (target === 'adm') {
             // Apenas baixa de estoque
         } else {
             // Integrar com fluxo de caixa normal
             let method = 'dinheiro';
             if (payment === 'PIX') method = 'pix';
-            if (payment === 'Cart├úo de D├®bito') method = 'debito';
-            if (payment === 'Cart├úo de Cr├®dito') method = 'credito';
+            if (payment === 'Cartão de Débito') method = 'debito';
+            if (payment === 'Cartão de Crédito') method = 'credito';
             transactionId = this.addTransaction('in', `Produto: ${product.name} (x${qty})`, total, 'produto', method);
         }
 
-        // Registrar no hist├│rico de vendas de produtos
+        // Registrar no histórico de vendas de produtos
         if (!this.state.productSales) this.state.productSales = [];
         this.state.productSales.push({
             id: Date.now(),
@@ -9431,15 +9431,15 @@ const app = {
         this.render(this.state.view);
 
         if (target === 'barbeiro') {
-            alert(`Ô£à Consumo registrado!\nR$ ${total.toFixed(2)} ser├í descontado do faturamento de ${bName.split(' ')[0]}.`);
+            alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${bName.split(' ')[0]}.`);
         } else if (target === 'adm') {
-            alert(`Ô£à Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
+            alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
         } else {
-            alert(`Ô£à Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
+            alert(`✅ Venda registrada!\n${qty}x ${product.name} = R$ ${total.toFixed(2)} (${payment})`);
         }
     },
 
-    // ÔöÇÔöÇÔöÇ Modal de Produto ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ─── Modal de Produto ─────────────────────────────────────────────────────
 
     openProductModal(productId, prefillBarcode) {
         const isNew = productId === null;
@@ -9459,17 +9459,17 @@ const app = {
                         <div>
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Categoria</label>
                             <select id="prod-category" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);">
-                                <option value="Geral" ${product.category === 'Geral' ? 'selected' : ''}>­ƒôª Geral</option>
-                                <option value="Cabelo" ${product.category === 'Cabelo' ? 'selected' : ''}>­ƒº┤ Cabelo</option>
-                                <option value="Barba" ${product.category === 'Barba' ? 'selected' : ''}>­ƒºö Barba</option>
-                                <option value="Bebidas" ${product.category === 'Bebidas' ? 'selected' : ''}>­ƒÑñ Bebidas</option>
-                                <option value="Outros" ${product.category === 'Outros' ? 'selected' : ''}>Ô£¿ Outros</option>
+                                <option value="Geral" ${product.category === 'Geral' ? 'selected' : ''}>📦 Geral</option>
+                                <option value="Cabelo" ${product.category === 'Cabelo' ? 'selected' : ''}>🧴 Cabelo</option>
+                                <option value="Barba" ${product.category === 'Barba' ? 'selected' : ''}>🧔 Barba</option>
+                                <option value="Bebidas" ${product.category === 'Bebidas' ? 'selected' : ''}>🥤 Bebidas</option>
+                                <option value="Outros" ${product.category === 'Outros' ? 'selected' : ''}>✨ Outros</option>
                             </select>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Pre├ºo de Venda (R$) *</label>
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Preço de Venda (R$) *</label>
                             <input type="number" id="prod-price" class="glass" style="width: 100%; padding: 11px; color: var(--text-primary);" value="${product.price}" min="0" step="0.01">
                         </div>
                         <div>
@@ -9478,22 +9478,22 @@ const app = {
                         </div>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">­ƒÆ╣ Margem do Barbeiro na Venda (%)</label>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">💹 Margem do Barbeiro na Venda (%)</label>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="number" id="prod-commission" class="glass" style="flex: 1; padding: 11px; color: var(--text-primary);" value="${product.commissionPct ?? 10}" min="0" max="100" step="1">
                             <span style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">% sobre o valor de venda</span>
                         </div>
                         <p style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 5px;">
-                            Ex: com 10% e pre├ºo de R$ ${parseFloat(product.price || 0).toFixed(2)}, o barbeiro recebe R$ ${(parseFloat(product.price || 0) * ((product.commissionPct ?? 10) / 100)).toFixed(2)} por venda.
+                            Ex: com 10% e preço de R$ ${parseFloat(product.price || 0).toFixed(2)}, o barbeiro recebe R$ ${(parseFloat(product.price || 0) * ((product.commissionPct ?? 10) / 100)).toFixed(2)} por venda.
                         </p>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">­ƒöû C├│digo de Barras / QR Code</label>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">🔖 Código de Barras / QR Code</label>
                         <div style="display: flex; gap: 8px;">
                             <input type="text" id="prod-barcode" class="glass" style="flex: 1; padding: 11px; color: var(--text-primary); font-family: monospace;" 
                                    value="${product.barcode || ''}" placeholder="Ex: 7891234560001">
                             <button class="btn-secondary" style="padding: 10px; font-size: 0.8rem; white-space: nowrap;" onclick="app.stopBarcodeScanner(); app.closeModal(); app.openBarcodeScanner();">
-                                ­ƒôÀ
+                                📷
                             </button>
                         </div>
                     </div>
@@ -9533,7 +9533,7 @@ const app = {
         this.saveState();
         this.closeModal();
 
-        // Redireciona para o contexto correto ap├│s salvar
+        // Redireciona para o contexto correto após salvar
         if (this.state.user?.role === 'totem') {
             this.setTotemTab('estoque');
         } else {
@@ -9542,9 +9542,9 @@ const app = {
     },
 
 
-    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    //  PDV ÔÇö Ponto de Venda
-    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ──────────────────────────────────────────────────────────────
+    //  PDV — Ponto de Venda
+    // ──────────────────────────────────────────────────────────────
 
     renderPDV(container) {
         const cart = this.state.cart || [];
@@ -9562,14 +9562,14 @@ const app = {
             <section id="pdv-view" class="fade-in" style="padding-bottom: 40px;">
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom: 3px;">­ƒÆÁ PDV ÔÇö Ponto de Venda</h2>
+                        <h2 class="section-title" style="margin-bottom: 3px;">💵 PDV — Ponto de Venda</h2>
                         <p style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
                 </div>
 
-                <!-- Barra de Scanner USB ÔÇö sempre vis├¡vel no PDV -->
+                <!-- Barra de Scanner USB — sempre visível no PDV -->
                 <div class="glass" style="padding: 14px 18px; margin-bottom: 18px; border-left: 4px solid #7c3aed; display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 1.6rem; flex-shrink: 0;">­ƒôÂ</span>
+                    <span style="font-size: 1.6rem; flex-shrink: 0;">📶</span>
                     <div style="flex: 1; position: relative; min-width: 0;">
                         <input type="text" id="pdv-scanner-input" class="glass"
                                style="width: 100%; padding: 10px 44px 10px 14px; color: var(--text-primary); font-size: 1rem; font-family: monospace;
@@ -9578,7 +9578,7 @@ const app = {
                                autocomplete="off"
                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); const c=this.value.trim(); if(c){ window.app.pdvAddToCartByCode(c); this.value=''; } }"
                                oninput="if(this.value.length===0) return;">
-                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1rem; opacity:0.4;">ÔåÁ</span>
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1rem; opacity:0.4;">↵</span>
                     </div>
                     <span style="font-size:0.72rem; color:var(--text-secondary); white-space:nowrap; flex-shrink:0;">Leitor USB</span>
                 </div>
@@ -9586,22 +9586,22 @@ const app = {
                 <!-- Abas Mobile [NOVO] -->
                 <div class="pdv-mobile-tabs">
                     <div class="pdv-mobile-tab ${this.state.pdvTab === 'catalog' ? 'active' : ''}" onclick="window.app.state.pdvTab='catalog'; window.app.render('pdv')">
-                        ­ƒôª Cat├ílogo
+                        📦 Catálogo
                     </div>
                     <div class="pdv-mobile-tab ${this.state.pdvTab === 'cart' ? 'active' : ''}" onclick="window.app.state.pdvTab='cart'; window.app.render('pdv')">
-                        ­ƒøÆ Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.75rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
+                        🛒 Carrinho (${cart.length}) ${total > 0 ? `<br><span style="font-size:0.75rem; color:#4ade80;">R$ ${total.toFixed(2)}</span>` : ''}
                     </div>
                 </div>
 
                 <div class="pdv-layout ${this.state.pdvTab === 'cart' ? 'show-cart' : 'show-catalog'}">
-                    <!-- COLUNA ESQUERDA: cat├ílogo -->
+                    <!-- COLUNA ESQUERDA: catálogo -->
                     <div class="pdv-catalog-column glass-panel">
                         <!-- Busca por nome -->
                         <div style="position: relative;">
                             <i data-lucide="search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--text-secondary);"></i>
                             <input type="text" id="pdv-search" class="glass"
                                    style="width: 100%; padding: 12px 12px 12px 45px; color: var(--text-primary); font-size: 0.95rem; border-radius: 14px;"
-                                   placeholder="O que voc├¬ procura?" oninput="window.app.renderPDVGrid(this.value)">
+                                   placeholder="O que você procura?" oninput="window.app.renderPDVGrid(this.value)">
                         </div>
 
                         <!-- Filtros de Categoria -->
@@ -9610,7 +9610,7 @@ const app = {
                                 <button class="pdv-category-tab ${this.state.pdvCategory === cat || (!this.state.pdvCategory && cat === 'Todos') ? 'active' : ''}"
                                         style="padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-secondary); cursor: pointer; white-space: nowrap; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;"
                                         onclick="window.app.state.pdvCategory='${cat}'; window.app.renderPDVGrid()">
-                                    ${cat === 'Todos' ? '­ƒôé ' : cat === 'Cabelo' ? '­ƒº┤ ' : cat === 'Barba' ? '­ƒºö ' : cat === 'Bebidas' ? '­ƒÑñ ' : 'Ô£¿ '}${cat}
+                                    ${cat === 'Todos' ? '📂 ' : cat === 'Cabelo' ? '🧴 ' : cat === 'Barba' ? '🧔 ' : cat === 'Bebidas' ? '🥤 ' : '✨ '}${cat}
                                 </button>
                             `).join('')}
                         </div>
@@ -9636,15 +9636,15 @@ const app = {
                             ${cart.length === 0
                 ? `
                                 <div style="text-align:center; padding: 40px 20px; border: 2px dashed rgba(255,255,255,0.05); border-radius: 15px;">
-                                    <div style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.3;">­ƒøì´©Å</div>
-                                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Seu carrinho est├í vazio.</p>
+                                    <div style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.3;">🛍️</div>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Seu carrinho está vazio.</p>
                                     <p style="color: var(--text-muted); font-size: 0.75rem; mt: 5px;">Selecione produtos ao lado.</p>
                                 </div>
                                 `
                 : cart.map((item, idx) => this.getCartItemHTML(item, idx, false)).join('')}
                         </div>
 
-                        <!-- Configura├º├Áes da Venda -->
+                        <!-- Configurações da Venda -->
                         <div style="display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; margin-bottom: 20px;">
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -9658,11 +9658,11 @@ const app = {
                                     <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Pagamento</label>
                                     <select id="pdv-payment" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
                                             onchange="document.getElementById('pdv-split-wrapper').style.display = this.value === 'Misto' ? 'block' : 'none'; window.app.updateSplitRemainder(null, 'pdv')">
-                                        <option value="Dinheiro">Dinheiro ­ƒÆÁ</option>
-                                        <option value="PIX">PIX ÔÜí</option>
-                                        <option value="Cart├úo de D├®bito">D├®bito ­ƒÆ│</option>
-                                        <option value="Cart├úo de Cr├®dito">Cr├®dito ­ƒÆ│</option>
-                                        <option value="Misto">Pagamento Misto ­ƒöÇ</option>
+                                        <option value="Dinheiro">Dinheiro 💵</option>
+                                        <option value="PIX">PIX ⚡</option>
+                                        <option value="Cartão de Débito">Débito 💳</option>
+                                        <option value="Cartão de Crédito">Crédito 💳</option>
+                                        <option value="Misto">Pagamento Misto 🔀</option>
                                     </select>
                                 </div>
                             </div>
@@ -9674,8 +9674,8 @@ const app = {
                                         <select id="pdv-method-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-bottom: 5px;">
                                             <option value="Dinheiro">Dinheiro</option>
                                             <option value="PIX">PIX</option>
-                                            <option value="Cart├úo de D├®bito">D├®bito</option>
-                                            <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                            <option value="Cartão de Débito">Débito</option>
+                                            <option value="Cartão de Crédito">Crédito</option>
                                         </select>
                                         <input type="number" id="pdv-amount-1" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 1" step="0.01" oninput="window.app.updateSplitRemainder(null, 'pdv')">
                                     </div>
@@ -9684,8 +9684,8 @@ const app = {
                                         <select id="pdv-method-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary); margin-bottom: 5px;">
                                             <option value="PIX">PIX</option>
                                             <option value="Dinheiro">Dinheiro</option>
-                                            <option value="Cart├úo de D├®bito">D├®bito</option>
-                                            <option value="Cart├úo de Cr├®dito">Cr├®dito</option>
+                                            <option value="Cartão de Débito">Débito</option>
+                                            <option value="Cartão de Crédito">Crédito</option>
                                         </select>
                                         <input type="number" id="pdv-amount-2" class="glass" style="width: 100%; padding: 8px; color: var(--text-primary);" placeholder="Valor 2" step="0.01">
                                     </div>
@@ -9696,9 +9696,9 @@ const app = {
                                 <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Destino da Venda</label>
                                 <select id="pdv-target" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" 
                                         onchange="document.getElementById('pdv-barber-wrapper').style.display = this.value === 'barbeiro' ? 'block' : 'none'; document.getElementById('pdv-client-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-payment-wrapper-extra').style.display = this.value === 'cliente' ? 'block' : 'none'; document.getElementById('pdv-seller-wrapper').style.display = this.value === 'cliente' ? 'block' : 'none';">
-                                    <option value="cliente" ${this.state.pdvClientName ? 'selected' : ''}>­ƒæñ Cliente Externo</option>
-                                    <option value="barbeiro">Ô£é´©Å Uso Pr├│prio (Barbeiro)</option>
-                                    <option value="adm">ÔÜÖ´©Å Uso Interno (Administrativo)</option>
+                                    <option value="cliente" ${this.state.pdvClientName ? 'selected' : ''}>👤 Cliente Externo</option>
+                                    <option value="barbeiro">✂️ Uso Próprio (Barbeiro)</option>
+                                    <option value="adm">⚙️ Uso Interno (Administrativo)</option>
                                 </select>
                             </div>
 
@@ -9715,9 +9715,9 @@ const app = {
                             </div>
 
                             <div id="pdv-seller-wrapper">
-                                <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Vendedor (Comiss├úo)</label>
+                                <label style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Vendedor (Comissão)</label>
                                 <select id="pdv-seller" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary); border-radius: 8px;" onchange="window.app.state.pdvSeller = this.value || null;">
-                                    <option value="">-- Sem comiss├úo --</option>
+                                    <option value="">-- Sem comissão --</option>
                                     ${barbers.map(b => `<option value="${b.name}" ${seller === b.name ? 'selected' : ''}>${b.name}</option>`).join('')}
                                 </select>
                             </div>
@@ -9729,7 +9729,7 @@ const app = {
                             ${this.getPDVTotalsHTML(subtotal, discount, total, commission, seller)}
                         </div>
 
-                        <!-- Bot├úo Finalizar -->
+                        <!-- Botão Finalizar -->
                         <button class="btn-primary" 
                                 style="width: 100%; font-size: 1.1rem; padding: 18px; font-weight: 800; letter-spacing: 1px; border-radius: 15px; 
                                        background: ${cart.length > 0 ? 'linear-gradient(90deg, #10b981, #059669)' : '#333'}; 
@@ -9746,14 +9746,14 @@ const app = {
             </section>
         `;
 
-        // [ADM ONLY] Adicionar o hist├│rico logo abaixo
+        // [ADM ONLY] Adicionar o histórico logo abaixo
         if (this.state.user.role === 'admin') {
             const auditDate = this.state.pdvAuditDate || new Date().toLocaleDateString('en-CA');
             container.innerHTML += `
                 <section style="padding: 0 20px 40px 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <h3 style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                            ­ƒòÆ Hist├│rico de Vendas ÔÇö <small style="color:var(--text-secondary); font-weight:normal;">Auditoria ADM</small>
+                            🕒 Histórico de Vendas — <small style="color:var(--text-secondary); font-weight:normal;">Auditoria ADM</small>
                         </h3>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <label style="font-size: 0.75rem; color: var(--text-secondary);">Filtrar Data:</label>
@@ -9766,13 +9766,13 @@ const app = {
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; min-width: 850px;">
                             <thead>
                                 <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border);">
-                                    <th style="padding: 12px 15px;">Hor├írio</th>
+                                    <th style="padding: 12px 15px;">Horário</th>
                                     <th style="padding: 12px 15px;">Produto</th>
                                     <th style="padding: 12px 15px;">Destino</th>
                                     <th style="padding: 12px 15px;">Origem</th>
                                     <th style="padding: 12px 15px;">Vendedor</th>
                                     <th style="padding: 12px 15px;">Pagamento</th>
-                                    <th style="padding: 12px 15px; text-align: right;">Comiss├úo</th>
+                                    <th style="padding: 12px 15px; text-align: right;">Comissão</th>
                                     <th style="padding: 12px 15px; text-align: right;">Total</th>
                                 </tr>
                             </thead>
@@ -9807,11 +9807,11 @@ const app = {
 
         return sales.map(s => {
             const time = s.timestamp ? new Date(s.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-            let targetLabel = '­ƒæñ Cliente';
-            if (s.target === 'barbeiro') targetLabel = `Ô£é´©Å ${s.barberName || 'Barbeiro'}`;
-            if (s.target === 'adm') targetLabel = 'ÔÜÖ´©Å Uso Interno';
+            let targetLabel = '👤 Cliente';
+            if (s.target === 'barbeiro') targetLabel = `✂️ ${s.barberName || 'Barbeiro'}`;
+            if (s.target === 'adm') targetLabel = '⚙️ Uso Interno';
 
-            // L├│gica melhorada para mostrar o vendedor e origem
+            // Lógica melhorada para mostrar o vendedor e origem
             let sellerDisplay = '--';
             if (s.seller) {
                 sellerDisplay = s.seller.split(' ')[0];
@@ -9821,7 +9821,7 @@ const app = {
                 sellerDisplay = s.loggedUser.split(' ')[0] + ' (log)';
             }
 
-            // L├│gica de Origem e Usu├írio (com fallback para dados antigos)
+            // Lógica de Origem e Usuário (com fallback para dados antigos)
             const originBase = s.origin || (s.target === 'barbeiro' ? 'App' : 'Sistema');
             let userSuffix = '';
 
@@ -9867,7 +9867,7 @@ const app = {
         if (filtered.length === 0) {
             return `
                 <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; opacity: 0.5;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">­ƒöì</div>
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🔍</div>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum produto encontrado nesta busca.</p>
                 </div>
             `;
@@ -9881,7 +9881,7 @@ const app = {
                 <div class="product-card-container ${outOfStock ? 'out-of-stock' : ''}" 
                      onclick="${outOfStock ? "window.app.showToast('Produto esgotado!', 'error')" : `window.app.pdvAddToCart(${p.id})`}">
                     
-                    <!-- Pre├ºo Badge -->
+                    <!-- Preço Badge -->
                     <div class="product-card-price">
                         R$ ${parseFloat(p.price).toFixed(2)}
                     </div>
@@ -9913,13 +9913,13 @@ const app = {
 
     getProductIcon(p) {
         const name = (p.name || '').toLowerCase();
-        if (name.includes('pomada') || name.includes('cera')) return '­ƒº┤';
-        if (name.includes('shampoo') || name.includes('condicionador')) return '­ƒº╝';
-        if (name.includes('oleo') || name.includes('├│leo') || name.includes('serum')) return '­ƒÆº';
-        if (name.includes('barba')) return '­ƒºö';
-        if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('fanta') || name.includes('refri') || name.includes('agua') || name.includes('├ígua') || name.includes('suco')) return '­ƒÑñ';
-        if (name.includes('perfume')) return 'Ô£¿';
-        return '­ƒôª';
+        if (name.includes('pomada') || name.includes('cera')) return '🧴';
+        if (name.includes('shampoo') || name.includes('condicionador')) return '🧼';
+        if (name.includes('oleo') || name.includes('óleo') || name.includes('serum')) return '💧';
+        if (name.includes('barba')) return '🧔';
+        if (name.includes('cerveja') || name.includes('bebida') || name.includes('coca') || name.includes('fanta') || name.includes('refri') || name.includes('agua') || name.includes('água') || name.includes('suco')) return '🥤';
+        if (name.includes('perfume')) return '✨';
+        return '📦';
     },
 
     getCartItemHTML(item, idx, isTotem = false) {
@@ -9934,7 +9934,7 @@ const app = {
                         border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);
                         box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.2s;">
                 
-                <!-- ├ìcone e Info -->
+                <!-- Ícone e Info -->
                 <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.05); border-radius: 12px; 
                             display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
                     ${icon}
@@ -9956,7 +9956,7 @@ const app = {
                         <button style="width: 26px; height: 26px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08); 
                                         color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; transition: all 0.2s;" 
                                 onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'"
-                                onclick="app.pdvChangeQty(${idx},-1)">ÔêÆ</button>
+                                onclick="app.pdvChangeQty(${idx},-1)">−</button>
                         
                         <span style="font-size: 0.95rem; font-weight: 900; min-width: 24px; text-align: center; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
                             ${item.qty}
@@ -10000,7 +10000,7 @@ const app = {
             </div>
             ${seller && commission > 0 ? `
             <div style="display: flex; justify-content: space-between; font-size: 0.72rem; margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
-                <span style="color: var(--text-secondary);">Comiss├úo p/ ${seller.split(' ')[0]}</span>
+                <span style="color: var(--text-secondary);">Comissão p/ ${seller.split(' ')[0]}</span>
                 <span style="color: #4ade80; font-weight: 700;">+ R$ ${commission.toFixed(2)}</span>
             </div>` : ''}
         `;
@@ -10076,7 +10076,7 @@ const app = {
     pdvAddToCartByCode(code) {
         const product = this.state.products.find(p => p.barcode === code);
         if (!product) {
-            const reg = confirm(`C├│digo "${code}" n├úo encontrado.\nDeseja cadastrar um novo produto?`);
+            const reg = confirm(`Código "${code}" não encontrado.\nDeseja cadastrar um novo produto?`);
             if (reg) this.openProductModal(null, code);
             return;
         }
@@ -10125,10 +10125,10 @@ const app = {
 
         const subtotal = cart.reduce((acc, i) => acc + (Number(i.unitPrice) * Number(i.qty)), 0);
         const total = Math.max(0, subtotal - discount);
-        console.log(`­ƒÆ░ C├ílculo PDV: Subtotal=${subtotal}, Desconto=${discount}, Total=${total}`);
+        console.log(`💰 Cálculo PDV: Subtotal=${subtotal}, Desconto=${discount}, Total=${total}`);
         let totalCommission = 0;
 
-        // Descontar estoque + registrar hist├│rico
+        // Descontar estoque + registrar histórico
         if (!this.state.productSales) this.state.productSales = [];
         const now = new Date();
         const saleDate = now.toISOString().split('T')[0];
@@ -10137,7 +10137,7 @@ const app = {
         let voucherId = null;
 
         if (target === 'barbeiro') {
-            // Lan├ºar Vale
+            // Lançar Vale
             voucherId = Date.now() + 10;
             if (!this.state.vouchers) this.state.vouchers = [];
             this.state.vouchers.push({
@@ -10147,7 +10147,7 @@ const app = {
                 date: now.toISOString(),
                 note: `Consumo PDV: ${cart.length} item(ns)`
             });
-            const desc = cart.length === 1 ? `PDV (Uso Pr├│prio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Pr├│prio): ${cart.length} itens - ${consumer}`;
+            const desc = cart.length === 1 ? `PDV (Uso Próprio): ${cart[0].name} (x${cart[0].qty}) - ${consumer}` : `PDV (Uso Próprio): ${cart.length} itens - ${consumer}`;
             transactionId = this.addTransaction('in', desc, total, 'produto', 'faturamento');
         } else if (target === 'adm') {
             // Apenas baixa de estoque
@@ -10159,13 +10159,13 @@ const app = {
                 const method2 = document.getElementById('pdv-method-2').value;
 
                 if (Math.abs((val1 + val2) - total) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) ├® diferente do total da venda (R$ ${total.toFixed(2)}). Deseja continuar?`)) return;
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do total da venda (R$ ${total.toFixed(2)}). Deseja continuar?`)) return;
                 }
 
                 const getM = (m) => {
                     if (m === 'PIX') return 'pix';
-                    if (m === 'Cart├úo de D├®bito') return 'debito';
-                    if (m === 'Cart├úo de Cr├®dito') return 'credito';
+                    if (m === 'Cartão de Débito') return 'debito';
+                    if (m === 'Cartão de Crédito') return 'credito';
                     return 'dinheiro';
                 };
 
@@ -10177,8 +10177,8 @@ const app = {
             } else {
                 let method = 'dinheiro';
                 if (payment === 'PIX') method = 'pix';
-                if (payment === 'Cart├úo de D├®bito') method = 'debito';
-                if (payment === 'Cart├úo de Cr├®dito') method = 'credito';
+                if (payment === 'Cartão de Débito') method = 'debito';
+                if (payment === 'Cartão de Crédito') method = 'credito';
                 const descBase = cart.length === 1
                     ? `PDV: ${cart[0].name} (x${cart[0].qty})`
                     : `PDV: ${cart.length} produtos (${cart.map(i => i.qty + 'x ' + i.name.split(' ')[0]).join(', ')})`;
@@ -10187,7 +10187,7 @@ const app = {
             }
         }
 
-        // Registrar hist├│rico individual e baixar estoque
+        // Registrar histórico individual e baixar estoque
         for (const item of cart) {
             const product = this.state.products.find(p => p.id === item.productId);
             if (product) {
@@ -10213,7 +10213,7 @@ const app = {
                 barberName: target === 'barbeiro' ? consumer : null,
                 date: saleDate,
                 timestamp: now.toISOString(),
-                transactionId, // Vinculado ├á transa├º├úo do grupo
+                transactionId, // Vinculado à transação do grupo
                 voucherId,     // Vinculado ao vale do grupo
                 origin: this.state.user.role === 'totem' ? 'Totem' : 'App',
                 loggedUser: this.state.user.name
@@ -10230,12 +10230,12 @@ const app = {
         // Evitar travamento no mobile isolando render e alert do ciclo atual
         setTimeout(() => {
             if (target === 'barbeiro') {
-                alert(`Ô£à Consumo registrado!\nR$ ${total.toFixed(2)} ser├í descontado do faturamento de ${consumer.split(' ')[0]}.`);
+                alert(`✅ Consumo registrado!\nR$ ${total.toFixed(2)} será descontado do faturamento de ${consumer.split(' ')[0]}.`);
             } else if (target === 'adm') {
-                alert(`Ô£à Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
+                alert(`✅ Baixa para Uso Interno (ADM) realizada!\nEstoque atualizado.`);
             } else {
-                const sellerMsg = seller && totalCommission > 0 ? `\n­ƒÆ╣ Comiss├úo de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
-                alert(`Ô£à Venda finalizada com sucesso!\n­ƒÆ░ Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
+                const sellerMsg = seller && totalCommission > 0 ? `\n💹 Comissão de ${seller.split(' ')[0]}: R$ ${totalCommission.toFixed(2)}` : '';
+                alert(`✅ Venda finalizada com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (${payment})${sellerMsg}`);
             }
             this.render('pdv');
         }, 50);
@@ -10251,58 +10251,58 @@ const app = {
 
     deleteTransaction(id) {
         const transId = Number(id);
-        console.log('­ƒùæ´©Å Tentando excluir transa├º├úo:', transId);
+        console.log('🗑️ Tentando excluir transação:', transId);
 
-        if (confirm('Deseja realmente excluir esta movimenta├º├úo? Isso afetar├í o faturamento e o estoque permanentemente.')) {
-            // Registrar exclus├úo da transa├º├úo
+        if (confirm('Deseja realmente excluir esta movimentação? Isso afetará o faturamento e o estoque permanentemente.')) {
+            // Registrar exclusão da transação
             this.registerDeletion(transId);
 
-            // 1. Verificar se h├í agendamento vinculado
+            // 1. Verificar se há agendamento vinculado
             const apt = this.state.appointments.find(a => Number(a.transactionId) === transId);
             if (apt) {
-                console.log('­ƒöù Agendamento vinculado encontrado:', apt.customer);
-                if (confirm(`Esta transa├º├úo est├í vinculada ao atendimento de ${apt.customer}. Deseja reabrir este agendamento (voltar para 'Confirmado')?`)) {
+                console.log('🔗 Agendamento vinculado encontrado:', apt.customer);
+                if (confirm(`Esta transação está vinculada ao atendimento de ${apt.customer}. Deseja reabrir este agendamento (voltar para 'Confirmado')?`)) {
                     apt.status = 'confirmado';
                     apt.transactionId = null;
-                    console.log('Ô£à Agendamento reaberto.');
+                    console.log('✅ Agendamento reaberto.');
                 }
             }
 
-            // 2. Verificar se h├í vendas de produtos vinculadas
+            // 2. Verificar se há vendas de produtos vinculadas
             if (this.state.productSales) {
                 const initialCount = this.state.productSales.length;
                 const salesToDelete = this.state.productSales.filter(s => Number(s.transactionId) === transId);
                 
                 if (salesToDelete.length > 0) {
-                    console.log(`­ƒôª Encontradas ${salesToDelete.length} vendas de produtos vinculadas.`);
+                    console.log(`📦 Encontradas ${salesToDelete.length} vendas de produtos vinculadas.`);
                     salesToDelete.forEach(sale => {
                         this.registerDeletion(sale.id);
                         // Restaurar Estoque
                         const prod = this.state.products.find(p => Number(p.id) === Number(sale.productId));
                         if (prod) {
                             prod.stock += Number(sale.qty);
-                            console.log(`ÔÖ╗´©Å Estoque restaurado: ${prod.name} (+${sale.qty})`);
+                            console.log(`♻️ Estoque restaurado: ${prod.name} (+${sale.qty})`);
                         }
                     });
                     // Remover registros de venda
                     this.state.productSales = this.state.productSales.filter(s => Number(s.transactionId) !== transId);
-                    console.log(`Ô£¿ Vendas removidas. De ${initialCount} para ${this.state.productSales.length}.`);
+                    console.log(`✨ Vendas removidas. De ${initialCount} para ${this.state.productSales.length}.`);
                 }
             }
 
-            // 3. Remover a transa├º├úo em si
+            // 3. Remover a transação em si
             const transBefore = this.state.transactions.length;
             this.state.transactions = (this.state.transactions || []).filter(t => Number(t.id) !== transId);
             const transAfter = this.state.transactions.length;
-            console.log(`­ƒôë Transa├º├Áes filtradas. De ${transBefore} para ${transAfter}.`);
+            console.log(`📉 Transações filtradas. De ${transBefore} para ${transAfter}.`);
             
             this.saveState();
             this.render('admin-cashflow');
             
             if (transBefore === transAfter) {
-                alert(`ÔÜá´©Å Aten├º├úo: Nenhuma transa├º├úo foi removida (ID: ${transId}). O ID pode estar incorreto.`);
+                alert(`⚠️ Atenção: Nenhuma transação foi removida (ID: ${transId}). O ID pode estar incorreto.`);
             } else {
-                alert(`Ô£à Sucesso! Movimenta├º├úo removida.\n(Antes: ${transBefore} | Depois: ${transAfter})`);
+                alert(`✅ Sucesso! Movimentação removida.\n(Antes: ${transBefore} | Depois: ${transAfter})`);
             }
         }
     },
@@ -10319,7 +10319,7 @@ const app = {
             const method = newMethod.toLowerCase().trim();
             
             if (!validMethods.includes(method)) {
-                alert('ÔÜá´©Å Forma de pagamento inv├ílida.\nUse apenas: dinheiro, pix, debito ou credito.');
+                alert('⚠️ Forma de pagamento inválida.\nUse apenas: dinheiro, pix, debito ou credito.');
                 return;
             }
 
@@ -10330,8 +10330,8 @@ const app = {
             const labels = { 
                 dinheiro: 'Dinheiro', 
                 pix: 'PIX', 
-                debito: 'Cart├úo de D├®bito', 
-                credito: 'Cart├úo de Cr├®dito' 
+                debito: 'Cartão de Débito', 
+                credito: 'Cartão de Crédito' 
             };
 
             if (apt) {
@@ -10349,7 +10349,7 @@ const app = {
 
             this.saveState();
             this.render('admin-cashflow');
-            alert('Ô£à Forma de pagamento atualizada com sucesso!');
+            alert('✅ Forma de pagamento atualizada com sucesso!');
         }
     },
 
@@ -10360,10 +10360,10 @@ const app = {
 
         const transactionsDate = (this.state.transactions || []).filter(t => t.date && t.date.startsWith(selectedDate));
 
-        // --- C├ílculo do Saldo Inicial (Carry-Over) ---
+        // --- Cálculo do Saldo Inicial (Carry-Over) ---
         const openingBalance = (this.state.openingBalances && this.state.openingBalances[selectedDate]) || 0;
 
-        // Sugest├úo baseada no dia anterior
+        // Sugestão baseada no dia anterior
         const prevDateObj = new Date(selectedDate + 'T12:00:00');
         prevDateObj.setDate(prevDateObj.getDate() - 1);
         const prevDate = prevDateObj.toLocaleDateString('en-CA');
@@ -10391,8 +10391,8 @@ const app = {
 
             if (t.type === 'in') {
                 if (method.includes('pix')) totals.pix += amount;
-                else if (method.includes('d├®bito') || method.includes('debito')) totals.debito += amount;
-                else if (method.includes('cr├®dito') || method.includes('credito')) totals.credito += amount;
+                else if (method.includes('débito') || method.includes('debito')) totals.debito += amount;
+                else if (method.includes('crédito') || method.includes('credito')) totals.credito += amount;
                 else totals.dinheiro += amount;
 
                 const cat = (t.category || '').toLowerCase();
@@ -10400,12 +10400,12 @@ const app = {
                 else if (cat === 'plano' || cat === 'assinatura' || cat === 'convenio') totals.planos += amount;
                 else totals.servicos += amount;
             } else {
-                // Despesas saem do dinheiro f├¡sico (sangria)
+                // Despesas saem do dinheiro físico (sangria)
                 totals.dinheiro -= amount;
             }
         });
 
-        // Balan├ºo do dia atual considerando o saldo inicial
+        // Balanço do dia atual considerando o saldo inicial
         const dailyTotal = transactionsDate.reduce((acc, t) => t.type === 'in' ? acc + (parseFloat(t.amount) || 0) : acc - (parseFloat(t.amount) || 0), 0);
         const finalBalanceOfDay = openingBalance + dailyTotal;
 
@@ -10418,12 +10418,12 @@ const app = {
             <section id="cashflow-view" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom: 5px;">­ƒôè Fluxo de Caixa</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Controle di├írio e saldo inicial (Carry-over)</p>
+                        <h2 class="section-title" style="margin-bottom: 5px;">📊 Fluxo de Caixa</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Controle diário e saldo inicial (Carry-over)</p>
                     </div>
                     
                     <div class="glass" style="padding: 10px; display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.8rem; color: var(--text-secondary);">­ƒôà Data:</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">📅 Data:</span>
                         <input type="date" value="${selectedDate}" class="glass" style="padding: 5px 10px; color: var(--text-primary); border: none;"
                                onchange="app.state.cashflowDate = this.value; app.render('admin-cashflow')">
                     </div>
@@ -10433,7 +10433,7 @@ const app = {
                 <div class="glass" style="padding: 20px; margin-bottom: 20px; border-top: 4px solid var(--accent-color);">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                         <div style="flex: 1; min-width: 200px;">
-                            <h3 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">­ƒÆ░ Saldo Inicial do Dia</h3>
+                            <h3 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">💰 Saldo Inicial do Dia</h3>
                             <p style="font-size: 0.75rem; color: var(--text-secondary);">Dinheiro que ficou no caixa do dia anterior.</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -10441,7 +10441,7 @@ const app = {
                                 <div style="text-align: right; cursor: pointer; padding: 5px 10px; background: rgba(212, 175, 55, 0.1); border-radius: 8px;" 
                                      onclick="if(confirm('Deseja aplicar o saldo de ontem (R$ ${prevDayFinalBalance.toFixed(2)}) como saldo inicial de hoje?')){ app.saveOpeningBalance('${selectedDate}', ${prevDayFinalBalance.toFixed(2)}); }">
                                     <p style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase;">Sugerido (ontem):</p>
-                                    <p style="font-size: 0.85rem; color: var(--accent-readable); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} ­ƒôÑ</p>
+                                    <p style="font-size: 0.85rem; color: var(--accent-readable); font-weight: 700;">R$ ${prevDayFinalBalance.toFixed(2)} 📥</p>
                                 </div>
                             ` : ''}
                             <div style="display: flex; gap: 8px; align-items: center;">
@@ -10453,7 +10453,7 @@ const app = {
                                 </div>
                                 <button class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem; background: #2E8B57;" 
                                         onclick="app.saveOpeningBalance('${selectedDate}', document.getElementById('opening-bal-input').value)">
-                                    ­ƒÆ¥ Salvar
+                                    💾 Salvar
                                 </button>
                             </div>
                         </div>
@@ -10462,35 +10462,35 @@ const app = {
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #4ade80;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒÆÁ Dinheiro (F├¡sico)</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💵 Dinheiro (Físico)</p>
                         <p style="font-weight: 700; font-size: 1.1rem;">R$ ${(totals.dinheiro + openingBalance).toFixed(2)}</p>
                         <small style="font-size: 0.65rem; opacity: 0.6;">(Incl. Saldo Inicial)</small>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #22d3ee;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒô▒ PIX</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">📱 PIX</p>
                         <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.pix.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #fbbf24;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒÆ│ D├®bito</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Débito</p>
                         <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.debito.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #a78bfa;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒÆ│ Cr├®dito</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Crédito</p>
                         <p style="font-weight: 700; font-size: 1.1rem;">R$ ${totals.credito.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid var(--accent-color); background: rgba(212, 175, 55, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Ô£é´©Å Servi├ºos</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">✂️ Serviços</p>
                         <p style="font-weight: 700; color: var(--accent-readable);">R$ ${totals.servicos.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒøÆ Produtos</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">🛒 Produtos</p>
                         <p style="font-weight: 700; color: #38bdf8;">R$ ${totals.produtos.toFixed(2)}</p>
                     </div>
                     <div class="glass" style="padding: 15px; text-align: center; border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">­ƒÆ│ Planos / Conv├¬nios</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">💳 Planos / Convênios</p>
                         <p style="font-weight: 700; color: #f59e0b;">R$ ${totals.planos.toFixed(2)}</p>
                     </div>
                 </div>
@@ -10501,13 +10501,13 @@ const app = {
                     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; font-size: 0.75rem; opacity: 0.8;">
                         <span>Inicial: R$ ${openingBalance.toFixed(2)}</span>
                         <span>+</span>
-                        <span>Movimenta├º├úo: R$ ${totals.dinheiro.toFixed(2)}</span>
+                        <span>Movimentação: R$ ${totals.dinheiro.toFixed(2)}</span>
                     </div>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">­ƒô£ Movimenta├º├Áes de ${selectedDate.split('-').reverse().join('/')}</h3>
+                <h3 class="section-title" style="font-size: 1.1rem; justify-content: flex-start; text-transform: none; letter-spacing: 1px;">📜 Movimentações de ${selectedDate.split('-').reverse().join('/')}</h3>
                 <div class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                    ${transactionsDate.length === 0 ? `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhuma movimenta├º├úo registrada.</p>` : ''}
+                    ${transactionsDate.length === 0 ? `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhuma movimentação registrada.</p>` : ''}
                     ${transactionsDate.slice().reverse().map(t => `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid ${t.type === 'in' ? (t.category === 'produto' ? '#38bdf8' : '#4ade80') : '#f87171'}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -10523,8 +10523,8 @@ const app = {
                                         ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
                                     </span>
                                     <div style="display: flex; gap: 5px;">
-                                        <button onclick="app.editTransactionMethod(${t.id})" title="Editar Pagamento" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">Ô£Å´©Å</button>
-                                        <button onclick="app.deleteTransaction(${t.id})" title="Excluir" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">­ƒùæ´©Å</button>
+                                        <button onclick="app.editTransactionMethod(${t.id})" title="Editar Pagamento" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">✏️</button>
+                                        <button onclick="app.deleteTransaction(${t.id})" title="Excluir" style="background: none; border: none; cursor: pointer; opacity: 0.4; font-size: 1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑️</button>
                                     </div>
                                 </div>
                             </div>
@@ -10534,18 +10534,18 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
                     <button class="btn-primary" style="background: #2E8B57; box-shadow: none;" id="btn-add-in">+ Entrada</button>
-                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out">+ Sa├¡da (Sangria)</button>
+                    <button class="btn-primary" style="background: #b22222; box-shadow: none;" id="btn-add-out">+ Saída (Sangria)</button>
                 </div>
-                ${selectedDate !== today ? `<p style="font-size: 0.7rem; color: #fbbf24; text-align: center; margin-top: 8px;">Ôä╣´©Å Voc├¬ est├í visualizando/editando o caixa de <b>${selectedDate.split('-').reverse().join('/')}</b>.</p>` : ''}
+                ${selectedDate !== today ? `<p style="font-size: 0.7rem; color: #fbbf24; text-align: center; margin-top: 8px;">ℹ️ Você está visualizando/editando o caixa de <b>${selectedDate.split('-').reverse().join('/')}</b>.</p>` : ''}
                 <button class="btn-secondary" style="width: 100%; margin-top: 15px;" onclick="app.navigateTo('admin-dash')">Voltar ao Painel</button>
             </section>
         `;
 
         document.getElementById('btn-add-in').onclick = () => {
             if (selectedDate !== today) {
-                if (!confirm(`ÔÜá´©Å Voc├¬ est├í adicionando uma ENTRADA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
+                if (!confirm(`⚠️ Você está adicionando uma ENTRADA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
             }
-            const desc = prompt('Descri├º├úo da entrada:');
+            const desc = prompt('Descrição da entrada:');
             const val = parseFloat(prompt('Valor (ex: 30.50):'));
             if (desc && val) {
                 const method = prompt('Modalidade (dinheiro, pix, debito, credito):', 'dinheiro').toLowerCase();
@@ -10557,7 +10557,7 @@ const app = {
                 const validCats = ['servico', 'produto', 'outros'];
                 const selectedCat = validCats.includes(category) ? category : 'outros';
 
-                // For├ºar a data selecionada na transa├º├úo
+                // Forçar a data selecionada na transação
                 const now = new Date();
                 const transactionDate = selectedDate + 'T' + now.toTimeString().split(' ')[0];
 
@@ -10580,9 +10580,9 @@ const app = {
 
         document.getElementById('btn-add-out').onclick = () => {
             if (selectedDate !== today) {
-                if (!confirm(`ÔÜá´©Å Voc├¬ est├í adicionando uma SA├ìDA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
+                if (!confirm(`⚠️ Você está adicionando uma SAÍDA retroativa para o dia ${selectedDate.split('-').reverse().join('/')}.\n\nDeseja continuar?`)) return;
             }
-            const desc = prompt('Descri├º├úo da sa├¡da (Ex: Sangria, Pagamento luz...):');
+            const desc = prompt('Descrição da saída (Ex: Sangria, Pagamento luz...):');
             const val = parseFloat(prompt('Valor:'));
             if (desc && val) {
                 const now = new Date();
@@ -10618,7 +10618,7 @@ const app = {
         });
         container.innerHTML = `
             <section id="vouchers-view" class="fade-in">
-                <h2 class="section-title">Lan├ºar Vales</h2>
+                <h2 class="section-title">Lançar Vales</h2>
                 <form onsubmit="event.preventDefault(); window.app.saveVoucher()" class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">${this.getTerm('workerTerm')}</label>
@@ -10634,13 +10634,13 @@ const app = {
                             <input type="number" step="0.01" id="voucher-amount" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="0.00" required>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Data de Desconto ­ƒôà</label>
+                            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Data de Desconto 📅</label>
                             <input type="date" id="voucher-discount-date" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${today}">
                         </div>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observa├º├úo (opcional)</label>
-                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de sal├írio">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Observação (opcional)</label>
+                        <input type="text" id="voucher-note" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" placeholder="Ex: Adiantamento de salário">
                     </div>
                     <button type="submit" class="btn-primary" style="width: 100%;">Confirmar Retirada</button>
                 </form>
@@ -10662,20 +10662,20 @@ const app = {
                     </div>
                 </div>
 
-                <h3 class="section-title" style="font-size: 1.1rem;">Lan├ºamentos para esta data</h3>
+                <h3 class="section-title" style="font-size: 1.1rem;">Lançamentos para esta data</h3>
                 <div class="voucher-list">
                     ${filteredVouchers.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum vale encontrado para esta data.</p>' : ''}
                     ${filteredVouchers.map(v => {
             const normalizedDiscount = v.discountDate ? this.normalizeDate(v.discountDate) : null;
             const discountLabel = normalizedDiscount
-                ? `<span style="font-size: 0.75rem; color: #fbbf24;">­ƒôà Desconto em: ${new Date(normalizedDiscount + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+                ? `<span style="font-size: 0.75rem; color: #fbbf24;">📅 Desconto em: ${new Date(normalizedDiscount + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`
                 : '';
             const noteLabel = v.note ? `<span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">${v.note}</span>` : '';
             return `
                         <div class="glass" style="padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                             <div style="display: flex; flex-direction: column; gap: 3px;">
                                 <span style="font-weight: 600; color: var(--text-primary);">${v.barber}</span>
-                                <span style="font-size: 0.75rem; color: var(--text-secondary);">${new Date(v.date).toLocaleDateString('pt-BR')} ÔÇö Emiss├úo</span>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">${new Date(v.date).toLocaleDateString('pt-BR')} — Emissão</span>
                                 ${discountLabel}
                                 ${noteLabel}
                             </div>
@@ -10702,7 +10702,7 @@ const app = {
             const voucherId = Date.now() + Math.floor(Math.random() * 100);
             const desc = `Vale: ${barber}${note ? ' - ' + note : ''}`;
 
-            // Salva ID da transa├º├úo no voucher
+            // Salva ID da transação no voucher
             const transactionId = this.addTransaction('out', desc, amount, 'vale', 'dinheiro');
 
             const voucher = {
@@ -10718,9 +10718,9 @@ const app = {
             this.state.vouchers.push(voucher);
             this.saveState();
             
-            alert('Ô£à Vale registrado com sucesso!');
+            alert('✅ Vale registrado com sucesso!');
             
-            // Atualiza a view de forma ass├¡ncrona para n├úo travar o teclado no mobile
+            // Atualiza a view de forma assíncrona para não travar o teclado no mobile
             setTimeout(() => {
                 const main = document.getElementById('main-content');
                 if (main) window.app.renderAdminVouchers(main);
@@ -10731,17 +10731,17 @@ const app = {
     },
 
     deleteVoucher(voucherId) {
-        if (confirm('Deseja realmente excluir este vale? Esta a├º├úo n├úo pode ser desfeita.')) {
+        if (confirm('Deseja realmente excluir este vale? Esta ação não pode ser desfeita.')) {
             const voucher = this.state.vouchers.find(v => v.id === voucherId);
             
-            // Registrar exclus├úo do vale
+            // Registrar exclusão do vale
             this.registerDeletion(voucherId);
 
             if (voucher && voucher.transactionId) {
                 this.registerDeletion(voucher.transactionId);
                 this.state.transactions = this.state.transactions.filter(t => t.id !== voucher.transactionId);
             } else if (voucher) {
-                // Fallback busca flex├¡vel
+                // Fallback busca flexível
                 const desc = `Vale: ${voucher.barber}`;
                 const transactionsToDelete = this.state.transactions.filter(t => t.description.includes(desc) && t.amount === voucher.amount);
                 transactionsToDelete.forEach(t => this.registerDeletion(t.id));
@@ -10759,7 +10759,7 @@ const app = {
         const userName = this.state.user.name;
         const filterDate = this.state.consumptionFilterDate || '';
 
-        // Marcar como visto sem for├ºar o saveState imediato (evita travar no carregamento)
+        // Marcar como visto sem forçar o saveState imediato (evita travar no carregamento)
         if (isAdmin) {
             this.state.lastConsumptionView = Date.now();
         }
@@ -10804,16 +10804,16 @@ const app = {
                             <div class="glass" style="padding: 18px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px;">
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
                                     <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">${item.qty}x ${item.productName}</span>
-                                    <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8;">­ƒòÆ ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8;">🕒 ${new Date(item.timestamp || item.date).toLocaleString('pt-BR')}</span>
                                 </div>
                                 <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
                                     <div style="display: flex; flex-direction: column; align-items: flex-end;">
                                         <span style="font-size: 0.6rem; font-weight: 900; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">
-                                            ${item.target === 'adm' ? 'ÔÜÖ´©Å ADM' : item.barberName?.split(' ')[0]}
+                                            ${item.target === 'adm' ? '⚙️ ADM' : item.barberName?.split(' ')[0]}
                                         </span>
                                         <span style="font-weight: 800; color: #4ade80; font-size: 1.1rem;">${item.target === 'adm' ? '---' : `R$ ${(parseFloat(item.total) || 0).toFixed(2)}`}</span>
                                     </div>
-                                    ${isAdmin ? `<button class="glass" onclick="app.deleteConsumptionRecord(${item.id})" style="padding: 8px; color:#ff4444; border: 1px solid rgba(255,68,68,0.2); cursor:pointer; border-radius: 8px; transition: 0.2s;">­ƒùæ´©Å</button>` : ''}
+                                    ${isAdmin ? `<button class="glass" onclick="app.deleteConsumptionRecord(${item.id})" style="padding: 8px; color:#ff4444; border: 1px solid rgba(255,68,68,0.2); cursor:pointer; border-radius: 8px; transition: 0.2s;">🗑️</button>` : ''}
                                 </div>
                             </div>
                         `).join('')}
@@ -10831,15 +10831,15 @@ const app = {
         if (!sale) return;
 
         const confirmMsg = sale.target === 'barbeiro'
-            ? `Deseja realmente apagar este consumo de ${sale.barberName}?\n\nO estoque ser├í devolvido e o lan├ºamento financeiro (Vale e Movimenta├º├úo) ser├í removido.`
-            : `Deseja realmente apagar este registro de consumo ADM?\nO estoque (${sale.qty} un.) ser├í devolvido automaticamente.`;
+            ? `Deseja realmente apagar este consumo de ${sale.barberName}?\n\nO estoque será devolvido e o lançamento financeiro (Vale e Movimentação) será removido.`
+            : `Deseja realmente apagar este registro de consumo ADM?\nO estoque (${sale.qty} un.) será devolvido automaticamente.`;
 
         if (confirm(confirmMsg)) {
             // Restaurar estoque
             const product = this.state.products.find(p => p.id === sale.productId);
             if (product) { product.stock += sale.qty; }
 
-            // Remover transa├º├úo e vale se for consumo de barbeiro
+            // Remover transação e vale se for consumo de barbeiro
             if (sale.target === 'barbeiro') {
                 if (sale.transactionId) {
                     this.state.transactions = this.state.transactions.filter(t => t.id !== sale.transactionId);
@@ -10849,12 +10849,12 @@ const app = {
                 }
             }
 
-            // Remover do hist├│rico de vendas
+            // Remover do histórico de vendas
             this.state.productSales = this.state.productSales.filter(s => s.id !== saleId);
 
             this.saveState();
             this.render('admin-consumption');
-            alert('Ô£à Registro removido, estoque restaurado e financeiro atualizado.');
+            alert('✅ Registro removido, estoque restaurado e financeiro atualizado.');
         }
     },
 
@@ -10863,7 +10863,7 @@ const app = {
         const now = new Date();
         const currentMonth = (this.state.perfMonth !== undefined) ? this.state.perfMonth : (now.getMonth() + 1);
         const currentYear = (this.state.perfYear !== undefined) ? this.state.perfYear : now.getFullYear();
-        const monthNames = ["Janeiro", "Fevereiro", "Mar├ºo", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
         const stats = {};
         this.state.staff.filter(s => s.role === 'barber').forEach(b => {
@@ -10899,8 +10899,8 @@ const app = {
             <section class="fade-in" style="padding-bottom: 50px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
                     <div>
-                        <h2 class="section-title" style="margin-bottom: 5px;">­ƒÅå Ranking da Equipe</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Compromisso e desempenho no m├¬s de ${monthNames[currentMonth-1]}</p>
+                        <h2 class="section-title" style="margin-bottom: 5px;">🏆 Ranking da Equipe</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Compromisso e desempenho no mês de ${monthNames[currentMonth-1]}</p>
                     </div>
                     
                     <div class="glass" style="padding: 10px; display: flex; gap: 10px; align-items: center;">
@@ -10924,13 +10924,13 @@ const app = {
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
                     ${rank.map((b, idx) => {
-                        const medal = idx === 0 ? '­ƒææ' : idx === 1 ? '­ƒÑç' : idx === 2 ? '­ƒÑê' : idx === 3 ? '­ƒÑë' : (idx + 1) + '┬║';
+                        const medal = idx === 0 ? '👑' : idx === 1 ? '🥇' : idx === 2 ? '🥈' : idx === 3 ? '🥉' : (idx + 1) + 'º';
                         const color = idx === 0 ? '#fbbf24' : idx === 1 ? '#fbbf24' : idx === 2 ? '#94a3b8' : idx === 3 ? '#d97706' : 'var(--text-secondary)';
                         const glow = idx === 0 ? `box-shadow: 0 0 30px ${color}44; border-top: 4px solid ${color};` : `border-top: 4px solid ${color};`;
                         
                         return `
                             <div class="glass" style="padding: 30px 20px; text-align: center; position: relative; ${glow} transition: transform 0.3s ease;">
-                                ${idx === 0 ? `<div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 2.5rem; z-index: 5; filter: drop-shadow(0 0 10px #fbbf24);">­ƒææ</div>` : ''}
+                                ${idx === 0 ? `<div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 2.5rem; z-index: 5; filter: drop-shadow(0 0 10px #fbbf24);">👑</div>` : ''}
                                 <div style="position: absolute; top: 15px; right: 15px; font-size: 1.2rem; font-weight: 900; color: ${color}; opacity: 0.8;">${medal}</div>
                                 
                                 <div style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px; border: 4px solid ${color}; padding: 4px; position: relative; box-shadow: 0 0 15px ${color}22;">
@@ -10940,7 +10940,7 @@ const app = {
                                 
                                 <h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 5px;">${b.name}</h3>
                                 <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 700;">
-                                    ${idx === 0 ? 'O Rei do M├¬s' : (idx + 1) + '┬║ Colocado'}
+                                    ${idx === 0 ? 'O Rei do Mês' : (idx + 1) + 'º Colocado'}
                                 </p>
 
                                 ${isAdmin ? `
@@ -10950,7 +10950,7 @@ const app = {
                                             <span style="color: #4ade80; font-weight: 700;">${b.appointments}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-                                            <span style="color: var(--text-secondary);">Servi├ºos:</span>
+                                            <span style="color: var(--text-secondary);">Serviços:</span>
                                             <span style="color: var(--text-primary);">R$ ${b.serviceTotal.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
@@ -10969,7 +10969,7 @@ const app = {
                                 </div>
                                 
                                 <div style="display: flex; justify-content: center; gap: 5px; color: #fbbf24; font-size: 0.9rem;">
-                                    ${Array(Math.max(1, 5 - idx)).fill('Ôÿà').join('')}${Array(Math.min(4, idx)).fill('Ôÿå').join('')}
+                                    ${Array(Math.max(1, 5 - idx)).fill('★').join('')}${Array(Math.min(4, idx)).fill('☆').join('')}
                                 </div>
                             </div>
                         `;
@@ -10989,7 +10989,7 @@ const app = {
         container.innerHTML = `
             <section id="booking-view" class="fade-in">
                 <div class="booking-header" style="text-align: center; margin-bottom: 30px;">
-                    <h2 class="section-title">Agendar Hor├írio</h2>
+                    <h2 class="section-title">Agendar Horário</h2>
                     <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
                         <div class="step-indicator ${bs.step >= 1 ? 'active' : ''}">1</div>
                         <div class="step-indicator ${bs.step >= 2 ? 'active' : ''}">2</div>
@@ -11000,7 +11000,7 @@ const app = {
                 <div id="booking-step-content"></div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 30px;">
-                    ${bs.step > 1 ? `<button class="btn-secondary" style="flex: 1;" onclick="app.prevBookingStep()">ÔØ« Voltar</button>` : ''}
+                    ${bs.step > 1 ? `<button class="btn-secondary" style="flex: 1;" onclick="app.prevBookingStep()">❮ Voltar</button>` : ''}
                     <button class="btn-secondary" style="flex: 1;" onclick="app.navigateTo('home')">Cancelar</button>
                 </div>
             </section>
@@ -11036,7 +11036,7 @@ const app = {
     renderBookingStep2(container) {
         const selectedIds = this.state.bookingState.services.map(s => s.id);
         container.innerHTML = `
-            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Voc├¬ pode selecionar v├írios procedimentos</p>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Você pode selecionar vários procedimentos</p>
             <div id="booking-service-list" class="service-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
                 ${this.state.services.map(s => {
             const isSelected = selectedIds.includes(s.id);
@@ -11078,7 +11078,7 @@ const app = {
     renderBookingStep3(container) {
         const timeSlots = this.generateTimeSlotsForBooking();
         container.innerHTML = `
-            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha data e hor├írio</p>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500;">Escolha data e horário</p>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Data</label>
                 <input type="date" id="booking-date" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
@@ -11087,7 +11087,7 @@ const app = {
             </div>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
-                ${timeSlots.length === 0 ? '<p style="grid-column: 1/-1; text-align: center; color: #ff4444; padding: 20px;">Sem hor├írios dispon├¡veis para esta data.</p>' : ''}
+                ${timeSlots.length === 0 ? '<p style="grid-column: 1/-1; text-align: center; color: #ff4444; padding: 20px;">Sem horários disponíveis para esta data.</p>' : ''}
                 ${timeSlots.map(t => `
                     <button class="glass ${this.state.bookingState.time === t ? 'active' : ''}" 
                             style="padding: 10px; font-size: 0.85rem; border: 1px solid ${this.state.bookingState.time === t ? 'var(--accent-color)' : 'var(--glass-border)'};"
@@ -11108,20 +11108,20 @@ const app = {
             <div class="glass" style="padding: 20px; margin-bottom: 20px;">
                 <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Barbeiro:</strong> ${bs.barber.name}</p>
                 <div style="font-size: 0.85rem; margin-bottom: 10px;">
-                    <strong>Servi├ºos:</strong>
+                    <strong>Serviços:</strong>
                     <ul style="margin: 5px 0 0 15px; padding: 0; list-style: disc;">
                         ${bs.services.map(s => `<li>${s.name} (R$ ${s.price})</li>`).join('')}
                     </ul>
                     <p style="margin-top: 5px; font-weight: 700; color: var(--accent-readable);">Total: R$ ${totalPrice.toFixed(2)}</p>
                 </div>
-                <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Data/Hora:</strong> ${new Date(bs.date + 'T00:00:00').toLocaleDateString()} ├ás ${bs.time}</p>
+                <p style="font-size: 0.85rem; margin-bottom: 10px;"><strong>Data/Hora:</strong> ${new Date(bs.date + 'T00:00:00').toLocaleDateString()} às ${bs.time}</p>
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Nome Completo</label>
                     <input type="text" id="cust-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" 
-                           value="${bs.customerName}" placeholder="Ex: Jo├úo da Silva" oninput="app.state.bookingState.customerName = this.value">
+                           value="${bs.customerName}" placeholder="Ex: João da Silva" oninput="app.state.bookingState.customerName = this.value">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Telefone (WhatsApp)</label>
@@ -11156,7 +11156,7 @@ const app = {
             this.state.bookingState.services.splice(index, 1);
         }
 
-        // Atualiza├º├úo parcial para evitar scroll jump
+        // Atualização parcial para evitar scroll jump
         const confirmArea = document.getElementById('booking-confirm-area');
         if (confirmArea) {
             confirmArea.innerHTML = this.renderBookingConfirmButton();
@@ -11202,7 +11202,7 @@ const app = {
         if (!this.state.settings || !this.state.settings.agenda) return [];
         const { intervalMin, schedule } = this.state.settings.agenda;
 
-        // Verificar se ├® uma data de exce├º├úo (feriado)
+        // Verificar se é uma data de exceção (feriado)
         const holidays = this.state.settings.holidays || [];
         const holidayConfig = holidays.find(h => h.date === bs.date);
 
@@ -11216,7 +11216,7 @@ const app = {
 
         if (!dayConfig || !dayConfig.active) return [];
 
-        // Calcula a dura├º├úo total somando todos os servi├ºos selecionados
+        // Calcula a duração total somando todos os serviços selecionados
         const totalDuration = this.calculateServicesDuration(bs.services);
 
         const slots = [];
@@ -11229,8 +11229,8 @@ const app = {
             const slotStartMin = hour * 60 + min;
             const slotEndMin = slotStartMin + totalDuration;
 
-            // S├│ disponibiliza se o servi├ºo couber antes do hor├írio de fechamento
-            // e se o barbeiro n├úo tiver nenhum agendamento colidindo dentro desse per├¡odo
+            // Só disponibiliza se o serviço couber antes do horário de fechamento
+            // e se o barbeiro não tiver nenhum agendamento colidindo dentro desse período
             if (slotEndMin <= dayCloseMin) {
                 const isOccupied = this.isBarberBusyInRange(bs.barber.name, bs.date, slotStartMin, slotEndMin);
                 if (!isOccupied) {
@@ -11254,13 +11254,13 @@ const app = {
             return;
         }
 
-        // Valida├º├úo de colis├úo de hor├írio no momento de salvar (evita race condition)
+        // Validação de colisão de horário no momento de salvar (evita race condition)
         const totalDuration = this.calculateServicesDuration(bs.services);
         const startMin = this.timeToMinutes(bs.time);
         const endMin = startMin + totalDuration;
 
         if (this.isBarberBusyInRange(bs.barber.name, bs.date, startMin, endMin)) {
-            alert(`ÔÜá´©Å Desculpe, o hor├írio ${bs.time} (dura├º├úo: ${totalDuration} min) acabou de ser reservado ou conflita com outro agendamento. Por favor, selecione outro hor├írio.`);
+            alert(`⚠️ Desculpe, o horário ${bs.time} (duração: ${totalDuration} min) acabou de ser reservado ou conflita com outro agendamento. Por favor, selecione outro horário.`);
             this.state.bookingState.step = 3;
             this.render('booking');
             return;
@@ -11306,7 +11306,7 @@ const app = {
             customer: bs.customerName,
             service: serviceNames,
             price: totalPrice,
-            duration: totalDuration, // DURA├ç├âO TOTAL SOMADA
+            duration: totalDuration, // DURAÇÃO TOTAL SOMADA
             status: 'agendado',
             date: bs.date,
             origin: 'App / Web'
@@ -11318,7 +11318,7 @@ const app = {
         // [PUSH NOTIFICATION] Notificar barbeiro do novo agendamento
         this.sendPushToBarber(bs.barber.name, appointment);
 
-        alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name} (Dura├º├úo estimada: ${totalDuration} min)!`);
+        alert(`Agendamento realizado com sucesso para ${bs.time} com ${bs.barber.name} (Duração estimada: ${totalDuration} min)!`);
 
         this.state.bookingState = {
             step: 1, barber: null, services: [], time: null,
@@ -11370,15 +11370,15 @@ const app = {
                                 <th style="padding: 18px 20px;">Cliente</th>
                                 <th style="padding: 18px 20px;">Contato</th>
                                 <th style="padding: 18px 20px; text-align: center;">Visitas</th>
-                                <th style="padding: 18px 20px;">├Ültima Visita</th>
-                                <th style="padding: 18px 20px; text-align: right;">A├º├Áes</th>
+                                <th style="padding: 18px 20px;">Última Visita</th>
+                                <th style="padding: 18px 20px; text-align: right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${filtered.length === 0 ? `
                                 <tr>
                                     <td colspan="5" style="padding: 60px; text-align: center;">
-                                        <div style="font-size: 2rem; margin-bottom: 10px;">­ƒöì</div>
+                                        <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
                                         <p style="color: var(--text-secondary);">Nenhum cliente encontrado para "${this.state.customerSearchQuery || ''}"</p>
                                     </td>
                                 </tr>
@@ -11442,7 +11442,7 @@ const app = {
             <section class="fade-in">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">Nome Completo *</label>
-                    <input type="text" id="add-cust-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: Jo├úo Silva">
+                    <input type="text" id="add-cust-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Ex: João Silva">
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">WhatsApp / Telefone</label>
@@ -11499,29 +11499,29 @@ const app = {
         this.openModal('Importar Banco de Clientes', `
             <section class="fade-in">
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
-                    Para manter seus dados privados, cole o conte├║do JSON que o assistente gerou para voc├¬ abaixo:
+                    Para manter seus dados privados, cole o conteúdo JSON que o assistente gerou para você abaixo:
                 </p>
                 
                 <textarea id="import-json-area" class="glass" style="width: 100%; height: 200px; padding: 15px; font-family: monospace; font-size: 0.75rem; color: var(--text-primary); margin-bottom: 20px;" placeholder='Ex: [ { "name": "Cliente X", ... }, ... ]'></textarea>
                 
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-secondary" style="flex: 1;" onclick="app.closeModal()">Cancelar</button>
-                    <button class="btn-primary" style="flex: 2; background: #2E8B57;" onclick="app.importJSONData()">­ƒÜÇ Processar Importa├º├úo</button>
+                    <button class="btn-primary" style="flex: 2; background: #2E8B57;" onclick="app.importJSONData()">🚀 Processar Importação</button>
                 </div>
                 
                 <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 15px; text-align: center;">
-                    Nota: O formato de arquivo (.xlsx/.zip) ├® processado pelo assistente para sua seguran├ºa e convertido em JSON.
+                    Nota: O formato de arquivo (.xlsx/.zip) é processado pelo assistente para sua segurança e convertido em JSON.
                 </p>
             </section>
         `);
     },
 
     async loadConsolidatedBase() {
-        if (!confirm("Isso ir├í SUBSTITUIR sua base de clientes atual pela base 'Cliente 1'. Deseja continuar?")) return;
+        if (!confirm("Isso irá SUBSTITUIR sua base de clientes atual pela base 'Cliente 1'. Deseja continuar?")) return;
 
         try {
             const response = await fetch('customers_final.json');
-            if (!response.ok) throw new Error('Arquivo de base n├úo encontrado. Certifique-se de que o arquivo customers_final.json existe na raiz.');
+            if (!response.ok) throw new Error('Arquivo de base não encontrado. Certifique-se de que o arquivo customers_final.json existe na raiz.');
             const data = await response.json();
 
             this.state.customers = data;
@@ -11538,13 +11538,13 @@ const app = {
         const dataStr = area.value.trim();
 
         if (!dataStr) {
-            alert('Por favor, cole o conte├║do JSON antes de continuar.');
+            alert('Por favor, cole o conteúdo JSON antes de continuar.');
             return;
         }
 
         try {
             const newCustomers = JSON.parse(dataStr);
-            if (!Array.isArray(newCustomers)) throw new Error('Dados inv├ílidos. Esperava-se uma lista (Array).');
+            if (!Array.isArray(newCustomers)) throw new Error('Dados inválidos. Esperava-se uma lista (Array).');
 
             // Mesclar dados (evitar duplicatas por ID se houver)
             const existingIds = new Set(this.state.customers.map(c => c.id));
@@ -11574,13 +11574,13 @@ const app = {
             <section class="fade-in">
                 <div class="glass" style="padding: 20px; margin-bottom: 20px;">
                     <p><strong>Nome:</strong> ${customer.name}</p>
-                    <p><strong>Telefone:</strong> ${customer.phone || 'N├úo informado'}</p>
+                    <p><strong>Telefone:</strong> ${customer.phone || 'Não informado'}</p>
                     <p><strong>Total de Visitas:</strong> ${customer.history.length}</p>
                 </div>
 
-                <h4 style="font-size: 0.9rem; margin-bottom: 10px;">Hist├│rico de Atendimentos</h4>
+                <h4 style="font-size: 0.9rem; margin-bottom: 10px;">Histórico de Atendimentos</h4>
                 <div style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;">
-                    ${customer.history.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem hist├│rico registrado.</p>' : ''}
+                    ${customer.history.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem histórico registrado.</p>' : ''}
                     ${customer.history.map(h => `
                         <div class="glass" style="padding: 10px; margin-bottom: 5px; font-size: 0.8rem;">
                             <div style="display: flex; justify-content: space-between;">
@@ -11595,7 +11595,7 @@ const app = {
                 <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
                     <button class="btn-primary" style="background: #7c3aed; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="window.app.pdvForCustomer('${customer.name}')">
                         <i data-lucide="shopping-cart" style="width: 18px;"></i>
-                        Lan├ºar Consumo (PDV)
+                        Lançar Consumo (PDV)
                     </button>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn-secondary" style="flex: 1; border: 1px solid #ff4444; color: #ff4444;" onclick="window.app.deleteCustomer(${customer.id})">Deletar Cliente</button>
@@ -11613,7 +11613,7 @@ const app = {
     },
 
     deleteCustomer(customerId) {
-        if (confirm('Tem certeza que deseja excluir permanentemente este cliente e todo o seu hist├│rico? Esta a├º├úo n├úo pode ser desfeita.')) {
+        if (confirm('Tem certeza que deseja excluir permanentemente este cliente e todo o seu histórico? Esta ação não pode ser desfeita.')) {
             this.registerDeletion(customerId);
             this.state.customers = this.state.customers.filter(c => c.id !== customerId);
             this.saveState();
@@ -11658,7 +11658,7 @@ const app = {
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Login (Usu├írio)</label>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Login (Usuário)</label>
                         <input type="text" id="staff-login" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${staff.login}">
                     </div>
                     <div>
@@ -11676,7 +11676,7 @@ const app = {
                         </select>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Comiss├úo Atrelada (%)</label>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Comissão Atrelada (%)</label>
                         <input type="number" id="staff-commission" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="${staff.commission}">
                     </div>
                 </div>
@@ -11685,7 +11685,7 @@ const app = {
                         <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Exibir profssional na Agenda / Site?</label>
                         <select id="staff-show-agenda" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);">
                             <option value="true" ${staff.showInAgenda !== false ? 'selected' : ''}>Sim (Liberado para agendamentos)</option>
-                            <option value="false" ${staff.showInAgenda === false ? 'selected' : ''}>N├úo (Invis├¡vel na Agenda)</option>
+                            <option value="false" ${staff.showInAgenda === false ? 'selected' : ''}>Não (Invisível na Agenda)</option>
                         </select>
                     </div>
                 </div>
@@ -11709,7 +11709,7 @@ const app = {
         const showInAgenda = document.getElementById('staff-show-agenda').value === 'true';
 
         if (!name || !login) {
-            alert('Nome e Login do sistema s├úo obrigat├│rios!');
+            alert('Nome e Login do sistema são obrigatórios!');
             return;
         }
 
@@ -11728,12 +11728,12 @@ const app = {
             // Evita login duplicado
             const loginNorm = login.trim().toLowerCase();
             if ((this.state.staff || []).some(s => s && String(s.login || '').trim().toLowerCase() === loginNorm)) {
-                alert('J├í existe um colaborador com este login. Escolha outro.');
+                alert('Já existe um colaborador com este login. Escolha outro.');
                 return;
             }
-            // ID ├║nico: o antigo "max + 1" podia reutilizar IDs j├í exclu├¡dos (ex.: 3 ou de
-            // colaboradores removidos), que s├úo filtrados na listagem e no sync com a nuvem,
-            // fazendo o novo colaborador "sumir" ap├│s salvar.
+            // ID único: o antigo "max + 1" podia reutilizar IDs já excluídos (ex.: 3 ou de
+            // colaboradores removidos), que são filtrados na listagem e no sync com a nuvem,
+            // fazendo o novo colaborador "sumir" após salvar.
             const blockedIds = new Set([
                 3,
                 ...(this.state.deletedStaffIds || []).map(Number),
@@ -11752,7 +11752,7 @@ const app = {
     },
 
     deleteStaff(staffId) {
-        if (confirm('Aten├º├úo: Ao excluir o colaborador voc├¬ pode perder refer├¬ncias e o acesso desse funcion├írio ser├í negado. Confirmar?')) {
+        if (confirm('Atenção: Ao excluir o colaborador você pode perder referências e o acesso desse funcionário será negado. Confirmar?')) {
             const numId = Number(staffId);
             this.registerDeletion(staffId);
             if (!this.state.deletedStaffIds) this.state.deletedStaffIds = [];
@@ -11791,7 +11791,7 @@ const app = {
                                 <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${s.name}</p>
                                 <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">Login: <strong>${s.login}</strong> | Acesso: <strong>${s.role === 'admin' ? 'Administrativo' : this.getTerm('workerTerm')}</strong></p>
                                 <div style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(72,193,126,0.1); color: var(--accent-readable); font-size: 0.75rem; font-weight: 600;">
-                                    Comiss├úo p/ Servi├ºo: ${s.commission}%
+                                    Comissão p/ Serviço: ${s.commission}%
                                 </div>
                             </div>
                             <button class="btn-secondary" style="padding: 8px 12px; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--surface-light); color: var(--text-primary);" onclick="app.openStaffModal(${s.id})">Editar</button>
@@ -11806,18 +11806,18 @@ const app = {
         container.innerHTML = `
             <section id="admin-services" class="fade-in">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="section-title">Servi├ºos Oferecidos</h2>
-                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; box-shadow: none;" onclick="app.openServiceModal()">+ Novo Servi├ºo</button>
+                    <h2 class="section-title">Serviços Oferecidos</h2>
+                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem; box-shadow: none;" onclick="app.openServiceModal()">+ Novo Serviço</button>
                 </div>
                 
                 <div class="glass" style="padding: 10px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
                         <thead>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);">
-                                <th style="padding: 15px;">Nome do Servi├ºo</th>
-                                <th style="padding: 15px;">Pre├ºo</th>
-                                <th style="padding: 15px;">Dura├º├úo</th>
-                                <th style="padding: 15px; text-align: center;">A├º├Áes</th>
+                                <th style="padding: 15px;">Nome do Serviço</th>
+                                <th style="padding: 15px;">Preço</th>
+                                <th style="padding: 15px;">Duração</th>
+                                <th style="padding: 15px; text-align: center;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -11842,34 +11842,34 @@ const app = {
     },
 
     openServiceModal(serviceId = null) {
-        let title = 'Novo Servi├ºo';
+        let title = 'Novo Serviço';
         let service = { name: '', price: 0, duration: 30 };
 
         if (serviceId) {
             service = this.state.services.find(s => s.id === serviceId);
-            title = 'Editar Servi├ºo';
+            title = 'Editar Serviço';
         }
 
         const html = `
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Nome do Servi├ºo</label>
-                    <input type="text" id="svc-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.name}" placeholder="Ex: Corte Degrad├¬">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Nome do Serviço</label>
+                    <input type="text" id="svc-name" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.name}" placeholder="Ex: Corte Degradê">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Pre├ºo (R$)</label>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Preço (R$)</label>
                         <input type="number" id="svc-price" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.price}">
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Dura├º├úo (minutos)</label>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">Duração (minutos)</label>
                         <input type="number" id="svc-duration" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" value="${service.duration}">
                     </div>
                 </div>
                 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                     <button class="btn-secondary" style="padding: 10px 20px;" onclick="app.closeModal()">Cancelar</button>
-                    <button class="btn-primary" style="padding: 10px 30px; cursor: pointer;" onclick="app.saveService(${serviceId || 'null'})">Salvar Servi├ºo</button>
+                    <button class="btn-primary" style="padding: 10px 30px; cursor: pointer;" onclick="app.saveService(${serviceId || 'null'})">Salvar Serviço</button>
                 </div>
             </div>
         `;
@@ -11882,7 +11882,7 @@ const app = {
         const duration = parseInt(document.getElementById('svc-duration').value) || 0;
 
         if (!name) {
-            alert('O nome do servi├ºo ├® obrigat├│rio!');
+            alert('O nome do serviço é obrigatório!');
             return;
         }
 
@@ -11899,13 +11899,13 @@ const app = {
             this.state.services.push({ id: newId, name, price, duration, updatedAt: newId });
         }
 
-        // Persist├¬ncia imediata na nuvem
+        // Persistência imediata na nuvem
         if (this.db) {
             try {
                 const dbPath = this.getDbPath();
                 set(ref(this.db, dbPath + 'services'), this.state.services);
             } catch (err) {
-                console.error('Erro ao salvar servi├ºo diretamente no Firebase:', err);
+                console.error('Erro ao salvar serviço diretamente no Firebase:', err);
             }
         }
 
@@ -11924,47 +11924,47 @@ const app = {
         return holidays.map((h, index) => `
             <div class="glass" style="padding: 15px; border-left: 3px solid ${h.status === 'open' ? '#4ade80' : '#f87171'}; position: relative;">
                 <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 5px;">${new Date(h.date + 'T00:00:00').toLocaleDateString('pt-BR')}</div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">${h.label || 'Feriado/Exce├º├úo'}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">${h.label || 'Feriado/Exceção'}</div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 0.75rem; font-weight: 600; color: ${h.status === 'open' ? '#4ade80' : '#f87171'};">
                         ${h.status === 'open' ? `Aberto: ${h.open} - ${h.close}` : 'Fechado'}
                     </span>
-                    <button onclick="app.deleteHoliday(${index})" style="background: none; border: none; cursor: pointer; opacity: 0.6; padding: 5px;">­ƒùæ´©Å</button>
+                    <button onclick="app.deleteHoliday(${index})" style="background: none; border: none; cursor: pointer; opacity: 0.6; padding: 5px;">🗑️</button>
                 </div>
             </div>
         `).join('');
     },
 
     openAddHolidayModal() {
-        this.openModal('Configurar Data Especial ­ƒôà', `
+        this.openModal('Configurar Data Especial 📅', `
             <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Data</label>
                     <input type="date" id="holiday-date" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" min="${new Date().toISOString().split('T')[0]}">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Descri├º├úo (Ex: Natal)</label>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Descrição (Ex: Natal)</label>
                     <input type="text" id="holiday-label" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" placeholder="Feriado Local">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Status do Dia</label>
                     <select id="holiday-status" class="glass" style="width: 100%; padding: 12px; color: var(--text-primary);" onchange="document.getElementById('holiday-hours-wrap').style.display = this.value === 'open' ? 'flex' : 'none';">
-                        <option value="closed">Ôøö FECHADO</option>
-                        <option value="open">Ô£à ABERTO (Hor├írio Especial)</option>
+                        <option value="closed">⛔ FECHADO</option>
+                        <option value="open">✅ ABERTO (Horário Especial)</option>
                     </select>
                 </div>
                 <div id="holiday-hours-wrap" style="display: none; gap: 10px; align-items: center;">
                     <div style="flex: 1;">
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Abre ├ás</label>
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Abre às</label>
                         <input type="time" id="holiday-open" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="09:00">
                     </div>
-                    <div style="margin-top: 20px; color: var(--text-secondary);">at├®</div>
+                    <div style="margin-top: 20px; color: var(--text-secondary);">até</div>
                     <div style="flex: 1;">
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Fecha ├ás</label>
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Fecha às</label>
                         <input type="time" id="holiday-close" class="glass" style="width: 100%; padding: 10px; color: var(--text-primary);" value="18:00">
                     </div>
                 </div>
-                <button class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;" onclick="app.saveHoliday()">Salvar Exce├º├úo</button>
+                <button class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;" onclick="app.saveHoliday()">Salvar Exceção</button>
             </div>
         `);
     },
@@ -11990,11 +11990,11 @@ const app = {
         this.closeModal();
         const currentView = this.state.view || 'admin-settings';
         this.render(currentView);
-        alert('­ƒôà Data configurada com sucesso!');
+        alert('📅 Data configurada com sucesso!');
     },
 
     deleteHoliday(index) {
-        if (confirm('Deseja remover esta exce├º├úo de hor├írio?')) {
+        if (confirm('Deseja remover esta exceção de horário?')) {
             this.state.settings.holidays.splice(index, 1);
             this.saveState();
             const currentView = this.state.view || 'admin-settings';
@@ -12003,7 +12003,7 @@ const app = {
     },
 
     deleteService(serviceId) {
-        if (confirm('Tem certeza que deseja excluir este servi├ºo? Ele n├úo aparecer├í mais para novos agendamentos.')) {
+        if (confirm('Tem certeza que deseja excluir este serviço? Ele não aparecerá mais para novos agendamentos.')) {
             const strId = String(serviceId);
             this.registerDeletion(serviceId);
             this.state.services = (this.state.services || []).filter(s => String(s.id) !== strId);
@@ -12012,7 +12012,7 @@ const app = {
                     const dbPath = this.getDbPath();
                     set(ref(this.db, dbPath + 'services'), this.state.services);
                 } catch (err) {
-                    console.error('Erro ao deletar servi├ºo no Firebase:', err);
+                    console.error('Erro ao deletar serviço no Firebase:', err);
                 }
             }
             this.saveState();
@@ -12024,7 +12024,7 @@ const app = {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
-        // Ciclo de 7 dias por padr├úo (7 dias atr├ís at├® hoje)
+        // Ciclo de 7 dias por padrão (7 dias atrás até hoje)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(today.getDate() - 7);
         const defaultStart = sevenDaysAgo.toISOString().split('T')[0];
@@ -12038,15 +12038,15 @@ const app = {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 class="section-title" style="margin: 0;">% Pagamentos</h2>
                     <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;" onclick="app.openEmissaoFaturamentoModal()">
-                        ­ƒôä Emitir Comprovante
+                        📄 Emitir Comprovante
                     </button>
                 </div>
                 
                 <div class="glass" style="padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                     <h3 style="font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
-                        <span style="color: var(--text-secondary);">Ôû╝</span> Filtros
+                        <span style="color: var(--text-secondary);">▼</span> Filtros
                     </h3>
-                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 15px;">Padr├úo: Ciclo de 7 dias para pagamento. Use o calend├írio para auditorias anteriores.</p>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 15px;">Padrão: Ciclo de 7 dias para pagamento. Use o calendário para auditorias anteriores.</p>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 20px; margin-bottom: 20px;">
                         <div>
@@ -12070,7 +12070,7 @@ const app = {
                     
                     <div style="display: flex; gap: 10px;">
                         <button class="glass" style="padding: 8px 20px; display: flex; align-items: center; gap: 5px; background: var(--surface-light); color: var(--text-primary); cursor: pointer;" id="btn-pay-search">
-                            ­ƒöì Pesquisar
+                            🔍 Pesquisar
                         </button>
                     </div>
                 </div>
@@ -12140,7 +12140,7 @@ const app = {
                     <p style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">R$ ${grossRevenue.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid var(--accent-color);">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Comiss├úo (${staff.commission}%)</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Comissão (${staff.commission}%)</p>
                     <p style="font-size: 1.3rem; font-weight: 700; color: var(--accent-readable);">R$ ${staffCommission.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #fbbf24;">
@@ -12148,29 +12148,29 @@ const app = {
                     <p style="font-size: 1.3rem; font-weight: 700; color: #fbbf24;">R$ ${totalTips.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #ff4444;">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Vales Detra├¡dos</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Vales Detraídos</p>
                     <p style="font-size: 1.3rem; font-weight: 700; color: #ff4444;">- R$ ${totalVouchers.toFixed(2)}</p>
                 </div>
                 <div class="glass" style="padding: 20px; text-align: center; border-left: 4px solid #48C17E; background: rgba(72, 193, 126, 0.05);">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">L├¡quido a Pagar</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Líquido a Pagar</p>
                     <p style="font-size: 1.6rem; font-weight: 800; color: #48C17E;">R$ ${netPay.toFixed(2)}</p>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div class="glass" style="padding: 20px; max-height: 500px; overflow-y: auto;">
-                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Relat├│rio Anal├¡tico (Servi├ºos e Gorjetas)</h4>
-                    ${appointments.length === 0 && tips.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem movimenta├º├úo neste per├¡odo.</p>' : ''}
+                    <h4 style="margin-bottom: 15px; color: var(--text-primary);">Relatório Analítico (Serviços e Gorjetas)</h4>
+                    ${appointments.length === 0 && tips.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem movimentação neste período.</p>' : ''}
                     
                     ${appointments.map(a => `
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem;">
                             <div>
                                 <strong style="color: var(--text-primary);">${a.customer}</strong><br>
-                                <span style="color: var(--text-secondary);">­ƒÆê ${a.service} | ${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
+                                <span style="color: var(--text-secondary);">💈 ${a.service} | ${new Date(a.date + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
                             <div style="text-align: right;">
                                 <strong style="color: var(--text-primary);">R$ ${a.price.toFixed(2)}</strong><br>
-                                <span style="color: var(--accent-readable);">+ R$ ${((a.commissionBase !== undefined ? a.commissionBase : a.price) * (staff.commission / 100)).toFixed(2)} (comiss├úo)</span>
+                                <span style="color: var(--accent-readable);">+ R$ ${((a.commissionBase !== undefined ? a.commissionBase : a.price) * (staff.commission / 100)).toFixed(2)} (comissão)</span>
                             </div>
                         </div>
                     `).join('')}
@@ -12178,7 +12178,7 @@ const app = {
                     ${tips.map(t => `
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; background: rgba(251, 191, 36, 0.03);">
                             <div>
-                                <strong style="color: #fbbf24;">Gorjeta ­ƒ¬Ö</strong><br>
+                                <strong style="color: #fbbf24;">Gorjeta 🪙</strong><br>
                                 <span style="color: var(--text-secondary);">${new Date(t.timestamp).toLocaleString('pt-BR')}</span>
                             </div>
                             <div style="text-align: right;">
@@ -12190,7 +12190,7 @@ const app = {
                 </div>
                 <div class="glass" style="padding: 20px; max-height: 500px; overflow-y: auto;">
                     <h4 style="margin-bottom: 15px; color: var(--text-primary);">Vales e Consumo</h4>
-                    ${vouchers.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem registros neste per├¡odo.</p>' : ''}
+                    ${vouchers.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-secondary);">Sem registros neste período.</p>' : ''}
                     
                     ${(() => {
                         const vConsumo = vouchers.filter(v => v.note && v.note.toLowerCase().includes('consumo'));
@@ -12199,7 +12199,7 @@ const app = {
                         let html = '';
                         
                         if (vVales.length > 0) {
-                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #ff4444; text-transform: uppercase; margin-bottom: 10px; margin-top: 5px;">­ƒÆ© Vales / Adiantamentos</p>`;
+                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #ff4444; text-transform: uppercase; margin-bottom: 10px; margin-top: 5px;">💸 Vales / Adiantamentos</p>`;
                             html += vVales.map(v => `
                                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.82rem;">
                                     <span style="color: var(--text-secondary);">${new Date(v.date).toLocaleDateString()}</span>
@@ -12209,7 +12209,7 @@ const app = {
                         }
                         
                         if (vConsumo.length > 0) {
-                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; margin-bottom: 10px; margin-top: 15px;">­ƒôª Consumo de Produtos</p>`;
+                            html += `<p style="font-size: 0.7rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; margin-bottom: 10px; margin-top: 15px;">📦 Consumo de Produtos</p>`;
                             html += vConsumo.map(v => `
                                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.82rem;">
                                     <span style="color: var(--text-secondary);">${new Date(v.date).toLocaleDateString()}</span>
@@ -12230,15 +12230,15 @@ const app = {
         if (tenantId === 'centauro') {
             container.innerHTML = `
                 <div class="glass" style="padding: 40px; text-align: center; border-top: 4px solid var(--accent-color);">
-                    <div style="font-size: 3rem; margin-bottom: 20px;">­ƒøí´©Å</div>
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🛡️</div>
                     <h2 style="font-family: 'Playfair Display';">Conta Matriz (Ilimitada)</h2>
-                    <p style="color: var(--text-secondary); margin-top: 10px; max-width: 400px; margin: 10px auto;">Voc├¬ possui acesso vital├¡cio e ilimitado por ser a unidade principal do sistema.</p>
+                    <p style="color: var(--text-secondary); margin-top: 10px; max-width: 400px; margin: 10px auto;">Você possui acesso vitalício e ilimitado por ser a unidade principal do sistema.</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">Ôîø Carregando dados da assinatura...</div>';
+        container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">⌛ Carregando dados da assinatura...</div>';
 
         try {
             const masterRef = ref(this.db, `master/tenants/${tenantId}`);
@@ -12246,7 +12246,7 @@ const app = {
             const data = snapshot.val();
 
             if (!data) {
-                container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">ÔØî Erro ao localizar dados da assinatura.</div>';
+                container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">❌ Erro ao localizar dados da assinatura.</div>';
                 return;
             }
 
@@ -12270,7 +12270,7 @@ const app = {
 
             container.innerHTML = `
                 <section class="fade-in" style="max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
-                    <h2 class="section-title" style="margin-bottom: 25px;">­ƒÆ│ Fatura e Assinatura</h2>
+                    <h2 class="section-title" style="margin-bottom: 25px;">💳 Fatura e Assinatura</h2>
                     
                     <div class="glass" style="padding: 30px; margin-bottom: 25px; border-left: 5px solid ${statusColor};">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
@@ -12279,31 +12279,31 @@ const app = {
                                 <div style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: ${statusBg}; color: ${statusColor}; font-weight: 800; font-size: 0.9rem; margin-top: 8px;">
                                     ${statusLabel}
                                 </div>
-                                <p style="font-size: 1rem; color: var(--text-primary); margin-top: 15px;">Pr├│ximo Vencimento: <strong style="color: ${statusColor};">${nextPaymentDate.toLocaleDateString('pt-BR')}</strong></p>
+                                <p style="font-size: 1rem; color: var(--text-primary); margin-top: 15px;">Próximo Vencimento: <strong style="color: ${statusColor};">${nextPaymentDate.toLocaleDateString('pt-BR')}</strong></p>
                             </div>
                             <div style="text-align: right;">
                                 <p style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Valor do Plano</p>
-                                <h3 style="color: var(--text-primary); font-size: 2.2rem; font-weight: 800; margin-top: 5px;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}<span style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">/m├¬s</span></h3>
+                                <h3 style="color: var(--text-primary); font-size: 2.2rem; font-weight: 800; margin-top: 5px;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}<span style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">/mês</span></h3>
                             </div>
                         </div>
                     </div>
 
                     <div class="glass" style="padding: 30px; border-top: 1px solid var(--glass-border);">
                         <h4 style="margin-bottom: 12px; color: var(--accent-readable); font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                            <span>ÔÜí</span> Renova├º├úo Autom├ítica com Libera├º├úo Imediata
+                            <span>⚡</span> Renovação Automática com Liberação Imediata
                         </h4>
                         <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px;">
-                            Pague via <strong>PIX</strong> e seu sistema ser├í renovado e liberado <strong>instantaneamente</strong>, sem precisar enviar comprovante ou aguardar atendimento.
+                            Pague via <strong>PIX</strong> e seu sistema será renovado e liberado <strong>instantaneamente</strong>, sem precisar enviar comprovante ou aguardar atendimento.
                         </p>
                         
                         <div style="background: linear-gradient(135deg, rgba(0, 158, 227, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(0, 158, 227, 0.4); padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 25px;">
-                            <div style="font-size: 2.2rem; margin-bottom: 8px;">­ƒô▒</div>
-                            <h3 style="color: #fff; font-size: 1.3rem; margin-bottom: 6px;">Pagar via PIX com Libera├º├úo Imediata</h3>
+                            <div style="font-size: 2.2rem; margin-bottom: 8px;">📱</div>
+                            <h3 style="color: #fff; font-size: 1.3rem; margin-bottom: 6px;">Pagar via PIX com Liberação Imediata</h3>
                             <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
                                 Valor: <strong style="color: #4ade80; font-size: 1.2rem;">R$ ${(data.subscriptionPrice || 0).toFixed(2)}</strong> (30 dias de acesso completo)
                             </p>
                             <button onclick="app.openAutoRenewalModal('${tenantId}')" class="btn-primary" style="background: #009ee3; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 0 10px 25px rgba(0, 158, 227, 0.4); display: inline-flex; align-items: center; gap: 10px;">
-                                <span>ÔÜí</span> GERAR PIX PARA LIBERA├ç├âO AUTOM├üTICA
+                                <span>⚡</span> GERAR PIX PARA LIBERAÇÃO AUTOMÁTICA
                             </button>
                         </div>
                     </div>
@@ -12318,7 +12318,7 @@ const app = {
             `;
         } catch (e) {
             console.error(e);
-            container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">ÔØî Erro ao conectar com o servidor financeiro.</div>';
+            container.innerHTML = '<div class="glass" style="padding:40px; text-align:center;">❌ Erro ao conectar com o servidor financeiro.</div>';
         }
     },
 
@@ -12337,12 +12337,12 @@ const app = {
         // Apenas para Admin
         if (this.state.user?.role !== 'admin') return '';
 
-        // 1. BLOQUEIO TEMPOR├üRIO (Vencido)
+        // 1. BLOQUEIO TEMPORÁRIO (Vencido)
         if (diffDays < 0) {
             return `
                 <div style="background: #ef4444; color: white; padding: 20px; text-align: center; font-weight: 800; width: 100%; flex-shrink: 0; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4); z-index: 9999; position: relative;">
-                    <div style="font-size: 1.2rem; margin-bottom: 10px;">­ƒÜ½ SISTEMA BLOQUEADO TEMPORARIAMENTE</div>
-                    <p style="font-size: 0.9rem; font-weight: 400; margin-bottom: 15px;">Seu per├¡odo de uso expirou. Para reativar seu acesso e continuar usando todas as fun├º├Áes, realize o pagamento da mensalidade.</p>
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">🚫 SISTEMA BLOQUEADO TEMPORARIAMENTE</div>
+                    <p style="font-size: 0.9rem; font-weight: 400; margin-bottom: 15px;">Seu período de uso expirou. Para reativar seu acesso e continuar usando todas as funções, realize o pagamento da mensalidade.</p>
                     <a href="${waLink}" target="_blank" style="background: white; color: #ef4444; border: none; padding: 12px 30px; border-radius: 12px; font-size: 1rem; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block;">Clique aqui para Pagar via PIX</a>
                 </div>
             `;
@@ -12352,32 +12352,32 @@ const app = {
         if (diffDays === 2 && currentView.startsWith('admin-')) {
             return `
                 <div style="background: #f59e0b; color: #000; padding: 15px; text-align: center; font-weight: 700; width: 100%; flex-shrink: 0; border-bottom: 2px solid rgba(0,0,0,0.1);">
-                    <span>ÔÜá´©Å AVISO: Faltam apenas 2 dias para o vencimento do seu plano!</span>
+                    <span>⚠️ AVISO: Faltam apenas 2 dias para o vencimento do seu plano!</span>
                     <a href="${waLink}" target="_blank" style="background: #000; color: #fff; margin-left: 15px; padding: 6px 15px; border-radius: 6px; text-decoration: none; font-size: 0.8rem;">Evitar Bloqueio: Pague Agora</a>
                 </div>
             `;
         }
 
-        // 3. Banner de TESTE GR├üTIS (Original)
+        // 3. Banner de TESTE GRÁTIS (Original)
         if (sub.plan === 'trial' && diffDays >= 0) {
             return `
                 <div style="background: linear-gradient(to right, #7c3aed, #4f46e5); color: white; padding: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; flex-shrink: 0;">
-                    <span>­ƒÜÇ Voc├¬ est├í no Per├¡odo de Teste Gr├ítis! Aproveite todas as fun├º├Áes por mais ${diffDays} dias.</span>
+                    <span>🚀 Você está no Período de Teste Grátis! Aproveite todas as funções por mais ${diffDays} dias.</span>
                     <button onclick="app.navigateTo('admin-billing')" style="background: white; color: #7c3aed; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Assinar Agora</button>
                 </div>
             `;
         }
 
-        // 4. Avisos cr├¡ticos de renova├º├úo (Perto do vencimento)
+        // 4. Avisos críticos de renovação (Perto do vencimento)
         if (diffDays <= 4) {
             const isExpired = diffDays < 0;
             const msg = isExpired
                 ? 'SISTEMA BLOQUEADO / EXPIRADO POR FALTA DE PAGAMENTO.'
-                : `EM BREVE SEU SISTEMA SER├ü BLOQUEADO POR FALTA DE PAGAMENTO. Vence em ${diffDays} dia${diffDays === 1 ? '' : 's'}.`;
+                : `EM BREVE SEU SISTEMA SERÁ BLOQUEADO POR FALTA DE PAGAMENTO. Vence em ${diffDays} dia${diffDays === 1 ? '' : 's'}.`;
 
             return `
                 <div style="background: #ef4444; color: white; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 9999; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; gap: 15px; animation: slideDown 0.5s ease-out;">
-                    <span>ÔÜá´©Å ${msg}</span>
+                    <span>⚠️ ${msg}</span>
                     <button onclick="app.navigateTo('admin-billing')" style="background: white; color: #ef4444; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 900; cursor: pointer; text-transform: uppercase;">Regularizar Agora</button>
                 </div>
                 <style>
@@ -12388,16 +12388,16 @@ const app = {
         return '';
     },
 
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    //  MODAL DE PAGAMENTO PIX AUTOM├üTICO VIA MERCADO PAGO
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+    // ══════════════════════════════════════════════════════════════
+    //  MODAL DE PAGAMENTO PIX AUTOMÁTICO VIA MERCADO PAGO
+    // ══════════════════════════════════════════════════════════════
     async openAutoRenewalModal(tenantId) {
         if (!tenantId) tenantId = this.getTenantId();
 
-        this.openModal('ÔÜí Pagamento Autom├ítico PIX', `
+        this.openModal('⚡ Pagamento Automático PIX', `
             <div style="text-align: center; padding: 20px;">
-                <div style="font-size: 2.5rem; margin-bottom: 15px;">ÔÅ│</div>
-                <h3 style="color: #fff; margin-bottom: 10px;">Gerando cobran├ºa PIX...</h3>
+                <div style="font-size: 2.5rem; margin-bottom: 15px;">⏳</div>
+                <h3 style="color: #fff; margin-bottom: 10px;">Gerando cobrança PIX...</h3>
                 <p style="color: var(--text-secondary); font-size: 0.85rem;">Conectando com o Mercado Pago...</p>
             </div>
         `);
@@ -12413,7 +12413,7 @@ const app = {
 
             if (!res.ok || !data.success) {
                 const detailMsg = typeof data.details === 'string' ? data.details : (data.details?.message || '');
-                const fullMsg = data.error ? (detailMsg ? `${data.error} (${detailMsg})` : data.error) : 'Falha ao gerar cobran├ºa.';
+                const fullMsg = data.error ? (detailMsg ? `${data.error} (${detailMsg})` : data.error) : 'Falha ao gerar cobrança.';
                 throw new Error(fullMsg);
             }
 
@@ -12422,12 +12422,12 @@ const app = {
             const qrCode = data.qrCode;
             const amount = (data.amount || 0).toFixed(2);
 
-            this.openModal('ÔÜí Pagamento Autom├ítico PIX', `
+            this.openModal('⚡ Pagamento Automático PIX', `
                 <div style="text-align: center; padding: 15px;">
                     <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(0, 158, 227, 0.15); color: #009ee3; font-weight: 700; font-size: 0.75rem; margin-bottom: 10px;">
-                        MERCADO PAGO ÔÇó LIBERA├ç├âO INSTANT├éNEA
+                        MERCADO PAGO • LIBERAÇÃO INSTANTÂNEA
                     </div>
-                    <h3 style="margin-bottom: 5px; color: #fff;">Escaneie o QR Code ou Copie o C├│digo</h3>
+                    <h3 style="margin-bottom: 5px; color: #fff;">Escaneie o QR Code ou Copie o Código</h3>
                     <p style="color: #4ade80; font-size: 1.4rem; font-weight: 900; margin: 10px 0;">R$ ${amount}</p>
 
                     ${qrCodeBase64 ? `
@@ -12437,17 +12437,17 @@ const app = {
                     ` : ''}
 
                     <div style="margin: 15px 0;">
-                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">C├│digo PIX Copia e Cola:</p>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">Código PIX Copia e Cola:</p>
                         <div style="display: flex; gap: 8px;">
                             <input type="text" readonly id="mp-pix-code-input" value="${qrCode || ''}" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: #94a3b8; font-family: monospace; font-size: 0.75rem;">
-                            <button class="btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('mp-pix-code-input').value); alert('Ô£à C├│digo PIX copiado! Cole no seu aplicativo banc├írio.');" style="padding: 10px 15px; font-size: 0.8rem; background: #009ee3; border: none; white-space: nowrap;">
+                            <button class="btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('mp-pix-code-input').value); alert('✅ Código PIX copiado! Cole no seu aplicativo bancário.');" style="padding: 10px 15px; font-size: 0.8rem; background: #009ee3; border: none; white-space: nowrap;">
                                 Copiar
                             </button>
                         </div>
                     </div>
 
                     <div id="mp-payment-status-box" style="margin-top: 15px; padding: 12px; border-radius: 10px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span class="pulse-indicator">ÔÅ│</span> Aguardando confirma├º├úo do banco...
+                        <span class="pulse-indicator">⏳</span> Aguardando confirmação do banco...
                     </div>
                 </div>
             `);
@@ -12458,7 +12458,7 @@ const app = {
 
             this._mpPollingInterval = setInterval(async () => {
                 pollAttempts++;
-                if (pollAttempts > 120) { // 10 minutos m├íx
+                if (pollAttempts > 120) { // 10 minutos máx
                     clearInterval(this._mpPollingInterval);
                     return;
                 }
@@ -12474,11 +12474,11 @@ const app = {
                             box.style.background = 'rgba(74, 222, 128, 0.2)';
                             box.style.borderColor = '#4ade80';
                             box.style.color = '#4ade80';
-                            box.innerHTML = '­ƒÄë <strong>PAGAMENTO APROVADO! SISTEMA LIBERADO!</strong>';
+                            box.innerHTML = '🎉 <strong>PAGAMENTO APROVADO! SISTEMA LIBERADO!</strong>';
                         }
 
                         setTimeout(() => {
-                            alert('Ô£à Pagamento confirmado com sucesso! Seu plano foi renovado e o sistema est├í 100% liberado por mais 30 dias.');
+                            alert('✅ Pagamento confirmado com sucesso! Seu plano foi renovado e o sistema está 100% liberado por mais 30 dias.');
                             window.location.reload();
                         }, 1800);
                     }
@@ -12488,10 +12488,10 @@ const app = {
             }, 5000);
 
         } catch (err) {
-            console.error('Erro ao abrir cobran├ºa:', err);
+            console.error('Erro ao abrir cobrança:', err);
             this.openModal('Erro', `
                 <div style="text-align: center; padding: 20px;">
-                    <p style="color: #ef4444; margin-bottom: 15px;">ÔØî ${err.message}</p>
+                    <p style="color: #ef4444; margin-bottom: 15px;">❌ ${err.message}</p>
                     <button class="btn-primary" onclick="app.closeModal()">Fechar</button>
                 </div>
             `);
@@ -12508,18 +12508,18 @@ const app = {
         container.innerHTML = `
             <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: white; font-family: 'Inter', sans-serif; padding: 20px; text-align: center;">
                 <div class="glass fade-in" style="max-width: 520px; width: 100%; padding: 40px; border-top: 5px solid #ef4444; border-radius: 20px;">
-                    <div style="font-size: 3.5rem; margin-bottom: 15px;">­ƒÜ½</div>
+                    <div style="font-size: 3.5rem; margin-bottom: 15px;">🚫</div>
                     <h1 style="font-family: 'Playfair Display'; font-size: 1.8rem; margin-bottom: 12px;">ACESSO SUSPENSO</h1>
                     <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px; font-size: 0.9rem;">
-                        O per├¡odo de uso desta unidade expirou. Realize o pagamento para <strong>liberar o sistema imediatamente</strong>.
+                        O período de uso desta unidade expirou. Realize o pagamento para <strong>liberar o sistema imediatamente</strong>.
                     </p>
                     
-                    <!-- Bot├úo de Libera├º├úo Autom├ítica PIX Mercado Pago -->
+                    <!-- Botão de Liberação Automática PIX Mercado Pago -->
                     <div style="background: linear-gradient(135deg, rgba(0, 158, 227, 0.2), rgba(16, 185, 129, 0.15)); padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(0, 158, 227, 0.5);">
-                        <p style="font-size: 0.85rem; color: #38bdf8; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">ÔÜí Libera├º├úo Autom├ítica Instant├ónea</p>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">Pague via PIX e seu acesso ser├í liberado no mesmo segundo.</p>
+                        <p style="font-size: 0.85rem; color: #38bdf8; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;">⚡ Liberação Automática Instantânea</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">Pague via PIX e seu acesso será liberado no mesmo segundo.</p>
                         <button onclick="app.openAutoRenewalModal('${tenantId}')" class="btn-primary" style="width: 100%; background: #009ee3; border: none; padding: 16px; font-size: 1rem; font-weight: 800; border-radius: 10px; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 158, 227, 0.4);">
-                            ÔÜí PAGAR PIX E LIBERAR AGORA
+                            ⚡ PAGAR PIX E LIBERAR AGORA
                         </button>
                     </div>
 
@@ -12553,10 +12553,10 @@ const app = {
     // PUSH NOTIFICATIONS MODULE
     // ============================================================
 
-    // Chave p├║blica VAPID (gerada para este projeto)
+    // Chave pública VAPID (gerada para este projeto)
     VAPID_PUBLIC_KEY: 'BLAW86ZqXoODtdYVe5mqYm4lQnWpLn8_0J2pX8mvbUOnOxpCTu6TiIdXH5RR4WnmrCAf1GtYcGJW5q-1DtVgCHQ',
 
-    // Converte chave VAPID de base64url para Uint8Array (necess├írio para a Push API)
+    // Converte chave VAPID de base64url para Uint8Array (necessário para a Push API)
     urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -12568,15 +12568,15 @@ const app = {
         return outputArray;
     },
 
-    // Inicializa push notifications ap├│s o login (solicita permiss├úo se for barbeiro/admin)
+    // Inicializa push notifications após o login (solicita permissão se for barbeiro/admin)
     async initPushNotifications() {
-        // Verifica├º├Áes de compatibilidade
+        // Verificações de compatibilidade
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn('[Push] Push Notifications n├úo suportadas neste navegador.');
+            console.warn('[Push] Push Notifications não suportadas neste navegador.');
             return;
         }
 
-        // S├│ ativa para barbeiros e admins (totem n├úo precisa)
+        // Só ativa para barbeiros e admins (totem não precisa)
         if (!this.state.user || this.state.user.role === 'totem') {
             return;
         }
@@ -12585,7 +12585,7 @@ const app = {
             // Aguardar o Service Worker estar pronto
             const registration = await navigator.serviceWorker.ready;
 
-            // Verificar se j├í tem uma subscription ativa
+            // Verificar se já tem uma subscription ativa
             let subscription = await registration.pushManager.getSubscription();
 
             if (subscription) {
@@ -12594,16 +12594,16 @@ const app = {
                 return;
             }
 
-            // Verificar estado da permiss├úo
+            // Verificar estado da permissão
             const permission = Notification.permission;
 
             if (permission === 'denied') {
-                console.warn('[Push] Permiss├úo de notifica├º├úo negada pelo usu├írio.');
+                console.warn('[Push] Permissão de notificação negada pelo usuário.');
                 return;
             }
 
             if (permission === 'default') {
-                // Mostrar um modal elegante antes de pedir permiss├úo ao navegador
+                // Mostrar um modal elegante antes de pedir permissão ao navegador
                 this.showPushPermissionModal(registration);
                 return;
             }
@@ -12616,32 +12616,32 @@ const app = {
         }
     },
 
-    // Exibe modal elegante pedindo permiss├úo para notifica├º├Áes
+    // Exibe modal elegante pedindo permissão para notificações
     showPushPermissionModal(registration) {
-        this.openModal('­ƒöö Ativar Notifica├º├Áes', `
+        this.openModal('🔔 Ativar Notificações', `
             <section class="fade-in" style="text-align: center;">
-                <div style="font-size: 4rem; margin-bottom: 15px;">­ƒô▒</div>
+                <div style="font-size: 4rem; margin-bottom: 15px;">📱</div>
                 <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600;">
                     Receba alertas de novos agendamentos!
                 </p>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6;">
-                    Ative as notifica├º├Áes push para ser avisado(a) instantaneamente quando um cliente agendar um hor├írio com voc├¬ ÔÇö mesmo com o celular bloqueado.
+                    Ative as notificações push para ser avisado(a) instantaneamente quando um cliente agendar um horário com você — mesmo com o celular bloqueado.
                 </p>
                 <button class="btn-primary" style="width: 100%; margin-bottom: 10px; padding: 16px; font-size: 1rem;" 
                         onclick="app.handlePushPermissionAccept()">
-                    Ô£à Ativar Notifica├º├Áes
+                    ✅ Ativar Notificações
                 </button>
                 <button class="btn-secondary" style="width: 100%; padding: 12px; font-size: 0.85rem; opacity: 0.7;" 
                         onclick="app.closeModal()">
-                    Agora n├úo
+                    Agora não
                 </button>
             </section>
         `);
-        // Guardar refer├¬ncia ao registration para uso posterior
+        // Guardar referência ao registration para uso posterior
         this._pendingPushRegistration = registration;
     },
 
-    // Handler do bot├úo "Ativar Notifica├º├Áes" no modal
+    // Handler do botão "Ativar Notificações" no modal
     async handlePushPermissionAccept() {
         this.closeModal();
         const registration = this._pendingPushRegistration || await navigator.serviceWorker.ready;
@@ -12650,10 +12650,10 @@ const app = {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             await this.subscribeToPush(registration);
-            this.showToast('­ƒöö Notifica├º├Áes ativadas com sucesso!', 'success');
+            this.showToast('🔔 Notificações ativadas com sucesso!', 'success');
         } else {
-            console.warn('[Push] Permiss├úo negada pelo usu├írio.');
-            this.showToast('Notifica├º├Áes n├úo foram ativadas.', 'warning');
+            console.warn('[Push] Permissão negada pelo usuário.');
+            this.showToast('Notificações não foram ativadas.', 'warning');
         }
     },
 
@@ -12671,15 +12671,15 @@ const app = {
         } catch (error) {
             console.error('[Push] Erro ao criar subscription:', error);
             if (error.name === 'NotAllowedError') {
-                console.warn('[Push] Permiss├úo negada.');
+                console.warn('[Push] Permissão negada.');
             }
         }
     },
 
-    // Salva a push subscription no Firebase RTDB vinculada ao usu├írio logado
+    // Salva a push subscription no Firebase RTDB vinculada ao usuário logado
     async savePushSubscription(subscription) {
         if (!this.state.user || !this.db) {
-            console.warn('[Push] Imposs├¡vel salvar subscription: sem usu├írio logado ou DB n├úo inicializado.');
+            console.warn('[Push] Impossível salvar subscription: sem usuário logado ou DB não inicializado.');
             return;
         }
 
@@ -12710,9 +12710,9 @@ const app = {
 
     // Envia push notification para o barbeiro via Vercel Serverless API
     async sendPushToBarber(barberName, appointment) {
-        // N├úo envia push se foi o pr├│prio barbeiro que criou o agendamento
+        // Não envia push se foi o próprio barbeiro que criou o agendamento
         if (this.state.user && this.state.user.name === barberName && this.state.user.role === 'barber') {
-            console.log('[Push] Agendamento criado pelo pr├│prio barbeiro. Push suprimido.');
+            console.log('[Push] Agendamento criado pelo próprio barbeiro. Push suprimido.');
             return;
         }
 
@@ -12741,42 +12741,42 @@ const app = {
             const result = await response.json();
 
             if (result.success) {
-                console.log(`[Push] Notifica├º├úo enviada: ${result.sent} dispositivo(s) para ${barberName}`);
+                console.log(`[Push] Notificação enviada: ${result.sent} dispositivo(s) para ${barberName}`);
             } else {
-                console.warn('[Push] Falha ao enviar notifica├º├úo:', result);
+                console.warn('[Push] Falha ao enviar notificação:', result);
             }
 
         } catch (error) {
-            // Silencioso - n├úo deve quebrar o fluxo de agendamento
-            console.error('[Push] Erro ao enviar push (n├úo-cr├¡tico):', error);
+            // Silencioso - não deve quebrar o fluxo de agendamento
+            console.error('[Push] Erro ao enviar push (não-crítico):', error);
         }
     },
 
-    // Ativa notifica├º├Áes push a partir da tela de Configura├º├Áes
+    // Ativa notificações push a partir da tela de Configurações
     async activatePushFromSettings() {
-        // Verifica├º├Áes de compatibilidade
+        // Verificações de compatibilidade
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            this.showToast('Seu navegador n├úo suporta notifica├º├Áes push.', 'error');
+            this.showToast('Seu navegador não suporta notificações push.', 'error');
             return;
         }
 
         try {
             const registration = await navigator.serviceWorker.ready;
 
-            // Se a permiss├úo foi bloqueada, instruir o usu├írio
+            // Se a permissão foi bloqueada, instruir o usuário
             if (Notification.permission === 'denied') {
-                this.openModal('­ƒÜ½ Notifica├º├Áes Bloqueadas', `
+                this.openModal('🚫 Notificações Bloqueadas', `
                     <section class="fade-in" style="text-align: center;">
-                        <div style="font-size: 4rem; margin-bottom: 15px;">­ƒöç</div>
+                        <div style="font-size: 4rem; margin-bottom: 15px;">🔇</div>
                         <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600;">
-                            As notifica├º├Áes foram bloqueadas neste dispositivo.
+                            As notificações foram bloqueadas neste dispositivo.
                         </p>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
-                            Para reativar, abra as <strong>configura├º├Áes do navegador</strong>, encontre este site e altere a permiss├úo de notifica├º├Áes para <strong>"Permitir"</strong>.
+                            Para reativar, abra as <strong>configurações do navegador</strong>, encontre este site e altere a permissão de notificações para <strong>"Permitir"</strong>.
                         </p>
                         <div style="padding:12px; background:var(--surface-dark); border-radius:10px; text-align:left; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
-                            <strong style="color:var(--text-primary);">­ƒô▒ No celular:</strong> Configura├º├Áes do navegador ÔåÆ Sites ÔåÆ Notifica├º├Áes<br>
-                            <strong style="color:var(--text-primary);">­ƒÆ╗ No PC:</strong> Clique no cadeado ­ƒöÆ na barra de endere├ºo ÔåÆ Notifica├º├Áes ÔåÆ Permitir
+                            <strong style="color:var(--text-primary);">📱 No celular:</strong> Configurações do navegador → Sites → Notificações<br>
+                            <strong style="color:var(--text-primary);">💻 No PC:</strong> Clique no cadeado 🔒 na barra de endereço → Notificações → Permitir
                         </div>
                         <button class="btn-secondary" style="width: 100%; padding: 12px;" onclick="app.closeModal()">
                             Entendi
@@ -12786,11 +12786,11 @@ const app = {
                 return;
             }
 
-            // Solicitar permiss├úo se ainda n├úo concedida
+            // Solicitar permissão se ainda não concedida
             if (Notification.permission === 'default') {
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
-                    this.showToast('Notifica├º├Áes n├úo foram ativadas.', 'warning');
+                    this.showToast('Notificações não foram ativadas.', 'warning');
                     this.updatePushStatusUI();
                     return;
                 }
@@ -12798,27 +12798,27 @@ const app = {
 
             // Inscrever no push
             await this.subscribeToPush(registration);
-            this.showToast('­ƒöö Notifica├º├Áes ativadas com sucesso!', 'success');
+            this.showToast('🔔 Notificações ativadas com sucesso!', 'success');
             this.updatePushStatusUI();
 
         } catch (error) {
-            console.error('[Push] Erro ao ativar push nas configura├º├Áes:', error);
-            this.showToast('Erro ao ativar notifica├º├Áes. Tente novamente.', 'error');
+            console.error('[Push] Erro ao ativar push nas configurações:', error);
+            this.showToast('Erro ao ativar notificações. Tente novamente.', 'error');
         }
     },
 
-    // Atualiza o status visual das notifica├º├Áes push na tela de Configura├º├Áes
+    // Atualiza o status visual das notificações push na tela de Configurações
     async updatePushStatusUI() {
         const iconEl = document.getElementById('push-status-icon');
         const textEl = document.getElementById('push-status-text');
         const btnEl = document.getElementById('btn-activate-push');
 
-        if (!iconEl || !textEl) return; // Elementos n├úo presentes na tela
+        if (!iconEl || !textEl) return; // Elementos não presentes na tela
 
         // Sem suporte
         if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-            iconEl.textContent = 'ÔØî';
-            textEl.innerHTML = '<span style="color:#ef4444;">Seu navegador n├úo suporta notifica├º├Áes push.</span>';
+            iconEl.textContent = '❌';
+            textEl.innerHTML = '<span style="color:#ef4444;">Seu navegador não suporta notificações push.</span>';
             if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.4'; btnEl.style.cursor = 'not-allowed'; }
             return;
         }
@@ -12826,11 +12826,11 @@ const app = {
         const permission = Notification.permission;
 
         if (permission === 'denied') {
-            iconEl.textContent = '­ƒÜ½';
-            textEl.innerHTML = '<span style="color:#f87171;">Notifica├º├Áes <strong>bloqueadas</strong> pelo navegador. Clique no bot├úo abaixo para ver como liberar.</span>';
+            iconEl.textContent = '🚫';
+            textEl.innerHTML = '<span style="color:#f87171;">Notificações <strong>bloqueadas</strong> pelo navegador. Clique no botão abaixo para ver como liberar.</span>';
             if (btnEl) {
                 btnEl.querySelector('strong').textContent = 'Como Desbloquear';
-                btnEl.querySelector('small').textContent = 'Veja as instru├º├Áes para liberar';
+                btnEl.querySelector('small').textContent = 'Veja as instruções para liberar';
                 btnEl.style.background = '#f87171';
                 btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
             }
@@ -12842,18 +12842,18 @@ const app = {
                 const registration = await navigator.serviceWorker.ready;
                 const subscription = await registration.pushManager.getSubscription();
                 if (subscription) {
-                    iconEl.textContent = 'Ô£à';
-                    textEl.innerHTML = '<span style="color:#4ade80;">Notifica├º├Áes <strong>ativas</strong>! Voc├¬ ser├í avisado(a) sobre novos agendamentos.</span>';
-                    if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.4'; btnEl.style.cursor = 'default'; btnEl.querySelector('strong').textContent = 'Notifica├º├Áes Ativas'; btnEl.querySelector('small').textContent = 'Tudo certo, nada mais a fazer'; btnEl.style.background = '#4ade80'; }
+                    iconEl.textContent = '✅';
+                    textEl.innerHTML = '<span style="color:#4ade80;">Notificações <strong>ativas</strong>! Você será avisado(a) sobre novos agendamentos.</span>';
+                    if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.4'; btnEl.style.cursor = 'default'; btnEl.querySelector('strong').textContent = 'Notificações Ativas'; btnEl.querySelector('small').textContent = 'Tudo certo, nada mais a fazer'; btnEl.style.background = '#4ade80'; }
                     return;
                 }
             } catch (e) { /* fallthrough */ }
 
-            // Permiss├úo concedida mas sem subscription ÔÇö re-inscrever
-            iconEl.textContent = 'ÔÜá´©Å';
-            textEl.innerHTML = '<span style="color:#fbbf24;">Permiss├úo concedida, mas as notifica├º├Áes precisam ser reativadas neste dispositivo.</span>';
+            // Permissão concedida mas sem subscription — re-inscrever
+            iconEl.textContent = '⚠️';
+            textEl.innerHTML = '<span style="color:#fbbf24;">Permissão concedida, mas as notificações precisam ser reativadas neste dispositivo.</span>';
             if (btnEl) {
-                btnEl.querySelector('strong').textContent = 'Reativar Notifica├º├Áes';
+                btnEl.querySelector('strong').textContent = 'Reativar Notificações';
                 btnEl.querySelector('small').textContent = 'Reconectar este dispositivo';
                 btnEl.style.background = '#38bdf8';
                 btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
@@ -12862,10 +12862,10 @@ const app = {
         }
 
         // permission === 'default'
-        iconEl.textContent = '­ƒÆñ';
-        textEl.innerHTML = 'Notifica├º├Áes <strong>n├úo ativadas</strong> neste dispositivo. Clique no bot├úo abaixo para ativar.';
+        iconEl.textContent = '💤';
+        textEl.innerHTML = 'Notificações <strong>não ativadas</strong> neste dispositivo. Clique no botão abaixo para ativar.';
         if (btnEl) {
-            btnEl.querySelector('strong').textContent = 'Ativar Notifica├º├Áes';
+            btnEl.querySelector('strong').textContent = 'Ativar Notificações';
             btnEl.querySelector('small').textContent = 'Permite receber alertas de agendamentos';
             btnEl.style.background = '#38bdf8';
             btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.style.cursor = 'pointer';
@@ -12876,7 +12876,7 @@ const app = {
     showToast(message, type = 'success') {
         const toast = document.createElement('div');
         const bgColor = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#fbbf24');
-        const icon = type === 'success' ? 'Ô£à' : (type === 'error' ? 'ÔØî' : 'ÔÜá´©Å');
+        const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️');
         
         toast.className = 'toast-notification fade-in';
         toast.style = `
