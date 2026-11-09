@@ -10,6 +10,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 const app = {
+    APP_VERSION: 80.59, // Manter igual ao ?v= do app_v15.js no index.html
     state: {
         view: 'home',
         user: null, // { id: 1, name: 'Henri', role: 'admin' }
@@ -577,6 +578,51 @@ const app = {
      * - Item só local: mantido apenas se `keepLocalOnly` ou se foi criado/editado após `cloudLastUpdate`.
      * Evita que o cache antigo de um aparelho sobrescreva o preço/nome alterado em outro aparelho.
      */
+    /**
+     * Aplica as correções de serviço gravadas em `serviceOverrides/{id}` sobre a lista de serviços.
+     * Esse caminho não é sobrescrito por versões antigas do app ainda abertas nos aparelhos,
+     * então o preço/nome/duração editados sempre prevalecem quando forem mais recentes.
+     */
+    applyServiceOverrides(services, overrides) {
+        if (!overrides || typeof overrides !== 'object') return services || [];
+        return (services || []).map(s => {
+            if (!s || !s.id) return s;
+            const o = overrides[String(s.id)];
+            if (o && (Number(o.updatedAt) || 0) > (Number(s.updatedAt) || 0)) {
+                return { ...s, name: o.name ?? s.name, price: o.price ?? s.price, duration: o.duration ?? s.duration, updatedAt: o.updatedAt };
+            }
+            return s;
+        });
+    },
+
+    // Grava a correção do serviço em caminho próprio e exige que os outros aparelhos usem esta versão do app.
+    saveServiceOverride(service) {
+        if (!this.db || !service || !service.id) return;
+        try {
+            const dbPath = this.getDbPath();
+            set(ref(this.db, dbPath + 'serviceOverrides/' + String(service.id)), {
+                name: service.name,
+                price: service.price,
+                duration: service.duration,
+                updatedAt: service.updatedAt || Date.now()
+            });
+            set(ref(this.db, dbPath + 'minAppVersion'), this.APP_VERSION);
+        } catch (err) {
+            console.error('Erro ao gravar serviceOverrides:', err);
+        }
+    },
+
+    // Recarrega o app quando a nuvem exige uma versão mais nova (evita aparelhos com código antigo aberto).
+    checkForcedUpdate(minVersion) {
+        const min = Number(minVersion) || 0;
+        if (min <= this.APP_VERSION) return;
+        const key = 'forced_reload_' + min;
+        if (sessionStorage.getItem(key)) return; // evita loop caso o deploy ainda não tenha propagado
+        sessionStorage.setItem(key, '1');
+        console.warn('Nova versão do app exigida (' + min + '). Recarregando...');
+        window.location.reload();
+    },
+
     mergeServicesByFreshness(localArr, cloudArr, { keepLocalOnly = false, cloudLastUpdate = 0, deletedSet = new Set() } = {}) {
         const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
         const map = new Map();
@@ -755,6 +801,7 @@ const app = {
                     deletedSet
                 });
 
+                this.state.services = this.applyServiceOverrides(this.state.services, cloudData.serviceOverrides);
                 this.state.products = mergeMap(this.state.products, cloudData.products);
                 this.state.subscriptionPlans = mergeMap(this.state.subscriptionPlans || [], cloudData.subscriptionPlans);
                 this.state.subscribers = mergeMap(this.state.subscribers || [], cloudData.subscribers);
@@ -1426,6 +1473,7 @@ const app = {
                         this.state.isInitializedFromCloud = true; // [TRAVA LIBERADA] Agora sabemos a verdade da nuvem
                         const data = snapshot.val();
                         if (data) {
+                            this.checkForcedUpdate(data.minAppVersion);
                             let cloudLastUpdate = data.lastUpdate || 0;
                             // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem estiver no futuro distante, reseta
                             if (cloudLastUpdate > 2000000000000) {
@@ -1446,7 +1494,8 @@ const app = {
                                 se: data.settings,
                                 sp: data.subscriptionPlans,
                                 p: data.products,
-                                sv: data.services
+                                sv: data.services,
+                                so: data.serviceOverrides
                             });
                             
                             if (this.state._lastDataHash === newDataHash) {
@@ -1559,6 +1608,7 @@ const app = {
                             this.state.subscribers = data.subscribers ? toArray(data.subscribers) : (this.state.subscribers || []);
                             this.state.pendingSubscriptions = data.pendingSubscriptions ? toArray(data.pendingSubscriptions) : (this.state.pendingSubscriptions || []);
 
+                            this.state.services = this.applyServiceOverrides(this.state.services, data.serviceOverrides);
                             this.state.openingBalances = data.openingBalances || {};
                             this.state.lastUpdate = cloudLastUpdate;
                             if (!this.state.needsSync && !this.state.isSyncing) {
@@ -11893,6 +11943,7 @@ const app = {
                 service.price = price;
                 service.duration = duration;
                 service.updatedAt = Date.now(); // Carimbo para vencer caches antigos de outros aparelhos
+                this.saveServiceOverride(service);
             }
         } else {
             const newId = Date.now();
