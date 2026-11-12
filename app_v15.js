@@ -796,14 +796,18 @@ const app = {
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
             // [ISOLAMENTO E MERGE INTELIGENTE]
-            // Antes de gravar na nuvem, fazemos um GET rápido para mesclar alterações simultâneas de outros aparelhos
+            // Usa o snapshot em tempo real já mantido pelo onValue para evitar baixar o banco inteiro a cada clique;
+            // só faz GET se ainda não houver snapshot em cache.
             const syncedDeltas = { ...(this.state._pendingStockDeltas || {}) };
-            let cloudData = null;
-            try {
-                const snapshot = await get(dbRef);
-                cloudData = snapshot.val();
-            } catch (e) {
-                console.warn('⚠️ Não foi possível ler dados para merge, prosseguindo com gravação direta:', e);
+            let cloudData = this._lastCloudData || null;
+            if (!cloudData) {
+                try {
+                    const snapshot = await get(dbRef);
+                    cloudData = snapshot.val();
+                    if (cloudData) this._lastCloudData = cloudData;
+                } catch (e) {
+                    console.warn('⚠️ Não foi possível ler dados para merge, prosseguindo com gravação direta:', e);
+                }
             }
 
             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
@@ -901,21 +905,24 @@ const app = {
                 this.state.tips = mergeMap(this.state.tips, cloudData.tips);
             }
 
-            console.log('📤 Enviando atualizações modulares para o servidor...');
+            console.log('📤 Enviando atualização atômica para o servidor...');
             
-            // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
-            // Substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
+            // [SINCRONIZAÇÃO ATÔMICA]
+            // Um único update() dispara apenas 1 evento onValue nos demais aparelhos (em vez de 21 set() separados).
             const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions', 'deletedStaffIds', 'deletedProductIds'];
-            
-            await Promise.all([
-                ...pathsToSet.map(key => set(ref(this.db, dbPath + key), this.state[key] || [])),
-                set(ref(this.db, dbPath + 'settings'), this.state.settings || {}),
-                set(ref(this.db, dbPath + 'openingBalances'), this.state.openingBalances || {}),
-                set(ref(this.db, dbPath + 'lastConsumptionView'), this.state.lastConsumptionView || 0),
-                set(ref(this.db, dbPath + 'lastUpdate'), this.state.lastUpdate),
-                set(ref(this.db, dbPath + 'minAppVersion'), this.APP_VERSION),
-                set(ref(this.db, dbPath + 'updatedBy'), this.state.user ? this.state.user.name : 'Sistema')
-            ]);
+            const payload = {};
+            pathsToSet.forEach(key => {
+                payload[key] = this.state[key] || [];
+            });
+            payload.settings = this.state.settings || {};
+            payload.openingBalances = this.state.openingBalances || {};
+            payload.lastConsumptionView = this.state.lastConsumptionView || 0;
+            payload.lastUpdate = this.state.lastUpdate;
+            payload.minAppVersion = this.APP_VERSION;
+            payload.updatedBy = this.state.user ? this.state.user.name : 'Sistema';
+
+            await update(dbRef, payload);
+            this._lastCloudData = { ...(this._lastCloudData || {}), ...payload };
             
             if (this.state._pendingStockDeltas && typeof this.state._pendingStockDeltas === 'object') {
                 Object.keys(syncedDeltas).forEach(pid => {
@@ -1548,6 +1555,9 @@ const app = {
                         if (document.visibilityState === 'visible') {
                             console.log('📱 App em destaque, reativando sincronização...');
                             goOnline(this.db);
+                            if (this.state.needsSync && !this.state.isSyncing) {
+                                this.syncToFirebase();
+                            }
                             // Pequeno delay para garantir reconexão antes de renderizar
                             setTimeout(() => {
                                 if (this.state.view !== 'booking') {
@@ -1578,6 +1588,7 @@ const app = {
                         this.state.isInitializedFromCloud = true; // [TRAVA LIBERADA] Agora sabemos a verdade da nuvem
                         const data = snapshot.val();
                         if (data) {
+                            this._lastCloudData = data;
                             this.checkForcedUpdate(data.minAppVersion);
                             let cloudLastUpdate = data.lastUpdate || 0;
                             // [SEGURANÇA CONTRA TIMESTAMP ENVENENADO] Se o relógio da nuvem estiver no futuro distante, reseta
@@ -1594,6 +1605,7 @@ const app = {
                             // [OTIMIZAÇÃO ANTI-FLICKER] 
                             // Só re-renderiza se os dados CRÍTICOS mudarem de fato
                             const newDataHash = JSON.stringify({
+                                lu: cloudLastUpdate,
                                 a: data.appointments,
                                 s: data.staff,
                                 se: data.settings,
@@ -1601,7 +1613,10 @@ const app = {
                                 p: data.products,
                                 dp: data.deletedProductIds,
                                 sv: data.services,
-                                so: data.serviceOverrides
+                                so: data.serviceOverrides,
+                                t: data.transactions ? Object.keys(data.transactions).length : 0,
+                                ps: data.productSales ? Object.keys(data.productSales).length : 0,
+                                c: data.customers ? Object.keys(data.customers).length : 0
                             });
                             
                             if (this.state._lastDataHash === newDataHash) {
@@ -6648,6 +6663,8 @@ const app = {
     },
 
     renderAgenda(container, barberFilter = null) {
+        this.state.isDragging = false;
+        this.state.draggingAptId = null;
         if (!this.state.settings || !this.state.settings.agenda) {
             container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;">⚠️ Configurações de agenda não encontradas. Por favor, acesse as configurações.</div>';
             return;
@@ -6755,7 +6772,7 @@ const app = {
                                     <div class="agenda-cell" 
                                          data-barber="${b.name}"
                                          data-time="${time}"
-                                         onclick="window.app.handleCellClick('${b.name}', '${time}', ${coveringApt ? coveringApt.id : 'null'})"
+                                         onclick="window.app.handleCellClick('${b.name}', '${time}', ${coveringApt ? JSON.stringify(coveringApt.id).replace(/"/g, '&quot;') : 'null'})"
                                          ondragover="window.app.handleDragOver(event)"
                                          ondragleave="window.app.handleDragLeave(event)"
                                          ondrop="window.app.handleDrop(event, '${b.name}', '${time}')">
@@ -6867,11 +6884,12 @@ const app = {
                  style="border: 1px solid var(--glass-border); border-left: 4px solid ${statusColor}; background: linear-gradient(0deg, ${statusBg}, ${statusBg}), var(--surface-light); display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; justify-content: flex-start; align-items: flex-start; overflow: hidden; height: auto; max-height: 100%;"
                  ${isDraggable ? `
                     draggable="true" 
-                    ondragstart="window.app.handleDragStart(event, ${apt.id})" 
+                    ondragstart="window.app.handleDragStart(event, ${JSON.stringify(apt.id).replace(/"/g, '&quot;')})" 
                     ondragend="window.app.handleDragEnd(event)"
-                    ontouchstart="window.app.handleTouchStart(event, ${apt.id})"
+                    ontouchstart="window.app.handleTouchStart(event, ${JSON.stringify(apt.id).replace(/"/g, '&quot;')})"
                     ontouchmove="window.app.handleTouchMove(event)"
                     ontouchend="window.app.handleTouchEnd(event)"
+                    ontouchcancel="window.app.handleTouchCancel(event)"
                  ` : ''}>
                 <div class="customer-name" style="pointer-events: none; font-size: 0.72rem; font-weight: 800; color: var(--text-primary); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span style="overflow: hidden; text-overflow: ellipsis;">${apt.customer || 'Cliente'}</span>
@@ -6926,21 +6944,34 @@ const app = {
 
     // Touch Support for Mobile
     handleTouchStart(e, aptId) {
-        // Inicia após um pequeno delay para não interferir no scroll
+        clearTimeout(this.touchTimer);
+        const blockEl = e.currentTarget;
+        const touch = e.touches && e.touches[0];
+        this._touchStartX = touch ? touch.clientX : 0;
+        this._touchStartY = touch ? touch.clientY : 0;
+
+        // Inicia após um delay longo (450ms) para não interferir no toque normal nem no scroll
         this.touchTimer = setTimeout(() => {
             this.state.isDragging = true;
             this.state.draggingAptId = aptId;
-            e.target.classList.add('dragging');
+            if (blockEl && blockEl.classList) blockEl.classList.add('dragging');
             document.body.classList.add('dragging-active');
-            
-            // Criar um feedback visual (clone) se possível, ou apenas destacar
-            this.touchTarget = e.target;
-        }, 300);
+            this.touchTarget = blockEl;
+        }, 450);
     },
 
     handleTouchMove(e) {
         if (!this.state.isDragging) {
-            clearTimeout(this.touchTimer);
+            const touch = e.touches && e.touches[0];
+            if (touch) {
+                const dx = Math.abs(touch.clientX - (this._touchStartX || 0));
+                const dy = Math.abs(touch.clientY - (this._touchStartY || 0));
+                if (dx > 8 || dy > 8) {
+                    clearTimeout(this.touchTimer);
+                }
+            } else {
+                clearTimeout(this.touchTimer);
+            }
             return;
         }
         e.preventDefault(); // Previne scroll enquanto arrasta
@@ -6954,31 +6985,45 @@ const app = {
         if (cell) cell.classList.add('drag-over');
     },
 
+    handleTouchCancel() {
+        clearTimeout(this.touchTimer);
+        this.state.isDragging = false;
+        this.state.draggingAptId = null;
+        if (this.touchTarget && this.touchTarget.classList) this.touchTarget.classList.remove('dragging');
+        this.touchTarget = null;
+        document.body.classList.remove('dragging-active');
+        document.querySelectorAll('.agenda-cell').forEach(c => c.classList.remove('drag-over'));
+    },
+
     handleTouchEnd(e) {
         clearTimeout(this.touchTimer);
         if (!this.state.isDragging) return;
 
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const cell = target ? target.closest('.agenda-cell') : null;
+        const draggedId = this.state.draggingAptId;
+        try {
+            const touch = e.changedTouches && e.changedTouches[0];
+            const target = touch ? document.elementFromPoint(touch.clientX, touch.clientY) : null;
+            const cell = target ? target.closest('.agenda-cell') : null;
 
-        if (cell) {
-            // Extrair dados da célula (barbeiro e horário)
-            // Isso requer que a célula tenha atributos data ou que usemos o que foi passado no ondrop
-            // Como não temos acesso fácil aos argumentos do ondrop aqui, vamos disparar o drop manualmente
-            // ou buscar os dados nos atributos da célula (que precisamos adicionar)
-            const barber = cell.getAttribute('data-barber');
-            const time = cell.getAttribute('data-time');
-            if (barber && time) {
-                this.handleDrop({ preventDefault: () => {} }, barber, time);
+            if (cell) {
+                const barber = cell.getAttribute('data-barber');
+                const time = cell.getAttribute('data-time');
+                if (barber && time) {
+                    this.handleDrop({
+                        preventDefault: () => {},
+                        currentTarget: cell,
+                        dataTransfer: { getData: () => String(draggedId || '') }
+                    }, barber, time);
+                }
             }
+        } finally {
+            this.state.isDragging = false;
+            this.state.draggingAptId = null;
+            if (this.touchTarget && this.touchTarget.classList) this.touchTarget.classList.remove('dragging');
+            this.touchTarget = null;
+            document.body.classList.remove('dragging-active');
+            document.querySelectorAll('.agenda-cell').forEach(c => c.classList.remove('drag-over'));
         }
-
-        this.state.isDragging = false;
-        this.state.draggingAptId = null;
-        if (this.touchTarget) this.touchTarget.classList.remove('dragging');
-        document.body.classList.remove('dragging-active');
-        document.querySelectorAll('.agenda-cell').forEach(c => c.classList.remove('drag-over'));
     },
 
     handleDragOver(e) {
@@ -6995,15 +7040,17 @@ const app = {
     },
 
     handleDrop(e, newBarber, newTime) {
-        e.preventDefault();
-        e.currentTarget.classList.remove('drag-over');
+        if (e && e.preventDefault) e.preventDefault();
+        if (e && e.currentTarget && e.currentTarget.classList) {
+            e.currentTarget.classList.remove('drag-over');
+        }
 
-        const aptId = Number(e.dataTransfer.getData('text/plain')) || this.state.draggingAptId;
+        const rawId = (e && e.dataTransfer ? e.dataTransfer.getData('text/plain') : '') || this.state.draggingAptId;
         this.state.draggingAptId = null; // Limpa o fallback
         
-        if (!aptId) return;
+        if (!rawId) return;
 
-        const apt = this.state.appointments.find(a => a.id === aptId);
+        const apt = this.state.appointments.find(a => String(a.id) === String(rawId));
         if (!apt) return;
 
         // [SEGURANÇA FINANCEIRA] Somente administradores podem mover agendamentos finalizados
@@ -7408,8 +7455,7 @@ const app = {
     },
 
     openAppointmentManagement(aptId) {
-        const idToFind = Number(aptId);
-        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const apt = this.state.appointments.find(a => String(a.id) === String(aptId));
         if (!apt) return;
 
         const isReadOnly = apt.status === 'finalizado' && this.state.user.role !== 'admin';
