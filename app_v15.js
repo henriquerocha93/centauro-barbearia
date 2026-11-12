@@ -9293,12 +9293,18 @@ const app = {
         const salesHistory = this.state.productSales || [];
         const todaySales = salesHistory.filter(s => s.date === new Date().toISOString().split('T')[0]);
         const todayRevenue = todaySales.reduce((sum, s) => sum + (s.total || 0), 0);
+        const zeroStockCount = (this.state.products || []).filter(p => p.stock <= 0).length;
+        const searchQuery = this._stockSearchQuery || '';
+        const filteredProducts = this.getFilteredStockProducts(searchQuery);
 
         container.innerHTML = `
             <section id="stock-view" class="fade-in">
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
                     <h2 class="section-title">Estoque de Produtos</h2>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="glass" style="padding: 8px 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; font-weight: 600; border: 1px solid ${this._stockZeroFilter ? '#ef4444' : 'rgba(239,68,68,0.4)'}; background: ${this._stockZeroFilter ? '#dc2626' : 'rgba(239,68,68,0.12)'}; color: ${this._stockZeroFilter ? '#fff' : '#fca5a5'};" id="btn-filter-zero-stock">
+                            ❌ Estoque Zerado (${zeroStockCount})
+                        </button>
                         <button class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem; background: #7c3aed; display: flex; align-items: center; gap: 6px;" id="btn-scan-barcode">
                             📶 Leitor USB
                         </button>
@@ -9326,17 +9332,20 @@ const app = {
                 <!-- Barra de busca -->
                 <div style="margin-bottom: 15px; position: relative;">
                     <input type="text" id="stock-search" class="glass" style="width: 100%; padding: 10px 40px 10px 12px; color: var(--text-primary);" 
+                           value="${searchQuery.replace(/"/g, '&quot;')}"
                            placeholder="🔍  Buscar produto por nome ou código..." oninput="app.filterStockList(this.value)">
                 </div>
 
                 <div class="stock-list" id="stock-list-container">
-                    ${this.renderStockItems(this.state.products)}
+                    ${this.renderStockItems(filteredProducts)}
                 </div>
                 <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="app.navigateTo('${this.state.user.role === 'admin' ? 'admin-dash' : 'barber-dash'}')">Voltar</button>
             </section>
         `;
-        document.getElementById('btn-add-stock').onclick = () => this.openProductModal(null);
+        const btnAddStock = document.getElementById('btn-add-stock');
+        if (btnAddStock) btnAddStock.onclick = () => this.openProductModal(null);
         document.getElementById('btn-scan-barcode').onclick = () => this.openBarcodeScanner();
+        document.getElementById('btn-filter-zero-stock').onclick = () => this.toggleZeroStockFilter();
     },
 
     renderStockItems(products) {
@@ -9373,14 +9382,25 @@ const app = {
         }).join('');
     },
 
-    filterStockList(query) {
-        const q = query.toLowerCase();
-        const filtered = q
-            ? this.state.products.filter(p =>
+    getFilteredStockProducts(query = '') {
+        const q = (query || '').toLowerCase();
+        return (this.state.products || []).filter(p => {
+            const matchesZero = !this._stockZeroFilter || p.stock <= 0;
+            const matchesQuery = !q ||
                 p.name.toLowerCase().includes(q) ||
-                (p.barcode && p.barcode.toLowerCase().includes(q))
-            )
-            : this.state.products;
+                (p.barcode && p.barcode.toLowerCase().includes(q));
+            return matchesZero && matchesQuery;
+        });
+    },
+
+    toggleZeroStockFilter() {
+        this._stockZeroFilter = !this._stockZeroFilter;
+        this.render('admin-stock');
+    },
+
+    filterStockList(query) {
+        this._stockSearchQuery = query || '';
+        const filtered = this.getFilteredStockProducts(this._stockSearchQuery);
         const container = document.getElementById('stock-list-container');
         if (container) container.innerHTML = this.renderStockItems(filtered);
     },
