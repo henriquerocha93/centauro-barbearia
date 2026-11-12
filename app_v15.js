@@ -1,4 +1,4 @@
-// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
+﻿// Centauro Barbearia - App Logic (Cloud Hybrid v4.5)
 console.log("🚀 CENTAURO APP V71.50 LOADED");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get, goOnline, goOffline } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -10,7 +10,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 const app = {
-    APP_VERSION: 80.60, // Manter igual ao ?v= do app_v15.js no index.html
+    APP_VERSION: 80.61, // Manter igual ao ?v= do app_v15.js no index.html
     state: {
         view: 'home',
         user: null, // { id: 1, name: 'Henri', role: 'admin' }
@@ -30,6 +30,8 @@ const app = {
         },
         staff: [],
         deletedStaffIds: [3],
+        deletedProductIds: [],
+        _pendingStockDeltas: {},
         services: [],
         products: [],
         appointments: [],
@@ -648,6 +650,74 @@ const app = {
         return Array.from(map.values()).filter(item => item && item.id && !deletedSet.has(String(item.id)));
     },
 
+    /**
+     * Ajusta o estoque de um produto localmente e acumula o delta pendente para sincronização segura entre múltiplos dispositivos.
+     */
+    adjustProductStock(productId, delta) {
+        const product = (this.state.products || []).find(p => String(p.id) === String(productId));
+        if (!product) return;
+        const d = Number(delta) || 0;
+        product.stock = (parseInt(product.stock, 10) || 0) + d;
+        product.updatedAt = Date.now();
+        if (!this.state._pendingStockDeltas || typeof this.state._pendingStockDeltas !== 'object') {
+            this.state._pendingStockDeltas = {};
+        }
+        const key = String(product.id);
+        this.state._pendingStockDeltas[key] = (Number(this.state._pendingStockDeltas[key]) || 0) + d;
+        if (this.state._pendingStockDeltas[key] === 0) {
+            delete this.state._pendingStockDeltas[key];
+        }
+    },
+
+    /**
+     * Mescla produtos usando frescor (updatedAt), lista persistente de excluídos (deletedProductIds)
+     * e deltas de estoque pendentes (pendingDeltas) para evitar perda de baixas em vendas simultâneas.
+     */
+    mergeProductsByFreshness(localArr, cloudArr, { keepLocalOnly = false, cloudLastUpdate = 0, deletedSet = new Set(), deletedProductIds = new Set(), pendingDeltas = {} } = {}) {
+        const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
+        const map = new Map();
+        const isDeleted = (id) => deletedSet.has(String(id)) || deletedProductIds.has(String(id));
+
+        toArray(cloudArr).forEach(item => {
+            if (item && item.id && !isDeleted(item.id)) {
+                map.set(String(item.id), { ...item, stock: parseInt(item.stock, 10) || 0 });
+            }
+        });
+
+        toArray(localArr).forEach(localItem => {
+            if (!localItem || !localItem.id) return;
+            const id = String(localItem.id);
+            if (isDeleted(id)) return;
+
+            const cloudItem = map.get(id);
+            if (cloudItem) {
+                const localExactAt = Number(localItem._stockExactUpdatedAt) || 0;
+                const cloudAt = Number(cloudItem.updatedAt) || 0;
+                const localAt = Number(localItem.updatedAt) || 0;
+                const pendingDelta = Number(pendingDeltas[id]) || 0;
+
+                if (localExactAt > cloudAt) {
+                    map.set(id, { ...cloudItem, ...localItem, stock: parseInt(localItem.stock, 10) || 0 });
+                } else if (pendingDelta !== 0) {
+                    const baseStock = parseInt(cloudItem.stock, 10) || 0;
+                    map.set(id, {
+                        ...cloudItem,
+                        stock: baseStock + pendingDelta,
+                        updatedAt: Math.max(cloudAt, localAt, Date.now())
+                    });
+                } else if (localAt > cloudAt) {
+                    map.set(id, { ...cloudItem, ...localItem, stock: parseInt(localItem.stock, 10) || 0 });
+                }
+            } else if (keepLocalOnly || localItem._isNew || (Number(localItem.updatedAt) || 0) > (Number(cloudLastUpdate) || 0)) {
+                const copy = { ...localItem, stock: parseInt(localItem.stock, 10) || 0 };
+                delete copy._isNew;
+                map.set(id, copy);
+            }
+        });
+
+        return Array.from(map.values()).filter(item => item && item.id && !isDeleted(item.id));
+    },
+
     saveState() {
         this.state.needsSync = true;
         this.state.lastUpdate = Date.now(); // [CRÍTICO] Atualiza o relógio para esta mudança
@@ -671,7 +741,9 @@ const app = {
                     pendingSubscriptions: this.state.pendingSubscriptions || [],
                     lastConsumptionView: this.state.lastConsumptionView || 0,
                     lastUpdate: this.state.lastUpdate || 0,
-                    _deletedIds: this.state._deletedIds || []
+                    _deletedIds: this.state._deletedIds || [],
+                    deletedProductIds: this.state.deletedProductIds || [],
+                    _pendingStockDeltas: this.state._pendingStockDeltas || {}
                 };
                 
                 // Dispara sincronização para a nuvem independentemente do armazenamento local falhar ou não
@@ -725,6 +797,7 @@ const app = {
 
             // [ISOLAMENTO E MERGE INTELIGENTE]
             // Antes de gravar na nuvem, fazemos um GET rápido para mesclar alterações simultâneas de outros aparelhos
+            const syncedDeltas = { ...(this.state._pendingStockDeltas || {}) };
             let cloudData = null;
             try {
                 const snapshot = await get(dbRef);
@@ -743,6 +816,10 @@ const app = {
                 const cloudDelStaff = Array.isArray(cloudData.deletedStaffIds) ? cloudData.deletedStaffIds : Object.values(cloudData.deletedStaffIds || {});
                 const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
                 this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
+
+                const cloudDelProducts = Array.isArray(cloudData.deletedProductIds) ? cloudData.deletedProductIds : Object.values(cloudData.deletedProductIds || {});
+                const allDeletedProductIds = new Set([...(this.state.deletedProductIds || []).map(String), ...cloudDelProducts.map(String)]);
+                this.state.deletedProductIds = Array.from(allDeletedProductIds);
 
                 // Mesclar clientes e outros arrays secundários
                 const mergeMap = (localArr, cloudArr) => {
@@ -808,7 +885,12 @@ const app = {
                 });
 
                 this.state.services = this.applyServiceOverrides(this.state.services, cloudData.serviceOverrides);
-                this.state.products = mergeMap(this.state.products, cloudData.products);
+                this.state.products = this.mergeProductsByFreshness(this.state.products, cloudData.products, {
+                    cloudLastUpdate: cloudData.lastUpdate || 0,
+                    deletedSet,
+                    deletedProductIds: allDeletedProductIds,
+                    pendingDeltas: syncedDeltas
+                });
                 this.state.subscriptionPlans = mergeMap(this.state.subscriptionPlans || [], cloudData.subscriptionPlans);
                 this.state.subscribers = mergeMap(this.state.subscribers || [], cloudData.subscribers);
                 this.state.customers = mergeMap(this.state.customers, cloudData.customers);
@@ -823,7 +905,7 @@ const app = {
             
             // [SEGURANÇA CONTRA DUPLICADOS E RESSURREIÇÃO]
             // Substituídas (truncadas) na nuvem, evitando duplicações ou ressurreição de itens no fim do array.
-            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions', 'deletedStaffIds'];
+            const pathsToSet = ['appointments', 'transactions', 'customers', 'vouchers', 'productSales', 'tips', 'services', 'staff', 'products', 'serviceOrders', 'subscriptionPlans', 'subscribers', 'pendingSubscriptions', 'deletedStaffIds', 'deletedProductIds'];
             
             await Promise.all([
                 ...pathsToSet.map(key => set(ref(this.db, dbPath + key), this.state[key] || [])),
@@ -831,9 +913,20 @@ const app = {
                 set(ref(this.db, dbPath + 'openingBalances'), this.state.openingBalances || {}),
                 set(ref(this.db, dbPath + 'lastConsumptionView'), this.state.lastConsumptionView || 0),
                 set(ref(this.db, dbPath + 'lastUpdate'), this.state.lastUpdate),
+                set(ref(this.db, dbPath + 'minAppVersion'), this.APP_VERSION),
                 set(ref(this.db, dbPath + 'updatedBy'), this.state.user ? this.state.user.name : 'Sistema')
             ]);
             
+            if (this.state._pendingStockDeltas && typeof this.state._pendingStockDeltas === 'object') {
+                Object.keys(syncedDeltas).forEach(pid => {
+                    const remaining = (Number(this.state._pendingStockDeltas[pid]) || 0) - (Number(syncedDeltas[pid]) || 0);
+                    if (remaining === 0) {
+                        delete this.state._pendingStockDeltas[pid];
+                    } else {
+                        this.state._pendingStockDeltas[pid] = remaining;
+                    }
+                });
+            }
             console.log('✅ SUCESSO: Sincronizado com Firebase');
             
             // Feedback visual no botão
@@ -1205,6 +1298,12 @@ const app = {
 
                 Object.assign(this.state, loaded);
                 this.state.deletedStaffIds = Array.from(delStaffIds);
+                const delProdIds = new Set([...toArray(loaded.deletedProductIds || []).map(String), ...toArray(this.state.deletedProductIds || []).map(String)]);
+                this.state.deletedProductIds = Array.from(delProdIds);
+                this.state.products = (this.state.products || []).filter(p => p && p.id && !delProdIds.has(String(p.id)));
+                if (!this.state._pendingStockDeltas || typeof this.state._pendingStockDeltas !== 'object') {
+                    this.state._pendingStockDeltas = {};
+                }
                 this.state.staff = (this.state.staff || []).filter(s => s && s.id && !delStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes');
                 this.state.currentDate = this.getTodayDate(); // SEMPRE hoje ao carregar o sistema
                 this.state.currentTenant = this.getTenantId(); // Vincula o estado ao tenant atual
@@ -1488,7 +1587,7 @@ const app = {
                             const localLastUpdate = this.state.lastUpdate || 0;
 
                             // [INSTANTÂNEO] Se a nuvem tem dados novos (sessões master SEMPRE processam os dados reais da nuvem)
-                            if (!this.state.user?.isMasterSession && cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
+                            if (!this.state.user?.isMasterSession && (this.state.needsSync || this.state.isSyncing) && cloudLastUpdate <= localLastUpdate && localLastUpdate > 0) {
                                 return;
                             }
 
@@ -1500,6 +1599,7 @@ const app = {
                                 se: data.settings,
                                 sp: data.subscriptionPlans,
                                 p: data.products,
+                                dp: data.deletedProductIds,
                                 sv: data.services,
                                 so: data.serviceOverrides
                             });
@@ -1572,6 +1672,10 @@ const app = {
                             const allDeletedStaffIds = new Set([3, ...(this.state.deletedStaffIds || []).map(Number), ...cloudDelStaff.map(Number)]);
                             this.state.deletedStaffIds = Array.from(allDeletedStaffIds);
 
+                const cloudDelProducts = Array.isArray(data.deletedProductIds) ? data.deletedProductIds : Object.values(data.deletedProductIds || {});
+                const allDeletedProductIds = new Set([...(this.state.deletedProductIds || []).map(String), ...cloudDelProducts.map(String)]);
+                this.state.deletedProductIds = Array.from(allDeletedProductIds);
+
                             const rawCloudStaff = toArray(data.staff).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
                             // Se temos alterações locais pendentes de envio, mescla com autoridade da nuvem; senão, a nuvem é a fonte da verdade absoluta (evita ressurreição de deletados)
@@ -1591,7 +1695,7 @@ const app = {
                                 this.state.staff = Array.from(staffMap.values()).filter(s => s && s.id && !allDeletedStaffIds.has(Number(s.id)) && s.name !== 'Matheus Fernandes' && !deletedSet.has(String(s.id)));
 
                                 this.state.services = this.mergeServicesByFreshness(this.state.services, data.services, { cloudLastUpdate, deletedSet, keepLocalOnly: this.state.needsSync || this.state.isSyncing });
-                                this.state.products = mergeArrays(this.state.products, data.products);
+                                this.state.products = this.mergeProductsByFreshness(this.state.products, data.products, { cloudLastUpdate, deletedSet, deletedProductIds: allDeletedProductIds, pendingDeltas: this.state._pendingStockDeltas || {} });
                                 this.state.customers = mergeArrays(this.state.customers, data.customers);
                                 this.state.vouchers = mergeArrays(this.state.vouchers, data.vouchers);
                                 this.state.productSales = mergeArrays(this.state.productSales, data.productSales);
@@ -1601,7 +1705,7 @@ const app = {
                             } else {
                                 this.state.staff = rawCloudStaff;
                                 this.state.services = this.mergeServicesByFreshness(this.state.services, data.services, { cloudLastUpdate, deletedSet, keepLocalOnly: this.state.needsSync || this.state.isSyncing });
-                                this.state.products = toArray(data.products).filter(p => p && p.id && !deletedSet.has(String(p.id)));
+                                this.state.products = toArray(data.products).filter(p => p && p.id && !deletedSet.has(String(p.id)) && !allDeletedProductIds.has(String(p.id)));
                                 this.state.customers = toArray(data.customers).filter(c => c && c.id && !deletedSet.has(String(c.id)));
                                 this.state.vouchers = toArray(data.vouchers).filter(v => v && v.id && !deletedSet.has(String(v.id)));
                                 this.state.productSales = toArray(data.productSales).filter(s => s && s.id && !deletedSet.has(String(s.id)));
@@ -4603,7 +4707,7 @@ const app = {
             const product = this.state.products.find(p => p.id === item.productId);
             if (product) {
                 // 1. Baixa no Estoque
-                product.stock -= item.qty;
+                this.adjustProductStock(product.id, -item.qty);
             }
             const itemTotal = item.unitPrice * item.qty;
             const itemComm = itemTotal * (item.commissionPct || 0) / 100;
@@ -5140,7 +5244,7 @@ const app = {
     updateStock(productId, quantityChange) {
         const product = this.state.products.find(p => p.id === productId);
         if (product) {
-            product.stock += quantityChange;
+        this.adjustProductStock(productId, quantityChange);
         }
     },
 
@@ -8425,7 +8529,7 @@ const app = {
                     // 1. Baixa no Estoque
                     const prod = this.state.products.find(item => item.id === p.id);
                     if (prod) {
-                        prod.stock -= p.qty;
+                        this.adjustProductStock(prod.id, -p.qty);
                     }
 
                     // 2. Registro Individual da Venda para Relatórios
@@ -9434,7 +9538,7 @@ const app = {
             return;
         }
 
-        product.stock -= qty;
+        this.adjustProductStock(product.id, -qty);
         const total = product.price * qty;
 
         let transactionId = null;
@@ -9565,7 +9669,8 @@ const app = {
     saveProduct(productId) {
         const name = document.getElementById('prod-name').value.trim();
         const price = parseFloat(document.getElementById('prod-price').value) || 0;
-        const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+        const parsedStock = parseInt(document.getElementById('prod-stock').value, 10);
+        const stock = isNaN(parsedStock) ? 0 : parsedStock;
         const barcode = document.getElementById('prod-barcode').value.trim();
         const commissionPct = parseFloat(document.getElementById('prod-commission').value) || 0;
 
@@ -9574,7 +9679,8 @@ const app = {
         if (!name) { alert('Informe o nome do produto.'); return; }
 
         if (productId === null) {
-            this.state.products.push({ id: Date.now(), name, price, stock, barcode, commissionPct, category });
+            const nowTs = Date.now();
+            this.state.products.push({ id: nowTs, name, price, stock, barcode, commissionPct, category, updatedAt: nowTs, _stockExactUpdatedAt: nowTs, _isNew: true });
         } else {
             const product = this.state.products.find(p => p.id === productId);
             if (product) { 
@@ -9584,6 +9690,10 @@ const app = {
                 product.barcode = barcode; 
                 product.commissionPct = commissionPct;
                 product.category = category;
+                const editTs = Date.now();
+                product.updatedAt = editTs;
+                product._stockExactUpdatedAt = editTs;
+                if (this.state._pendingStockDeltas) delete this.state._pendingStockDeltas[String(product.id)];
             }
         }
         this.saveState();
@@ -10248,7 +10358,7 @@ const app = {
             const product = this.state.products.find(p => p.id === item.productId);
             if (product) {
                 // 1. Baixa no Estoque
-                product.stock -= item.qty;
+                this.adjustProductStock(product.id, -item.qty);
             }
 
             const itemTotal = item.unitPrice * item.qty;
@@ -10299,7 +10409,12 @@ const app = {
 
     deleteProduct(productId) {
         if (confirm('Deseja realmente excluir este produto do estoque?')) {
-            this.state.products = this.state.products.filter(p => p.id !== productId);
+            this.registerDeletion(productId);
+            if (!Array.isArray(this.state.deletedProductIds)) this.state.deletedProductIds = [];
+            const idStr = String(productId);
+            if (!this.state.deletedProductIds.includes(idStr)) this.state.deletedProductIds.push(idStr);
+            if (this.state._pendingStockDeltas) delete this.state._pendingStockDeltas[idStr];
+            this.state.products = (this.state.products || []).filter(p => String(p.id) !== idStr);
             this.saveState();
             this.render('admin-stock');
         }
@@ -10336,7 +10451,7 @@ const app = {
                         // Restaurar Estoque
                         const prod = this.state.products.find(p => Number(p.id) === Number(sale.productId));
                         if (prod) {
-                            prod.stock += Number(sale.qty);
+                            this.adjustProductStock(prod.id, Number(sale.qty));
                             console.log(`♻️ Estoque restaurado: ${prod.name} (+${sale.qty})`);
                         }
                     });
@@ -10893,7 +11008,8 @@ const app = {
         if (confirm(confirmMsg)) {
             // Restaurar estoque
             const product = this.state.products.find(p => p.id === sale.productId);
-            if (product) { product.stock += sale.qty; }
+            this.registerDeletion(saleId);
+            if (product) { this.adjustProductStock(product.id, Number(sale.qty)); }
 
             // Remover transação e vale se for consumo de barbeiro
             if (sale.target === 'barbeiro') {
