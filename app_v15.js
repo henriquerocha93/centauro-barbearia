@@ -850,10 +850,10 @@ const app = {
                         const localRank = getRank(localApt.status);
                         const cloudRank = getRank(cloudApt.status);
                         if (localRank >= cloudRank) {
-                            mergedAptsMap.set(idStr, { ...cloudApt, ...localApt });
+                            mergedAptsMap.set(idStr, { ...cloudApt, ...localApt, payment: localApt.payment || cloudApt.payment });
                         } else {
-                            // Se a nuvem tem status maior, mantém a nuvem
-                            mergedAptsMap.set(idStr, { ...localApt, ...cloudApt });
+                            // Se a nuvem tem status maior, mantém a nuvem mas preserva forma de pagamento se existir
+                            mergedAptsMap.set(idStr, { ...localApt, ...cloudApt, payment: cloudApt.payment || localApt.payment });
                         }
                     } else {
                         mergedAptsMap.set(idStr, localApt);
@@ -1673,10 +1673,16 @@ const app = {
                                         mergedApt.time = localApt.time;
                                         mergedApt.service = localApt.service;
                                         mergedApt.price = localApt.price;
+                                        if (localApt.payment) mergedApt.payment = localApt.payment;
+                                        if (localApt.transactionId) mergedApt.transactionId = localApt.transactionId;
+                                        if (localApt.finalPrice !== undefined) mergedApt.finalPrice = localApt.finalPrice;
                                     }
 
                                     if (localRank > cloudRank) {
                                         mergedApt.status = localApt.status;
+                                        if (localApt.payment && !mergedApt.payment) mergedApt.payment = localApt.payment;
+                                    } else if (localApt.payment && !mergedApt.payment) {
+                                        mergedApt.payment = localApt.payment;
                                     }
                                 }
                                 return mergedApt;
@@ -5057,7 +5063,7 @@ const app = {
         }
     },
 
-    addTransaction(type, description, amount, category, method = 'dinheiro') {
+    addTransaction(type, description, amount, category, method = 'dinheiro', skipSave = false) {
         const transId = Date.now() + Math.floor(Math.random() * 1000);
         const cleanAmount = parseFloat(amount) || 0;
 
@@ -5091,7 +5097,9 @@ const app = {
         };
         if (!this.state.transactions) this.state.transactions = [];
         this.state.transactions.push(transaction);
-        this.saveState();
+        if (!skipSave) {
+            this.saveState();
+        }
         return transId;
     },
 
@@ -7696,8 +7704,7 @@ const app = {
     },
 
     updateAppointmentPayment(aptId, newPayment) {
-        const idToFind = Number(aptId);
-        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const apt = this.state.appointments.find(a => String(a.id) === String(aptId));
         if (!apt) return false;
 
         apt.payment = newPayment;
@@ -7750,8 +7757,7 @@ const app = {
     },
 
     openChangePaymentModal(aptId) {
-        const idToFind = Number(aptId);
-        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const apt = this.state.appointments.find(a => String(a.id) === String(aptId));
         if (!apt) return;
 
         this.openModal('Alterar Forma de Pagamento', `
@@ -7800,8 +7806,7 @@ const app = {
     },
 
     saveQuickPaymentChange(aptId) {
-        const idToFind = Number(aptId);
-        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const apt = this.state.appointments.find(a => String(a.id) === String(aptId));
         if (!apt) return;
 
         const newPayment = document.getElementById('quick-edit-payment').value;
@@ -8426,8 +8431,7 @@ const app = {
     },
 
     doFinalizeOS(aptId) {
-        const idToFind = Number(aptId);
-        const apt = this.state.appointments.find(a => a.id === idToFind);
+        const apt = this.state.appointments.find(a => String(a.id) === String(aptId));
 
         // ── PROTEÇÃO 1: Verifica se a OS já foi finalizada ──
         if (!apt || apt.status === 'finalizado') {
@@ -8519,7 +8523,15 @@ const app = {
                 const method2 = document.getElementById('split-method-2').value;
 
                 if (Math.abs((val1 + val2) - totalBase) > 0.01) {
-                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor (R$ ${totalBase.toFixed(2)}). Deseja continuar?`)) return;
+                    if (!confirm(`O total informado (R$ ${(val1 + val2).toFixed(2)}) é diferente do valor (R$ ${totalBase.toFixed(2)}). Deseja continuar?`)) {
+                        if (btnFinalizar) {
+                            btnFinalizar.disabled = false;
+                            btnFinalizar.style.opacity = '1';
+                            btnFinalizar.textContent = 'Concluir e Receber';
+                        }
+                        apt.status = 'em atendimento';
+                        return;
+                    }
                 }
 
                 const getM = (m) => {
@@ -8529,11 +8541,11 @@ const app = {
                     return 'dinheiro';
                 };
 
-                const t1 = this.addTransaction('in', `${desc} [Parte 1/${method1}]`, val1, 'servico', getM(method1));
-                const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'servico', getM(method2));
+                const t1 = this.addTransaction('in', `${desc} [Parte 1/${method1}]`, val1, 'servico', getM(method1), true);
+                const t2 = this.addTransaction('in', `${desc} [Parte 2/${method2}]`, val2, 'servico', getM(method2), true);
                 apt.transactionId = t1; 
             } else {
-                apt.transactionId = this.addTransaction('in', desc, totalBase, 'servico', mappedMethod);
+                apt.transactionId = this.addTransaction('in', desc, totalBase, 'servico', mappedMethod, true);
             }
 
             // Registrar Gorjeta se houver
@@ -8549,7 +8561,7 @@ const app = {
 
                     // Integrar com Fluxo de Caixa e salvar ID no agendamento para rastreio
                     const tipDesc = `Gorjeta: ${barberName} (Corte)`;
-                    const tipTransactionId = this.addTransaction('in', tipDesc, tipAmount, 'outros', mappedMethod);
+                    const tipTransactionId = this.addTransaction('in', tipDesc, tipAmount, 'outros', mappedMethod, true);
 
                     this.state.tips.push({
                         id: Date.now() + 1,
