@@ -10,7 +10,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 const app = {
-    APP_VERSION: 80.61, // Manter igual ao ?v= do app_v15.js no index.html
+    APP_VERSION: 80.62, // Manter igual ao ?v= do app_v15.js no index.html
     state: {
         view: 'home',
         user: null, // { id: 1, name: 'Henri', role: 'admin' }
@@ -807,6 +807,9 @@ const app = {
             } catch (e) {
                 console.warn('⚠️ Não foi possível ler dados para merge, usando cache recente da nuvem:', e);
                 cloudData = this._lastCloudData || null;
+                if (!cloudData) {
+                    throw new Error('Falha ao obter snapshot da nuvem para merge seguro. Abortando gravação para evitar perda de dados.');
+                }
             }
 
             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
@@ -920,8 +923,26 @@ const app = {
             payload.minAppVersion = this.APP_VERSION;
             payload.updatedBy = this.state.user ? this.state.user.name : 'Sistema';
 
-            await update(dbRef, payload);
-            this._lastCloudData = { ...(this._lastCloudData || {}), ...payload };
+            const sanitizedPayload = JSON.parse(JSON.stringify(payload));
+
+            // [BLINDAGEM ANTI-PERDA] Nunca sobrescrever agendamentos ou transações da nuvem com array vazio
+            // se não houve exclusão explícita correspondente.
+            if (cloudData) {
+                const cloudAptsArr = toArray(cloudData.appointments).filter(a => a && a.id);
+                const cloudTxArr = toArray(cloudData.transactions).filter(t => t && t.id);
+                const delCount = (this.state._deletedIds || []).length;
+                if (cloudAptsArr.length > 0 && (!sanitizedPayload.appointments || sanitizedPayload.appointments.length === 0) && delCount < cloudAptsArr.length) {
+                    sanitizedPayload.appointments = cloudAptsArr;
+                    this.state.appointments = cloudAptsArr;
+                }
+                if (cloudTxArr.length > 0 && (!sanitizedPayload.transactions || sanitizedPayload.transactions.length === 0) && delCount < cloudTxArr.length) {
+                    sanitizedPayload.transactions = cloudTxArr;
+                    this.state.transactions = cloudTxArr;
+                }
+            }
+
+            await update(dbRef, sanitizedPayload);
+            this._lastCloudData = { ...(this._lastCloudData || {}), ...sanitizedPayload };
             
             if (this.state._pendingStockDeltas && typeof this.state._pendingStockDeltas === 'object') {
                 Object.keys(syncedDeltas).forEach(pid => {
