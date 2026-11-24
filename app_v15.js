@@ -796,18 +796,17 @@ const app = {
             const dbRef = ref(this.db, dbPath); // [FIX] Referência restaurada
 
             // [ISOLAMENTO E MERGE INTELIGENTE]
-            // Usa o snapshot em tempo real já mantido pelo onValue para evitar baixar o banco inteiro a cada clique;
-            // só faz GET se ainda não houver snapshot em cache.
+            // Sempre busca o snapshot mais recente da nuvem antes de gravar, evitando sobrescrever
+            // agendamentos ou transações recém-criados por outros aparelhos ou clientes.
             const syncedDeltas = { ...(this.state._pendingStockDeltas || {}) };
-            let cloudData = this._lastCloudData || null;
-            if (!cloudData) {
-                try {
-                    const snapshot = await get(dbRef);
-                    cloudData = snapshot.val();
-                    if (cloudData) this._lastCloudData = cloudData;
-                } catch (e) {
-                    console.warn('⚠️ Não foi possível ler dados para merge, prosseguindo com gravação direta:', e);
-                }
+            let cloudData = null;
+            try {
+                const snapshot = await get(dbRef);
+                cloudData = snapshot.val();
+                if (cloudData) this._lastCloudData = cloudData;
+            } catch (e) {
+                console.warn('⚠️ Não foi possível ler dados para merge, usando cache recente da nuvem:', e);
+                cloudData = this._lastCloudData || null;
             }
 
             const toArray = (v) => Array.isArray(v) ? v : Object.values(v || {});
@@ -1645,14 +1644,15 @@ const app = {
 
                             const cloudApts = toArray(data.appointments).filter(a => a && a.id && !deletedSet.has(String(a.id)));
                             const cloudTransactions = toArray(data.transactions);
+                            const localAptsBackup = toArray(this.state.appointments);
 
-                            this.state.appointments = cloudApts.map(cloudApt => {
-                                const localApt = this.state.appointments.find(a => String(a.id) === String(cloudApt.id));
+                            const mergedCloudApts = cloudApts.map(cloudApt => {
+                                const localApt = localAptsBackup.find(a => String(a.id) === String(cloudApt.id));
                                 
                                 // [SEGURANÇA FINANCEIRA] Se existe transação para este agendamento, ele é FINALIZADO obrigatoriamente
                                 const hasTransaction = cloudTransactions.some(t => 
                                     t.id === cloudApt.transactionId || 
-                                    (t.date === cloudApt.date && t.description.includes(cloudApt.customer) && t.amount === cloudApt.price)
+                                    (t.date === cloudApt.date && t.description && cloudApt.customer && t.description.includes(cloudApt.customer) && t.amount === cloudApt.price)
                                 );
 
                                 let mergedApt = { ...cloudApt };
@@ -1687,6 +1687,20 @@ const app = {
                                 }
                                 return mergedApt;
                             });
+
+                            // [PROTEÇÃO CONTRA PERDA DE AGENDAMENTOS LOCAIS PENDENTES]
+                            // Se há alterações locais ainda não enviadas, preserva agendamentos recém-criados localmente
+                            // que ainda não existem no snapshot da nuvem.
+                            if (this.state.needsSync || this.state.isSyncing) {
+                                const cloudAptIds = new Set(cloudApts.map(a => String(a.id)));
+                                localAptsBackup.forEach(localApt => {
+                                    if (localApt && localApt.id && !cloudAptIds.has(String(localApt.id)) && !deletedSet.has(String(localApt.id))) {
+                                        mergedCloudApts.push(localApt);
+                                    }
+                                });
+                            }
+
+                            this.state.appointments = mergedCloudApts;
 
                             // [BLINDAGEM CONTRA RESSURREIÇÃO DE COLABORADORES EXCLUÍDOS]
                             const cloudDelStaff = Array.isArray(data.deletedStaffIds) ? data.deletedStaffIds : Object.values(data.deletedStaffIds || {});
